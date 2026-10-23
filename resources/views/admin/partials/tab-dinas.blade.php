@@ -208,8 +208,8 @@
                                             @endphp
                                             @if($pageInfo)
                                                 <span class="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                                                    <i class="fa-solid {{ $pageInfo['icon'] }} text-[9px] text-[#f95a00]"></i>
-                                                    <span>{{ $pageInfo['title'] }}</span>
+                                                    <i class="fa-solid {{ $pageInfo['icon'] ?? 'fa-file-lines' }} text-[9px] text-[#f95a00]"></i>
+                                                    <span>{{ $pageInfo['name'] ?? $pageInfo['title'] ?? $pageKey }}</span>
                                                 </span>
                                             @endif
                                         @endforeach

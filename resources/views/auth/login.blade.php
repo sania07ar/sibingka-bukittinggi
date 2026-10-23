@@ -110,7 +110,7 @@
         }
     </style>
 </head>
-<body class="h-screen max-h-screen overflow-hidden bg-[#f1f4f9] text-slate-800 flex flex-col justify-between relative selection:bg-orange-500 selection:text-white">
+<body class="min-h-screen bg-[#f1f4f9] text-slate-800 flex flex-col justify-between relative selection:bg-orange-500 selection:text-white overflow-y-auto">
 
     <!-- Ambient Lighting Atmosphere -->
     <div class="ambient-sphere w-80 h-80 bg-orange-200/40 top-[-60px] right-[-40px]"></div>
@@ -193,10 +193,10 @@
                     <form action="{{ route('login.post') }}" method="POST" id="loginForm" autocomplete="on" class="space-y-3">
                         @csrf
                         
-                        <!-- Email / Username Input -->
+                        <!-- Email / Username / NIP Input -->
                         <div>
                             <label for="usernameInput" class="block text-[10.5px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                                Email / Username
+                                Email / Username / NIP
                             </label>
                             <div class="relative flex items-center">
                                 <div class="absolute left-3 flex items-center pointer-events-none text-slate-400">
@@ -208,7 +208,7 @@
                                        autocomplete="username"
                                        required
                                        value="{{ old('username') }}"
-                                       placeholder="Masukkan email atau username"
+                                       placeholder="Masukkan email, username, atau NIP"
                                        class="input-simonda w-full pl-8 pr-3 py-2 rounded-lg text-xs font-semibold placeholder:font-normal placeholder:text-slate-400">
                             </div>
                         </div>
@@ -266,16 +266,6 @@
                         </div>
 
                     </form>
-
-                    <!-- Bottom Help / Registration Link -->
-                    <div class="text-center mt-3 pt-2.5 border-t border-slate-100 space-y-0.5">
-                        <p class="text-[11px] font-semibold text-slate-600">
-                            Belum Punya Akun?
-                        </p>
-                        <button type="button" onclick="openForgotModal()" class="text-xs font-black text-[#f95a00] hover:text-orange-700 hover:underline transition-colors">
-                            Hubungi Admin
-                        </button>
-                    </div>
 
                 </div>
             </div>
@@ -359,6 +349,7 @@
             document.getElementById('forgotModal').classList.add('hidden');
         }
 
+        // Login form submit loading state
         document.getElementById('loginForm').addEventListener('submit', function() {
             const btnSubmit = document.getElementById('btnSubmit');
             const btnText = document.getElementById('btnText');
@@ -368,8 +359,6 @@
             btnSpinner.classList.remove('hidden');
             btnSpinner.classList.add('flex');
             
-            // Gunakan pointer-events agar tombol tidak bisa diklik dua kali
-            // tanpa men-disable elemen submit di DOM (agar Edge Password Manager tetap menangkap event submit)
             btnSubmit.style.pointerEvents = 'none';
         });
     </script>

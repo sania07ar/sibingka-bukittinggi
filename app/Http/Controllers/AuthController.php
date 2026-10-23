@@ -70,6 +70,7 @@ class AuthController extends Controller
         // 2. Check Database Users (Dinas / OPD / Registered Admin)
         $dbUser = User::where('username', $username)
             ->orWhere('email', $username)
+            ->orWhere('nip', $username)
             ->first();
 
         if ($dbUser) {
@@ -107,6 +108,13 @@ class AuthController extends Controller
 
                 session(['user' => $userData]);
 
+                // Update last login timestamp
+                try {
+                    $dbUser->update(['last_login_at' => now()]);
+                } catch (\Throwable $th) {
+                    // Ignore if column doesn't exist
+                }
+
                 if ($role === 'admin') {
                     return redirect()->route('portal')->with('success', "Selamat datang, {$dbUser->name}!");
                 }
@@ -117,7 +125,7 @@ class AuthController extends Controller
 
         return back()
             ->withInput($request->only('username'))
-            ->with('error', 'Nama pengguna atau kata sandi tidak sesuai.');
+            ->with('error', 'Nama pengguna, NIP, atau kata sandi tidak sesuai.');
     }
 
     /**
