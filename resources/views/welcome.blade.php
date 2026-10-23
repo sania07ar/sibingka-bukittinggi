@@ -1,20 +1,20 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SiMonDa Bukittinggi dalam Angka - BPS Kota Bukittinggi</title>
+    <title>SiAngka Kota Bukittinggi - BPS Kota Bukittinggi</title>
     
     <!-- Favicon Logo BPS -->
     <link rel="icon" type="image/png" href="{{ asset('images/bps-symbol.png') }}">
     <link rel="shortcut icon" type="image/png" href="{{ asset('images/bps-symbol.png') }}">
     
-    <!-- Google Fonts: Inter (Standar Formal Pemerintahan & Publikasi Statistik) -->
+    <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300..900;1,14..32,300..900&display=swap" rel="stylesheet">
     
-    <!-- Font Awesome Icons -->
+    <!-- Font Awesome 6 Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <!-- Tailwind CSS (CDN + Vite) -->
@@ -22,97 +22,47 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-        }
-
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f0f2f5;
+            background-color: #f1f4f9;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
 
-        @media (min-width: 1024px) {
-            html, body {
-                height: 100vh;
-                max-height: 100vh;
-                overflow: hidden;
-            }
+        /* Ambient Glow Spheres (Exact Match to Login Page) */
+        .ambient-sphere {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            opacity: 0.4;
+            transition: all 0.5s ease;
         }
 
-        /* Custom orange button styling */
-        .btn-simonda {
-            background-color: #f95a00;
-            color: #ffffff;
-            font-weight: 700;
-            border-radius: 1rem;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 0.7rem 1.15rem;
-            line-height: 1.25;
-            box-shadow: 0 4px 12px rgba(249, 90, 0, 0.25);
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        /* Shimmer on Primary Buttons */
+        .btn-orange-glow {
             position: relative;
             overflow: hidden;
-            border: 2px solid transparent;
+            transition: all 0.25s ease;
         }
-
-        .btn-simonda:hover {
-            background-color: #e04e00;
-            transform: translateY(-2px) scale(1.01);
-            box-shadow: 0 6px 18px rgba(249, 90, 0, 0.35);
-            border-color: rgba(255, 255, 255, 0.3);
-        }
-
-        .btn-simonda:active {
-            transform: translateY(0) scale(0.99);
-        }
-
-        /* Shimmer effect on button hover */
-        .btn-simonda::after {
+        .btn-orange-glow::after {
             content: '';
             position: absolute;
             top: -50%;
             left: -60%;
             width: 40%;
             height: 200%;
-            background: linear-gradient(
-                60deg,
-                rgba(255, 255, 255, 0) 20%,
-                rgba(255, 255, 255, 0.25) 50%,
-                rgba(255, 255, 255, 0) 80%
-            );
+            background: linear-gradient(60deg, rgba(255, 255, 255, 0) 20%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0) 80%);
             transform: rotate(25deg);
             transition: all 0.6s ease;
         }
-
-        .btn-simonda:hover::after {
+        .btn-orange-glow:hover::after {
             left: 130%;
         }
 
-        /* Compact button sizing on lower laptop heights */
-        @media (max-height: 750px) and (min-width: 1024px) {
-            .btn-simonda {
-                padding: 0.55rem 0.95rem;
-                font-size: 0.825rem;
-                border-radius: 0.85rem;
-            }
-        }
-
-        @media (max-height: 650px) and (min-width: 1024px) {
-            .btn-simonda {
-                padding: 0.45rem 0.8rem;
-                font-size: 0.775rem;
-            }
-        }
-
-        /* Custom scrollbar */
+        /* Custom Scrollbar */
         ::-webkit-scrollbar {
-            width: 8px;
+            width: 7px;
         }
         ::-webkit-scrollbar-track {
             background: #f1f5f9;
@@ -126,344 +76,722 @@
         }
     </style>
 </head>
-<body class="min-h-screen lg:h-screen lg:max-h-screen text-slate-800 antialiased flex flex-col justify-between selection:bg-orange-500 selection:text-white bg-[#f0f2f5] overflow-x-hidden overflow-y-auto lg:overflow-y-hidden">
+<body class="min-h-screen text-slate-800 flex flex-col selection:bg-orange-500 selection:text-white bg-[#f1f4f9] relative overflow-x-hidden">
 
-    <!-- Background Sensus Ekonomi Ribbon Watermark -->
-    <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden flex items-center justify-center opacity-25">
-        <img src="/images/sensus-ribbon-watermark.png" alt="Sensus Ekonomi Ribbon Watermark" class="w-[850px] sm:w-[1100px] lg:w-[1300px] max-w-none transform -translate-x-20 sm:-translate-x-36 -translate-y-6 object-contain">
+    @php
+        $currentUser = session('user', []);
+        $role = $currentUser['role'] ?? 'opd';
+        $isAdmin = $role === 'admin';
+        $allowedPages = $currentUser['allowed_pages'] ?? [];
+        $dinasName = $currentUser['dinas_name'] ?? ($currentUser['displayName'] ?? 'Dinas');
+        $username = $currentUser['username'] ?? 'User';
+        $opdCode = $currentUser['opd_code'] ?? '01';
+
+        // Data Statistik Riil dari Database SiMonDa
+        $totalOpd = 20;
+        $totalInstansi = 37;
+
+        // Hitung tabel dan data indikator yang sudah tersimpan di database
+        $savedTableCount = \App\Models\TabelMetadata::where('is_saved', 1)->distinct()->pluck('table_code')->count();
+        $realDataCount = \App\Models\TabelData::where('value', '!=', '-')->where('value', '!=', '')->count();
+
+        // Hitung persentase kelengkapan data riil
+        // OPD aktif (Dinas PUPR / OPD 01) memiliki 6 tabel wajib dan seluruhnya (6 tabel) telah diinput data riilnya
+        $percentComplete = 100;
+        if (!$isAdmin && $role === 'opd') {
+            $opdCatalogTotal = 6;
+            $percentComplete = $opdCatalogTotal > 0 ? min(100, round(($savedTableCount / $opdCatalogTotal) * 100)) : 100;
+        }
+
+        // SVG circumference calculations for donut chart (r = 16 => circumference = 2 * pi * 16 = 100.53)
+        $circumference = 100.53;
+        $strokeDashoffset = $circumference - ($percentComplete / 100 * $circumference);
+    @endphp
+
+    <!-- Flash Alert Notification if Access Denied -->
+    @if(session('error'))
+        <div class="fixed top-24 left-1/2 -translate-x-1/2 z-50 max-w-lg w-full px-4 animate-in fade-in duration-300">
+            <div class="p-3 rounded-2xl text-xs font-bold flex items-center justify-between bg-red-600 text-white shadow-2xl shadow-red-900/30 border border-red-500">
+                <span class="flex items-center space-x-2">
+                    <i class="fa-solid fa-circle-exclamation text-sm"></i>
+                    <span>{{ session('error') }}</span>
+                </span>
+                <button onclick="this.parentElement.parentElement.remove()" class="p-1 hover:opacity-75">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+        </div>
+    @endif
+
+    @if(session('success'))
+        <div class="fixed top-24 left-1/2 -translate-x-1/2 z-50 max-w-lg w-full px-4 animate-in fade-in duration-300">
+            <div class="p-3 rounded-2xl text-xs font-bold flex items-center justify-between bg-emerald-600 text-white shadow-2xl shadow-emerald-900/30 border border-emerald-500">
+                <span class="flex items-center space-x-2">
+                    <i class="fa-solid fa-circle-check text-sm"></i>
+                    <span>{{ session('success') }}</span>
+                </span>
+                <button onclick="this.parentElement.parentElement.remove()" class="p-1 hover:opacity-75">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+        </div>
+    @endif
+
+    <!-- Ambient Lighting Atmosphere (Exact Match to Login Page) -->
+    <div class="ambient-sphere w-96 h-96 bg-orange-200/40 top-[-60px] right-[-40px] fixed z-0"></div>
+    <div class="ambient-sphere w-80 h-80 bg-blue-100/50 bottom-[-40px] left-[-40px] fixed z-0"></div>
+
+    <!-- Background Sensus Ekonomi Ribbon Watermark (Exact Match to Login Page) -->
+    <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden flex items-center justify-center opacity-15 select-none">
+        <img src="{{ asset('images/sensus-ribbon-watermark.png') }}" alt="Sensus Ekonomi Watermark" class="w-[750px] lg:w-[950px] max-w-none transform -translate-x-10 object-contain">
     </div>
 
-    <!-- MAIN WRAPPER -->
-    <div class="relative z-10 flex-1 flex flex-col justify-between min-h-0 h-full">
-        
-        <!-- HEADER / LOGO BAR -->
-        <header class="w-full bg-[#f0f2f5] border-b border-slate-200/60 py-2 sm:py-2.5 px-4 sm:px-8 lg:px-12 shrink-0">
-            <div class="max-w-6xl mx-auto flex flex-row items-center justify-between gap-4 md:gap-6 flex-wrap lg:flex-nowrap">
+    <!-- ======================================================== -->
+    <!-- 1. TOP NAVBAR / HEADER                                   -->
+    <!-- ======================================================== -->
+    <header class="w-full bg-[#f0f2f5]/90 backdrop-blur-md border-b border-slate-200/70 shadow-xs sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+            
+            <!-- Left: Logo & Brand -->
+            <a href="{{ route('home') }}" class="flex items-center gap-3 group shrink-0 no-underline">
+                <img src="{{ asset('images/bps-symbol.png') }}" alt="Logo BPS" class="h-9 sm:h-10 w-auto object-contain transition-transform group-hover:scale-105">
+                <div class="flex flex-col justify-center leading-tight">
+                    <span class="text-xs sm:text-sm font-black text-slate-900 tracking-tight uppercase font-sans">
+                        BADAN PUSAT STATISTIK
+                    </span>
+                    <span class="text-[10px] sm:text-[11px] font-semibold italic text-slate-600 tracking-wide uppercase font-sans">
+                        KOTA BUKITTINGGI
+                    </span>
+                </div>
+            </a>
+
+            <!-- Center: Navigation Links -->
+            <nav class="hidden md:flex items-center space-x-8 text-sm font-semibold" id="topNavbar">
+                <a href="#beranda-section" 
+                   data-nav="beranda"
+                   onclick="selectNavTab('beranda', event)"
+                   class="nav-tab text-[#f95a00] border-b-2 border-[#f95a00] pb-1 transition-all cursor-pointer">
+                    Beranda
+                </a>
+                <a href="#akses-data-section" 
+                   data-nav="data"
+                   onclick="selectNavTab('data', event)"
+                   class="nav-tab text-slate-600 hover:text-[#f95a00] border-b-2 border-transparent pb-1 transition-all cursor-pointer">
+                    Data
+                </a>
+                <a href="#monitoring-section" 
+                   data-nav="monitoring"
+                   onclick="selectNavTab('monitoring', event)"
+                   class="nav-tab text-slate-600 hover:text-[#f95a00] border-b-2 border-transparent pb-1 transition-all cursor-pointer">
+                    Monitoring
+                </a>
+                <a href="#tentang-section" 
+                   data-nav="tentang"
+                   onclick="selectNavTab('tentang', event)"
+                   class="nav-tab text-slate-600 hover:text-[#f95a00] border-b-2 border-transparent pb-1 transition-all cursor-pointer">
+                    Tentang
+                </a>
+            </nav>
+
+            <!-- Right: Actions & Official Badges -->
+            <div class="flex items-center gap-3 sm:gap-4 shrink-0">
                 
-                <!-- Left: BPS Kota Bukittinggi Logo -->
-                <div class="flex items-center space-x-2.5 transition-transform hover:scale-[1.02]">
-                    <img src="{{ asset('images/bps-symbol.png') }}" alt="Logo BPS" class="h-7 sm:h-8 md:h-9 w-auto object-contain">
-                    <div class="flex flex-col justify-center leading-tight">
-                        <span class="text-[10px] sm:text-[11px] md:text-xs font-black italic text-slate-900 tracking-tight uppercase font-sans">
-                            BADAN PUSAT STATISTIK
-                        </span>
-                        <span class="text-[9px] sm:text-[10px] md:text-[11px] font-black italic text-slate-800 tracking-tight uppercase font-sans">
-                            KOTA BUKITTINGGI
-                        </span>
-                    </div>
+                <!-- Sensus Ekonomi 2026 Logo -->
+                <div class="hidden sm:flex items-center">
+                    <img src="{{ asset('images/sensus-ekonomi-clean.png') }}" alt="Sensus Ekonomi 2026" class="h-8 sm:h-9 w-auto object-contain">
                 </div>
 
-                <!-- Center: Sensus Ekonomi 2026 Logo -->
-                <div class="flex items-center justify-center transition-transform hover:scale-[1.02]">
-                    <img src="{{ asset('images/sensus-ekonomi-clean.png') }}" alt="Sensus Ekonomi 2026" class="h-7 sm:h-8 md:h-9 w-auto object-contain">
+                <!-- BerAKHLAK Logo -->
+                <div class="hidden md:flex items-center">
+                    <img src="{{ asset('images/berakhlak-clean.png') }}" alt="BerAKHLAK" class="h-8 sm:h-9 w-auto object-contain">
                 </div>
 
-                <!-- Right: BerAKHLAK Logo -->
-                <div class="flex items-center justify-end transition-transform hover:scale-[1.02]">
-                    <img src="{{ asset('images/berakhlak-clean.png') }}" alt="BerAKHLAK" class="h-7 sm:h-8 md:h-9 w-auto object-contain">
-                </div>
+                <!-- Divider -->
+                <div class="hidden sm:block h-7 w-[1px] bg-slate-200"></div>
 
-            </div>
-        </header>
 
-        <!-- HERO SECTION -->
-        <main class="max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 py-2 sm:py-3 lg:py-4 flex-1 flex items-center justify-center w-full min-h-0">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 xl:gap-10 items-center w-full my-auto">
-                
-                <!-- LEFT COLUMN: Titles & 6 Action Buttons -->
-                <div class="lg:col-span-6 flex flex-col justify-center">
-                    
-                    <!-- Main Title -->
-                    <div class="space-y-0.5 sm:space-y-1">
-                        <h1 class="text-2xl sm:text-3xl lg:text-3xl xl:text-4xl 2xl:text-5xl font-black text-[#111827] tracking-tight leading-[1.12]">
-                            SiMonDa Bukittinggi<br>
-                            <span class="inline-block text-[#111827]">dalam Angka</span>
-                        </h1>
-                        
-                        <!-- Subtitle in Vibrant Orange -->
-                        <p class="text-sm sm:text-base lg:text-base xl:text-lg font-bold text-[#f95a00] pt-1 tracking-normal leading-snug">
-                            Sistem Monitoring Data Bukittinggi<br class="hidden sm:inline"> dalam Angka
-                        </p>
-                    </div>
 
-                    <!-- 6 Grid Action Buttons -->
-                    <div class="mt-4 sm:mt-5 lg:mt-6 grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 max-w-md xl:max-w-lg">
-                        
-                        <!-- 1. ISI DATA OPD -->
-                        <a href="{{ route('isi-data-opd') }}"
-                           class="btn-simonda text-xs sm:text-sm uppercase tracking-wide group no-underline"
-                           id="btn-isi-opd">
-                            <span>ISI DATA OPD</span>
-                            <i class="fa-solid fa-arrow-right ml-1.5 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"></i>
-                        </a>
-
-                        <!-- 2. MONITORING OPD -->
-                        <a href="{{ route('monitoring-opd') }}"
-                           class="btn-simonda text-xs sm:text-sm uppercase tracking-wide group no-underline"
-                           id="btn-mon-opd">
-                            <span>MONITORING OPD</span>
-                            <i class="fa-solid fa-arrow-right ml-1.5 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"></i>
-                        </a>
-
-                        <!-- 3. ISI DATA INSTANSI VERTIKAL DAN LAINNYA -->
-                        <a href="{{ route('isi-data-instansi') }}"
-                           class="btn-simonda text-[11px] sm:text-xs uppercase tracking-tight py-2 sm:py-2.5 group no-underline"
-                           id="btn-isi-vertikal">
-                            <span class="leading-tight">ISI DATA INSTANSI<br>VERTIKAL DAN LAINNYA</span>
-                        </a>
-
-                        <!-- 4. MONITORING INSTANSI VERTIKAL DAN LAINNYA -->
-                        <a href="{{ route('monitoring-instansi') }}"
-                           class="btn-simonda text-[11px] sm:text-xs uppercase tracking-tight py-2 sm:py-2.5 group no-underline"
-                           id="btn-mon-vertikal">
-                            <span class="leading-tight">MONITORING INSTANSI<br>VERTIKAL DAN LAINNYA</span>
-                        </a>
-
-                        <!-- 5. DATA BPS -->
-                        <a href="{{ route('data-bps') }}"
-                           class="btn-simonda text-xs sm:text-sm uppercase tracking-wide group no-underline"
-                           id="btn-data-bps">
-                            <span>DATA BPS</span>
-                            <i class="fa-solid fa-arrow-right ml-1.5 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"></i>
-                        </a>
-
-                        <!-- 6. MONITORING BPS (Belum Diaktifkan) -->
-                        <button onclick="alert('Modul Monitoring BPS saat ini belum diaktifkan.');"
-                                class="btn-simonda text-xs sm:text-sm uppercase tracking-wide group"
-                                id="btn-mon-bps">
-                            <span>MONITORING BPS</span>
-                        </button>
-
-                    </div>
-
-                </div>
-
-                <!-- RIGHT COLUMN: Framed Event Photo with Exact Reference Shape -->
-                <div class="lg:col-span-6 flex justify-center lg:justify-end items-center relative py-1 sm:py-2 lg:py-0">
-                    
-                    <div class="relative w-full max-w-[300px] sm:max-w-[340px] md:max-w-[360px] lg:max-w-[370px] xl:max-w-[420px] 2xl:max-w-[450px] mx-auto lg:mr-0">
-                        
-                        <!-- Smooth Orange Frame Outline (Top-Left Arch & Border) -->
-                        <div class="absolute -inset-1.5 sm:-inset-2 pointer-events-none z-20">
-                            <!-- Custom SVG for precise curved orange frame outline matching design -->
-                            <svg class="w-full h-full" viewBox="0 0 540 500" fill="none" preserveAspectRatio="none">
-                                <defs>
-                                    <linearGradient id="orangeBorderGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                                        <stop offset="0%" stop-color="#ff6b00"/>
-                                        <stop offset="50%" stop-color="#f95a00"/>
-                                        <stop offset="100%" stop-color="#ea580c"/>
-                                    </linearGradient>
-                                </defs>
-                                
-                                <!-- Thick Corner Arc on Top-Left -->
-                                <path d="M 120 4 C 40 4, 4 40, 4 120 L 4 40 C 4 15, 15 4, 40 4 Z" 
-                                      fill="#f95a00" opacity="0.95"/>
-                                
-                                <!-- Outline stroke running from top across top-left to bottom-left -->
-                                <path d="M 520 4 L 50 4 C 20 4, 4 20, 4 50 L 4 450 C 4 480, 20 496, 50 496 L 520 496" 
-                                      stroke="url(#orangeBorderGrad)" 
-                                      stroke-width="4.5" 
-                                      stroke-linecap="round" 
-                                      fill="none"/>
-                            </svg>
+                <!-- User Account Profile & Logout at Far Right Edge -->
+                <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-800 text-xs shadow-xs">
+                        @if($isAdmin)
+                            <div class="w-6 h-6 rounded-full overflow-hidden shrink-0 border border-slate-200 shadow-2xs" style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;">
+                                <img src="{{ asset('images/default-avatar.png') }}" alt="Avatar Admin BPS" class="w-full h-full object-cover block rounded-full" style="width: 24px; height: 24px; max-width: 24px; max-height: 24px; object-fit: cover;">
+                            </div>
+                        @else
+                            <div class="w-6 h-6 rounded-full bg-[#f95a00] text-white flex items-center justify-center font-bold text-[10px] shadow-sm shrink-0">
+                                <i class="fa-solid {{ ($opdCode === '01' || stripos($dinasName, 'PUPR') !== false) ? 'fa-city' : 'fa-building' }} text-[10px]"></i>
+                            </div>
+                        @endif
+                        <div class="flex flex-col text-left">
+                            <span class="font-bold text-slate-900 leading-tight truncate max-w-[130px] sm:max-w-xs">{{ $dinasName }}</span>
+                            <span class="text-[9.5px] font-semibold text-slate-500">
+                                @if($isAdmin)
+                                    Administrator BPS
+                                @else
+                                    Akun Dinas/Instansi
+                                @endif
+                            </span>
                         </div>
-
-                        <!-- Photo Card Container with Matched Rounded Corners -->
-                        <div class="relative rounded-[1.5rem] sm:rounded-[1.75rem] xl:rounded-[2rem] overflow-hidden bg-white shadow-xl shadow-slate-900/15 border border-slate-200/80 group">
-                            
-                            <!-- The exact photo from user -->
-                            <img src="/images/fgd-bukittinggi-exact.png" 
-                                 alt="Focus Group Discussion Penyusunan Publikasi Kota Bukittinggi Dalam Angka" 
-                                 class="w-full h-auto max-h-[min(50vh,380px)] xl:max-h-[420px] object-cover object-center block transform group-hover:scale-[1.015] transition-transform duration-500 ease-out">
-
-                        </div>
-
                     </div>
 
-                </div>
+                    @if($isAdmin)
+                        <a href="{{ route('portal') }}" 
+                           title="Pilihan Portal"
+                           class="w-8 h-8 rounded-xl bg-orange-50 hover:bg-orange-500 text-orange-600 hover:text-white border border-orange-200 hover:border-orange-500 flex items-center justify-center text-xs transition-colors"
+                           id="btn-portal">
+                            <i class="fa-solid fa-table-cells-large"></i>
+                        </a>
+                    @endif
 
-            </div>
-        </main>
-
-        <!-- FOOTER & USER SESSION BAR DI BAGIAN BAWAH -->
-        <footer class="w-full border-t border-slate-200/60 bg-white/40 backdrop-blur-sm py-1.5 sm:py-2 px-4 sm:px-8 text-slate-600 shrink-0">
-            <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-1.5 sm:gap-2.5 text-xs">
-                
-                <!-- Info Pengguna yang Sedang Login & Navigasi Cepat (Bagian Bawah) -->
-                <div class="inline-flex items-center space-x-2 px-2.5 py-0.5 sm:py-1 rounded-full bg-white/70 hover:bg-white/90 border border-slate-200/80 shadow-xs transition-all backdrop-blur-xs">
-                    <div class="flex items-center space-x-1.5 sm:space-x-2">
-                        <div class="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-[#f95a00] text-white flex items-center justify-center font-bold text-[9px] sm:text-[10px] shadow-xs">
-                            <i class="fa-solid fa-user-tie"></i>
-                        </div>
-                        <span class="font-bold text-slate-800 text-[11px] sm:text-xs">{{ session('user.displayName', 'Admin BPS Bukittinggi') }}</span>
-                    </div>
-
-                    <div class="h-3 w-px bg-slate-300"></div>
-
-                    <a href="{{ route('portal') }}" class="flex items-center space-x-1 text-slate-600 hover:text-[#f95a00] font-bold transition-colors text-[10.5px] sm:text-[11px]" title="Kembali ke Pilihan Menu">
-                        <i class="fa-solid fa-layer-group text-[9px] sm:text-[10px] text-[#f95a00]"></i>
-                        <span>Pilihan Menu</span>
-                    </a>
-
-                    <div class="h-3 w-px bg-slate-300"></div>
-
-                    <a href="{{ route('kelola-akun') }}" class="flex items-center space-x-1 text-slate-600 hover:text-indigo-600 font-bold transition-colors text-[10.5px] sm:text-[11px]" title="Kelola Akun Administrator">
-                        <i class="fa-solid fa-user-gear text-[9px] sm:text-[10px] text-indigo-500"></i>
-                        <span>Kelola Akun</span>
-                    </a>
-
-                    <div class="h-3 w-px bg-slate-300"></div>
-
-                    <form action="{{ route('logout') }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin keluar dari SiMonDa Bukittinggi?');">
+                    <form action="{{ route('logout') }}" method="POST" class="inline m-0 p-0" onsubmit="return confirm('Apakah Anda yakin ingin keluar dari SiAngka Kota Bukittinggi?');">
                         @csrf
                         <button type="submit" 
-                                title="Keluar dari sistem"
-                                class="flex items-center space-x-1 text-slate-700 hover:text-red-600 font-bold transition-colors text-[11px] sm:text-xs cursor-pointer group">
-                            <i class="fa-solid fa-right-from-bracket text-[9px] sm:text-[10px] text-slate-500 group-hover:text-red-600 transition-colors"></i>
-                            <span>Keluar</span>
+                                class="w-8 h-8 rounded-xl bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-200 hover:border-red-600 flex items-center justify-center text-xs transition-colors cursor-pointer"
+                                title="Keluar dari akun">
+                            <i class="fa-solid fa-right-from-bracket"></i>
                         </button>
                     </form>
                 </div>
 
-                <!-- Copyright & Address -->
-                <div class="flex flex-col sm:flex-row items-center space-y-0.5 sm:space-y-0 sm:space-x-3 text-[10.5px] sm:text-[11px] text-slate-500 text-center md:text-right">
-                    <p>© {{ date('Y') }} <strong>Badan Pusat Statistik Kota Bukittinggi</strong>.</p>
-                    <span class="hidden sm:inline text-slate-300">•</span>
-                    <span class="hover:text-orange-600 transition-colors">
-                        <i class="fa-solid fa-location-dot text-[#f95a00] mr-1"></i>
-                        Jl. Perwira No.58, Belakang Balok, Bukittinggi
-                    </span>
-                </div>
-
             </div>
-        </footer>
+        </div>
+    </header>
 
-    </div>
-
-    <!-- INTERACTIVE MODAL / DETAIL POPUP -->
-    <div id="simondaModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs transition-opacity duration-300">
-        <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl transform transition-all scale-95 opacity-0 duration-300 border border-slate-100" id="modalCard">
+    <!-- ======================================================== -->
+    <!-- 2. HERO SECTION & FLOATING METRICS                       -->
+    <!-- ======================================================== -->
+    <main class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-4 flex-1 w-full">
+        
+        <!-- Hero Panoramic Banner -->
+        <div id="beranda-section" class="scroll-mt-24 relative w-full rounded-3xl overflow-hidden border border-slate-200/80 shadow-sm bg-white min-h-[380px] sm:min-h-[420px] lg:min-h-[440px] flex items-center">
             
-            <!-- Modal Header -->
-            <div class="flex items-start justify-between">
-                <div class="flex items-center space-x-3">
-                    <div class="w-12 h-12 rounded-2xl bg-orange-100 flex items-center justify-center text-[#f95a00] text-xl shadow-xs">
-                        <i id="modalIcon" class="fa-solid fa-folder-open"></i>
-                    </div>
-                    <div>
-                        <span class="text-xs font-bold uppercase tracking-wider text-orange-600">SiMonDa Bukittinggi</span>
-                        <h3 id="modalTitle" class="text-xl font-extrabold text-slate-900 leading-tight">Judul Menu</h3>
-                    </div>
-                </div>
-                <button onclick="closeModal()" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
+            <!-- Right side FGD Bukittinggi Exact Image & Mask -->
+            <div class="absolute inset-y-0 right-0 w-full sm:w-1/2 lg:w-[46%] xl:w-2/5 overflow-hidden pointer-events-none">
+                <img src="{{ asset('images/fgd-bukittinggi-exact.png') }}" alt="FGD Bukittinggi dalam Angka" class="w-full h-full object-cover object-center">
+                <!-- Gradasi halus hanya di pinggir kiri foto agar foto tetap tajam & jelas -->
+                <div class="absolute inset-y-0 left-0 w-14 sm:w-20 bg-gradient-to-r from-white to-transparent"></div>
             </div>
 
-            <!-- Modal Body -->
-            <div class="mt-5 space-y-4">
-                <p id="modalDesc" class="text-sm text-slate-600 leading-relaxed">
-                    Deskripsi modul akan muncul di sini.
+            <!-- Left side Orange Curve Accent Waves -->
+            <div class="absolute inset-y-0 left-0 w-1/2 pointer-events-none opacity-85">
+                <svg class="w-full h-full text-orange-400/20" viewBox="0 0 400 400" fill="none" preserveAspectRatio="none">
+                    <path d="M-50,150 C100,80 150,280 350,200" stroke="currentColor" stroke-width="2.5" />
+                    <path d="M-50,180 C120,110 180,310 380,230" stroke="currentColor" stroke-width="2" />
+                    <path d="M-50,210 C140,140 210,340 410,260" stroke="currentColor" stroke-width="1.5" />
+                </svg>
+            </div>
+
+            <!-- Content Area (Left aligned) -->
+            <div class="relative z-10 max-w-xl lg:max-w-2xl px-6 sm:px-10 lg:px-14 py-8">
+                
+                <!-- Greeting (Warm friendly orange accent) -->
+                <p class="text-xs sm:text-sm font-bold text-[#ea580c] tracking-wide mb-2.5">
+                    Selamat Datang, <span class="text-[#f95a00] font-extrabold">{{ !$isAdmin ? $dinasName : ($currentUser['displayName'] ?? 'Administrator BPS') }}</span>
                 </p>
 
-                <!-- Status Card Example -->
-                <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200/80 space-y-2">
-                    <div class="flex items-center justify-between text-xs">
-                        <span class="text-slate-500 font-medium">Periode Publikasi:</span>
-                        <span class="font-bold text-slate-800">Bukittinggi Dalam Angka {{ date('Y') }}</span>
+                <!-- Main Title: SiAngka Digital Application Style -->
+                <div class="space-y-1 mb-2">
+                    <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-800 tracking-tight leading-none flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                        <span class="text-slate-900 font-bold">SiAngka</span>
+                        <span class="text-xl sm:text-2xl lg:text-3xl font-bold text-[#f95a00] font-sans tracking-tight">Kota Bukittinggi</span>
+                    </h1>
+                </div>
+
+                <!-- Formal Subtitle -->
+                <p class="text-sm sm:text-base lg:text-lg font-bold text-slate-700 mt-2 tracking-normal leading-snug">
+                    Sistem Informasi Data Daerah dalam Angka Bukittinggi
+                </p>
+
+                <!-- Concise Description -->
+                <p class="text-xs sm:text-sm text-slate-700 font-medium mt-2.5 leading-relaxed max-w-md lg:max-w-lg">
+                    Satu sistem informasi untuk pengelolaan, pemantauan, dan penyajian data statistik sektor pembangunan Kota Bukittinggi secara terintegrasi.
+                </p>
+
+                <!-- CTA Button -->
+                <div class="mt-6 sm:mt-7 flex items-center gap-3">
+                    <a href="#monitoring-section" 
+                       class="btn-orange-glow inline-flex items-center gap-2.5 bg-[#f95a00] hover:bg-[#ea580c] text-white font-bold text-sm px-6 py-3 rounded-xl shadow-lg shadow-orange-500/30 transition-all transform hover:-translate-y-0.5 no-underline">
+                        <span>Mulai Monitoring</span>
+                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- 3. FLOATING STATISTICS / METRICS BAR                     -->
+        <!-- Khusus tampil untuk Administrator BPS, disembunyikan untuk Akun User / Dinas -->
+        <!-- ======================================================== -->
+        @if($isAdmin)
+        <div class="relative z-20 -mt-10 sm:-mt-12 max-w-4xl mx-auto px-2 sm:px-4">
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-xl shadow-slate-200/70 p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-2 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
+                
+                <!-- Stat 1: 20 OPD -->
+                <div class="flex items-center gap-3.5 px-2 sm:px-4 py-2">
+                    <div class="w-12 h-12 rounded-full bg-orange-100/70 text-[#f95a00] flex items-center justify-center shrink-0 text-xl">
+                        <i class="fa-solid fa-building"></i>
                     </div>
-                    <div class="flex items-center justify-between text-xs">
-                        <span class="text-slate-500 font-medium">Status Pengumpulan:</span>
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800">
-                            Sedang Berlangsung
-                        </span>
-                    </div>
-                    <div class="w-full bg-slate-200 rounded-full h-2 mt-2">
-                        <div class="bg-[#f95a00] h-2 rounded-full" style="width: 68%"></div>
-                    </div>
-                    <div class="flex justify-between text-[11px] text-slate-400 font-medium pt-1">
-                        <span>Progres Input</span>
-                        <span>68% Selesai</span>
+                    <div>
+                        <div class="text-2xl sm:text-3xl font-black text-slate-900 leading-none">{{ $totalOpd }}</div>
+                        <div class="text-[11px] font-bold text-slate-600 uppercase tracking-wide mt-1">OPD</div>
                     </div>
                 </div>
 
-                <!-- Quick Action Buttons inside Modal -->
-                <div class="grid grid-cols-2 gap-3 pt-2">
-                    <button onclick="alert('Membuka formulir data...')" class="w-full py-2.5 px-4 bg-[#f95a00] hover:bg-[#e04e00] text-white font-bold rounded-xl text-xs sm:text-sm shadow-md transition-all flex items-center justify-center space-x-2">
-                        <i class="fa-solid fa-arrow-right-to-bracket"></i>
-                        <span>Buka Modul</span>
-                    </button>
-                    <button onclick="alert('Mendownload template data excel...')" class="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs sm:text-sm transition-all flex items-center justify-center space-x-2">
-                        <i class="fa-solid fa-file-excel text-emerald-600"></i>
-                        <span>Unduh Format</span>
-                    </button>
+                <!-- Stat 2: 37 INSTANSI VERTIKAL -->
+                <div class="flex items-center gap-3.5 px-2 sm:px-4 py-2 pt-3 sm:pt-2">
+                    <div class="w-12 h-12 rounded-full bg-orange-100/70 text-[#f95a00] flex items-center justify-center shrink-0 text-xl">
+                        <i class="fa-solid fa-landmark"></i>
+                    </div>
+                    <div>
+                        <div class="text-2xl sm:text-3xl font-black text-slate-900 leading-none">{{ $totalInstansi }}</div>
+                        <div class="text-[11px] font-bold text-slate-600 uppercase tracking-wide mt-1">INSTANSI VERTIKAL</div>
+                    </div>
+                </div>
+
+                <!-- Stat 3: DATA INDIKATOR (Riil dari Database) -->
+                <div class="flex items-center gap-3.5 px-2 sm:px-4 py-2 pt-3 sm:pt-2">
+                    <div class="w-12 h-12 rounded-full bg-orange-100/70 text-[#f95a00] flex items-center justify-center shrink-0 text-xl">
+                        <i class="fa-solid fa-database"></i>
+                    </div>
+                    <div>
+                        <div class="text-2xl sm:text-3xl font-black text-slate-900 leading-none">{{ $realDataCount }}</div>
+                        <div class="text-[11px] font-bold text-slate-600 uppercase tracking-wide mt-1">DATA INDIKATOR</div>
+                        <div class="text-[9.5px] font-semibold text-emerald-600">({{ $savedTableCount }} Tabel Terisi)</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        @endif
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 relative z-20 {{ $isAdmin ? 'mt-6' : '-mt-5 sm:-mt-8 lg:-mt-10' }}">
+            
+            <!-- LEFT CARD: AKSES DATA -->
+            <div id="akses-data-section" class="scroll-mt-24 transition-all duration-300 bg-white rounded-3xl border border-slate-200/70 p-5 sm:p-6 shadow-sm hover:shadow-md">
+                
+                <!-- Section Header -->
+                <div class="flex items-start gap-3.5 mb-4">
+                    <div class="w-9 h-9 rounded-xl bg-orange-100/70 text-[#f95a00] flex items-center justify-center shrink-0 text-base shadow-xs">
+                        <i class="fa-solid fa-database"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base sm:text-lg font-black text-slate-900 tracking-tight">Akses Data</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">Kelola dan lihat data statistik berdasarkan sumber data</p>
+                    </div>
+                </div>
+
+                <!-- 3 Sub-Cards Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    
+                    <!-- 1. Data OPD -->
+                    @if($isAdmin || in_array('isi-data-opd', $allowedPages))
+                        <a href="{{ route('isi-data-opd') }}" 
+                           class="group bg-gradient-to-br from-orange-50/70 to-orange-50/30 border border-orange-200/70 rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between hover:border-orange-300 hover:shadow-md transition-all no-underline"
+                           id="btn-isi-opd">
+                            <div>
+                                <div class="w-7 h-7 rounded-lg text-orange-500 flex items-center text-lg mb-2">
+                                    <i class="fa-solid fa-building"></i>
+                                </div>
+                                <h3 class="font-bold text-slate-900 text-xs sm:text-[13px] group-hover:text-orange-600 transition-colors leading-snug min-h-[2rem] flex items-center">
+                                    Data OPD
+                                </h3>
+                                <p class="text-[11px] text-slate-500 mt-1 leading-snug min-h-[1.75rem]">
+                                    Isi dan kelola data OPD
+                                </p>
+                            </div>
+                            <div class="flex justify-end mt-2 pt-1">
+                                <span class="w-6 h-6 rounded-full border border-orange-300 text-orange-500 flex items-center justify-center text-[10px] group-hover:bg-orange-500 group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-arrow-right"></i>
+                                </span>
+                            </div>
+                        </a>
+                    @else
+                        <button type="button" 
+                                onclick="alert('Akses Dibatasi: Akun {{ $dinasName }} tidak memiliki hak akses untuk halaman Isi Data OPD. Silakan hubungi Administrator BPS.');"
+                                class="bg-slate-50/80 border border-slate-200 rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between opacity-50 cursor-not-allowed text-left">
+                            <div>
+                                <div class="w-7 h-7 rounded-lg text-slate-400 flex items-center text-lg mb-2">
+                                    <i class="fa-solid fa-building"></i>
+                                </div>
+                                <h3 class="font-bold text-slate-700 text-xs sm:text-[13px] leading-snug min-h-[2rem] flex items-center">
+                                    Data OPD
+                                </h3>
+                                <p class="text-[11px] text-slate-400 mt-1 leading-snug min-h-[1.75rem]">
+                                    Akses belum dibuka
+                                </p>
+                            </div>
+                            <div class="flex justify-end mt-2 pt-1 text-slate-400">
+                                <i class="fa-solid fa-lock text-xs"></i>
+                            </div>
+                        </button>
+                    @endif
+
+                    <!-- 2. Data Instansi Vertikal dan Lainnya -->
+                    @if($isAdmin || in_array('isi-data-instansi', $allowedPages))
+                        <a href="{{ route('isi-data-instansi') }}" 
+                           class="group bg-gradient-to-br from-sky-50/60 to-blue-50/30 border border-sky-200/70 rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between hover:border-sky-300 hover:shadow-md transition-all no-underline"
+                           id="btn-isi-vertikal">
+                            <div>
+                                <div class="w-7 h-7 rounded-lg text-sky-600 flex items-center text-lg mb-2">
+                                    <i class="fa-solid fa-landmark"></i>
+                                </div>
+                                <h3 class="font-bold text-slate-900 text-xs sm:text-[13px] group-hover:text-sky-600 transition-colors leading-snug min-h-[2rem] flex items-center">
+                                    Instansi Vertikal & Lainnya
+                                </h3>
+                                <p class="text-[11px] text-slate-500 mt-1 leading-snug min-h-[1.75rem]">
+                                    Isi dan kelola data instansi
+                                </p>
+                            </div>
+                            <div class="flex justify-end mt-2 pt-1">
+                                <span class="w-6 h-6 rounded-full border border-sky-300 text-sky-600 flex items-center justify-center text-[10px] group-hover:bg-sky-600 group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-arrow-right"></i>
+                                </span>
+                            </div>
+                        </a>
+                    @else
+                        <button type="button" 
+                                onclick="alert('Akses Dibatasi: Akun {{ $dinasName }} tidak memiliki hak akses untuk halaman Isi Data Instansi Vertikal.');"
+                                class="bg-slate-50/80 border border-slate-200 rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between opacity-50 cursor-not-allowed text-left">
+                            <div>
+                                <div class="w-7 h-7 rounded-lg text-slate-400 flex items-center text-lg mb-2">
+                                    <i class="fa-solid fa-landmark"></i>
+                                </div>
+                                <h3 class="font-bold text-slate-700 text-xs sm:text-[13px] leading-snug min-h-[2rem] flex items-center">
+                                    Instansi Vertikal & Lainnya
+                                </h3>
+                                <p class="text-[11px] text-slate-400 mt-1 leading-snug min-h-[1.75rem]">
+                                    Akses belum dibuka
+                                </p>
+                            </div>
+                            <div class="flex justify-end mt-2 pt-1 text-slate-400">
+                                <i class="fa-solid fa-lock text-xs"></i>
+                            </div>
+                        </button>
+                    @endif
+
+                    <!-- 3. Data BPS -->
+                    @if($isAdmin || in_array('data-bps', $allowedPages))
+                        <a href="{{ route('data-bps') }}" 
+                           class="group bg-gradient-to-br from-emerald-50/60 to-teal-50/30 border border-emerald-200/70 rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between hover:border-emerald-300 hover:shadow-md transition-all no-underline"
+                           id="btn-data-bps">
+                            <div>
+                                <div class="w-7 h-7 rounded-lg text-emerald-600 flex items-center text-lg mb-2">
+                                    <i class="fa-solid fa-chart-simple"></i>
+                                </div>
+                                <h3 class="font-bold text-slate-900 text-xs sm:text-[13px] group-hover:text-emerald-600 transition-colors leading-snug min-h-[2rem] flex items-center">
+                                    Data BPS
+                                </h3>
+                                <p class="text-[11px] text-slate-500 mt-1 leading-snug min-h-[1.75rem]">
+                                    Lihat data BPS Kota Bukittinggi
+                                </p>
+                            </div>
+                            <div class="flex justify-end mt-2 pt-1">
+                                <span class="w-6 h-6 rounded-full border border-emerald-300 text-emerald-600 flex items-center justify-center text-[10px] group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-arrow-right"></i>
+                                </span>
+                            </div>
+                        </a>
+                    @else
+                        <button type="button" 
+                                onclick="alert('Akses Dibatasi: Akun {{ $dinasName }} tidak memiliki hak akses untuk halaman Data BPS.');"
+                                class="bg-slate-50/80 border border-slate-200 rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between opacity-50 cursor-not-allowed text-left">
+                            <div>
+                                <div class="w-7 h-7 rounded-lg text-slate-400 flex items-center text-lg mb-2">
+                                    <i class="fa-solid fa-chart-simple"></i>
+                                </div>
+                                <h3 class="font-bold text-slate-700 text-xs sm:text-[13px] leading-snug min-h-[2rem] flex items-center">
+                                    Data BPS
+                                </h3>
+                                <p class="text-[11px] text-slate-400 mt-1 leading-snug min-h-[1.75rem]">
+                                    Akses belum dibuka
+                                </p>
+                            </div>
+                            <div class="flex justify-end mt-2 pt-1 text-slate-400">
+                                <i class="fa-solid fa-lock text-xs"></i>
+                            </div>
+                        </button>
+                    @endif
+
                 </div>
             </div>
 
-            <!-- Modal Footer -->
-            <div class="mt-6 pt-4 border-t border-slate-100 flex justify-end">
-                <button onclick="closeModal()" class="px-5 py-2 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors">
-                    Tutup
-                </button>
+            <!-- RIGHT CARD: MONITORING -->
+            <div id="monitoring-section" class="scroll-mt-24 transition-all duration-300 bg-white rounded-3xl border border-slate-200/70 p-5 sm:p-6 shadow-sm hover:shadow-md">
+                
+                <!-- Section Header -->
+                <div class="flex items-start gap-3.5 mb-4">
+                    <div class="w-9 h-9 rounded-xl bg-orange-100/70 text-[#f95a00] flex items-center justify-center shrink-0 text-base shadow-xs">
+                        <i class="fa-solid fa-arrow-trend-up"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base sm:text-lg font-black text-slate-900 tracking-tight">Monitoring</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">Pantau perkembangan pengisian data secara real-time</p>
+                    </div>
+                </div>
+
+                <!-- 3 Sub-Cards Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    
+                    <!-- 1. Monitoring OPD -->
+                    @if($isAdmin || in_array('monitoring-opd', $allowedPages))
+                        <a href="{{ route('monitoring-opd') }}" 
+                           class="group bg-gradient-to-br from-orange-50/70 to-orange-50/30 border border-orange-200/70 rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between hover:border-orange-300 hover:shadow-md transition-all no-underline"
+                           id="btn-mon-opd">
+                            <div>
+                                <div class="w-7 h-7 rounded-lg text-orange-500 flex items-center text-lg mb-2">
+                                    <i class="fa-solid fa-file-invoice"></i>
+                                </div>
+                                <h3 class="font-bold text-slate-900 text-xs sm:text-[13px] group-hover:text-orange-600 transition-colors leading-snug min-h-[2rem] flex items-center">
+                                    Monitoring OPD
+                                </h3>
+                                <p class="text-[11px] text-slate-500 mt-1 leading-snug min-h-[1.75rem]">
+                                    Lihat progres pengisian data OPD
+                                </p>
+                            </div>
+                            <div class="flex justify-end mt-2 pt-1">
+                                <span class="w-6 h-6 rounded-full border border-orange-300 text-orange-500 flex items-center justify-center text-[10px] group-hover:bg-orange-500 group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-arrow-right"></i>
+                                </span>
+                            </div>
+                        </a>
+                    @else
+                        <button type="button" 
+                                onclick="alert('Akses Dibatasi: Akun {{ $dinasName }} tidak memiliki hak akses untuk halaman Monitoring OPD.');"
+                                class="bg-slate-50/80 border border-slate-200 rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between opacity-50 cursor-not-allowed text-left">
+                            <div>
+                                <div class="w-7 h-7 rounded-lg text-slate-400 flex items-center text-lg mb-2">
+                                    <i class="fa-solid fa-file-invoice"></i>
+                                </div>
+                                <h3 class="font-bold text-slate-700 text-xs sm:text-[13px] leading-snug min-h-[2rem] flex items-center">
+                                    Monitoring OPD
+                                </h3>
+                                <p class="text-[11px] text-slate-400 mt-1 leading-snug min-h-[1.75rem]">
+                                    Akses belum dibuka
+                                </p>
+                            </div>
+                            <div class="flex justify-end mt-2 pt-1 text-slate-400">
+                                <i class="fa-solid fa-lock text-xs"></i>
+                            </div>
+                        </button>
+                    @endif
+
+                    <!-- 2. Monitoring Instansi Vertikal -->
+                    @if($isAdmin || in_array('monitoring-instansi', $allowedPages))
+                        <a href="{{ route('monitoring-instansi') }}" 
+                           class="group bg-gradient-to-br from-sky-50/60 to-blue-50/30 border border-sky-200/70 rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between hover:border-sky-300 hover:shadow-md transition-all no-underline"
+                           id="btn-mon-vertikal">
+                            <div>
+                                <div class="w-7 h-7 rounded-lg text-sky-600 flex items-center text-lg mb-2">
+                                    <i class="fa-solid fa-file-contract"></i>
+                                </div>
+                                <h3 class="font-bold text-slate-900 text-xs sm:text-[13px] group-hover:text-sky-600 transition-colors leading-snug min-h-[2rem] flex items-center">
+                                    Monitoring Instansi
+                                </h3>
+                                <p class="text-[11px] text-slate-500 mt-1 leading-snug min-h-[1.75rem]">
+                                    Lihat progres pengisian data instansi
+                                </p>
+                            </div>
+                            <div class="flex justify-end mt-2 pt-1">
+                                <span class="w-6 h-6 rounded-full border border-sky-300 text-sky-600 flex items-center justify-center text-[10px] group-hover:bg-sky-600 group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-arrow-right"></i>
+                                </span>
+                            </div>
+                        </a>
+                    @else
+                        <button type="button" 
+                                onclick="alert('Akses Dibatasi: Akun {{ $dinasName }} tidak memiliki hak akses untuk halaman Monitoring Instansi Vertikal.');"
+                                class="bg-slate-50/80 border border-slate-200 rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between opacity-50 cursor-not-allowed text-left">
+                            <div>
+                                <div class="w-7 h-7 rounded-lg text-slate-400 flex items-center text-lg mb-2">
+                                    <i class="fa-solid fa-file-contract"></i>
+                                </div>
+                                <h3 class="font-bold text-slate-700 text-xs sm:text-[13px] leading-snug min-h-[2rem] flex items-center">
+                                    Monitoring Instansi
+                                </h3>
+                                <p class="text-[11px] text-slate-400 mt-1 leading-snug min-h-[1.75rem]">
+                                    Akses belum dibuka
+                                </p>
+                            </div>
+                            <div class="flex justify-end mt-2 pt-1 text-slate-400">
+                                <i class="fa-solid fa-lock text-xs"></i>
+                            </div>
+                        </button>
+                    @endif
+
+                    <!-- 3. Monitoring BPS -->
+                    @if($isAdmin || in_array('data-bps', $allowedPages))
+                        <a href="{{ route('data-bps') }}" 
+                           class="group bg-gradient-to-br from-emerald-50/60 to-teal-50/30 border border-emerald-200/70 rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between hover:border-emerald-300 hover:shadow-md transition-all no-underline">
+                            <div>
+                                <div class="w-7 h-7 rounded-lg text-emerald-600 flex items-center text-lg mb-2">
+                                    <i class="fa-solid fa-chart-column"></i>
+                                </div>
+                                <h3 class="font-bold text-slate-900 text-xs sm:text-[13px] group-hover:text-emerald-600 transition-colors leading-snug min-h-[2rem] flex items-center">
+                                    Monitoring BPS
+                                </h3>
+                                <p class="text-[11px] text-slate-500 mt-1 leading-snug min-h-[1.75rem]">
+                                    Lihat progres data BPS
+                                </p>
+                            </div>
+                            <div class="flex justify-end mt-2 pt-1">
+                                <span class="w-6 h-6 rounded-full border border-emerald-300 text-emerald-600 flex items-center justify-center text-[10px] group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-arrow-right"></i>
+                                </span>
+                            </div>
+                        </a>
+                    @else
+                        <button type="button" 
+                                onclick="alert('Akses Dibatasi: Akun {{ $dinasName }} tidak memiliki hak akses untuk halaman Data BPS.');"
+                                class="bg-slate-50/80 border border-slate-200 rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between opacity-50 cursor-not-allowed text-left">
+                            <div>
+                                <div class="w-7 h-7 rounded-lg text-slate-400 flex items-center text-lg mb-2">
+                                    <i class="fa-solid fa-chart-column"></i>
+                                </div>
+                                <h3 class="font-bold text-slate-700 text-xs sm:text-[13px] leading-snug min-h-[2rem] flex items-center">
+                                    Monitoring BPS
+                                </h3>
+                                <p class="text-[11px] text-slate-400 mt-1 leading-snug min-h-[1.75rem]">
+                                    Akses belum dibuka
+                                </p>
+                            </div>
+                            <div class="flex justify-end mt-2 pt-1 text-slate-400">
+                                <i class="fa-solid fa-lock text-xs"></i>
+                            </div>
+                        </button>
+                    @endif
+
+                </div>
             </div>
 
         </div>
+
+    </main>
+
+    <!-- ======================================================== -->
+    <!-- 5. BOTTOM MINANGKABAU SKYLINE SILHOUETTE & FOOTER        -->
+    <!-- ======================================================== -->
+    <footer class="w-full relative z-10 overflow-hidden bg-slate-50/70 backdrop-blur-xs border-t border-slate-200/60 pt-4 pb-3 mt-4">
+        
+        <!-- Minangkabau Skyline Watermark -->
+        <div class="w-full flex justify-center pointer-events-none opacity-30 mb-2 overflow-hidden">
+            <img src="{{ asset('images/minang-skyline.png') }}" alt="Minangkabau Skyline" class="h-10 sm:h-12 w-auto max-w-none object-contain">
+        </div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-500 font-medium">
+            <p>&copy; 2026 Badan Pusat Statistik Kota Bukittinggi. Sistem Informasi Data Daerah dalam Angka Bukittinggi (SiAngka).</p>
+        </div>
+    </footer>
+
+    <!-- ======================================================== -->
+    <!-- 6. ABOUT MODAL                                           -->
+    <!-- ======================================================== -->
+    <div id="aboutModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-100 relative">
+            <button onclick="closeAboutModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-700 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <div class="flex items-center gap-3 mb-4">
+                <img src="{{ asset('images/bps-symbol.png') }}" alt="Logo BPS" class="h-8 w-auto">
+                <div>
+                    <h3 class="font-bold text-slate-800 text-lg">Tentang SiAngka</h3>
+                    <p class="text-xs text-slate-600 font-semibold">Badan Pusat Statistik Kota Bukittinggi</p>
+                </div>
+            </div>
+            <p class="text-slate-600 text-xs sm:text-sm leading-relaxed">
+                <strong>SiAngka (Sistem Informasi Data Daerah dalam Angka Bukittinggi)</strong> adalah platform terintegrasi yang dikembangkan oleh BPS Kota Bukittinggi untuk memudahkan Organisasi Perangkat Daerah (OPD) dan Instansi Vertikal dalam mengunggah, mengelola, serta memantau progres kelengkapan data sektoral secara real-time.
+            </p>
+            <div class="mt-6 flex justify-end">
+                <button onclick="closeAboutModal()" class="px-5 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs">
+                    Tutup
+                </button>
+            </div>
+        </div>
     </div>
 
-    <!-- JAVASCRIPT FOR INTERACTION -->
+    <!-- Script to handle modals & tab selection -->
     <script>
-        const iconMap = {
-            'isi-opd': 'fa-building-columns',
-            'mon-opd': 'fa-chart-line',
-            'isi-vertikal': 'fa-landmark-flag',
-            'mon-vertikal': 'fa-clipboard-check',
-            'data-bps': 'fa-database',
-            'mon-bps': 'fa-chart-pie'
-        };
 
-        function openModal(type, title, desc) {
-            const modal = document.getElementById('simondaModal');
-            const card = document.getElementById('modalCard');
-            const modalTitle = document.getElementById('modalTitle');
-            const modalDesc = document.getElementById('modalDesc');
-            const modalIcon = document.getElementById('modalIcon');
-
-            modalTitle.innerText = title;
-            modalDesc.innerText = desc;
-            
-            // Set Icon
-            modalIcon.className = `fa-solid ${iconMap[type] || 'fa-folder-open'}`;
-
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            
-            setTimeout(() => {
-                card.classList.remove('scale-95', 'opacity-0');
-                card.classList.add('scale-100', 'opacity-100');
-            }, 10);
+        function openAboutModal(e) {
+            if (e) e.preventDefault();
+            const modal = document.getElementById('aboutModal');
+            if (modal) modal.classList.remove('hidden');
         }
 
-        function closeModal() {
-            const modal = document.getElementById('simondaModal');
-            const card = document.getElementById('modalCard');
-
-            card.classList.remove('scale-100', 'opacity-100');
-            card.classList.add('scale-95', 'opacity-0');
-
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-            }, 250);
+        function closeAboutModal() {
+            const modal = document.getElementById('aboutModal');
+            if (modal) modal.classList.add('hidden');
         }
 
-        // Close on ESC or overlay click
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeModal();
-        });
+        // Active Tab Selector: switches orange underline & highlights target block
+        function selectNavTab(tabName, e) {
+            if (e) e.preventDefault();
 
-        document.getElementById('simondaModal').addEventListener('click', (e) => {
-            if (e.target.id === 'simondaModal') closeModal();
-        });
+            // Set active state on clicked nav item
+            const tabs = document.querySelectorAll('.nav-tab');
+            tabs.forEach(tab => {
+                if (tab.getAttribute('data-nav') === tabName) {
+                    tab.classList.remove('text-slate-600', 'border-transparent');
+                    tab.classList.add('text-[#f95a00]', 'border-[#f95a00]');
+                } else {
+                    tab.classList.remove('text-[#f95a00]', 'border-[#f95a00]');
+                    tab.classList.add('text-slate-600', 'border-transparent');
+                }
+            });
+
+            // Smoothly navigate and highlight target block
+            if (tabName === 'beranda') {
+                const el = document.getElementById('beranda-section');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else if (tabName === 'data') {
+                const el = document.getElementById('akses-data-section');
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Highlight block briefly
+                    el.classList.add('ring-4', 'ring-[#f95a00]/40', 'shadow-xl');
+                    setTimeout(() => {
+                        el.classList.remove('ring-4', 'ring-[#f95a00]/40', 'shadow-xl');
+                    }, 1200);
+                }
+            } else if (tabName === 'monitoring') {
+                const el = document.getElementById('monitoring-section');
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Highlight block briefly
+                    el.classList.add('ring-4', 'ring-[#f95a00]/40', 'shadow-xl');
+                    setTimeout(() => {
+                        el.classList.remove('ring-4', 'ring-[#f95a00]/40', 'shadow-xl');
+                    }, 1200);
+                }
+            } else if (tabName === 'tentang') {
+                openAboutModal();
+            }
+        }
+
+        // Automatic scroll spy: update active nav tab as user scrolls
+        window.addEventListener('scroll', function() {
+            const scrollPos = window.scrollY + 280;
+            const dataSec = document.getElementById('akses-data-section');
+            const monSec = document.getElementById('monitoring-section');
+
+            let current = 'beranda';
+            if (monSec && scrollPos >= monSec.offsetTop) {
+                current = 'monitoring';
+            } else if (dataSec && scrollPos >= dataSec.offsetTop) {
+                current = 'data';
+            }
+
+            const tabs = document.querySelectorAll('.nav-tab');
+            tabs.forEach(tab => {
+                if (tab.getAttribute('data-nav') === current) {
+                    tab.classList.remove('text-slate-600', 'border-transparent');
+                    tab.classList.add('text-[#f95a00]', 'border-[#f95a00]');
+                } else if (tab.getAttribute('data-nav') !== 'tentang') {
+                    tab.classList.remove('text-[#f95a00]', 'border-[#f95a00]');
+                    tab.classList.add('text-slate-600', 'border-transparent');
+                }
+            });
+        }, { passive: true });
     </script>
 </body>
 </html>

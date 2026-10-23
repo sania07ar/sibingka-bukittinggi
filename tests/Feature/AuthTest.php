@@ -16,8 +16,8 @@ class AuthTest extends TestCase
     {
         $response = $this->get('/login');
         $response->assertStatus(200);
-        $response->assertSee('Login Admin BPS');
-        $response->assertSee('SiMonDa Bukittinggi');
+        $response->assertSee('SiAngka');
+        $response->assertSee('MASUK KE AKUN ANDA');
     }
 
     public function test_admin_bps_can_login(): void
@@ -27,7 +27,7 @@ class AuthTest extends TestCase
             'password' => 'bpsbukittinggi',
         ]);
 
-        $response->assertRedirect('/');
+        $response->assertRedirect('/portal');
         $this->assertTrue(session()->has('user'));
         $this->assertEquals('admin', session('user.role'));
         $this->assertEquals('Admin BPS Bukittinggi', session('user.displayName'));

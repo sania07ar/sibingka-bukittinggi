@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <!-- Background Circle fills edge-to-edge -->
+  <circle cx="100" cy="100" r="100" fill="#F1F5F9"/>
+  <circle cx="100" cy="100" r="98.5" fill="#F1F5F9" stroke="#E2E8F0" stroke-width="3"/>
+  
+  <!-- User Silhouette -->
+  <!-- Head -->
+  <circle cx="100" cy="78" r="38" fill="#1E293B"/>
+  
+  <!-- Body / Shoulders -->
+  <path d="M 40 182 C 40 142, 68 126, 100 126 C 132 126, 160 142, 160 182 C 160 196, 140 200, 100 200 C 60 200, 40 196, 40 182 Z" fill="#1E293B"/>
+</svg>

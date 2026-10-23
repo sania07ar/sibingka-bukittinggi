@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Admin BPS - SiMonDa Bukittinggi dalam Angka | BPS Kota Bukittinggi</title>
-    <meta name="description" content="Portal Masuk Khusus Administrator SiMonDa Bukittinggi dalam Angka - Badan Pusat Statistik Kota Bukittinggi">
+    <title>Login BPS - SiAngka Kota Bukittinggi | BPS Kota Bukittinggi</title>
+    <meta name="description" content="Portal Masuk Khusus Administrator SiAngka Kota Bukittinggi - Sistem Informasi Data Daerah dalam Angka Bukittinggi - Badan Pusat Statistik Kota Bukittinggi">
     
     <!-- Favicon Logo BPS -->
     <link rel="icon" type="image/png" href="{{ asset('images/bps-symbol.png') }}">
@@ -122,34 +122,7 @@
     </div>
 
     <!-- HEADER / LOGO BAR -->
-    <header class="w-full bg-[#f0f2f5] border-b border-slate-200/60 py-2.5 sm:py-3 px-4 sm:px-8 lg:px-12 relative z-20">
-        <div class="max-w-6xl mx-auto flex flex-row items-center justify-between gap-4 md:gap-6 flex-wrap lg:flex-nowrap">
-            
-            <!-- Left: BPS Kota Bukittinggi Logo -->
-            <div class="flex items-center space-x-2.5 transition-transform hover:scale-[1.02]">
-                <img src="{{ asset('images/bps-symbol.png') }}" alt="Logo BPS" class="h-8 sm:h-9 md:h-10 w-auto object-contain">
-                <div class="flex flex-col justify-center leading-tight">
-                    <span class="text-[11px] sm:text-xs md:text-sm font-black italic text-slate-900 tracking-tight uppercase font-sans">
-                        BADAN PUSAT STATISTIK
-                    </span>
-                    <span class="text-[10px] sm:text-[11px] md:text-xs font-black italic text-slate-800 tracking-tight uppercase font-sans">
-                        KOTA BUKITTINGGI
-                    </span>
-                </div>
-            </div>
-
-            <!-- Center: Sensus Ekonomi 2026 Logo -->
-            <div class="flex items-center justify-center transition-transform hover:scale-[1.02]">
-                <img src="{{ asset('images/sensus-ekonomi-clean.png') }}" alt="Sensus Ekonomi 2026" class="h-8 sm:h-9 md:h-10 w-auto object-contain">
-            </div>
-
-            <!-- Right: BerAKHLAK Logo -->
-            <div class="flex items-center justify-end transition-transform hover:scale-[1.02]">
-                <img src="{{ asset('images/berakhlak-clean.png') }}" alt="BerAKHLAK" class="h-8 sm:h-9 md:h-10 w-auto object-contain">
-            </div>
-
-        </div>
-    </header>
+    @include('partials.navbar')
 
     <!-- MAIN LOGIN CONTAINER (Compact 2-Column Layout) -->
     <main class="relative z-10 flex-1 flex items-center justify-center px-4 sm:px-8 py-2">
@@ -163,27 +136,27 @@
                     <img src="{{ asset('images/bps-symbol.png') }}" alt="Logo BPS" class="w-20 sm:w-24 h-auto object-contain drop-shadow-xs">
                 </div>
 
-                <!-- Brand Name: SiMonDa -->
-                <div class="space-y-0.5">
-                    <h1 class="text-3xl sm:text-[34px] font-black tracking-tight leading-none text-slate-900">
-                        SiMon<span class="text-[#f95a00]">Da</span>
+                <!-- Brand Name: SiAngka Digital Application Style -->
+                <div class="space-y-1.5 flex flex-col items-center">
+                    <h1 class="text-3xl sm:text-4xl font-bold tracking-tight leading-none text-slate-800">
+                        SiAngka
                     </h1>
-                    <p class="text-[10.5px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider">
-                        Sistem Monitoring Data Bukittinggi
+                    <p class="text-xs font-bold text-[#f95a00] uppercase tracking-wider">
+                        Kota Bukittinggi
+                    </p>
+                    <p class="text-xs text-slate-700 font-medium leading-relaxed max-w-[240px]">
+                        Sistem Informasi Data Daerah dalam Angka
                     </p>
                 </div>
 
             </div>
 
-            <!-- RIGHT COLUMN: LOGIN FORM (Compact Card) -->
+            <!-- RIGHT COLUMN: LOGIN FORM (Compact Card with Soft Ambient Shadow) -->
             <div class="w-full max-w-[350px] mx-auto">
-                <div class="bg-white/95 backdrop-blur-md rounded-2xl p-4 sm:p-5 shadow-lg shadow-slate-900/5 border border-slate-200/90 relative overflow-hidden transition-all">
+                <div class="bg-white/95 backdrop-blur-md rounded-2xl p-5 sm:p-6 shadow-[0_12px_36px_rgba(15,23,42,0.06)] border border-slate-200/60 relative overflow-hidden transition-all">
                     
-                    <!-- Top Accent Multitone Gradient Bar -->
-                    <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-400 via-[#f95a00] to-amber-500"></div>
-
                     <!-- Title Header -->
-                    <h2 class="text-base sm:text-lg font-black text-slate-900 tracking-wide uppercase text-center mb-3.5 pt-0.5">
+                    <h2 class="text-base sm:text-lg font-bold text-slate-800 tracking-wide uppercase text-center mb-4 pt-0.5">
                         MASUK KE AKUN ANDA
                     </h2>
 
@@ -217,13 +190,13 @@
                     @endif
 
                     <!-- Form Login Admin -->
-                    <form action="{{ route('login.post') }}" method="POST" id="loginForm" class="space-y-3">
+                    <form action="{{ route('login.post') }}" method="POST" id="loginForm" autocomplete="on" class="space-y-3">
                         @csrf
                         
                         <!-- Email / Username Input -->
                         <div>
                             <label for="usernameInput" class="block text-[10.5px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                                Email / Username Admin
+                                Email / Username
                             </label>
                             <div class="relative flex items-center">
                                 <div class="absolute left-3 flex items-center pointer-events-none text-slate-400">
@@ -232,6 +205,7 @@
                                 <input type="text" 
                                        id="usernameInput" 
                                        name="username" 
+                                       autocomplete="username"
                                        required
                                        value="{{ old('username') }}"
                                        placeholder="Masukkan email atau username"
@@ -256,6 +230,7 @@
                                 <input type="password" 
                                        id="passwordInput" 
                                        name="password" 
+                                       autocomplete="current-password"
                                        required
                                        placeholder="Masukkan kata sandi"
                                        class="input-simonda w-full pl-8 pr-8 py-2 rounded-lg text-xs font-semibold placeholder:font-normal placeholder:text-slate-400">
@@ -310,7 +285,7 @@
 
     <!-- FOOTER -->
     <footer class="relative z-10 w-full py-2 px-4 text-center text-[10px] text-slate-500 border-t border-slate-200/70 bg-white/60">
-        <p>© <span id="currentYear"></span> <strong>Badan Pusat Statistik Kota Bukittinggi</strong>. SiMonDa Bukittinggi dalam Angka.</p>
+        <p>© <span id="currentYear"></span> <strong>Badan Pusat Statistik Kota Bukittinggi</strong>. SiAngka Kota Bukittinggi - Sistem Informasi Data Daerah dalam Angka.</p>
     </footer>
 
     <!-- MODAL FORGOT PASSWORD / HUBUNGI ADMIN -->
@@ -389,10 +364,13 @@
             const btnText = document.getElementById('btnText');
             const btnSpinner = document.getElementById('btnSpinner');
 
-            btnSubmit.disabled = true;
             btnText.classList.add('hidden');
             btnSpinner.classList.remove('hidden');
             btnSpinner.classList.add('flex');
+            
+            // Gunakan pointer-events agar tombol tidak bisa diklik dua kali
+            // tanpa men-disable elemen submit di DOM (agar Edge Password Manager tetap menangkap event submit)
+            btnSubmit.style.pointerEvents = 'none';
         });
     </script>
 </body>

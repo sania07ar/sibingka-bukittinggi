@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoring OPD - SiMonDa Bukittinggi dalam Angka</title>
+    <title>Monitoring OPD - SiAngka Kota Bukittinggi</title>
     
     <!-- Favicon Logo BPS -->
     <link rel="icon" type="image/png" href="{{ asset('images/bps-symbol.png') }}">
@@ -82,43 +82,13 @@
     <div class="relative z-10 flex-1 flex flex-col justify-between">
         
         <!-- HEADER / LOGO BAR -->
-        <header class="w-full bg-[#f0f2f5] border-b border-slate-200/60 py-2 sm:py-2.5 px-4 sm:px-8 lg:px-12">
-            <div class="max-w-7xl mx-auto flex flex-row items-center justify-between gap-4 md:gap-6 flex-wrap lg:flex-nowrap">
-                
-                <!-- Left: BPS Kota Bukittinggi Logo -->
-                <a href="{{ route('home') }}" class="flex items-center space-x-2.5 transition-transform hover:scale-[1.02]">
-                    <img src="{{ asset('images/bps-symbol.png') }}" alt="Logo BPS" class="h-8 sm:h-9 md:h-10 w-auto object-contain">
-                    <div class="flex flex-col justify-center leading-tight">
-                        <span class="text-[11px] sm:text-xs md:text-sm font-black italic text-slate-900 tracking-tight uppercase font-sans">
-                            BADAN PUSAT STATISTIK
-                        </span>
-                        <span class="text-[10px] sm:text-[11px] md:text-xs font-black italic text-slate-800 tracking-tight uppercase font-sans">
-                            KOTA BUKITTINGGI
-                        </span>
-                    </div>
-                </a>
-
-                <!-- Center: Sensus Ekonomi 2026 Logo -->
-                <div class="flex items-center justify-center transition-transform hover:scale-[1.02]">
-                    <img src="{{ asset('images/sensus-ekonomi-clean.png') }}" alt="Sensus Ekonomi 2026" class="h-8 sm:h-9 md:h-10 w-auto object-contain">
-                </div>
-
-                <!-- Right: BerAKHLAK Logo -->
-                <div class="flex items-center justify-end transition-transform hover:scale-[1.02]">
-                    <img src="{{ asset('images/berakhlak-clean.png') }}" alt="BerAKHLAK" class="h-8 sm:h-9 md:h-10 w-auto object-contain">
-                </div>
-
-            </div>
-        </header>
+        @include('partials.navbar')
 
         <!-- MAIN MONITORING OPD CONTAINER -->
         <main class="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 flex flex-col justify-center w-full">
             
             <!-- Title Header -->
             <div class="text-center mb-6">
-                <span class="text-xs font-bold uppercase tracking-wider text-orange-600 bg-orange-100/80 px-3 py-1 rounded-full inline-block mb-2">
-                    SiMonDa Bukittinggi
-                </span>
                 <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
                     MONITORING DATA OPD
                 </h1>
@@ -250,7 +220,7 @@
 
                     <div class="h-3.5 w-px bg-slate-300"></div>
 
-                    <form action="{{ route('logout') }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin keluar dari SiMonDa Bukittinggi?');">
+                    <form action="{{ route('logout') }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin keluar dari SiAngka Kota Bukittinggi?');">
                         @csrf
                         <button type="submit" 
                                 title="Keluar dari sistem"
