@@ -38,31 +38,8 @@
             @endif
         </form>
 
-        <!-- Action Buttons: Batch Seeds & + Buat Akun Baru -->
+        <!-- Action Buttons: Reset & + Buat Akun Baru -->
         <div class="w-full xl:w-auto flex flex-wrap items-center justify-end gap-2 shrink-0">
-            
-            <!-- Batch Seed 20 OPD -->
-            <form action="{{ route('kelola-akun.dinas.batch-seed') }}" method="POST" onsubmit="return confirm('Apakah Anda ingin meng-generate akun default otomatis untuk seluruh 20 OPD Bukittinggi? Akun yang sudah ada tidak akan terhapus.');">
-                @csrf
-                <button type="submit" 
-                        class="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-bold text-orange-800 bg-orange-50 hover:bg-orange-100 border border-orange-200 transition-all shadow-xs"
-                        title="Buat akun default untuk seluruh 20 OPD sekaligus">
-                    <i class="fa-solid fa-building-columns text-[11px] text-[#f95a00]"></i>
-                    <span>Generate 20 OPD</span>
-                </button>
-            </form>
-
-            <!-- Batch Seed 37 Instansi Vertikal -->
-            <form action="{{ route('kelola-akun.instansi.batch-seed') }}" method="POST" onsubmit="return confirm('Apakah Anda ingin meng-generate akun default otomatis untuk seluruh 37 Instansi Vertikal & Perguruan Tinggi Bukittinggi? Akun yang sudah ada tidak akan terhapus.');">
-                @csrf
-                <button type="submit" 
-                        class="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-bold text-indigo-800 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition-all shadow-xs"
-                        title="Buat akun default untuk seluruh 37 Instansi Vertikal & Kampus sekaligus">
-                    <i class="fa-solid fa-landmark-flag text-[11px] text-indigo-600"></i>
-                    <span>Generate 37 Instansi Vertikal</span>
-                </button>
-            </form>
-
             <!-- Reset / Hapus Massal Akun -->
             <button type="button" 
                     onclick="openBulkDeleteModal()" 
@@ -94,7 +71,6 @@
                         <th class="py-3 px-4 w-12 text-center">No</th>
                         <th class="py-3 px-4 min-w-[240px]">Dinas / Instansi</th>
                         <th class="py-3 px-4 min-w-[170px]">Akun Login</th>
-                        <th class="py-3 px-4 min-w-[260px]">Hak Akses Halaman Terbuka</th>
                         <th class="py-3 px-4 text-center min-w-[150px]">Terakhir Login</th>
                         <th class="py-3 px-4 text-right min-w-[110px]">Aksi</th>
                     </tr>
@@ -196,26 +172,6 @@
                                 </div>
                             </td>
 
-                            <!-- Hak Akses Halaman (Badges) -->
-                            <td class="py-3.5 px-4">
-                                <div class="flex flex-wrap gap-1 max-w-sm">
-                                    @if(empty($userPages))
-                                        <span class="text-[10px] text-slate-400 italic">Belum ada izin halaman</span>
-                                    @else
-                                        @foreach($userPages as $pageKey)
-                                            @php
-                                                $pageInfo = $pagesList[$pageKey] ?? null;
-                                            @endphp
-                                            @if($pageInfo)
-                                                <span class="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                                                    <i class="fa-solid {{ $pageInfo['icon'] ?? 'fa-file-lines' }} text-[9px] text-[#f95a00]"></i>
-                                                    <span>{{ $pageInfo['name'] ?? $pageInfo['title'] ?? $pageKey }}</span>
-                                                </span>
-                                            @endif
-                                        @endforeach
-                                    @endif
-                                </div>
-                            </td>
 
                             <!-- Terakhir Login -->
                             <td class="py-3.5 px-4 text-center">
@@ -272,11 +228,11 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="py-12 text-center text-slate-400">
+                            <td colspan="5" class="py-12 text-center text-slate-400">
                                 <div class="flex flex-col items-center justify-center space-y-2">
                                     <i class="fa-solid fa-users-slash text-3xl text-slate-300"></i>
                                     <p class="font-bold text-sm">Tidak ada akun dinas/instansi yang ditemukan.</p>
-                                    <p class="text-xs text-slate-400">Klik tombol <strong>"Generate 20 OPD"</strong> atau <strong>"+ Buat Akun Baru"</strong> di atas untuk menambahkan akun.</p>
+                                    <p class="text-xs text-slate-400">Klik tombol <strong>"+ Buat Akun Baru"</strong> di atas untuk menambahkan akun.</p>
                                 </div>
                             </td>
                         </tr>

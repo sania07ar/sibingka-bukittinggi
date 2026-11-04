@@ -28,7 +28,7 @@
                         id="tab-btn-dinas" 
                         class="tab-btn active px-5 py-3.5 text-xs sm:text-sm font-black border-b-2 border-transparent transition-all flex items-center space-x-2">
                     <i class="fa-solid fa-users-gear text-sm"></i>
-                    <span>Kelola Akun Dinas, Instansi Vertikal & Hak Akses Halaman</span>
+                    <span>Kelola Akun Dinas & Instansi Vertikal</span>
                     <span class="px-2 py-0.5 rounded-full text-[10.5px] bg-orange-100 text-orange-700 font-bold ml-1">
                         {{ $dinasUsers->count() }}
                     </span>

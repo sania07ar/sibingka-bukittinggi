@@ -4,7 +4,7 @@
     <div class="ambient-sphere w-96 h-96 bg-blue-200/40 -bottom-16 -left-16"></div>
 </div>
 
-<!-- Background Sensus Ekonomi Ribbon Watermark -->
-<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden flex items-center justify-center opacity-20 select-none">
-    <img src="{{ asset('images/sensus-ribbon-watermark.png') }}" alt="Sensus Ekonomi Watermark" class="w-[900px] lg:w-[1200px] max-w-none transform -translate-x-16 object-contain">
+<!-- Background SiAngka Jam Gadang Watermark -->
+<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden flex items-center justify-center opacity-25 select-none">
+    <img src="{{ asset('images/siangka-watermark-jamgadang.jpg') }}" alt="Watermark SiAngka Jam Gadang" class="w-[950px] lg:w-[1250px] max-w-none transform -translate-x-12 sm:-translate-x-20 object-contain mix-blend-multiply">
 </div>

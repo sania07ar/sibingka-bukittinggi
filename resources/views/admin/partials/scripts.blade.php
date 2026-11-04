@@ -78,10 +78,16 @@
 
     // Toggle category filter helper
     function toggleCategoryFilter(mode, type) {
-        if (type === 'opd') {
-            setPageCheckboxes(mode, ['isi-data-opd', 'monitoring-opd', 'tabel-opd']);
-        } else {
-            setPageCheckboxes(mode, ['isi-data-instansi', 'monitoring-instansi']);
+        const opdGroup = document.getElementById(`${mode}_opd_group`);
+        const instGroup = document.getElementById(`${mode}_instansi_group`);
+        if (opdGroup && instGroup) {
+            if (type === 'opd') {
+                opdGroup.style.display = '';
+                instGroup.style.display = 'none';
+            } else {
+                opdGroup.style.display = 'none';
+                instGroup.style.display = '';
+            }
         }
     }
 
@@ -101,6 +107,7 @@
 
     // Modal Open / Close
     function openCreateModal() {
+        toggleCategoryFilter('create', 'opd');
         document.getElementById('createModal').classList.remove('hidden');
     }
 
@@ -120,6 +127,7 @@
         const instansiRadio = document.getElementById('edit_role_instansi');
         if (opdRadio) opdRadio.checked = !isInst;
         if (instansiRadio) instansiRadio.checked = isInst;
+        toggleCategoryFilter('edit', isInst ? 'instansi' : 'opd');
 
         const opdCodeInput = document.getElementById('edit_opd_code');
         if (opdCodeInput) opdCodeInput.value = userData.opd_code || '';

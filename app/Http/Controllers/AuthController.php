@@ -13,12 +13,8 @@ class AuthController extends Controller
      */
     public function showLoginForm()
     {
-        // If already logged in, redirect accordingly
+        // If already logged in, redirect directly to home
         if (session()->has('user')) {
-            $user = session('user');
-            if (($user['role'] ?? 'opd') === 'admin') {
-                return redirect()->route('portal');
-            }
             return redirect()->route('home');
         }
 
@@ -64,7 +60,7 @@ class AuthController extends Controller
             ];
 
             session(['user' => $userData]);
-            return redirect()->route('portal')->with('success', 'Selamat datang kembali, Administrator BPS Kota Bukittinggi!');
+            return redirect()->route('home')->with('success', 'Selamat datang kembali, Administrator BPS Kota Bukittinggi!');
         }
 
         // 2. Check Database Users (Dinas / OPD / Registered Admin)
@@ -116,7 +112,7 @@ class AuthController extends Controller
                 }
 
                 if ($role === 'admin') {
-                    return redirect()->route('portal')->with('success', "Selamat datang, {$dbUser->name}!");
+                    return redirect()->route('home')->with('success', "Selamat datang, {$dbUser->name}!");
                 }
 
                 return redirect()->route('home')->with('success', "Selamat datang di SiAngka Kota Bukittinggi, {$dbUser->dinas_name}!");
@@ -129,11 +125,11 @@ class AuthController extends Controller
     }
 
     /**
-     * Show the Portal Selection page (Kelola Akun vs Masuk SiMonDa).
+     * Show the Portal Selection page (Redirects directly to SiAngka Home).
      */
     public function showPortal()
     {
-        return view('admin.portal');
+        return redirect()->route('home');
     }
 
     /**
@@ -207,8 +203,13 @@ class AuthController extends Controller
             'password.min' => 'Kata sandi minimal 6 karakter.',
         ]);
 
-        $allowedPages = $request->input('allowed_pages', []);
         $role = $request->input('role', 'opd');
+        $allowedPages = $request->input('allowed_pages');
+        if (empty($allowedPages)) {
+            $allowedPages = ($role === 'instansi')
+                ? ['isi-data-instansi']
+                : ['isi-data-opd', 'tabel-opd', 'edit-tabel-opd'];
+        }
         $username = trim($request->input('username'));
         $dinasName = trim($request->input('dinas_name'));
         $name = $request->filled('name') ? trim($request->input('name')) : $dinasName;
@@ -286,7 +287,14 @@ class AuthController extends Controller
         }
         $user->opd_code = $request->input('opd_code');
         $user->dinas_name = $dinasName;
-        $user->allowed_pages = $request->input('allowed_pages', []);
+        $allowedPages = $request->input('allowed_pages');
+        if (!empty($allowedPages)) {
+            $user->allowed_pages = $allowedPages;
+        } else {
+            $user->allowed_pages = ($user->role === 'instansi')
+                ? ['isi-data-instansi']
+                : ['isi-data-opd', 'tabel-opd', 'edit-tabel-opd'];
+        }
         $user->is_active = $request->has('is_active') ? true : false;
 
         if ($request->filled('password')) {
@@ -364,7 +372,7 @@ class AuthController extends Controller
     public function batchSeedDinasUsers()
     {
         $opdList = config('simonda.opd_list', []);
-        $defaultPages = ['isi-data-opd', 'monitoring-opd', 'tabel-opd'];
+        $defaultPages = ['isi-data-opd', 'monitoring-opd', 'tabel-opd', 'edit-tabel-opd'];
         $createdCount = 0;
         $updatedCount = 0;
 
@@ -411,7 +419,7 @@ class AuthController extends Controller
     public function batchSeedInstansiUsers()
     {
         $instansiList = config('simonda.instansi_list', []);
-        $defaultPages = ['isi-data-instansi', 'monitoring-instansi'];
+        $defaultPages = ['isi-data-instansi', 'monitoring-instansi', 'tabel-opd', 'edit-tabel-opd'];
         $createdCount = 0;
         $updatedCount = 0;
 

@@ -1,4 +1,4 @@
-<!-- TOP NAVBAR / LOGO BAR (BPS BUKITTINGGI - SENSUS EKONOMI - BerAKHLAK) -->
+<!-- TOP NAVBAR / LOGO BAR (BPS BUKITTINGGI - BerAKHLAK) -->
 <header class="w-full bg-[#f0f2f5] border-b border-slate-200/60 py-2 sm:py-2.5 px-3 sm:px-8 lg:px-12 relative z-20 shrink-0">
     <div class="max-w-7xl mx-auto flex flex-row items-center justify-between gap-2 sm:gap-4 md:gap-6 flex-wrap sm:flex-nowrap">
         
@@ -14,11 +14,6 @@
                 </span>
             </div>
         </a>
-
-        <!-- Center: Sensus Ekonomi 2026 Logo -->
-        <div class="flex items-center justify-center transition-transform hover:scale-[1.02] shrink-0">
-            <img src="{{ asset('images/sensus-ekonomi-clean.png') }}" alt="Sensus Ekonomi 2026" class="h-6 sm:h-8 md:h-9 w-auto object-contain">
-        </div>
 
         <!-- Right: BerAKHLAK Logo -->
         <div class="flex items-center justify-end transition-transform hover:scale-[1.02] shrink-0">

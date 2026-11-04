@@ -52,6 +52,7 @@ const opdTablesCatalog = {
     '08': [
         { code: '4.1.1', title: 'Jumlah Sekolah, Guru, dan Murid Taman Kanak–Kanak (TK) di Bawah Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi Menurut Kecamatan di Kota Bukittinggi', titleEn: 'Number of Schools, Teachers, and Pupils in Kindergarten Under The Ministry of Education, Culture, Research, and Technology by District in Bukittinggi Municipality' },
         { code: '4.1.3', title: 'Jumlah Sekolah, Guru, dan Murid Sekolah Dasar (SD) di Bawah Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi Menurut Kecamatan di Kota Bukittinggi', titleEn: 'Number of Schools, Teachers, and Pupils in Primary Schools Under The Ministry of Education, Culture, Research, and Technology by District in Bukittinggi Municipality' },
+        { code: '4.1.4', title: 'Jumlah Sekolah, Guru, dan Murid Madrasah Ibtidaiyah (MI) Menurut Kecamatan di Kota Bukittinggi', titleEn: 'Number of Schools, Teachers, and Pupils in Madrasah Ibtidaiyah (MI) by District in Bukittinggi Municipality' },
         { code: '4.1.5', title: 'Jumlah Sekolah, Guru, dan Murid Sekolah Menengah Pertama (SMP) di Bawah Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi Menurut Kecamatan di Kota Bukittinggi', titleEn: 'Number of Schools, Teachers, and Pupils in Junior High Schools Under The Ministry of Education, Culture, Research, and Technology by District in Bukittinggi Municipality' },
         { code: '4.1.15', title: 'Jumlah Sekolah, Guru, dan Murid Kelompok Bermain (KB) di Bawah Kementerian Pendidikan dan Kebudayaan Menurut Kecamatan di Kota Bukittinggi', titleEn: 'Number of Schools, Teachers, and Pupils in Playgroup Under The Ministry of Education, Culture, Research, and Technology by Subistrict in Bukittinggi Municipality' },
         { code: '4.1.16', title: 'Jumlah Sekolah, Guru, dan Murid Taman Penitipan Anak (TPA) di Bawah Kementerian Pendidikan dan Kebudayaan Menurut Kecamatan di Kota Bukittinggi', titleEn: 'Number of Schools, Teachers, and Pupils in Day Care Under The Ministry of Education, Culture, Research, and Technology by District in Bukittinggi Municipality' },
@@ -302,59 +303,152 @@ const instansiTablesCatalog = {
     ]
 };
 
+const bpsTablesCatalog = {
+    '01': [ // PODES
+        { code: '4.1.1', title: 'Jumlah Desa/Kelurahan Menurut Ketersediaan Fasilitas Pendidikan di Kota Bukittinggi', titleEn: 'Number of Villages by Availability of Educational Facilities in Bukittinggi Municipality' },
+        { code: '4.1.2', title: 'Jumlah Fasilitas Kesehatan Menurut Kecamatan di Kota Bukittinggi', titleEn: 'Number of Health Facilities by District in Bukittinggi Municipality' },
+        { code: '4.1.3', title: 'Keberadaan Sarana Transportasi Antar Desa/Kelurahan Menurut Kecamatan di Kota Bukittinggi', titleEn: 'Existence of Transportation Facilities Between Villages by District in Bukittinggi Municipality' },
+        { code: '4.1.4', title: 'Banyaknya Sarana Perekonomian Utama Menurut Kelurahan di Kota Bukittinggi', titleEn: 'Number of Main Economic Facilities by Village in Bukittinggi Municipality' }
+    ],
+    '02': [ // PENDUDUK
+        { code: '3.1.1', title: 'Jumlah Penduduk Menurut Kecamatan dan Jenis Kelamin di Kota Bukittinggi', titleEn: 'Number of Population by District and Sex in Bukittinggi Municipality' },
+        { code: '3.1.2', title: 'Laju Pertumbuhan Penduduk, Distribusi Persentase, dan Kepadatan Penduduk di Kota Bukittinggi', titleEn: 'Population Growth Rate, Percentage Distribution, and Density in Bukittinggi Municipality' },
+        { code: '3.1.3', title: 'Penduduk Menurut Kelompok Umur dan Jenis Kelamin di Kota Bukittinggi', titleEn: 'Population by Age Group and Sex in Bukittinggi Municipality' },
+        { code: '3.1.4', title: 'Proyeksi Penduduk Menurut Kelompok Umur di Kota Bukittinggi', titleEn: 'Population Projections by Age Group in Bukittinggi Municipality' }
+    ],
+    '03': [ // SUSENAS
+        { code: '4.2.1', title: 'Rata-rata Pengeluaran per Kapita Sebulan Menurut Kelompok Komoditas di Kota Bukittinggi', titleEn: 'Monthly Average Expenditure per Capita by Commodity Group in Bukittinggi Municipality' },
+        { code: '4.2.2', title: 'Persentase Penduduk Miskin dan Garis Kemiskinan di Kota Bukittinggi', titleEn: 'Percentage of Poor People and Poverty Line in Bukittinggi Municipality' },
+        { code: '4.2.3', title: 'Indeks Pembangunan Manusia (IPM) Menurut Komponen di Kota Bukittinggi', titleEn: 'Human Development Index (HDI) by Component in Bukittinggi Municipality' }
+    ],
+    '04': [ // SAKERNAS
+        { code: '3.2.1', title: 'Penduduk Usia 15 Tahun ke Atas Menurut Jenis Kegiatan Selama Seminggu yang Lalu', titleEn: 'Population Aged 15 Years and Over by Type of Activity During Previous Week' },
+        { code: '3.2.2', title: 'Tingkat Partisipasi Angkatan Kerja (TPAK) dan Tingkat Pengangguran Terbuka (TPT)', titleEn: 'Labor Force Participation Rate and Open Unemployment Rate in Bukittinggi Municipality' },
+        { code: '3.2.3', title: 'Penduduk yang Bekerja Menurut Lapangan Pekerjaan Utama di Kota Bukittinggi', titleEn: 'Working Population by Main Employment Field in Bukittinggi Municipality' }
+    ],
+    '05': [ // HORTI
+        { code: '5.1.1', title: 'Luas Panen Tanaman Sayuran Menurut Jenis Tanaman di Kota Bukittinggi', titleEn: 'Harvested Area of Vegetables by Kind of Plant in Bukittinggi Municipality' },
+        { code: '5.1.2', title: 'Produksi Tanaman Sayuran Menurut Jenis Tanaman di Kota Bukittinggi', titleEn: 'Production of Vegetables by Kind of Plant in Bukittinggi Municipality' },
+        { code: '5.1.3', title: 'Produksi Tanaman Buah-buahan Menurut Jenis Tanaman di Kota Bukittinggi', titleEn: 'Production of Fruits by Kind of Plant in Bukittinggi Municipality' },
+        { code: '5.1.4', title: 'Produksi Tanaman Biofarmaka Menurut Jenis Tanaman di Kota Bukittinggi', titleEn: 'Production of Medicinal Plants by Kind of Plant in Bukittinggi Municipality' }
+    ],
+    '06': [ // IMK
+        { code: '6.1.1', title: 'Banyaknya Usaha Industri Mikro dan Kecil (IMK) Menurut Klasifikasi Industri', titleEn: 'Number of Micro and Small Scale Manufacturing Establishments by Industry Classification' },
+        { code: '6.1.2', title: 'Banyaknya Tenaga Kerja Industri Mikro dan Kecil Menurut Klasifikasi Industri', titleEn: 'Number of Workers of Micro and Small Scale Manufacturing by Industry Classification' },
+        { code: '6.1.3', title: 'Nilai Pengeluaran dan Pendapatan Usaha Industri Mikro dan Kecil di Kota Bukittinggi', titleEn: 'Expenditure and Revenue of Micro and Small Industry in Bukittinggi Municipality' }
+    ],
+    '07': [ // HOTEL
+        { code: '7.1.1', title: 'Jumlah Hotel Bintang dan Non Bintang Menurut Kecamatan di Kota Bukittinggi', titleEn: 'Number of Star and Non-Star Hotels by District in Bukittinggi Municipality' },
+        { code: '7.1.2', title: 'Jumlah Kamar dan Tempat Tidur yang Tersedia pada Akomodasi Hotel di Kota Bukittinggi', titleEn: 'Number of Rooms and Beds Available in Accommodation in Bukittinggi Municipality' },
+        { code: '7.1.3', title: 'Tingkat Penghunian Kamar (TPK) Hotel Bintang Menurut Bulan di Kota Bukittinggi', titleEn: 'Room Occupancy Rate (ROR) of Star Rated Hotels by Month in Bukittinggi Municipality' },
+        { code: '7.1.4', title: 'Rata-rata Lama Menginap Tamu Asing dan Domestik di Hotel di Kota Bukittinggi', titleEn: 'Average Length of Stay of Foreign and Domestic Guests at Hotels in Bukittinggi Municipality' }
+    ],
+    '08': [ // IHK
+        { code: '8.3.1', title: 'Indeks Harga Konsumen (IHK) Menurut Kelompok Pengeluaran di Kota Bukittinggi', titleEn: 'Consumer Price Index by Expenditure Group in Bukittinggi Municipality' },
+        { code: '8.3.2', title: 'Laju Inflasi Bulanan dan Tahunan Menurut Kelompok Pengeluaran di Kota Bukittinggi', titleEn: 'Monthly and Year on Year Inflation Rate by Expenditure Group in Bukittinggi Municipality' },
+        { code: '8.3.3', title: 'Rata-rata Harga Beberapa Komoditas Bahan Pokok Menurut Bulan di Kota Bukittinggi', titleEn: 'Average Price of Selected Essential Commodities by Month in Bukittinggi Municipality' }
+    ],
+    '09': [ // PDRB LAPUS
+        { code: '11.1.1', title: 'Produk Domestik Regional Bruto Atas Dasar Harga Berlaku Menurut Lapangan Usaha di Kota Bukittinggi', titleEn: 'Gross Regional Domestic Product at Current Market Prices by Industry in Bukittinggi Municipality' },
+        { code: '11.1.2', title: 'Produk Domestik Regional Bruto Atas Dasar Harga Konstan 2010 Menurut Lapangan Usaha', titleEn: 'Gross Regional Domestic Product at 2010 Constant Market Prices by Industry in Bukittinggi Municipality' },
+        { code: '11.1.3', title: 'Laju Pertumbuhan PDRB Atas Dasar Harga Konstan 2010 Menurut Lapangan Usaha', titleEn: 'Growth Rate of GRDP at 2010 Constant Market Prices by Industry in Bukittinggi Municipality' },
+        { code: '11.1.4', title: 'Distribusi Persentase PDRB Atas Dasar Harga Berlaku Menurut Lapangan Usaha', titleEn: 'Percentage Distribution of GRDP at Current Market Prices by Industry in Bukittinggi Municipality' }
+    ],
+    '10': [ // PDRB PENGELUARAN
+        { code: '11.2.1', title: 'Produk Domestik Regional Bruto Atas Dasar Harga Berlaku Menurut Pengeluaran di Kota Bukittinggi', titleEn: 'Gross Regional Domestic Product at Current Market Prices by Expenditure in Bukittinggi Municipality' },
+        { code: '11.2.2', title: 'Produk Domestik Regional Bruto Atas Dasar Harga Konstan 2010 Menurut Pengeluaran', titleEn: 'Gross Regional Domestic Product at 2010 Constant Market Prices by Expenditure in Bukittinggi Municipality' },
+        { code: '11.2.3', title: 'Laju Pertumbuhan PDRB Pengeluaran Atas Dasar Harga Konstan 2010 di Kota Bukittinggi', titleEn: 'Growth Rate of GRDP Expenditure at 2010 Constant Market Prices in Bukittinggi Municipality' },
+        { code: '11.2.4', title: 'Distribusi Persentase PDRB Atas Dasar Harga Berlaku Menurut Pengeluaran', titleEn: 'Percentage Distribution of GRDP at Current Market Prices by Expenditure in Bukittinggi Municipality' }
+    ]
+};
+
 /**
- * Ambil daftar semua tabel untuk suatu instansi/OPD
+ * Ambil daftar semua tabel untuk suatu instansi/OPD/BPS
  */
 function getAgencyTables(opdCode, type) {
     const cleanOpd = opdCode ? opdCode.toString().padStart(2, '0') : '01';
-    let isInstansi = type === 'instansi';
-    if (!isInstansi && typeof window !== 'undefined' && window.location) {
+    let currentType = type;
+    if (!currentType && typeof window !== 'undefined' && window.location) {
         try {
             const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('type') === 'instansi') {
-                isInstansi = true;
-            }
+            currentType = urlParams.get('type') || 'opd';
         } catch (e) {}
     }
 
-    const catalog = isInstansi ? instansiTablesCatalog : opdTablesCatalog;
-    if (catalog && catalog[cleanOpd]) {
-        return catalog[cleanOpd];
+    let catalog = opdTablesCatalog;
+    let storagePrefix = 'simonda_custom_opd_tables_';
+    if (currentType === 'bps') {
+        catalog = bpsTablesCatalog;
+        storagePrefix = 'simonda_custom_bps_tables_';
+    } else if (currentType === 'instansi') {
+        catalog = instansiTablesCatalog;
+        storagePrefix = 'simonda_custom_instansi_tables_';
     }
-    return [];
+
+    let list = (catalog && catalog[cleanOpd]) ? [...catalog[cleanOpd]] : [];
+
+    // Gabungkan tabel kustom dari localStorage jika ada
+    if (typeof window !== 'undefined' && window.localStorage) {
+        try {
+            const storageKey = storagePrefix + cleanOpd;
+            const stored = JSON.parse(window.localStorage.getItem(storageKey) || '[]');
+            if (Array.isArray(stored)) {
+                stored.forEach(st => {
+                    if (!list.some(t => t.code.trim() === st.code.trim())) {
+                        list.push({ ...st, isCustom: true });
+                    }
+                });
+            }
+        } catch(e) {}
+    }
+
+    // Gabungkan dari window.serverDbCustomTables jika di-inject oleh backend
+    if (typeof window !== 'undefined' && window.serverDbCustomTables && Array.isArray(window.serverDbCustomTables)) {
+        window.serverDbCustomTables.forEach(st => {
+            if (!list.some(t => t.code.toString().trim() === st.code.toString().trim())) {
+                list.push({
+                    code: st.code,
+                    title: st.title,
+                    titleEn: st.titleEn || st.title,
+                    isCustom: true
+                });
+            }
+        });
+    }
+
+    return list;
 }
 
 /**
- * Cari informasi judul resmi tabel dari katalog OPD / Instansi
+ * Cari informasi judul resmi tabel dari katalog OPD / Instansi / BPS
  */
 function getCatalogTableInfo(code, opdCode, type) {
     if (!code) return null;
     const cleanCode = code.toString().trim().replace(/\.+$/, '');
     const cleanOpd = opdCode ? opdCode.toString().padStart(2, '0') : null;
-    let isInstansi = type === 'instansi';
-    if (!isInstansi && typeof window !== 'undefined' && window.location) {
+    let currentType = type;
+    if (!currentType && typeof window !== 'undefined' && window.location) {
         try {
             const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('type') === 'instansi') {
-                isInstansi = true;
-            }
+            currentType = urlParams.get('type') || 'opd';
         } catch (e) {}
     }
 
-    // 1. Cek query parameter URL terlebih dahulu jika ada
-    try {
-        if (typeof window !== 'undefined' && window.location) {
-            const urlParams = new URLSearchParams(window.location.search);
-            const urlTitle = urlParams.get('title');
-            const urlTitleEn = urlParams.get('title_en') || urlParams.get('titleEn');
-            if (urlTitle && urlTitle.trim()) {
-                return { title: urlTitle.trim(), titleEn: (urlTitleEn || '').trim() };
-            }
+    // 1. Prioritaskan pencarian di katalog resmi OPD / Instansi / BPS berdasarkan kode tabel!
+    // 1a. Jika tipe BPS, prioritaskan bpsTablesCatalog
+    if (currentType === 'bps' && typeof bpsTablesCatalog !== 'undefined') {
+        if (cleanOpd && bpsTablesCatalog[cleanOpd]) {
+            const found = bpsTablesCatalog[cleanOpd].find(t => t.code.toString().trim().replace(/\.+$/, '') === cleanCode);
+            if (found) return { title: found.title, titleEn: found.titleEn || '' };
         }
-    } catch (e) {}
+        for (const k in bpsTablesCatalog) {
+            const found = bpsTablesCatalog[k].find(t => t.code.toString().trim().replace(/\.+$/, '') === cleanCode);
+            if (found) return { title: found.title, titleEn: found.titleEn || '' };
+        }
+    }
 
-    // 2. Jika tipe instansi, prioritaskan instansiTablesCatalog
-    if (isInstansi && typeof instansiTablesCatalog !== 'undefined') {
+    // 1b. Jika tipe instansi, prioritaskan instansiTablesCatalog
+    if (currentType === 'instansi' && typeof instansiTablesCatalog !== 'undefined') {
         if (cleanOpd && instansiTablesCatalog[cleanOpd]) {
             const found = instansiTablesCatalog[cleanOpd].find(t => t.code.toString().trim().replace(/\.+$/, '') === cleanCode);
             if (found) return { title: found.title, titleEn: found.titleEn || '' };
@@ -365,7 +459,7 @@ function getCatalogTableInfo(code, opdCode, type) {
         }
     }
 
-    // 3. Cari di opdTablesCatalog
+    // 1c. Cari di opdTablesCatalog
     if (typeof opdTablesCatalog !== 'undefined') {
         if (cleanOpd && opdTablesCatalog[cleanOpd]) {
             const found = opdTablesCatalog[cleanOpd].find(t => t.code.toString().trim().replace(/\.+$/, '') === cleanCode);
@@ -377,36 +471,140 @@ function getCatalogTableInfo(code, opdCode, type) {
         }
     }
 
-    // 4. Fallback ke instansiTablesCatalog jika belum dicari
-    if (!isInstansi && typeof instansiTablesCatalog !== 'undefined') {
-        if (cleanOpd && instansiTablesCatalog[cleanOpd]) {
-            const found = instansiTablesCatalog[cleanOpd].find(t => t.code.toString().trim().replace(/\.+$/, '') === cleanCode);
-            if (found) return { title: found.title, titleEn: found.titleEn || '' };
-        }
+    // 1d. Fallback ke instansi / BPS jika belum ketemu
+    if (typeof instansiTablesCatalog !== 'undefined') {
         for (const k in instansiTablesCatalog) {
             const found = instansiTablesCatalog[k].find(t => t.code.toString().trim().replace(/\.+$/, '') === cleanCode);
             if (found) return { title: found.title, titleEn: found.titleEn || '' };
         }
     }
+    if (typeof bpsTablesCatalog !== 'undefined') {
+        for (const k in bpsTablesCatalog) {
+            const found = bpsTablesCatalog[k].find(t => t.code.toString().trim().replace(/\.+$/, '') === cleanCode);
+            if (found) return { title: found.title, titleEn: found.titleEn || '' };
+        }
+    }
+
+    // 1e. Cek dari daftar custom agency tables
+    try {
+        if (typeof getAgencyTables === 'function') {
+            const agencyList = getAgencyTables(cleanOpd || '01', currentType);
+            const customFound = agencyList.find(t => t.code.toString().trim().replace(/\.+$/, '') === cleanCode);
+            if (customFound) {
+                return { title: customFound.title, titleEn: customFound.titleEn || customFound.title };
+            }
+        }
+    } catch (e) {}
+
+    // 2. Terakhir, jika tidak ada di katalog resmi, baru periksa query parameter URL
+    // (HANYA jika kode pada URL cocok dengan kode yang dicari!)
+    try {
+        if (typeof window !== 'undefined' && window.location) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlCode = (urlParams.get('code') || urlParams.get('table') || '').toString().trim().replace(/\.+$/, '');
+            if (urlCode === cleanCode) {
+                const urlTitle = urlParams.get('title');
+                const urlTitleEn = urlParams.get('title_en') || urlParams.get('titleEn');
+                if (urlTitle && urlTitle.trim()) {
+                    return { title: urlTitle.trim(), titleEn: (urlTitleEn || '').trim() };
+                }
+            }
+        }
+    } catch (e) {}
 
     return null;
 }
+
+/**
+ * Cari kode OPD/Instansi dan Tipenya berdasarkan kode tabel
+ */
+function getAgencyInfoForTable(tableCode, defaultOpd = '01', defaultType = 'opd') {
+    if (!tableCode) return { opdCode: defaultOpd, type: defaultType };
+    const cleanCode = tableCode.toString().trim().replace(/\.+$/, '');
+    
+    // Pemetaan khusus tabel yang memiliki instansi definitif
+    if (cleanCode === '4.1.24') return { opdCode: '11', type: 'opd' }; // 11. Dinas Perpustakaan dan Kearsipan
+    if (cleanCode === '4.1.20') return { opdCode: '10', type: 'opd' }; // 10. Dinas Pemuda dan Olahraga
+    if (cleanCode === '4.3.4')  return { opdCode: '09', type: 'opd' }; // 09. BPBD
+    if (cleanCode === '4.3.5' || cleanCode === '4.3.6' || cleanCode === '4.3.7' || cleanCode === '4.3.8') return { opdCode: '15', type: 'opd' }; // 15. Dinas Pemadam Kebakaran dan Penyelamatan
+    if (cleanCode === '1.1.6' || cleanCode.startsWith('8.1.')) return { opdCode: '01', type: 'opd' }; // 01. PUPR
+
+    // 1. Cari di katalog OPD terlebih dahulu
+    if (typeof opdTablesCatalog !== 'undefined') {
+        // Cek jika ada di defaultOpd
+        const cleanDefaultOpd = defaultOpd ? defaultOpd.toString().padStart(2, '0') : null;
+        if (cleanDefaultOpd && opdTablesCatalog[cleanDefaultOpd]) {
+            if (opdTablesCatalog[cleanDefaultOpd].some(t => t.code.toString().trim().replace(/\.+$/, '') === cleanCode)) {
+                return { opdCode: cleanDefaultOpd, type: 'opd' };
+            }
+        }
+        for (const opd in opdTablesCatalog) {
+            if (opdTablesCatalog[opd].some(t => t.code.toString().trim().replace(/\.+$/, '') === cleanCode)) {
+                return { opdCode: opd, type: 'opd' };
+            }
+        }
+    }
+
+    // 2. Cari di katalog Instansi Vertikal
+    if (typeof instansiTablesCatalog !== 'undefined') {
+        const cleanDefaultOpd = defaultOpd ? defaultOpd.toString().padStart(2, '0') : null;
+        if (cleanDefaultOpd && instansiTablesCatalog[cleanDefaultOpd]) {
+            if (instansiTablesCatalog[cleanDefaultOpd].some(t => t.code.toString().trim().replace(/\.+$/, '') === cleanCode)) {
+                return { opdCode: cleanDefaultOpd, type: 'instansi' };
+            }
+        }
+        for (const inst in instansiTablesCatalog) {
+            if (instansiTablesCatalog[inst].some(t => t.code.toString().trim().replace(/\.+$/, '') === cleanCode)) {
+                return { opdCode: inst, type: 'instansi' };
+            }
+        }
+    }
+
+    // 3. Cari di katalog BPS
+    if (typeof bpsTablesCatalog !== 'undefined') {
+        for (const b in bpsTablesCatalog) {
+            if (bpsTablesCatalog[b].some(t => t.code.toString().trim().replace(/\.+$/, '') === cleanCode)) {
+                return { opdCode: b, type: 'bps' };
+            }
+        }
+    }
+
+    return { opdCode: defaultOpd, type: defaultType };
+}
+
+// Bersihkan riwayat salah tempat jika tabel 4.1.24 pernah tersimpan di bawah OPD 10 pada localStorage
+try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+        const k10 = 'simonda_custom_opd_tables_10';
+        const raw10 = localStorage.getItem(k10);
+        if (raw10) {
+            const list10 = JSON.parse(raw10);
+            if (Array.isArray(list10) && list10.some(t => t.code === '4.1.24')) {
+                localStorage.setItem(k10, JSON.stringify(list10.filter(t => t.code !== '4.1.24')));
+            }
+        }
+    }
+} catch(e) {}
 
 // Export for Browser window and global runtime
 if (typeof window !== 'undefined') {
     window.opdTablesCatalog = opdTablesCatalog;
     window.instansiTablesCatalog = instansiTablesCatalog;
+    window.bpsTablesCatalog = bpsTablesCatalog;
     window.getAgencyTables = getAgencyTables;
     window.getCatalogTableInfo = getCatalogTableInfo;
+    window.getAgencyInfoForTable = getAgencyInfoForTable;
 }
 if (typeof globalThis !== 'undefined') {
     globalThis.opdTablesCatalog = opdTablesCatalog;
     globalThis.instansiTablesCatalog = instansiTablesCatalog;
+    globalThis.bpsTablesCatalog = bpsTablesCatalog;
     globalThis.getAgencyTables = getAgencyTables;
     globalThis.getCatalogTableInfo = getCatalogTableInfo;
+    globalThis.getAgencyInfoForTable = getAgencyInfoForTable;
 }
 
 // Export for Node/CommonJS if needed
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { opdTablesCatalog, instansiTablesCatalog, getAgencyTables, getCatalogTableInfo };
+    module.exports = { opdTablesCatalog, instansiTablesCatalog, bpsTablesCatalog, getAgencyTables, getCatalogTableInfo, getAgencyInfoForTable };
 }

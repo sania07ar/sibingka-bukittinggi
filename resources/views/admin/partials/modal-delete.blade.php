@@ -95,7 +95,7 @@
 
             <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-800 text-xs flex items-start space-x-2">
                 <i class="fa-solid fa-triangle-exclamation text-amber-600 mt-0.5 shrink-0"></i>
-                <span>Setelah dihapus, Anda tetap dapat membuat ulang akun secara otomatis kapan saja menggunakan tombol <strong>Generate 20 OPD</strong> atau <strong>Generate 37 Instansi Vertikal</strong>.</span>
+                <span>Setelah dihapus, Anda dapat menambahkan akun kembali kapan saja menggunakan tombol <strong>+ Buat Akun Baru</strong>.</span>
             </div>
 
             <div class="flex items-center justify-end space-x-2 pt-2 border-t border-slate-100">

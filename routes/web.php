@@ -44,15 +44,27 @@ Route::middleware(['simonda.auth'])->group(function () {
     })->name('simonda');
 
     Route::get('/isi-data-opd', function () {
-        return view('dinas.isi-opd');
+        $customTables = \App\Models\TabelMetadata::whereIn('source_type', ['custom', 'custom_opd'])
+            ->select('table_code as code', 'opd_code', 'title_id as title', 'title_en as titleEn')
+            ->distinct()
+            ->get();
+        return view('dinas.isi-opd', compact('customTables'));
     })->name('isi-data-opd');
 
     Route::get('/isi-data-instansi', function () {
-        return view('dinas.isi-instansi');
+        $customTables = \App\Models\TabelMetadata::where('source_type', 'custom_instansi')
+            ->select('table_code as code', 'opd_code', 'title_id as title', 'title_en as titleEn')
+            ->distinct()
+            ->get();
+        return view('dinas.isi-instansi', compact('customTables'));
     })->name('isi-data-instansi');
 
     Route::get('/data-bps', function () {
-        return view('dinas.data-bps');
+        $customTables = \App\Models\TabelMetadata::whereIn('source_type', ['custom_bps', 'bps'])
+            ->select('table_code as code', 'opd_code', 'title_id as title', 'title_en as titleEn')
+            ->distinct()
+            ->get();
+        return view('dinas.data-bps', compact('customTables'));
     })->name('data-bps');
 
     Route::get('/monitoring-opd', function () {
@@ -63,9 +75,51 @@ Route::middleware(['simonda.auth'])->group(function () {
         return view('monitoring.instansi');
     })->name('monitoring-instansi');
 
+    Route::post('/monitoring/update-stage', function (\Illuminate\Http\Request $request) {
+        $validated = $request->validate([
+            'agency_type' => 'required|in:opd,instansi',
+            'agency_code' => 'required|string',
+            'year' => 'required|integer',
+            'stage' => 'required|integer|between:1,5',
+        ]);
+
+        $stageInfo = \App\Models\MonitoringStage::getStageInfo($validated['stage']);
+
+        $record = \App\Models\MonitoringStage::updateOrCreate(
+            [
+                'agency_type' => $validated['agency_type'],
+                'agency_code' => $validated['agency_code'],
+                'year' => $validated['year'],
+            ],
+            [
+                'stage' => $validated['stage'],
+                'status_text' => $stageInfo['label'],
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Tahapan berhasil diubah ke ' . $stageInfo['label'],
+            'data' => $record,
+            'stageInfo' => $stageInfo,
+        ]);
+    })->name('monitoring.update-stage');
+
     Route::get('/tabel-opd', [TabelOpdController::class, 'index'])->name('tabel-opd');
     Route::get('/edit-tabel-opd', [TabelOpdController::class, 'edit'])->name('edit-tabel-opd');
     Route::get('/api/tabel-opd/data', [TabelOpdController::class, 'apiGetData'])->name('tabel-opd.api.data');
     Route::post('/api/tabel-opd/save', [TabelOpdController::class, 'apiSaveData'])->name('tabel-opd.api.save');
     Route::post('/api/tabel-opd/delete', [TabelOpdController::class, 'apiDeleteData'])->name('tabel-opd.api.delete');
+    Route::get('/api/tabel-opd/custom-catalog', [TabelOpdController::class, 'apiGetCustomCatalog'])->name('tabel-opd.api.custom-catalog');
+    Route::post('/api/tabel-opd/save-custom-catalog', [TabelOpdController::class, 'apiSaveCustomCatalog'])->name('tabel-opd.api.save-custom-catalog');
+    Route::post('/api/tabel-opd/delete-custom-catalog', [TabelOpdController::class, 'apiDeleteCustomCatalog'])->name('tabel-opd.api.delete-custom-catalog');
+    Route::get('/api/tabel-opd/comments', [TabelOpdController::class, 'apiGetComments'])->name('tabel-opd.api.comments');
+    Route::post('/api/tabel-opd/comments', [TabelOpdController::class, 'apiSaveComment'])->name('tabel-opd.api.save-comment');
+    Route::delete('/api/tabel-opd/comments/{id}', [TabelOpdController::class, 'apiDeleteComment'])->name('tabel-opd.api.delete-comment');
+
+    // Workflow Verifikasi & ACC Monitoring Tabel
+    Route::post('/api/tabel-opd/submit-verification', [TabelOpdController::class, 'apiSubmitVerification'])->name('tabel-opd.api.submit-verification');
+    Route::post('/api/tabel-opd/approve-verification', [TabelOpdController::class, 'apiApproveVerification'])->name('tabel-opd.api.approve-verification');
+    Route::post('/api/tabel-opd/reject-verification', [TabelOpdController::class, 'apiRejectVerification'])->name('tabel-opd.api.reject-verification');
+    Route::post('/api/tabel-opd/unlock-table', [TabelOpdController::class, 'apiUnlockTable'])->name('tabel-opd.api.unlock-table');
 });

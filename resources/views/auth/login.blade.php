@@ -23,11 +23,27 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
+        html, body {
+            height: 100%;
+            height: 100dvh;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: #f1f4f9;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+        }
+
+        @media (max-height: 560px), (max-width: 640px) {
+            html, body {
+                height: auto;
+                min-height: 100%;
+                overflow-y: auto;
+            }
         }
 
         /* Ambient Glow Spheres */
@@ -110,22 +126,24 @@
         }
     </style>
 </head>
-<body class="min-h-screen bg-[#f1f4f9] text-slate-800 flex flex-col justify-between relative selection:bg-orange-500 selection:text-white overflow-y-auto">
+<body class="h-screen w-full bg-[#f1f4f9] text-slate-800 flex flex-col justify-between relative selection:bg-orange-500 selection:text-white overflow-hidden">
 
-    <!-- Ambient Lighting Atmosphere -->
-    <div class="ambient-sphere w-80 h-80 bg-orange-200/40 top-[-60px] right-[-40px]"></div>
-    <div class="ambient-sphere w-72 h-72 bg-blue-100/50 bottom-[-40px] left-[-40px]"></div>
+    <!-- Ambient Lighting Atmosphere (Contained so it doesn't cause overflow/scrollbar) -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div class="ambient-sphere w-80 h-80 bg-orange-200/40 -top-16 -right-10"></div>
+        <div class="ambient-sphere w-72 h-72 bg-blue-100/50 -bottom-10 -left-10"></div>
+    </div>
 
-    <!-- Background Sensus Ekonomi Ribbon Watermark -->
-    <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden flex items-center justify-center opacity-15 select-none">
-        <img src="{{ asset('images/sensus-ribbon-watermark.png') }}" alt="Sensus Ekonomi Watermark" class="w-[750px] lg:w-[950px] max-w-none transform -translate-x-10 object-contain">
+    <!-- Background SiAngka Jam Gadang Watermark -->
+    <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden flex items-center justify-center opacity-25 select-none">
+        <img src="{{ asset('images/siangka-watermark-jamgadang.jpg') }}" alt="Watermark SiAngka Jam Gadang" class="w-[850px] lg:w-[1050px] max-w-none transform -translate-x-12 sm:-translate-x-20 object-contain mix-blend-multiply">
     </div>
 
     <!-- HEADER / LOGO BAR -->
     @include('partials.navbar')
 
     <!-- MAIN LOGIN CONTAINER (Compact 2-Column Layout) -->
-    <main class="relative z-10 flex-1 flex items-center justify-center px-4 sm:px-8 py-2">
+    <main class="relative z-10 flex-1 flex items-center justify-center px-4 sm:px-8 py-2 min-h-0">
         <div class="max-w-3xl w-full grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 items-center">
             
             <!-- LEFT COLUMN: BRAND LOGO & TITLE (Compact) -->
@@ -274,7 +292,7 @@
     </main>
 
     <!-- FOOTER -->
-    <footer class="relative z-10 w-full py-2 px-4 text-center text-[10px] text-slate-500 border-t border-slate-200/70 bg-white/60">
+    <footer class="relative z-10 w-full py-2 px-4 text-center text-[10px] text-slate-500 border-t border-slate-200/70 bg-white/60 shrink-0">
         <p>© <span id="currentYear"></span> <strong>Badan Pusat Statistik Kota Bukittinggi</strong>. SiAngka Kota Bukittinggi - Sistem Informasi Data Daerah dalam Angka.</p>
     </footer>
 

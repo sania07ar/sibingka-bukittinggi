@@ -3,8 +3,11 @@
         -webkit-tap-highlight-color: transparent;
     }
 
-    html {
+    html, body {
         min-height: 100%;
+        min-height: 100dvh;
+        margin: 0;
+        padding: 0;
     }
 
     body {
@@ -12,18 +15,8 @@
         background-color: #f1f4f9;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        margin: 0;
-        padding: 0;
-        min-height: 100vh;
-    }
-
-    /* Hanya kunci 100vh & overflow hidden jika di layar desktop besar yang cukup tinggi */
-    @media (min-width: 1024px) and (min-height: 700px) {
-        html, body {
-            height: 100vh;
-            max-height: 100vh;
-            overflow: hidden;
-        }
+        overflow-x: hidden;
+        overflow-y: auto;
     }
 
     button, a, .portal-card {

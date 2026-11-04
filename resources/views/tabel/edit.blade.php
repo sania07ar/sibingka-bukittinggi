@@ -126,6 +126,11 @@
     <!-- Decorative Top Background Glow -->
     <div class="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-64 bg-gradient-to-b from-orange-100/40 via-orange-50/20 to-transparent pointer-events-none -z-10"></div>
 
+    <!-- Background SiAngka Jam Gadang Watermark -->
+    <div class="fixed inset-0 pointer-events-none -z-10 overflow-hidden flex items-center justify-center opacity-15 select-none">
+        <img src="{{ asset('images/siangka-watermark-jamgadang.jpg') }}" alt="Watermark SiAngka Jam Gadang" class="w-[850px] sm:w-[1100px] lg:w-[1300px] max-w-none transform -translate-x-16 sm:-translate-x-28 -translate-y-6 object-contain mix-blend-multiply">
+    </div>
+
     <!-- MAIN WRAPPER -->
     <div class="w-full flex-1 flex flex-col">
         
@@ -177,8 +182,19 @@
                         <span>Beranda</span>
                     </a>
                     <i class="fa-solid fa-chevron-right text-[9px] text-slate-400"></i>
-                    <a id="breadcrumbCatalogLink" href="{{ ($currentType ?? 'opd') === 'instansi' ? route('isi-data-instansi') : route('isi-data-opd') }}" class="hover:text-[#f95a00] transition-colors">
-                        <span id="breadcrumbCatalogText">{{ ($currentType ?? 'opd') === 'instansi' ? 'Daftar Instansi' : 'Daftar OPD' }}</span>
+                    @php
+                        $backRoute = route('isi-data-opd');
+                        $backLabel = 'Daftar OPD';
+                        if (($currentType ?? 'opd') === 'instansi') {
+                            $backRoute = route('isi-data-instansi');
+                            $backLabel = 'Daftar Instansi';
+                        } elseif (($currentType ?? 'opd') === 'bps') {
+                            $backRoute = route('data-bps');
+                            $backLabel = 'Data BPS';
+                        }
+                    @endphp
+                    <a id="breadcrumbCatalogLink" href="{{ $backRoute }}" class="hover:text-[#f95a00] transition-colors">
+                        <span id="breadcrumbCatalogText">{{ $backLabel }}</span>
                     </a>
                     <i class="fa-solid fa-chevron-right text-[9px] text-slate-400"></i>
                     <span id="breadcrumbOpdText" class="font-bold text-slate-800">01. DINAS PUPR</span>
@@ -254,6 +270,25 @@
                         </button>
                         <input type="file" id="editExcelInput" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleEditExcelImport(event)">
 
+                        <!-- Tambah Baris Button -->
+                        <button onclick="addNewRow()" 
+                                class="px-3 py-1.5 rounded-lg bg-orange-50 hover:bg-orange-100 text-[#f95a00] border border-orange-300 font-bold text-xs flex items-center space-x-1.5 shadow-2xs transition-all cursor-pointer"
+                                title="Tambah baris data baru ke tabel ini">
+                            <i class="fa-solid fa-plus text-[11px]"></i>
+                            <span>+ Tambah Baris</span>
+                        </button>
+
+                        <!-- Button: Catatan / Komentar Rincian Data -->
+                        <button onclick="openTableCommentOverview()" 
+                                id="btnHeaderComments"
+                                class="px-3 py-1.5 rounded-lg bg-orange-50 hover:bg-orange-100 text-[#f95a00] border border-orange-300 font-bold text-xs flex items-center space-x-1.5 shadow-2xs transition-all cursor-pointer"
+                                title="Buka Catatan & Komentar Rincian Data">
+                            <i class="fa-solid fa-comments text-xs"></i>
+                            <span>Catatan (<span id="headerTotalCommentsCount">0</span>)</span>
+                        </button>
+
+
+
                         <button onclick="resetTableOriginal()" 
                                 class="px-3 py-1.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 font-bold text-xs flex items-center space-x-1.5 shadow-2xs transition-all cursor-pointer"
                                 title="Kembalikan nilai ke data awal">
@@ -267,13 +302,44 @@
                             <span>Batal</span>
                         </button>
 
-                        <button onclick="saveAndReturn()" 
-                                class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center space-x-1.5 shadow-2xs transition-all cursor-pointer">
-                            <i class="fa-solid fa-floppy-disk text-xs"></i>
-                            <span>Simpan Perubahan</span>
-                        </button>
+                        @php
+                            $isAdmin = session('user.role') === 'admin';
+                            $isLocked = (bool) ($dbMetadata?->is_locked ?? false);
+                        @endphp
+
+                        @if($isLocked && !$isAdmin)
+                            <button disabled 
+                                    class="px-4 py-1.5 rounded-lg bg-slate-300 text-slate-500 font-bold text-xs flex items-center space-x-1.5 cursor-not-allowed"
+                                    title="Tabel terkunci karena sudah di-ACC oleh BPS Bukittinggi.">
+                                <i class="fa-solid fa-lock text-xs"></i>
+                                <span>Terkunci</span>
+                            </button>
+                        @else
+                            <button onclick="saveAndReturn()" 
+                                    class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center space-x-1.5 shadow-2xs transition-all cursor-pointer">
+                                <i class="fa-solid fa-floppy-disk text-xs"></i>
+                                <span>Simpan Perubahan</span>
+                            </button>
+                        @endif
                     </div>
                 </div>
+
+                @if($isLocked && !$isAdmin)
+                    <div class="mb-5 p-3.5 sm:p-4 rounded-2xl bg-amber-50 border border-amber-300 text-amber-900 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
+                        <div class="flex items-center space-x-2.5">
+                            <div class="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center text-sm shrink-0 shadow-2xs">
+                                <i class="fa-solid fa-lock"></i>
+                            </div>
+                            <div>
+                                <span class="font-extrabold text-amber-950 block text-[13px]">Tabel Terkunci (Read-Only)</span>
+                                <span class="text-amber-800 text-[11.5px]">Data tabel ini telah disetujui (ACC) oleh BPS Bukittinggi. Perubahan tidak dapat disimpan tanpa persetujuan Admin BPS.</span>
+                            </div>
+                        </div>
+                        <button onclick="backToTableView()" class="px-3.5 py-1.5 bg-white hover:bg-amber-100 rounded-xl border border-amber-300 font-bold text-amber-900 transition-colors shrink-0 cursor-pointer shadow-2xs">
+                            Kembali ke Tabel
+                        </button>
+                    </div>
+                @endif
 
                 <!-- TABLE TITLE & METADATA SECTION -->
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-2 sm:gap-4 mb-5 text-xs sm:text-sm text-slate-900">
@@ -316,10 +382,20 @@
                 </div>
 
                 <!-- TABLE DISPLAY CONTAINER (SCROLLABLE ON MOBILE) -->
-                <div class="overflow-x-auto mb-5" id="printableTableSection">
+                <div class="overflow-x-auto mb-3" id="printableTableSection">
                     <table class="w-full text-left text-xs sm:text-sm border-collapse table-custom-border" id="dataDisplayTable">
                         <!-- Injected via JavaScript based on table code and year -->
                     </table>
+                </div>
+
+                <!-- ACTION ROW UNDER TABLE: + Tambah Baris Data -->
+                <div class="flex items-center justify-between mb-5">
+                    <button type="button" onclick="addNewRow()" 
+                            class="inline-flex items-center space-x-2 px-3.5 py-2 rounded-xl bg-orange-100 hover:bg-[#f98825] text-[#f98825] hover:text-white font-bold text-xs border border-orange-300 hover:border-transparent transition-all shadow-2xs cursor-pointer">
+                        <i class="fa-solid fa-plus text-xs"></i>
+                        <span>+ Tambah Baris Data</span>
+                    </button>
+                    <span class="text-[11px] text-slate-400 italic">Klik tombol di atas untuk menambah baris data baru ke tabel.</span>
                 </div>
 
                 <!-- TABLE FOOTER: NOTE & SOURCE / SUMBER -->
@@ -391,6 +467,57 @@
             </div>
         </footer>
 
+    </div>
+
+
+
+    <!-- CELL COMMENT / CHAT DRAWER (Slide-over di samping kecil) -->
+    <div id="cellCommentDrawerBackdrop" onclick="closeCellCommentDrawer()" class="fixed inset-0 bg-slate-900/30 backdrop-blur-[2px] z-50 transition-opacity duration-300 opacity-0 pointer-events-none"></div>
+    <div id="cellCommentDrawer" class="fixed top-0 right-0 bottom-0 w-80 sm:w-96 bg-white z-50 shadow-2xl flex flex-col border-l border-slate-200 transform translate-x-full transition-transform duration-300 ease-out">
+        <!-- Drawer Header -->
+        <div class="px-4 py-3.5 border-b border-slate-200 bg-slate-50 flex items-center justify-between shrink-0">
+            <div class="flex items-center space-x-2.5 min-w-0">
+                <div class="w-8 h-8 rounded-lg bg-orange-100 text-[#f95a00] flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-comments text-sm"></i>
+                </div>
+                <div class="min-w-0">
+                    <h3 class="font-bold text-slate-800 text-xs sm:text-sm truncate">Catatan Rincian Data</h3>
+                    <p id="drawerCellLabel" class="text-[11px] text-slate-500 truncate" title="...">Pilih rincian data</p>
+                </div>
+            </div>
+            <button onclick="closeCellCommentDrawer()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer" title="Tutup">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+        </div>
+
+        <!-- Selected Cell Context Bar -->
+        <div class="px-4 py-2.5 bg-orange-50/60 border-b border-orange-100 flex items-center justify-between text-xs shrink-0">
+            <div class="flex items-center space-x-1.5 text-slate-600">
+                <span class="text-[11px]">Nilai Rincian:</span>
+                <span id="drawerCellValue" class="font-extrabold text-[#ea580c] px-2 py-0.5 rounded bg-white border border-orange-200 text-xs">-</span>
+            </div>
+            <span id="drawerCommentCountBadge" class="text-[10px] font-bold text-slate-500 bg-white px-2 py-0.5 rounded-full border border-slate-200">0 catatan</span>
+        </div>
+
+        <!-- Chat / Comment Stream (Scrollable) -->
+        <div id="drawerCommentsStream" class="flex-1 overflow-y-auto p-4 space-y-3.5 flex flex-col bg-slate-50/40">
+            <!-- Dynamic Content (Empty State or Comment Bubbles) -->
+        </div>
+
+        <!-- Drawer Footer Form (Input with Orange Border matching user screenshot) -->
+        <form id="drawerCommentForm" onsubmit="handleSendComment(event)" class="p-3.5 border-t border-slate-200 bg-white shrink-0">
+            <div class="relative flex items-center">
+                <input type="text" id="drawerCommentInput" placeholder="Tambah catatan di sini..." autocomplete="off"
+                    class="w-full border-2 border-[#f95a00] focus:border-[#d94e00] focus:outline-none focus:ring-0 rounded-xl pl-3.5 pr-11 py-2.5 text-xs text-slate-800 placeholder-slate-400 bg-white transition-all shadow-2xs" />
+                <button type="submit" id="btnSubmitDrawerComment" class="absolute right-1.5 px-2.5 py-1.5 rounded-lg bg-[#f95a00] hover:bg-[#d94e00] text-white text-xs font-semibold transition-colors cursor-pointer shadow-2xs" title="Kirim Catatan">
+                    <i class="fa-solid fa-paper-plane text-[11px]"></i>
+                </button>
+            </div>
+            <div class="flex items-center justify-between mt-2 text-[10px] text-slate-400">
+                <span>Tekan Enter untuk mengirim</span>
+                <span class="text-orange-600 font-medium">BPS &amp; OPD Kolaboratif</span>
+            </div>
+        </form>
     </div>
 
     <!-- TOAST NOTIFICATION CONTAINER -->
@@ -468,7 +595,23 @@
             '37': 'PERUM BULOG KANTOR CABANG BUKITTINGGI'
         };
 
+        const bpsNames = {
+            '01': 'PODES (Potensi Desa / Kelurahan)',
+            '02': 'PENDUDUK (Statistik Kependudukan & Proyeksi)',
+            '03': 'SUSENAS (Survei Sosial Ekonomi Nasional)',
+            '04': 'SAKERNAS (Survei Angkatan Kerja Nasional)',
+            '05': 'HORTI (Statistik Pertanian & Hortikultura)',
+            '06': 'IMK (Industri Mikro dan Kecil)',
+            '07': 'HOTEL (Statistik Perhotelan & Pariwisata)',
+            '08': 'IHK & INFLASI (Indeks Harga Konsumen)',
+            '09': 'PDRB LAPUS (PDRB Menurut Lapangan Usaha)',
+            '10': 'PDRB PENGELUARAN (PDRB Menurut Pengeluaran)'
+        };
+
         function getAgencyName(code) {
+            if (currentType === 'bps') {
+                return bpsNames[code] || 'BADAN PUSAT STATISTIK KOTA BUKITTINGGI';
+            }
             if (currentType === 'instansi') {
                 return instansiNames[code] || 'KANTOR PERTANAHAN KOTA BUKITTINGGI (BPN)';
             }
@@ -847,13 +990,13 @@
                                 <td class="py-2.5 px-4 text-center border border-slate-700 align-middle ${tambuoClass}" rowspan="2">
                                     ${tambuoWidth}
                                 </td>
-                                <td class="py-2 px-2 text-center border border-slate-700 font-bold">1</td>
+                                <td class="py-2.5 px-3 text-center border border-slate-700 align-middle font-medium text-slate-800">1</td>
                                 <td class="py-2 px-4 border border-slate-700 font-medium">
                                     Aur Birugo Tigo Baleh
                                 </td>
                             </tr>
                             <tr>
-                                <td class="py-2 px-2 text-center border border-slate-700 font-bold">2</td>
+                                <td class="py-2.5 px-3 text-center border border-slate-700 align-middle font-medium text-slate-800">2</td>
                                 <td class="py-2 px-4 border border-slate-700 font-medium">
                                     Mandiangin Koto Selayan
                                 </td>
@@ -865,16 +1008,2179 @@
                                 <td class="py-2.5 px-4 text-center border border-slate-700 align-middle ${sianokClass}" rowspan="2">
                                     ${sianokWidth}
                                 </td>
-                                <td class="py-2 px-2 text-center border border-slate-700 font-bold">1</td>
+                                <td class="py-2.5 px-3 text-center border border-slate-700 align-middle font-medium text-slate-800">1</td>
                                 <td class="py-2 px-4 border border-slate-700 font-medium">
                                     Aur Birugo Tigo Baleh
                                 </td>
                             </tr>
                             <tr>
-                                <td class="py-2 px-2 text-center border border-slate-700 font-bold">2</td>
+                                <td class="py-2.5 px-3 text-center border border-slate-700 align-middle font-medium text-slate-800">2</td>
                                 <td class="py-2 px-4 border border-slate-700 font-medium">
                                     Guguk Panjang
                                 </td>
+                            </tr>
+                        </tbody>
+                    `;
+                }
+            },
+                        '4.1.1': {
+                titleId: 'Jumlah Sekolah, Guru, dan Murid Taman Kanak-Kanak (TK) di Bawah Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi Menurut Kecamatan di Kota Bukittinggi',
+                titleEn: 'Number of Schools, Teachers, and Pupils in Kindergarten Under The Ministry of Education, Culture, Research, and Technology by District in Bukittinggi Municipality',
+                source: 'Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi, Data Semester Ganjil / <span class=\"italic text-slate-500\">Ministry of Education, Culture, Research, and Technology, Odd Semester Report Data</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const isFuture = (yr > 2025);
+                    const y1 = `${yr - 2}/${yr - 1}`;
+                    const y2 = `${yr - 1}/${yr}`;
+                    const y3 = `${yr}/${yr + 1}`;
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="3">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="6">
+                                    <div>Sekolah</div><div class="italic font-normal text-[11px] sm:text-xs">Schools</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2" colspan="3">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-2.5 px-3 font-bold border border-slate-700" colspan="3">
+                                    <div>Negeri</div><div class="italic font-normal text-[11px] sm:text-xs">Public</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700" colspan="3">
+                                    <div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs">
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700 text-center">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(7)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(8)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(9)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(10)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">01. Guguk Panjang</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '17'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '17'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '18'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '17'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '17'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '18'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">02. Mandiangin Koto Selayan</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '18'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '18'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '17'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '19'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '19'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '18'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">03. Aur Birugo Tigo Baleh</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '16'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '16'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '16'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '17'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '17'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '17'}</td>
+                            </tr>
+                            <tr class="bg-amber-100/70 font-bold border-t-2 border-b-2 border-slate-700">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-bold">Bukittinggi</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '2'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '2'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '2'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '51'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '51'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '51'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '53'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '53'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '53'}</td>
+                            </tr>
+
+                            <!-- PEMISAH 1 SPACE -->
+                            <tr class="subtable-spacer-row pointer-events-none select-none">
+                                <td colspan="10" class="h-7 sm:h-9 bg-[#f0f3f8] border-y border-slate-200/90 border-x-0 p-0 text-center">&nbsp;</td>
+                            </tr>
+
+                            <!-- 2. HEADER GURU -->
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-title">
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="3">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" colspan="6">
+                                    <div>Guru</div><div class="italic font-normal text-[11px] sm:text-xs">Teachers</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="2" colspan="3">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-subtitle">
+                                <th class="py-2 px-3 font-bold border border-slate-700 text-center align-middle" colspan="3">
+                                    <div>Negeri</div><div class="italic font-normal text-[11px] sm:text-xs">Public</div>
+                                </th>
+                                <th class="py-2 px-3 font-bold border border-slate-700 text-center align-middle" colspan="3">
+                                    <div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs subtable-header-years">
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs subtable-header-numbering">
+                                <th class="py-1 px-3 border border-slate-700 text-center">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(7)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(8)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(9)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(10)</th>
+                            </tr>
+
+                            <!-- DATA GURU -->
+                            
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">01. Guguk Panjang</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '102'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '94'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '115'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '102'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '94'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '115'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">02. Mandiangin Koto Selayan</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '6'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '5'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '6'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '109'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '95'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '124'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '115'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '100'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '130'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">03. Aur Birugo Tigo Baleh</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '14'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '12'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '12'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '97'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '69'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '103'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '111'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '81'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '115'}</td>
+                            </tr>
+                            <tr class="bg-amber-100/70 font-bold border-t-2 border-b-2 border-slate-700">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-bold">Bukittinggi</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '20'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '17'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '18'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '308'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '258'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '342'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '328'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '275'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '360'}</td>
+                            </tr>
+
+                            <!-- PEMISAH 1 SPACE -->
+                            <tr class="subtable-spacer-row pointer-events-none select-none">
+                                <td colspan="10" class="h-7 sm:h-9 bg-[#f0f3f8] border-y border-slate-200/90 border-x-0 p-0 text-center">&nbsp;</td>
+                            </tr>
+
+                            <!-- 3. HEADER MURID -->
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-title">
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="3">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" colspan="6">
+                                    <div>Murid</div><div class="italic font-normal text-[11px] sm:text-xs">Students</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="2" colspan="3">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-subtitle">
+                                <th class="py-2 px-3 font-bold border border-slate-700 text-center align-middle" colspan="3">
+                                    <div>Negeri</div><div class="italic font-normal text-[11px] sm:text-xs">Public</div>
+                                </th>
+                                <th class="py-2 px-3 font-bold border border-slate-700 text-center align-middle" colspan="3">
+                                    <div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs subtable-header-years">
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs subtable-header-numbering">
+                                <th class="py-1 px-3 border border-slate-700 text-center">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(7)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(8)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(9)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(10)</th>
+                            </tr>
+
+                            <!-- DATA MURID -->
+                            
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">01. Guguk Panjang</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '950'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '948'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '963'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '950'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '948'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '963'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">02. Mandiangin Koto Selayan</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '55'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '46'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '69'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1041'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1068'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1189'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1096'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1114'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1258'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">03. Aur Birugo Tigo Baleh</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '196'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '201'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '167'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '789'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '748'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '795'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '985'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '949'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '962'}</td>
+                            </tr>
+                            <tr class="bg-amber-100/70 font-bold border-t-2 border-b-2 border-slate-700">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-bold">Bukittinggi</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '251'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '247'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '236'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '2780'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '2764'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '2947'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '3031'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '3011'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '3183'}</td>
+                            </tr>
+                        </tbody>
+                    `;
+                }
+            },
+                        '4.1.3': {
+                titleId: 'Jumlah Sekolah, Guru, dan Murid Sekolah Dasar (SD) di Bawah Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi Menurut Kecamatan di Kota Bukittinggi',
+                titleEn: 'Number of Schools, Teachers, and Pupils in Primary Schools Under The Ministry of Education, Culture, Research, and Technology by District in Bukittinggi Municipality',
+                source: 'Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi, Data Semester Ganjil / <span class=\"italic text-slate-500\">Ministry of Education, Culture, Research, and Technology, Odd Semester Report Data</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const isFuture = (yr > 2025);
+                    const y1 = `${yr - 2}/${yr - 1}`;
+                    const y2 = `${yr - 1}/${yr}`;
+                    const y3 = `${yr}/${yr + 1}`;
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="3">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="6">
+                                    <div>Sekolah</div><div class="italic font-normal text-[11px] sm:text-xs">Schools</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2" colspan="3">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-2.5 px-3 font-bold border border-slate-700" colspan="3">
+                                    <div>Negeri</div><div class="italic font-normal text-[11px] sm:text-xs">Public</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700" colspan="3">
+                                    <div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs">
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700 text-center">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(7)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(8)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(9)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(10)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">01. Guguk Panjang</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '17'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '17'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '17'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '7'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '7'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '7'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '24'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '24'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '24'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">02. Mandiangin Koto Selayan</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '18'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '18'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '17'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '8'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '8'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '8'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '26'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '26'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '25'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">03. Aur Birugo Tigo Baleh</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '11'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '11'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '11'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '4'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '4'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '5'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '15'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '15'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '16'}</td>
+                            </tr>
+                            <tr class="bg-amber-100/70 font-bold border-t-2 border-b-2 border-slate-700">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-bold">Bukittinggi</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '46'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '46'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '45'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '19'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '19'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '20'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '65'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '65'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '65'}</td>
+                            </tr>
+
+                            <!-- PEMISAH 1 SPACE -->
+                            <tr class="subtable-spacer-row pointer-events-none select-none">
+                                <td colspan="10" class="h-7 sm:h-9 bg-[#f0f3f8] border-y border-slate-200/90 border-x-0 p-0 text-center">&nbsp;</td>
+                            </tr>
+
+                            <!-- 2. HEADER GURU -->
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-title">
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="3">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" colspan="6">
+                                    <div>Guru</div><div class="italic font-normal text-[11px] sm:text-xs">Teachers</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="2" colspan="3">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-subtitle">
+                                <th class="py-2 px-3 font-bold border border-slate-700 text-center align-middle" colspan="3">
+                                    <div>Negeri</div><div class="italic font-normal text-[11px] sm:text-xs">Public</div>
+                                </th>
+                                <th class="py-2 px-3 font-bold border border-slate-700 text-center align-middle" colspan="3">
+                                    <div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs subtable-header-years">
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs subtable-header-numbering">
+                                <th class="py-1 px-3 border border-slate-700 text-center">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(7)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(8)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(9)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(10)</th>
+                            </tr>
+
+                            <!-- DATA GURU -->
+                            
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">01. Guguk Panjang</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '280'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '275'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '270'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '110'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '115'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '118'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '390'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '390'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '388'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">02. Mandiangin Koto Selayan</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '310'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '305'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '298'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '125'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '128'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '130'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '435'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '433'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '428'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">03. Aur Birugo Tigo Baleh</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '190'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '188'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '185'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '65'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '68'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '72'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '255'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '256'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '257'}</td>
+                            </tr>
+                            <tr class="bg-amber-100/70 font-bold border-t-2 border-b-2 border-slate-700">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-bold">Bukittinggi</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '780'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '768'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '753'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '300'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '311'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '320'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '1080'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '1079'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '1073'}</td>
+                            </tr>
+
+                            <!-- PEMISAH 1 SPACE -->
+                            <tr class="subtable-spacer-row pointer-events-none select-none">
+                                <td colspan="10" class="h-7 sm:h-9 bg-[#f0f3f8] border-y border-slate-200/90 border-x-0 p-0 text-center">&nbsp;</td>
+                            </tr>
+
+                            <!-- 3. HEADER MURID -->
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-title">
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="3">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" colspan="6">
+                                    <div>Murid</div><div class="italic font-normal text-[11px] sm:text-xs">Students</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="2" colspan="3">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-subtitle">
+                                <th class="py-2 px-3 font-bold border border-slate-700 text-center align-middle" colspan="3">
+                                    <div>Negeri</div><div class="italic font-normal text-[11px] sm:text-xs">Public</div>
+                                </th>
+                                <th class="py-2 px-3 font-bold border border-slate-700 text-center align-middle" colspan="3">
+                                    <div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs subtable-header-years">
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs subtable-header-numbering">
+                                <th class="py-1 px-3 border border-slate-700 text-center">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(7)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(8)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(9)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(10)</th>
+                            </tr>
+
+                            <!-- DATA MURID -->
+                            
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">01. Guguk Panjang</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '3.950'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '3.920'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '3.890'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1.420'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1.450'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1.480'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '5.370'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '5.370'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '5.370'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">02. Mandiangin Koto Selayan</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '4.520'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '4.480'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '4.410'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1.680'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1.710'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1.740'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '6.200'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '6.190'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '6.150'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">03. Aur Birugo Tigo Baleh</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '2.680'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '2.650'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '2.620'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '890'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '920'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '950'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '3.570'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '3.570'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '3.570'}</td>
+                            </tr>
+                            <tr class="bg-amber-100/70 font-bold border-t-2 border-b-2 border-slate-700">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-bold">Bukittinggi</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '11.150'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '11.050'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '10.920'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '3.990'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '4.080'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '4.170'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '15.140'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '15.130'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '15.090'}</td>
+                            </tr>
+                        </tbody>
+                    `;
+                }
+            },
+                                    '4.1.4': {
+                titleId: 'Jumlah Sekolah, Guru, dan Murid Madrasah Ibtidaiyah (MI) di Bawah Kementerian Agama Menurut Kecamatan di Kota Bukittinggi',
+                titleEn: 'Number of Schools, Teachers, and Pupils in Madrasah Ibtidaiyah (MI) Under The Ministry of Religious Affairs by District in Bukittinggi Municipality',
+                source: 'Kementerian Agama, Data Semester Ganjil / <span class=\"italic text-slate-500\">Ministry of Religious Affairs, Odd Semester Report Data</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const isFuture = (yr > 2025);
+                    const y1 = `${yr - 2}/${yr - 1}`;
+                    const y2 = `${yr - 1}/${yr}`;
+                    const y3 = `${yr}/${yr + 1}`;
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="3">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="6">
+                                    <div>Sekolah</div><div class="italic font-normal text-[11px] sm:text-xs">Schools</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2" colspan="3">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-2.5 px-3 font-bold border border-slate-700" colspan="3">
+                                    <div>Negeri</div><div class="italic font-normal text-[11px] sm:text-xs">Public</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700" colspan="3">
+                                    <div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs">
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700 text-center">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(7)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(8)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(9)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(10)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">01. Guguk Panjang</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">02. Mandiangin Koto Selayan</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '2'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '2'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '2'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '3'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '3'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '3'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">03. Aur Birugo Tigo Baleh</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1'}</td>
+                            </tr>
+                            <tr class="bg-amber-100/70 font-bold border-t-2 border-b-2 border-slate-700">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-bold">Bukittinggi</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '4'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '4'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '4'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '5'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '5'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '5'}</td>
+                            </tr>
+
+                            <!-- PEMISAH 1 SPACE -->
+                            <tr class="subtable-spacer-row pointer-events-none select-none">
+                                <td colspan="10" class="h-7 sm:h-9 bg-[#f0f3f8] border-y border-slate-200/90 border-x-0 p-0 text-center">&nbsp;</td>
+                            </tr>
+
+                            <!-- 2. HEADER GURU -->
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-title">
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="3">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" colspan="6">
+                                    <div>Guru</div><div class="italic font-normal text-[11px] sm:text-xs">Teachers</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="2" colspan="3">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-subtitle">
+                                <th class="py-2 px-3 font-bold border border-slate-700 text-center align-middle" colspan="3">
+                                    <div>Negeri</div><div class="italic font-normal text-[11px] sm:text-xs">Public</div>
+                                </th>
+                                <th class="py-2 px-3 font-bold border border-slate-700 text-center align-middle" colspan="3">
+                                    <div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs subtable-header-years">
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs subtable-header-numbering">
+                                <th class="py-1 px-3 border border-slate-700 text-center">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(7)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(8)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(9)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(10)</th>
+                            </tr>
+
+                            <!-- DATA GURU -->
+                            
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">01. Guguk Panjang</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '18'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '18'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '20'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '18'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '18'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '20'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">02. Mandiangin Koto Selayan</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '24'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '24'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '25'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '32'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '34'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '36'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '56'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '58'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '61'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">03. Aur Birugo Tigo Baleh</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '16'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '16'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '17'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '16'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '16'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '17'}</td>
+                            </tr>
+                            <tr class="bg-amber-100/70 font-bold border-t-2 border-b-2 border-slate-700">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-bold">Bukittinggi</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '24'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '24'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '25'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '66'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '68'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '73'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '90'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '92'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '98'}</td>
+                            </tr>
+
+                            <!-- PEMISAH 1 SPACE -->
+                            <tr class="subtable-spacer-row pointer-events-none select-none">
+                                <td colspan="10" class="h-7 sm:h-9 bg-[#f0f3f8] border-y border-slate-200/90 border-x-0 p-0 text-center">&nbsp;</td>
+                            </tr>
+
+                            <!-- 3. HEADER MURID -->
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-title">
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="3">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" colspan="6">
+                                    <div>Murid</div><div class="italic font-normal text-[11px] sm:text-xs">Students</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="2" colspan="3">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-subtitle">
+                                <th class="py-2 px-3 font-bold border border-slate-700 text-center align-middle" colspan="3">
+                                    <div>Negeri</div><div class="italic font-normal text-[11px] sm:text-xs">Public</div>
+                                </th>
+                                <th class="py-2 px-3 font-bold border border-slate-700 text-center align-middle" colspan="3">
+                                    <div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs subtable-header-years">
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs subtable-header-numbering">
+                                <th class="py-1 px-3 border border-slate-700 text-center">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(7)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(8)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(9)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(10)</th>
+                            </tr>
+
+                            <!-- DATA MURID -->
+                            
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">01. Guguk Panjang</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '285'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '290'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '305'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '285'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '290'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '305'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">02. Mandiangin Koto Selayan</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '510'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '525'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '540'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '480'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '495'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '510'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '990'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1.020'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1.050'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">03. Aur Birugo Tigo Baleh</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '240'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '245'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '255'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '240'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '245'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '255'}</td>
+                            </tr>
+                            <tr class="bg-amber-100/70 font-bold border-t-2 border-b-2 border-slate-700">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-bold">Bukittinggi</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '510'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '525'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '540'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '1.005'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '1.030'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '1.070'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '1.515'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '1.555'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '1.610'}</td>
+                            </tr>
+                        </tbody>
+                    `;
+                }
+            },
+                        '4.1.5': {
+                titleId: 'Jumlah Sekolah, Guru, dan Murid Sekolah Menengah Pertama (SMP) di Bawah Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi Menurut Kecamatan di Kota Bukittinggi',
+                titleEn: 'Number of Schools, Teachers, and Pupils in Junior High Schools Under The Ministry of Education, Culture, Research, and Technology by District in Bukittinggi Municipality',
+                source: 'Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi, Data Semester Ganjil / <span class=\"italic text-slate-500\">Ministry of Education, Culture, Research, and Technology, Odd Semester Report Data</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const isFuture = (yr > 2025);
+                    const y1 = `${yr - 2}/${yr - 1}`;
+                    const y2 = `${yr - 1}/${yr}`;
+                    const y3 = `${yr}/${yr + 1}`;
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="3">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="6">
+                                    <div>Sekolah</div><div class="italic font-normal text-[11px] sm:text-xs">Schools</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2" colspan="3">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-2.5 px-3 font-bold border border-slate-700" colspan="3">
+                                    <div>Negeri</div><div class="italic font-normal text-[11px] sm:text-xs">Public</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700" colspan="3">
+                                    <div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs">
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700 text-center">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(7)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(8)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(9)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(10)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">01. Guguk Panjang</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '3'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '3'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '3'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '4'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '4'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '4'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '7'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '7'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '7'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">02. Mandiangin Koto Selayan</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '3'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '3'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '3'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '5'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '5'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '5'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '8'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '8'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '8'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">03. Aur Birugo Tigo Baleh</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '2'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '2'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '2'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '2'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '2'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '2'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '4'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '4'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '4'}</td>
+                            </tr>
+                            <tr class="bg-amber-100/70 font-bold border-t-2 border-b-2 border-slate-700">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-bold">Bukittinggi</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '8'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '8'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '8'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '11'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '11'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '11'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '19'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '19'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '19'}</td>
+                            </tr>
+
+                            <!-- PEMISAH 1 SPACE -->
+                            <tr class="subtable-spacer-row pointer-events-none select-none">
+                                <td colspan="10" class="h-7 sm:h-9 bg-[#f0f3f8] border-y border-slate-200/90 border-x-0 p-0 text-center">&nbsp;</td>
+                            </tr>
+
+                            <!-- 2. HEADER GURU -->
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-title">
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="3">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" colspan="6">
+                                    <div>Guru</div><div class="italic font-normal text-[11px] sm:text-xs">Teachers</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="2" colspan="3">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-subtitle">
+                                <th class="py-2 px-3 font-bold border border-slate-700 text-center align-middle" colspan="3">
+                                    <div>Negeri</div><div class="italic font-normal text-[11px] sm:text-xs">Public</div>
+                                </th>
+                                <th class="py-2 px-3 font-bold border border-slate-700 text-center align-middle" colspan="3">
+                                    <div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs subtable-header-years">
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs subtable-header-numbering">
+                                <th class="py-1 px-3 border border-slate-700 text-center">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(7)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(8)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(9)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(10)</th>
+                            </tr>
+
+                            <!-- DATA GURU -->
+                            
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">01. Guguk Panjang</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '135'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '132'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '130'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '72'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '75'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '78'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '207'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '207'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '208'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">02. Mandiangin Koto Selayan</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '142'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '140'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '138'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '85'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '88'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '90'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '227'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '228'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '228'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">03. Aur Birugo Tigo Baleh</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '88'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '86'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '85'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '36'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '38'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '40'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '124'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '124'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '125'}</td>
+                            </tr>
+                            <tr class="bg-amber-100/70 font-bold border-t-2 border-b-2 border-slate-700">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-bold">Bukittinggi</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '365'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '358'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '353'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '193'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '201'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '208'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '558'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '559'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '561'}</td>
+                            </tr>
+
+                            <!-- PEMISAH 1 SPACE -->
+                            <tr class="subtable-spacer-row pointer-events-none select-none">
+                                <td colspan="10" class="h-7 sm:h-9 bg-[#f0f3f8] border-y border-slate-200/90 border-x-0 p-0 text-center">&nbsp;</td>
+                            </tr>
+
+                            <!-- 3. HEADER MURID -->
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-title">
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="3">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" colspan="6">
+                                    <div>Murid</div><div class="italic font-normal text-[11px] sm:text-xs">Students</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="2" colspan="3">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-subtitle">
+                                <th class="py-2 px-3 font-bold border border-slate-700 text-center align-middle" colspan="3">
+                                    <div>Negeri</div><div class="italic font-normal text-[11px] sm:text-xs">Public</div>
+                                </th>
+                                <th class="py-2 px-3 font-bold border border-slate-700 text-center align-middle" colspan="3">
+                                    <div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs subtable-header-years">
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs subtable-header-numbering">
+                                <th class="py-1 px-3 border border-slate-700 text-center">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(7)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(8)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(9)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(10)</th>
+                            </tr>
+
+                            <!-- DATA MURID -->
+                            
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">01. Guguk Panjang</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '2.150'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '2.120'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '2.100'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '980'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1.010'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1.030'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '3.130'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '3.130'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '3.130'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">02. Mandiangin Koto Selayan</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '2.340'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '2.310'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '2.290'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1.120'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1.150'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1.180'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '3.460'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '3.460'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '3.470'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">03. Aur Birugo Tigo Baleh</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1.420'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1.400'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1.390'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '490'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '510'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '520'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1.910'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1.910'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1.910'}</td>
+                            </tr>
+                            <tr class="bg-amber-100/70 font-bold border-t-2 border-b-2 border-slate-700">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-bold">Bukittinggi</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '5.910'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '5.830'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '5.780'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '2.590'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '2.670'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '2.730'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '8.500'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '8.500'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '8.510'}</td>
+                            </tr>
+                        </tbody>
+                    `;
+                }
+            },
+                                    '4.1.15': {
+                titleId: 'Jumlah Sekolah, Guru, dan Murid Kelompok Bermain (KB) di Bawah Kementerian Pendidikan dan Kebudayaan Menurut Kecamatan di Kota Bukittinggi',
+                titleEn: 'Number of Schools, Teachers, and Pupils in Play Groups (KB) Under The Ministry of Education and Culture by District in Bukittinggi Municipality',
+                source: 'Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi, Data Semester Ganjil / <span class=\"italic text-slate-500\">Ministry of Education, Culture, Research, and Technology, Odd Semester Report Data</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const isFuture = (yr > 2025);
+                    const y1 = `${yr - 2}/${yr - 1}`;
+                    const y2 = `${yr - 1}/${yr}`;
+                    const y3 = `${yr}/${yr + 1}`;
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="3">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="6">
+                                    <div>Sekolah</div><div class="italic font-normal text-[11px] sm:text-xs">Schools</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2" colspan="3">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-2.5 px-3 font-bold border border-slate-700" colspan="3">
+                                    <div>Negeri</div><div class="italic font-normal text-[11px] sm:text-xs">Public</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700" colspan="3">
+                                    <div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs">
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700 text-center">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(7)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(8)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(9)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(10)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">01. Guguk Panjang</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '9'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '9'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '9'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '9'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '9'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '9'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">02. Mandiangin Koto Selayan</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '14'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '14'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '14'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '14'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '14'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '14'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">03. Aur Birugo Tigo Baleh</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '7'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '7'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '7'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '7'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '7'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '7'}</td>
+                            </tr>
+                            <tr class="bg-amber-100/70 font-bold border-t-2 border-b-2 border-slate-700">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-bold">Bukittinggi</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '30'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '30'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '30'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '30'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '30'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '30'}</td>
+                            </tr>
+
+                            <!-- PEMISAH 1 SPACE -->
+                            <tr class="subtable-spacer-row pointer-events-none select-none">
+                                <td colspan="10" class="h-7 sm:h-9 bg-[#f0f3f8] border-y border-slate-200/90 border-x-0 p-0 text-center">&nbsp;</td>
+                            </tr>
+
+                            <!-- 2. HEADER GURU -->
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-title">
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="3">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" colspan="6">
+                                    <div>Guru</div><div class="italic font-normal text-[11px] sm:text-xs">Teachers</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="2" colspan="3">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-subtitle">
+                                <th class="py-2 px-3 font-bold border border-slate-700 text-center align-middle" colspan="3">
+                                    <div>Negeri</div><div class="italic font-normal text-[11px] sm:text-xs">Public</div>
+                                </th>
+                                <th class="py-2 px-3 font-bold border border-slate-700 text-center align-middle" colspan="3">
+                                    <div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs subtable-header-years">
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs subtable-header-numbering">
+                                <th class="py-1 px-3 border border-slate-700 text-center">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(7)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(8)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(9)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(10)</th>
+                            </tr>
+
+                            <!-- DATA GURU -->
+                            
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">01. Guguk Panjang</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '28'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '29'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '30'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '28'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '29'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '30'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">02. Mandiangin Koto Selayan</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '44'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '45'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '46'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '44'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '45'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '46'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">03. Aur Birugo Tigo Baleh</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '22'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '23'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '24'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '22'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '23'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '24'}</td>
+                            </tr>
+                            <tr class="bg-amber-100/70 font-bold border-t-2 border-b-2 border-slate-700">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-bold">Bukittinggi</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '94'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '97'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '100'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '94'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '97'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '100'}</td>
+                            </tr>
+
+                            <!-- PEMISAH 1 SPACE -->
+                            <tr class="subtable-spacer-row pointer-events-none select-none">
+                                <td colspan="10" class="h-7 sm:h-9 bg-[#f0f3f8] border-y border-slate-200/90 border-x-0 p-0 text-center">&nbsp;</td>
+                            </tr>
+
+                            <!-- 3. HEADER MURID -->
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-title">
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="3">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" colspan="6">
+                                    <div>Murid</div><div class="italic font-normal text-[11px] sm:text-xs">Students</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="2" colspan="3">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-subtitle">
+                                <th class="py-2 px-3 font-bold border border-slate-700 text-center align-middle" colspan="3">
+                                    <div>Negeri</div><div class="italic font-normal text-[11px] sm:text-xs">Public</div>
+                                </th>
+                                <th class="py-2 px-3 font-bold border border-slate-700 text-center align-middle" colspan="3">
+                                    <div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs subtable-header-years">
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs subtable-header-numbering">
+                                <th class="py-1 px-3 border border-slate-700 text-center">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(7)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(8)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(9)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(10)</th>
+                            </tr>
+
+                            <!-- DATA MURID -->
+                            
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">01. Guguk Panjang</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '245'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '250'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '260'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '245'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '250'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '260'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">02. Mandiangin Koto Selayan</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '380'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '395'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '410'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '380'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '395'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '410'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">03. Aur Birugo Tigo Baleh</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '190'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '195'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '205'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '190'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '195'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '205'}</td>
+                            </tr>
+                            <tr class="bg-amber-100/70 font-bold border-t-2 border-b-2 border-slate-700">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-bold">Bukittinggi</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '815'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '840'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '875'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '815'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '840'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '875'}</td>
+                            </tr>
+                        </tbody>
+                    `;
+                }
+            },
+                                    '4.1.16': {
+                titleId: 'Jumlah Sekolah, Guru, dan Murid Taman Penitipan Anak (TPA) di Bawah Kementerian Pendidikan dan Kebudayaan Menurut Kecamatan di Kota Bukittinggi',
+                titleEn: 'Number of Schools, Teachers, and Pupils in Day Care Centers (TPA) Under The Ministry of Education and Culture by District in Bukittinggi Municipality',
+                source: 'Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi, Data Semester Ganjil / <span class=\"italic text-slate-500\">Ministry of Education, Culture, Research, and Technology, Odd Semester Report Data</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const isFuture = (yr > 2025);
+                    const y1 = `${yr - 2}/${yr - 1}`;
+                    const y2 = `${yr - 1}/${yr}`;
+                    const y3 = `${yr}/${yr + 1}`;
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="3">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="6">
+                                    <div>Sekolah</div><div class="italic font-normal text-[11px] sm:text-xs">Schools</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2" colspan="3">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-2.5 px-3 font-bold border border-slate-700" colspan="3">
+                                    <div>Negeri</div><div class="italic font-normal text-[11px] sm:text-xs">Public</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700" colspan="3">
+                                    <div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs">
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700 text-center">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(7)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(8)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(9)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(10)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">01. Guguk Panjang</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '2'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '2'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '2'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '2'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '2'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '2'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">02. Mandiangin Koto Selayan</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '2'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '2'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '2'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '2'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '2'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '2'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">03. Aur Birugo Tigo Baleh</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '1'}</td>
+                            </tr>
+                            <tr class="bg-amber-100/70 font-bold border-t-2 border-b-2 border-slate-700">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-bold">Bukittinggi</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '5'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '5'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '5'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '5'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '5'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '5'}</td>
+                            </tr>
+
+                            <!-- PEMISAH 1 SPACE -->
+                            <tr class="subtable-spacer-row pointer-events-none select-none">
+                                <td colspan="10" class="h-7 sm:h-9 bg-[#f0f3f8] border-y border-slate-200/90 border-x-0 p-0 text-center">&nbsp;</td>
+                            </tr>
+
+                            <!-- 2. HEADER GURU -->
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-title">
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="3">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" colspan="6">
+                                    <div>Guru</div><div class="italic font-normal text-[11px] sm:text-xs">Teachers</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="2" colspan="3">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-subtitle">
+                                <th class="py-2 px-3 font-bold border border-slate-700 text-center align-middle" colspan="3">
+                                    <div>Negeri</div><div class="italic font-normal text-[11px] sm:text-xs">Public</div>
+                                </th>
+                                <th class="py-2 px-3 font-bold border border-slate-700 text-center align-middle" colspan="3">
+                                    <div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs subtable-header-years">
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs subtable-header-numbering">
+                                <th class="py-1 px-3 border border-slate-700 text-center">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(7)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(8)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(9)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(10)</th>
+                            </tr>
+
+                            <!-- DATA GURU -->
+                            
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">01. Guguk Panjang</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '8'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '8'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '9'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '8'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '8'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '9'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">02. Mandiangin Koto Selayan</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '7'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '8'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '8'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '7'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '8'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '8'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">03. Aur Birugo Tigo Baleh</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '4'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '4'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '5'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '4'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '4'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '5'}</td>
+                            </tr>
+                            <tr class="bg-amber-100/70 font-bold border-t-2 border-b-2 border-slate-700">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-bold">Bukittinggi</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '19'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '20'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '22'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '19'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '20'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '22'}</td>
+                            </tr>
+
+                            <!-- PEMISAH 1 SPACE -->
+                            <tr class="subtable-spacer-row pointer-events-none select-none">
+                                <td colspan="10" class="h-7 sm:h-9 bg-[#f0f3f8] border-y border-slate-200/90 border-x-0 p-0 text-center">&nbsp;</td>
+                            </tr>
+
+                            <!-- 3. HEADER MURID -->
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-title">
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="3">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" colspan="6">
+                                    <div>Murid</div><div class="italic font-normal text-[11px] sm:text-xs">Students</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="2" colspan="3">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-subtitle">
+                                <th class="py-2 px-3 font-bold border border-slate-700 text-center align-middle" colspan="3">
+                                    <div>Negeri</div><div class="italic font-normal text-[11px] sm:text-xs">Public</div>
+                                </th>
+                                <th class="py-2 px-3 font-bold border border-slate-700 text-center align-middle" colspan="3">
+                                    <div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs subtable-header-years">
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs subtable-header-numbering">
+                                <th class="py-1 px-3 border border-slate-700 text-center">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(7)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(8)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(9)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(10)</th>
+                            </tr>
+
+                            <!-- DATA MURID -->
+                            
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">01. Guguk Panjang</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '42'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '45'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '48'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '42'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '45'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '48'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">02. Mandiangin Koto Selayan</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '38'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '40'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '42'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '38'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '40'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '42'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">03. Aur Birugo Tigo Baleh</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '22'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '24'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '25'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '22'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '24'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '25'}</td>
+                            </tr>
+                            <tr class="bg-amber-100/70 font-bold border-t-2 border-b-2 border-slate-700">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-bold">Bukittinggi</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '102'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '109'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '115'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '102'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '109'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '115'}</td>
+                            </tr>
+                        </tbody>
+                    `;
+                }
+            },
+                                    '4.1.17': {
+                titleId: 'Jumlah Sekolah, Guru, dan Murid Satuan PAUD Sejenis (SPS) di Bawah Kementerian Pendidikan dan Kebudayaan Menurut Kecamatan di Kota Bukittinggi',
+                titleEn: 'Number of Schools, Teachers, and Pupils in Similar Early Childhood Education Units (SPS) Under The Ministry of Education and Culture by District in Bukittinggi Municipality',
+                source: 'Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi, Data Semester Ganjil / <span class=\"italic text-slate-500\">Ministry of Education, Culture, Research, and Technology, Odd Semester Report Data</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const isFuture = (yr > 2025);
+                    const y1 = `${yr - 2}/${yr - 1}`;
+                    const y2 = `${yr - 1}/${yr}`;
+                    const y3 = `${yr}/${yr + 1}`;
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="3">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="6">
+                                    <div>Sekolah</div><div class="italic font-normal text-[11px] sm:text-xs">Schools</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2" colspan="3">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-2.5 px-3 font-bold border border-slate-700" colspan="3">
+                                    <div>Negeri</div><div class="italic font-normal text-[11px] sm:text-xs">Public</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700" colspan="3">
+                                    <div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs">
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700 text-center">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(7)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(8)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(9)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(10)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">01. Guguk Panjang</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '4'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '4'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '4'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '4'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '4'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '4'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">02. Mandiangin Koto Selayan</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '6'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '6'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '6'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '6'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '6'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '6'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">03. Aur Birugo Tigo Baleh</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '3'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '3'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '3'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '3'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '3'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '3'}</td>
+                            </tr>
+                            <tr class="bg-amber-100/70 font-bold border-t-2 border-b-2 border-slate-700">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-bold">Bukittinggi</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '13'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '13'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '13'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '13'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '13'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '13'}</td>
+                            </tr>
+
+                            <!-- PEMISAH 1 SPACE -->
+                            <tr class="subtable-spacer-row pointer-events-none select-none">
+                                <td colspan="10" class="h-7 sm:h-9 bg-[#f0f3f8] border-y border-slate-200/90 border-x-0 p-0 text-center">&nbsp;</td>
+                            </tr>
+
+                            <!-- 2. HEADER GURU -->
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-title">
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="3">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" colspan="6">
+                                    <div>Guru</div><div class="italic font-normal text-[11px] sm:text-xs">Teachers</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="2" colspan="3">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-subtitle">
+                                <th class="py-2 px-3 font-bold border border-slate-700 text-center align-middle" colspan="3">
+                                    <div>Negeri</div><div class="italic font-normal text-[11px] sm:text-xs">Public</div>
+                                </th>
+                                <th class="py-2 px-3 font-bold border border-slate-700 text-center align-middle" colspan="3">
+                                    <div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs subtable-header-years">
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs subtable-header-numbering">
+                                <th class="py-1 px-3 border border-slate-700 text-center">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(7)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(8)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(9)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(10)</th>
+                            </tr>
+
+                            <!-- DATA GURU -->
+                            
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">01. Guguk Panjang</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '12'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '12'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '13'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '12'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '12'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '13'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">02. Mandiangin Koto Selayan</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '18'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '19'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '20'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '18'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '19'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '20'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">03. Aur Birugo Tigo Baleh</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '9'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '10'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '10'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '9'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '10'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '10'}</td>
+                            </tr>
+                            <tr class="bg-amber-100/70 font-bold border-t-2 border-b-2 border-slate-700">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-bold">Bukittinggi</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '39'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '41'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '43'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '39'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '41'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '43'}</td>
+                            </tr>
+
+                            <!-- PEMISAH 1 SPACE -->
+                            <tr class="subtable-spacer-row pointer-events-none select-none">
+                                <td colspan="10" class="h-7 sm:h-9 bg-[#f0f3f8] border-y border-slate-200/90 border-x-0 p-0 text-center">&nbsp;</td>
+                            </tr>
+
+                            <!-- 3. HEADER MURID -->
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-title">
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="3">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" colspan="6">
+                                    <div>Murid</div><div class="italic font-normal text-[11px] sm:text-xs">Students</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="2" colspan="3">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-subtitle">
+                                <th class="py-2 px-3 font-bold border border-slate-700 text-center align-middle" colspan="3">
+                                    <div>Negeri</div><div class="italic font-normal text-[11px] sm:text-xs">Public</div>
+                                </th>
+                                <th class="py-2 px-3 font-bold border border-slate-700 text-center align-middle" colspan="3">
+                                    <div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs subtable-header-years">
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs subtable-header-numbering">
+                                <th class="py-1 px-3 border border-slate-700 text-center">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(7)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(8)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(9)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(10)</th>
+                            </tr>
+
+                            <!-- DATA MURID -->
+                            
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">01. Guguk Panjang</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '95'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '98'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '105'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '95'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '98'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '105'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">02. Mandiangin Koto Selayan</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '140'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '145'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '150'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '140'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '145'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '150'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">03. Aur Birugo Tigo Baleh</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '70'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '72'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '75'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '70'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '72'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center ">${isFuture ? '-' : '75'}</td>
+                            </tr>
+                            <tr class="bg-amber-100/70 font-bold border-t-2 border-b-2 border-slate-700">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-bold">Bukittinggi</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '305'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '315'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '330'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '305'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '315'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '330'}</td>
                             </tr>
                         </tbody>
                     `;
@@ -2204,7 +4510,7 @@
                 render: function(year) {
                     const yr = parseInt(year) || 2025;
                     const d = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[yr]) ? serverDbDataStore[yr] : {};
-                    ﻿const units235 = [
+                    const units235 = [
     { key: 'unit_1', no: 1, name: "01. Sekretaris Daerah", pns25: '104', pppk25: '5', pns24: '99', pppk24: '4' },
     { key: 'unit_2', no: 2, name: "02. Badan Kepegawaian dan Pengembangan Sumber Daya Manusia", pns25: '27', pppk25: '2', pns24: '27', pppk24: '0' },
     { key: 'unit_3', no: 3, name: "03. Badan Keuangan", pns25: '57', pppk25: '5', pns24: '50', pppk24: '3' },
@@ -2377,6 +4683,2597 @@
                         </tbody>
                     `;
                 }
+            },
+            '3.1.1': {
+                titleId: 'Jumlah Penduduk, Laju Pertumbuhan Penduduk, Distribusi Persentase Penduduk, Kepadatan Penduduk, Rasio Jenis Kelamin Penduduk Menurut Kecamatan di Kota Bukittinggi',
+                titleEn: 'Population, Population Growth Rate, Percentage Distribution of Population, Population Density, and Population Sex Ratio by District in Bukittinggi Municipality',
+                source: 'Dinas Kependudukan dan Pencatatan Sipil Kota Bukittinggi / <span class="italic text-slate-500">Population and Civil Registration Office of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const d = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[yr]) ? serverDbDataStore[yr] : {};
+                    
+                    const defaultData311 = {
+                        2025: {
+                            '01': { pop: '50.210', pct: '34,97', ratio: '100,73' },
+                            '02': { pop: '61.395', pct: '42,76', ratio: '100,60' },
+                            '03': { pop: '31.990', pct: '22,28', ratio: '100,09' },
+                            'total': { pop: '143.595', pct: '-', ratio: '100,53' }
+                        },
+                        2024: {
+                            '01': { pop: '49.614', pct: '34,99', ratio: '100,70' },
+                            '02': { pop: '60.751', pct: '42,84', ratio: '100,60' },
+                            '03': { pop: '31.439', pct: '22,17', ratio: '100,10' },
+                            'total': { pop: '141.804', pct: '-', ratio: '100,52' }
+                        }
+                    };
+
+                    const def = defaultData311[yr] || {};
+                    const v1Pop = d['01_pop'] !== undefined ? d['01_pop'] : (def['01'] ? def['01'].pop : '-');
+                    const v1Pct = d['01_pct'] !== undefined ? d['01_pct'] : (def['01'] ? def['01'].pct : '-');
+                    const v1Ratio = d['01_ratio'] !== undefined ? d['01_ratio'] : (def['01'] ? def['01'].ratio : '-');
+
+                    const v2Pop = d['02_pop'] !== undefined ? d['02_pop'] : (def['02'] ? def['02'].pop : '-');
+                    const v2Pct = d['02_pct'] !== undefined ? d['02_pct'] : (def['02'] ? def['02'].pct : '-');
+                    const v2Ratio = d['02_ratio'] !== undefined ? d['02_ratio'] : (def['02'] ? def['02'].ratio : '-');
+
+                    const v3Pop = d['03_pop'] !== undefined ? d['03_pop'] : (def['03'] ? def['03'].pop : '-');
+                    const v3Pct = d['03_pct'] !== undefined ? d['03_pct'] : (def['03'] ? def['03'].pct : '-');
+                    const v3Ratio = d['03_ratio'] !== undefined ? d['03_ratio'] : (def['03'] ? def['03'].ratio : '-');
+
+                    let numPop1 = parseFloat(String(v1Pop).replace(/\./g, '').replace(',', '.')) || 0;
+                    let numPop2 = parseFloat(String(v2Pop).replace(/\./g, '').replace(',', '.')) || 0;
+                    let numPop3 = parseFloat(String(v3Pop).replace(/\./g, '').replace(',', '.')) || 0;
+                    let calcTotalPop = (v1Pop !== '-' || v2Pop !== '-' || v3Pop !== '-') ? (numPop1 + numPop2 + numPop3).toLocaleString('id-ID') : '-';
+
+                    const vTotPop = d['total_pop'] !== undefined ? d['total_pop'] : (def['total'] ? def['total'].pop : calcTotalPop);
+                    const vTotPct = d['total_pct'] !== undefined ? d['total_pct'] : (def['total'] ? def['total'].pct : '-');
+                    const vTotRatio = d['total_ratio'] !== undefined ? d['total_ratio'] : (def['total'] ? def['total'].ratio : '-');
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Kecamatan</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Subdistrict</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Jumlah Penduduk (jiwa)</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Population (people)</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Persentase Penduduk</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Percentage of Total Population (%)</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Rasio Jenis Kelamin</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Population Sex Ratio</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">
+                                    01. Guguk Panjang
+                                </td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${v1Pop}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${v1Pct}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${v1Ratio}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">
+                                    02. Mandiangin Koto Selayan
+                                </td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${v2Pop}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${v2Pct}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${v2Ratio}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">
+                                    03. Aur Birugo Tigo Baleh
+                                </td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${v3Pop}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${v3Pct}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${v3Ratio}</td>
+                            </tr>
+                            <tr class="bg-[#fed7aa] font-bold">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">
+                                    Jumlah / Total (Bukittinggi)
+                                </td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-extrabold">${vTotPop}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-extrabold">${vTotPct}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-extrabold">${vTotRatio}</td>
+                            </tr>
+                        </tbody>
+                    `;
+                }
+            },
+            '3.1.2': {
+                titleId: 'Penduduk Menurut Golongan Umur dan Jenis Kelamin di Kota Bukittinggi',
+                titleEn: 'Population by Age Group and Sex in Bukittinggi Municipality',
+                source: 'Dinas Kependudukan dan Pencatatan Sipil Kota Bukittinggi / <span class="italic text-slate-500">Population and Civil Registration Office of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const d = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[yr]) ? serverDbDataStore[yr] : {};
+                    
+                    const ageGroups = [
+                        { key: '0_4', label: '0–4', l: '5.203', p: '4.882', tot: '10.085' },
+                        { key: '5_9', label: '5–9', l: '6.541', p: '6.044', tot: '12.585' },
+                        { key: '10_14', label: '10–14', l: '6.837', p: '6.469', tot: '13.306' },
+                        { key: '15_19', label: '15–19', l: '6.594', p: '6.223', tot: '12.817' },
+                        { key: '20_24', label: '20–24', l: '6.303', p: '5.946', tot: '12.249' },
+                        { key: '25_29', label: '25–29', l: '6.127', p: '5.937', tot: '12.064' },
+                        { key: '30_34', label: '30–34', l: '5.472', p: '5.429', tot: '10.901' },
+                        { key: '35_39', label: '35–39', l: '5.169', p: '5.094', tot: '10.263' },
+                        { key: '40_44', label: '40–44', l: '5.101', p: '5.096', tot: '10.197' },
+                        { key: '45_49', label: '45–49', l: '4.657', p: '4.476', tot: '9.133' },
+                        { key: '50_54', label: '50–54', l: '4.025', p: '4.025', tot: '8.050' },
+                        { key: '55_59', label: '55–59', l: '3.179', p: '3.369', tot: '6.548' },
+                        { key: '60_64', label: '60–64', l: '2.663', p: '2.866', tot: '5.529' },
+                        { key: '65_69', label: '65–69', l: '2.070', p: '2.262', tot: '4.332' },
+                        { key: '70_74', label: '70–74', l: '1.305', p: '1.507', tot: '2.812' },
+                        { key: '75_plus', label: '75+', l: '1.198', p: '1.898', tot: '3.096' }
+                    ];
+
+                    let sumL = 0, sumP = 0, sumTot = 0;
+                    let hasAnyData = false;
+
+                    const rowsHtml = ageGroups.map(grp => {
+                        const is2025 = (yr === 2025);
+                        let vL = d[`${grp.key}_l`] !== undefined ? d[`${grp.key}_l`] : (is2025 ? grp.l : '-');
+                        let vP = d[`${grp.key}_p`] !== undefined ? d[`${grp.key}_p`] : (is2025 ? grp.p : '-');
+                        
+                        let numL = parseFloat(String(vL).replace(/\./g, '').replace(',', '.')) || 0;
+                        let numP = parseFloat(String(vP).replace(/\./g, '').replace(',', '.')) || 0;
+                        let calcRowTot = (vL !== '-' || vP !== '-') ? (numL + numP).toLocaleString('id-ID') : '-';
+                        let vTot = d[`${grp.key}_tot`] !== undefined ? d[`${grp.key}_tot`] : (is2025 ? grp.tot : calcRowTot);
+
+                        if (vL !== '-' || vP !== '-') {
+                            hasAnyData = true;
+                            sumL += numL;
+                            sumP += numP;
+                            if (calcRowTot !== '-') sumTot += (numL + numP);
+                        }
+
+                        return `
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">
+                                    ${grp.label}
+                                </td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${vL}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${vP}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${vTot}</td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    const is2025 = (yr === 2025);
+                    const finalTotalL = d['total_l'] !== undefined ? d['total_l'] : (is2025 ? '71.987' : (hasAnyData ? sumL.toLocaleString('id-ID') : '-'));
+                    const finalTotalP = d['total_p'] !== undefined ? d['total_p'] : (is2025 ? '71.608' : (hasAnyData ? sumP.toLocaleString('id-ID') : '-'));
+                    const finalTotalTot = d['total_tot'] !== undefined ? d['total_tot'] : (is2025 ? '143.595' : (hasAnyData ? sumTot.toLocaleString('id-ID') : '-'));
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Kelompok Umur</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Age Group</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Laki–laki</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Male</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Perempuan</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Female</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Jumlah</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                            <tr class="bg-[#fed7aa] font-bold">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">
+                                    Jumlah / <span class="italic font-bold">Total</span>
+                                </td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-extrabold">${finalTotalL}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-extrabold">${finalTotalP}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-extrabold">${finalTotalTot}</td>
+                            </tr>
+                        </tbody>
+                    `;
+                }
+            },
+            '3.1.8': {
+                titleId: 'Jumlah Penduduk Wajib KTP (Kartu Tanda Penduduk) dan yang Telah Memiliki KTP dirinci Menurut Kecamatan di Kota Bukittinggi',
+                titleEn: 'Number of Population Owner Identity Card and Be Possessed Identity Card Already by District in Bukittinggi Municipality',
+                source: 'Dinas Kependudukan dan Pencatatan Sipil Kota Bukittinggi / <span class="italic text-slate-500">Population and Civil Registration Office of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const d = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[yr]) ? serverDbDataStore[yr] : {};
+                    
+                    const fmt = (v) => {
+                        if (v === undefined || v === null || v === '' || v === '-') return '-';
+                        const s = v.toString().trim();
+                        const clean = s.replace(/[^\d]/g, '');
+                        if (!clean) return '-';
+                        return parseInt(clean, 10).toLocaleString('id-ID');
+                    };
+
+                    const defKec = {
+                        2025: {
+                            '01_pop': '50.210', '01_wajib': '35.853', '01_ktp': '35.348',
+                            '02_pop': '61.395', '02_wajib': '43.995', '02_ktp': '43.463',
+                            '03_pop': '31.990', '03_wajib': '22.523', '03_ktp': '22.214'
+                        },
+                        2024: {
+                            '01_pop': '49.614', '01_wajib': '35.197', '01_ktp': '34.988',
+                            '02_pop': '60.751', '02_wajib': '43.195', '02_ktp': '42.932',
+                            '03_pop': '31.439', '03_wajib': '21.901', '03_ktp': '21.764'
+                        }
+                    };
+                    const fallback = defKec[yr] || {};
+
+                    const v1Pop = d['01_pop'] !== undefined ? fmt(d['01_pop']) : (fallback['01_pop'] || '-');
+                    const v1Wajib = d['01_wajib'] !== undefined ? fmt(d['01_wajib']) : (fallback['01_wajib'] || '-');
+                    const v1Ktp = d['01_ktp'] !== undefined ? fmt(d['01_ktp']) : (fallback['01_ktp'] || '-');
+
+                    const v2Pop = d['02_pop'] !== undefined ? fmt(d['02_pop']) : (fallback['02_pop'] || '-');
+                    const v2Wajib = d['02_wajib'] !== undefined ? fmt(d['02_wajib']) : (fallback['02_wajib'] || '-');
+                    const v2Ktp = d['02_ktp'] !== undefined ? fmt(d['02_ktp']) : (fallback['02_ktp'] || '-');
+
+                    const v3Pop = d['03_pop'] !== undefined ? fmt(d['03_pop']) : (fallback['03_pop'] || '-');
+                    const v3Wajib = d['03_wajib'] !== undefined ? fmt(d['03_wajib']) : (fallback['03_wajib'] || '-');
+                    const v3Ktp = d['03_ktp'] !== undefined ? fmt(d['03_ktp']) : (fallback['03_ktp'] || '-');
+
+                    const knownTotals = {
+                        2025: { pop: '143.595', wajib: '102.371', ktp: '101.025' },
+                        2024: { pop: '141.804', wajib: '100.293', ktp: '99.684' },
+                        2023: { pop: '138.534', wajib: '99.849',  ktp: '95.690' },
+                        2022: { pop: '134.412', wajib: '96.195',  ktp: '92.459' },
+                        2021: { pop: '130.211', wajib: '90.846',  ktp: '90790' },
+                        2020: { pop: '101.745', wajib: '88.327',  ktp: '88.289' },
+                        2019: { pop: '123.296', wajib: '85.296',  ktp: '85.454' }
+                    };
+
+                    let totalRowsHtml = '';
+                    for (let i = 0; i < 6; i++) {
+                        const y = yr - i;
+                        const known = knownTotals[y] || {};
+                        const valPop = d[`tot_${y}_pop`] !== undefined ? fmt(d[`tot_${y}_pop`]) : (known.pop || '-');
+                        const valWajib = d[`tot_${y}_wajib`] !== undefined ? fmt(d[`tot_${y}_wajib`]) : (known.wajib || '-');
+                        const valKtp = d[`tot_${y}_ktp`] !== undefined ? fmt(d[`tot_${y}_ktp`]) : (known.ktp || '-');
+
+                        if (i === 0) {
+                            totalRowsHtml += `
+                                <tr class="bg-[#fed7aa] font-bold">
+                                    <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top" rowspan="6">
+                                        Jumlah / <span class="italic font-bold">Total</span>
+                                    </td>
+                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-extrabold">
+                                        ${y}
+                                    </td>
+                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-extrabold">
+                                        ${valPop}
+                                    </td>
+                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-extrabold">
+                                        ${valWajib}
+                                    </td>
+                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-extrabold">
+                                        ${valKtp}
+                                    </td>
+                                </tr>
+                            `;
+                        } else {
+                            totalRowsHtml += `
+                                <tr class="hover:bg-amber-100/60 transition-colors">
+                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top">
+                                        ${y}
+                                    </td>
+                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top">
+                                        ${valPop}
+                                    </td>
+                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top">
+                                        ${valWajib}
+                                    </td>
+                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top">
+                                        ${valKtp}
+                                    </td>
+                                </tr>
+                            `;
+                        }
+                    }
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="2">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Jumlah Penduduk</div><div class="italic font-normal text-[11px] sm:text-xs">Number of Population</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Wajib KTP</div><div class="italic font-normal text-[11px] sm:text-xs">Must Have ID</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Memiliki KTP Elektronik</div><div class="italic font-normal text-[11px] sm:text-xs">Have Electronic ID</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700" colspan="2">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top" colspan="2">
+                                    01. GUGUK PANJANG
+                                </td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${v1Pop}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${v1Wajib}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${v1Ktp}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top" colspan="2">
+                                    02. MANDIANGIN KOTO SELAYAN
+                                </td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${v2Pop}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${v2Wajib}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${v2Ktp}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top" colspan="2">
+                                    03. AUR BIRUGO TIGO BALEH
+                                </td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${v3Pop}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${v3Wajib}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${v3Ktp}</td>
+                            </tr>
+                            ${totalRowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+            '4.3.1': {
+                titleId: 'Jumlah Penduduk Menurut Agama yang Dianut di Kota Bukittinggi',
+                titleEn: 'Number of Population by Religion in Bukittinggi',
+                source: 'Dinas Kependudukan dan Pencatatan Sipil Kota Bukittinggi / <span class="italic text-slate-500">Population and Civil Registration Office of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yrKey = year ? year.toString() : '2025';
+                    const d = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[yrKey]) ? serverDbDataStore[yrKey] : {};
+
+                    const rowsDef = [
+                        // 01. GUGUK PANJANG
+                        { key: '01_total', label: '01. GUGUK PANJANG', isKec: true },
+                        { key: '01_01', label: '1. Tarok Dipo' },
+                        { key: '01_02', label: '2. Bukik Cangang Kayu Ramang' },
+                        { key: '01_03', label: '3. Pakan Kurai' },
+                        { key: '01_04', label: '4. Aur Tajungkang Tengah Sawah' },
+                        { key: '01_05', label: '5. Benteng Pasar Atas' },
+                        { key: '01_06', label: '6. Kayu Kubu' },
+                        { key: '01_07', label: '7. Bukik Apit Puhun' },
+                        // 02. MANDIANGIN KOTO SELAYAN
+                        { key: '02_total', label: '02. MANDIANGIN KOTO SELAYAN', isKec: true },
+                        { key: '02_01', label: '1. Campago Guguk Bulek' },
+                        { key: '02_02', label: '2. Campago Ipuh' },
+                        { key: '02_03', label: '3. Puhun Tembok' },
+                        { key: '02_04', label: '4. Kubu Gulai Bancah' },
+                        { key: '02_05', label: '5. Puhun Pintu Kabun' },
+                        { key: '02_06', label: '6. Pulai Anak Air' },
+                        { key: '02_07', label: '7. Koto Selayan' },
+                        { key: '02_08', label: '8. Garegeh' },
+                        { key: '02_09', label: '9. Manggis Ganting' },
+                        // 03. AUR BIRUGO TIGO BALEH
+                        { key: '03_total', label: '03. AUR BIRUGO TIGO BALEH', isKec: true },
+                        { key: '03_01', label: '1. Aur Kuning' },
+                        { key: '03_02', label: '2. Birugo' },
+                        { key: '03_03', label: '3. Belakang Balok' },
+                        { key: '03_04', label: '4. Sapiran' },
+                        { key: '03_05', label: '5. Kubu Tanjung' },
+                        { key: '03_06', label: '6. Pakan Labuah' },
+                        { key: '03_07', label: '7. Parit Antang' },
+                        { key: '03_08', label: '8. Ladang Cakiah' },
+                        // TOTAL
+                        { key: 'total', label: 'Jumlah / Total', isTotal: true }
+                    ];
+
+                    const defaultDataByYear = {
+                        '2025': {
+                            '01_total': { islam: '48.867', protestan: '656', katholik: '579', hindu: '5', budha: '103', lainnya: '0' },
+                            '01_01':    { islam: '18.160', protestan: '535', katholik: '322', hindu: '5', budha: '4',   lainnya: '0' },
+                            '01_02':    { islam: '2.543',  protestan: '22',  katholik: '30',  hindu: '0', budha: '2',   lainnya: '0' },
+                            '01_03':    { islam: '7.853',  protestan: '12',  katholik: '0',   hindu: '0', budha: '7',   lainnya: '0' },
+                            '01_04':    { islam: '8.481',  protestan: '20',  katholik: '21',  hindu: '0', budha: '3',   lainnya: '0' },
+                            '01_05':    { islam: '1.144',  protestan: '26',  katholik: '197', hindu: '0', budha: '87',  lainnya: '0' },
+                            '01_06':    { islam: '4.346',  protestan: '6',   katholik: '3',   hindu: '0', budha: '0',   lainnya: '0' },
+                            '01_07':    { islam: '6.340',  protestan: '35',  katholik: '6',   hindu: '0', budha: '0',   lainnya: '0' },
+                            '02_total': { islam: '59.317', protestan: '1.559', katholik: '494', hindu: '0', budha: '25', lainnya: '0' },
+                            '02_01':    { islam: '8.168',  protestan: '605', katholik: '124', hindu: '0', budha: '1',   lainnya: '0' },
+                            '02_02':    { islam: '11.942', protestan: '74',  katholik: '3',   hindu: '0', budha: '0',   lainnya: '0' },
+                            '02_03':    { islam: '6.657',  protestan: '13',  katholik: '15',  hindu: '0', budha: '3',   lainnya: '0' },
+                            '02_04':    { islam: '7.273',  protestan: '22',  katholik: '12',  hindu: '0', budha: '6',   lainnya: '0' },
+                            '02_05':    { islam: '8.330',  protestan: '13',  katholik: '8',   hindu: '0', budha: '7',   lainnya: '0' },
+                            '02_06':    { islam: '6.647',  protestan: '298', katholik: '161', hindu: '0', budha: '8',   lainnya: '0' },
+                            '02_07':    { islam: '1.996',  protestan: '0',   katholik: '0',   hindu: '0', budha: '0',   lainnya: '0' },
+                            '02_08':    { islam: '3.236',  protestan: '14',  katholik: '5',   hindu: '0', budha: '0',   lainnya: '0' },
+                            '02_09':    { islam: '5.068',  protestan: '520', katholik: '166', hindu: '0', budha: '0',   lainnya: '0' },
+                            '03_total': { islam: '31.749', protestan: '184', katholik: '53',  hindu: '0', budha: '4',   lainnya: '0' },
+                            '03_01':    { islam: '8.062',  protestan: '8',   katholik: '0',   hindu: '0', budha: '0',   lainnya: '0' },
+                            '03_02':    { islam: '6.986',  protestan: '49',  katholik: '6',   hindu: '0', budha: '0',   lainnya: '0' },
+                            '03_03':    { islam: '3.036',  protestan: '47',  katholik: '27',  hindu: '0', budha: '4',   lainnya: '0' },
+                            '03_04':    { islam: '3.691',  protestan: '80',  katholik: '20',  hindu: '0', budha: '0',   lainnya: '0' },
+                            '03_05':    { islam: '2.046',  protestan: '0',   katholik: '0',   hindu: '0', budha: '0',   lainnya: '0' },
+                            '03_06':    { islam: '3.830',  protestan: '0',   katholik: '0',   hindu: '0', budha: '0',   lainnya: '0' },
+                            '03_07':    { islam: '1.681',  protestan: '0',   katholik: '0',   hindu: '0', budha: '0',   lainnya: '0' },
+                            '03_08':    { islam: '2.417',  protestan: '0',   katholik: '0',   hindu: '0', budha: '0',   lainnya: '0' },
+                            'total':    { islam: '139.933',protestan: '2.399',katholik: '1.126',hindu: '5', budha: '132', lainnya: '0' }
+                        },
+                        '2024': {
+                            '01_total': { islam: '48.238', protestan: '649', katholik: '617', hindu: '5', budha: '105', lainnya: '-' },
+                            '01_01':    { islam: '18.026', protestan: '523', katholik: '345', hindu: '5', budha: '4',   lainnya: '-' },
+                            '01_02':    { islam: '2.486',  protestan: '23',  katholik: '32',  hindu: '-', budha: '2',   lainnya: '-' },
+                            '01_03':    { islam: '7.709',  protestan: '12',  katholik: '5',   hindu: '-', budha: '7',   lainnya: '-' },
+                            '01_04':    { islam: '8.280',  protestan: '21',  katholik: '24',  hindu: '-', budha: '4',   lainnya: '-' },
+                            '01_05':    { islam: '1.145',  protestan: '24',  katholik: '202', hindu: '-', budha: '88',  lainnya: '-' },
+                            '01_06':    { islam: '4.307',  protestan: '6',   katholik: '3',   hindu: '-', budha: '-',   lainnya: '-' },
+                            '01_07':    { islam: '6.285',  protestan: '40',  katholik: '6',   hindu: '-', budha: '-',   lainnya: '-' },
+                            '02_total': { islam: '58.704', protestan: '1.540', katholik: '481', hindu: '-', budha: '26', lainnya: '-' },
+                            '02_01':    { islam: '8.080',  protestan: '603', katholik: '132', hindu: '-', budha: '1',   lainnya: '-' },
+                            '02_02':    { islam: '11.879', protestan: '72',  katholik: '2',   hindu: '-', budha: '-',   lainnya: '-' },
+                            '02_03':    { islam: '6.619',  protestan: '13',  katholik: '15',  hindu: '-', budha: '4',   lainnya: '-' },
+                            '02_04':    { islam: '7.144',  protestan: '22',  katholik: '12',  hindu: '-', budha: '7',   lainnya: '-' },
+                            '02_05':    { islam: '8.269',  protestan: '12',  katholik: '8',   hindu: '-', budha: '6',   lainnya: '-' },
+                            '02_06':    { islam: '6.582',  protestan: '291', katholik: '162', hindu: '-', budha: '8',   lainnya: '-' },
+                            '02_07':    { islam: '1.930',  protestan: '2',   katholik: '-',   hindu: '-', budha: '-',   lainnya: '-' },
+                            '02_08':    { islam: '3.242',  protestan: '29',  katholik: '4',   hindu: '-', budha: '-',   lainnya: '-' },
+                            '02_09':    { islam: '4.959',  protestan: '496', katholik: '146', hindu: '-', budha: '-',   lainnya: '-' },
+                            '03_total': { islam: '31.205', protestan: '178', katholik: '52',  hindu: '-', budha: '4',   lainnya: '-' },
+                            '03_01':    { islam: '7.980',  protestan: '9',   katholik: '-',   hindu: '-', budha: '-',   lainnya: '-' },
+                            '03_02':    { islam: '6.831',  protestan: '44',  katholik: '7',   hindu: '-', budha: '-',   lainnya: '-' },
+                            '03_03':    { islam: '2.989',  protestan: '45',  katholik: '25',  hindu: '-', budha: '4',   lainnya: '-' },
+                            '03_04':    { islam: '3.561',  protestan: '79',  katholik: '20',  hindu: '-', budha: '-',   lainnya: '-' },
+                            '03_05':    { islam: '1.989',  protestan: '-',   katholik: '-',   hindu: '-', budha: '-',   lainnya: '-' },
+                            '03_06':    { islam: '3.742',  protestan: '-',   katholik: '-',   hindu: '-', budha: '-',   lainnya: '-' },
+                            '03_07':    { islam: '1.675',  protestan: '-',   katholik: '-',   hindu: '-', budha: '-',   lainnya: '-' },
+                            '03_08':    { islam: '2.438',  protestan: '1',   katholik: '-',   hindu: '-', budha: '-',   lainnya: '-' },
+                            'total':    { islam: '138.147',protestan: '2.367',katholik: '1.150',hindu: '5', budha: '135', lainnya: '-' }
+                        }
+                    };
+
+                    const curDef = defaultDataByYear[yrKey] || {};
+
+                    const fmt = (val) => {
+                        if (val === undefined || val === null || val === '' || val === '-' || val === '–' || val === '—') return '-';
+                        let s = String(val).trim();
+                        if (s === '0') return '0';
+                        let clean = s.replace(/[^\d]/g, '');
+                        if (!clean) return '-';
+                        return parseInt(clean, 10).toLocaleString('id-ID');
+                    };
+
+                    let rowsHtml = '';
+                    rowsDef.forEach(r => {
+                        const def = curDef[r.key] || {};
+                        const vIslam = fmt(d[`${r.key}_islam`] !== undefined ? d[`${r.key}_islam`] : def.islam);
+                        const vProtestan = fmt(d[`${r.key}_protestan`] !== undefined ? d[`${r.key}_protestan`] : def.protestan);
+                        const vKatholik = fmt(d[`${r.key}_katholik`] !== undefined ? d[`${r.key}_katholik`] : def.katholik);
+                        const vHindu = fmt(d[`${r.key}_hindu`] !== undefined ? d[`${r.key}_hindu`] : def.hindu);
+                        const vBudha = fmt(d[`${r.key}_budha`] !== undefined ? d[`${r.key}_budha`] : def.budha);
+                        const vLainnya = fmt(d[`${r.key}_lainnya`] !== undefined ? d[`${r.key}_lainnya`] : def.lainnya);
+
+                        if (r.isTotal) {
+                            rowsHtml += `
+                                <tr class="bg-[#fed7aa] font-bold">
+                                    <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">Jumlah / <span class="italic font-bold">Total</span></td>
+                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-extrabold">${vIslam}</td>
+                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-extrabold">${vProtestan}</td>
+                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-extrabold">${vKatholik}</td>
+                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-extrabold">${vHindu}</td>
+                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-extrabold">${vBudha}</td>
+                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-extrabold">${vLainnya}</td>
+                                </tr>
+                            `;
+                        } else if (r.isKec) {
+                            rowsHtml += `
+                                <tr class="bg-amber-100/80 font-bold">
+                                    <td class="py-2.5 px-4 border border-slate-700 text-left font-bold align-top">${r.label}</td>
+                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-bold">${vIslam}</td>
+                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-bold">${vProtestan}</td>
+                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-bold">${vKatholik}</td>
+                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-bold">${vHindu}</td>
+                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-bold">${vBudha}</td>
+                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-bold">${vLainnya}</td>
+                                </tr>
+                            `;
+                        } else {
+                            rowsHtml += `
+                                <tr class="hover:bg-amber-100/60 transition-colors">
+                                    <td class="py-2.5 px-4 border border-slate-700 text-left font-medium align-top pl-8">${r.label}</td>
+                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${vIslam}</td>
+                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${vProtestan}</td>
+                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${vKatholik}</td>
+                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${vHindu}</td>
+                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${vBudha}</td>
+                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${vLainnya}</td>
+                                </tr>
+                            `;
+                        }
+                    });
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Islam</div><div class="italic font-normal text-[11px] sm:text-xs">Moslem</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Protestan</div><div class="italic font-normal text-[11px] sm:text-xs">Protestant</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Katholik</div><div class="italic font-normal text-[11px] sm:text-xs">Catholic</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Hindu</div><div class="italic font-normal text-[11px] sm:text-xs">Hindu</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Budha</div><div class="italic font-normal text-[11px] sm:text-xs">Buddha</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Lainnya</div><div class="italic font-normal text-[11px] sm:text-xs">Other</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700">(7)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+            '3.2.8': {
+                titleId: 'Jumlah Pencari Kerja yang Terdaftar Menurut Tingkat Pendidikan yang Ditamatkan di Kota Bukittinggi',
+                titleEn: 'Number of Job Seeker Registered by Educational Attainment in Bukittinggi Municipality',
+                source: 'Dinas Koperasi, UKM dan Tenaga Kerja Kota Bukittinggi / <span class="italic text-slate-500">Cooperative, Small and Medium Business and Labor Services of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const dash = '<span class="text-slate-400 font-normal">-</span>';
+                    const fmt = (val) => {
+                        if (val === null || val === undefined || val === '' || val === '-') return dash;
+                        const s = val.toString().trim();
+                        const clean = s.replace(/[^\d]/g, '');
+                        if (!clean) return dash;
+                        return parseInt(clean, 10).toLocaleString('id-ID');
+                    };
+
+                    const knownEduByYear = {
+                        2025: [
+                            [5, 0, 5, 7, 0, 7, 1, 0, 1, 2, 0, 2],
+                            [281, 142, 423, 139, 127, 266, 23, 6, 29, 90, 32, 122],
+                            [125, 208, 333, 58, 65, 123, 11, 17, 28, 45, 49, 94],
+                            [284, 551, 835, 68, 162, 230, 19, 21, 40, 55, 130, 185]
+                        ]
+                    };
+
+                    const eduValues = (knownEduByYear[yr]) ? knownEduByYear[yr] : [
+                        Array(12).fill(null),
+                        Array(12).fill(null),
+                        Array(12).fill(null),
+                        Array(12).fill(null)
+                    ];
+
+                    const knownTotals = {
+                        2025: [695, 901, 1596, 272, 354, 626, 54, 44, 98, 192, 211, 403],
+                        2024: [647, 777, 1424, 336, 376, 712, 127, 98, 225, 181, 257, 438],
+                        2023: [658, 784, 1442, 302, 423, 725, 102, 206, 308, 161, 211, 372],
+                        2022: [619, 778, 1397, 362, 541, 903, 103, 120, 223, 619, 778, 1397],
+                        2021: [520, 624, 1144, 269, 301, 572, 229, 295, 524, 520, 624, 1144],
+                        2020: [649, 798, 1447, 188, 285, 473, 211, 483, 692, 649, 798, 1447]
+                    };
+
+                    const eduLabels = [
+                        '01. SD/SLTP',
+                        '02. SLTA',
+                        '03. Akademik',
+                        '04. Perguruan Tinggi'
+                    ];
+
+                    let rowsHtml = '';
+                    eduLabels.forEach((label, idx) => {
+                        rowsHtml += `
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top" colspan="2">${label}</td>
+                        `;
+                        for (let c = 0; c < 12; c++) {
+                            const val = eduValues[idx] ? eduValues[idx][c] : null;
+                            rowsHtml += `<td class="py-2.5 px-4 border border-slate-700 text-center align-top">${fmt(val)}</td>`;
+                        }
+                        rowsHtml += `</tr>`;
+                    });
+
+                    for (let i = 0; i < 6; i++) {
+                        const y = yr - i;
+                        const tot = knownTotals[y] || null;
+
+                        if (i === 0) {
+                            rowsHtml += `
+                                <tr class="bg-[#fed7aa] font-bold">
+                                    <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top" rowspan="6">
+                                        Jumlah / <span class="italic font-bold">Total</span>
+                                    </td>
+                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-extrabold">${y}</td>
+                            `;
+                            for (let c = 0; c < 12; c++) {
+                                const val = tot ? tot[c] : null;
+                                rowsHtml += `<td class="py-2.5 px-4 border border-slate-700 text-center align-top font-extrabold">${fmt(val)}</td>`;
+                            }
+                            rowsHtml += `</tr>`;
+                        } else {
+                            rowsHtml += `
+                                <tr class="hover:bg-amber-100/60 transition-colors">
+                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${y}</td>
+                            `;
+                            for (let c = 0; c < 12; c++) {
+                                const val = tot ? tot[c] : null;
+                                rowsHtml += `<td class="py-2.5 px-4 border border-slate-700 text-center align-top">${fmt(val)}</td>`;
+                            }
+                            rowsHtml += `</tr>`;
+                        }
+                    }
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2" colspan="2">
+                                    <div>Pendidikan Ditamatkan</div><div class="italic font-normal text-[11px] sm:text-xs">Educational Attainment</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="3">
+                                    <div>Belum Ditempatkan Tahun Ini</div><div class="italic font-normal text-[11px] sm:text-xs">Not Placed This Year Yet</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="3">
+                                    <div>Terdaftar</div><div class="italic font-normal text-[11px] sm:text-xs">Registered</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="3">
+                                    <div>Ditempatkan Tahun Ini</div><div class="italic font-normal text-[11px] sm:text-xs">Placed This Year</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="3">
+                                    <div>Dihapuskan Tahun Ini</div><div class="italic font-normal text-[11px] sm:text-xs">Cleared This Year</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs">
+                                <th class="py-2 px-3 border border-slate-700"><div>Laki–laki</div><div class="italic font-normal text-[10px]">Male</div></th>
+                                <th class="py-2 px-3 border border-slate-700"><div>Perempuan</div><div class="italic font-normal text-[10px]">Female</div></th>
+                                <th class="py-2 px-3 border border-slate-700"><div>Jumlah</div><div class="italic font-normal text-[10px]">Total</div></th>
+                                <th class="py-2 px-3 border border-slate-700"><div>Laki–laki</div><div class="italic font-normal text-[10px]">Male</div></th>
+                                <th class="py-2 px-3 border border-slate-700"><div>Perempuan</div><div class="italic font-normal text-[10px]">Female</div></th>
+                                <th class="py-2 px-3 border border-slate-700"><div>Jumlah</div><div class="italic font-normal text-[10px]">Total</div></th>
+                                <th class="py-2 px-3 border border-slate-700"><div>Laki–laki</div><div class="italic font-normal text-[10px]">Male</div></th>
+                                <th class="py-2 px-3 border border-slate-700"><div>Perempuan</div><div class="italic font-normal text-[10px]">Female</div></th>
+                                <th class="py-2 px-3 border border-slate-700"><div>Jumlah</div><div class="italic font-normal text-[10px]">Total</div></th>
+                                <th class="py-2 px-3 border border-slate-700"><div>Laki–laki</div><div class="italic font-normal text-[10px]">Male</div></th>
+                                <th class="py-2 px-3 border border-slate-700"><div>Perempuan</div><div class="italic font-normal text-[10px]">Female</div></th>
+                                <th class="py-2 px-3 border border-slate-700"><div>Jumlah</div><div class="italic font-normal text-[10px]">Total</div></th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700" colspan="2">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700">(7)</th>
+                                <th class="py-1 px-3 border border-slate-700">(8)</th>
+                                <th class="py-1 px-3 border border-slate-700">(9)</th>
+                                <th class="py-1 px-3 border border-slate-700">(10)</th>
+                                <th class="py-1 px-3 border border-slate-700">(11)</th>
+                                <th class="py-1 px-3 border border-slate-700">(12)</th>
+                                <th class="py-1 px-3 border border-slate-700">(13)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+            '9.1': {
+                titleId: 'Jumlah Koperasi Aktif Menurut Kecamatan di Kota Bukittinggi',
+                titleEn: 'Number of Active Cooperative in Bukittinggi Municipality',
+                isMultiYear: true,
+                isExcludeSelectedYear: false,
+                source: 'Dinas Koperasi, UKM dan Tenaga Kerja Kota Bukittinggi / <span class="italic text-slate-500">Cooperative, Small and Medium Business and Labor Services of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const p = get5YearPeriod(yr);
+                    const years = p.yearsAsc;
+
+                    const dataStore = {
+                        2020: { guguk_panjang: '-', mandiangin_koto_selayan: '-', aur_birugo_tigo_baleh: '-', total: '-' },
+                        2021: { guguk_panjang: '61', mandiangin_koto_selayan: '58', aur_birugo_tigo_baleh: '41', total: '160' },
+                        2022: { guguk_panjang: '46', mandiangin_koto_selayan: '48', aur_birugo_tigo_baleh: '38', total: '132' },
+                        2023: { guguk_panjang: '48', mandiangin_koto_selayan: '50', aur_birugo_tigo_baleh: '39', total: '137' },
+                        2024: { guguk_panjang: '52', mandiangin_koto_selayan: '52', aur_birugo_tigo_baleh: '40', total: '144' },
+                        2025: { guguk_panjang: '52', mandiangin_koto_selayan: '52', aur_birugo_tigo_baleh: '40', total: '144' }
+                    };
+
+                    const getVal = (y, key) => {
+                        if (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[y] && serverDbDataStore[y][key] !== undefined) {
+                            return serverDbDataStore[y][key];
+                        }
+                        if (dataStore[y] && dataStore[y][key] !== undefined) return dataStore[y][key];
+                        return '-';
+                    };
+
+                    const rows = [
+                        { label: '01. Guguk Panjang', key: 'guguk_panjang' },
+                        { label: '02. Mandiangin Koto Selayan', key: 'mandiangin_koto_selayan' },
+                        { label: '03. Aur Birugo Tigo Baleh', key: 'aur_birugo_tigo_baleh' }
+                    ];
+
+                    const rowsHtml = rows.map(r => `
+                        <tr class="hover:bg-amber-100/60 transition-colors">
+                            <td class="py-2.5 px-4 font-semibold border border-slate-700 text-left">${r.label}</td>
+                            ${years.map(y => `<td class="py-2.5 px-3 text-center border border-slate-700 ${y === yr ? 'font-bold bg-amber-100/60' : ''}">${getVal(y, r.key)}</td>`).join('')}
+                        </tr>
+                    `).join('');
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700 text-left align-middle">
+                                    <div>Kecamatan</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Subdistrict</div>
+                                </th>
+                                ${years.map(y => `<th class="py-3 px-4 border border-slate-700 text-center ${y === yr ? 'bg-amber-600 font-extrabold ring-1 ring-white/30' : ''}">${y}</th>`).join('')}
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700 text-center">(1)</th>
+                                ${years.map((y, idx) => `<th class="py-1 px-3 border border-slate-700 text-center">(${idx + 2})</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                            <tr class="bg-[#fed7aa] font-bold">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-extrabold">Jumlah / <span class="italic font-bold">Total</span></td>
+                                ${years.map(y => `<td class="py-2.5 px-3 text-center border border-slate-700 font-extrabold ${y === yr ? 'bg-amber-200/80 ring-1 ring-amber-400' : ''}">${getVal(y, 'total')}</td>`).join('')}
+                            </tr>
+                        </tbody>
+                    `;
+                }
+            },
+                                    '4.1.24': {
+                titleId: 'Jumlah Lembaga Perpustakaan, Koleksi, dan Pengunjung Perpustakaan di Kota Bukittinggi',
+                titleEn: 'Number of Library Institutions, Collections, and Library Visitors in the City of Bukittinggi',
+                isMultiYear: false,
+                isExcludeSelectedYear: false,
+                source: 'Dinas Perpustakaan dan Kearsipan Kota Bukittinggi / <span class="italic text-slate-500">Library and Archives Service of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const isFuture = (yr > 2025);
+                    const officialData = {
+                        2025: {
+                            umum: ['21', '38460', '52776', '24123'],
+                            sd_mi: ['62', '309610', '4341086', '387320'],
+                            smp_mts: ['19', '52104', '567268', '173524'],
+                            sma_smk_ma: ['26', '44085', '714152', '34782'],
+                            perguruan_tinggi: ['19', '25103', '15721', '10926'],
+                            taman_bacaan: ['11', '872', '1245', '2764'],
+                            total: ['158', '470234', '5692248', '633439']
+                        }
+                    };
+
+                    const yrData = officialData[yr] || {};
+
+                    const getVal = (rowKey, colIdx, colName) => {
+                        const dbKey = `${rowKey}_${colName}`;
+                        if (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[yr] && serverDbDataStore[yr][dbKey] !== undefined) {
+                            return serverDbDataStore[yr][dbKey];
+                        }
+                        if (isFuture) {
+                            return '-';
+                        }
+                        if (yrData[rowKey] && yrData[rowKey][colIdx] !== undefined) {
+                            return yrData[rowKey][colIdx];
+                        }
+                        return '-';
+                    };
+
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+
+                    const rows = [
+                        { key: 'umum', label: 'Umum / <span class="italic font-normal text-slate-600">General</span>' },
+                        { key: 'sd_mi', label: 'SD / <span class="italic font-normal text-slate-600">MI / Primary School</span>' },
+                        { key: 'smp_mts', label: 'SMP / <span class="italic font-normal text-slate-600">MTs / Junior High School</span>' },
+                        { key: 'sma_smk_ma', label: 'SMA / <span class="italic font-normal text-slate-600">SMK/MA / Senior High School</span>' },
+                        { key: 'perguruan_tinggi', label: 'Perguruan Tinggi / <span class="italic font-normal text-slate-600">College</span>' },
+                        { key: 'taman_bacaan', label: 'Taman Bacaan / <span class="italic font-normal text-slate-600">Perpustakaan Masyarakat / Public Library</span>' },
+                        { key: 'total', label: 'Jumlah / Total', isTotal: true }
+                    ];
+
+                    const rowsHtml = rows.map(r => {
+                        const isTot = r.isTotal;
+                        const rowCls = isTot ? 'bg-[#fed7aa] font-bold' : 'hover:bg-amber-100/60 transition-colors';
+                        const vPerpus = getVal(r.key, 0, 'perpus');
+                        const vJudul = getVal(r.key, 1, 'judul');
+                        const vEks = getVal(r.key, 2, 'eksemplar');
+                        const vPengunjung = getVal(r.key, 3, 'pengunjung');
+
+                        return `
+                            <tr class="${rowCls}" data-key="${r.key}">
+                                <td class="py-2.5 px-4 font-semibold border border-slate-700 text-left align-middle">${r.label}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vPerpus, isTot ? 'font-bold' : '')}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vJudul, isTot ? 'font-bold' : '')}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vEks, isTot ? 'font-bold' : '')}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vPengunjung, isTot ? 'font-bold' : '')}</td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+                                    <div>Jenis Perpustakaan</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Type of Library</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+                                    <div>Jumlah Perpustakaan</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Number of Library</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="2">
+                                    <div>Jumlah Koleksi</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Number of Collection</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+                                    <div>Jumlah Pengunjung</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Number of Visitor</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-2 px-3 font-bold border border-slate-700">
+                                    <div>Judul</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Title</div>
+                                </th>
+                                <th class="py-2 px-3 font-bold border border-slate-700">
+                                    <div>Eksemplar</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Copies</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700">(5)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+            '4.2.2': {
+                titleId: 'Jumlah Tenaga Kesehatan Menurut Kecamatan di Kota Bukittinggi',
+                titleEn: 'Number of Health Human Resources by District in Bukittinggi Municipality',
+                isMultiYear: false,
+                isExcludeSelectedYear: false,
+                source: 'DINAS KESEHATAN Kota Bukittinggi / <span class="italic text-slate-500">Bukittinggi Municipality Health Office</span>',
+                note: '<div class="space-y-1"><div><sup>1</sup> Tenaga medis terdiri atas dokter, dokter gigi, dokter spesialis, dan dokter gigi spesialis baik di dalam maupun di luar negeri yang diakui oleh Pemerintah RI sesuai dengan peraturan perundang-undangan (UU No. 29 Tahun 2004 tentang Praktik Kedokteran)</div><div class="italic text-slate-500">/ Medical worker includes doctor, dentist, medical specialist, and dentist specialist at home and abroad recognized by Indonesian government in accordance with the laws and regulations (Law No. 29 year 2004 about Medical Practice)</div></div>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const isFuture = (yr > 2025);
+                    const officialData = {
+                        2024: {
+                            guguk: [12, 0, 20, 17, 5, 10, 3, 2, 0, 2, 0, 0],
+                            mks: [48, 0, 120, 62, 40, 85, 6, 21, 1, 17, 0, 0],
+                            abtb: [211, 2, 546, 85, 205, 32, 21, 33, 29, 93, 86, 0],
+                            total: [271, 2, 686, 164, 250, 127, 30, 56, 30, 112, 86, 0]
+                        },
+                        2025: {
+                            guguk: [153, 1, 197, 69, 72, 21, 10, 16, 13, 53, 90, 0],
+                            mks: [25, 0, 167, 40, 35, 8, 6, 8, 8, 14, 19, 0],
+                            abtb: [211, 2, 546, 85, 205, 32, 21, 33, 29, 93, 86, 0],
+                            total: [389, 3, 910, 194, 312, 61, 37, 57, 50, 160, 195, 0]
+                        }
+                    };
+                    const yrData = officialData[yr] || {};
+                    const getVal = (rowKey, colIdx) => {
+                        if (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[yr] && serverDbDataStore[yr][`${rowKey}_col${colIdx}`] !== undefined) {
+                            return serverDbDataStore[yr][`${rowKey}_col${colIdx}`];
+                        }
+                        if (yrData[rowKey] && yrData[rowKey][colIdx] !== undefined) {
+                            return yrData[rowKey][colIdx];
+                        }
+                        return isFuture ? '-' : '-';
+                    };
+
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+
+                    const rows = [
+                        { key: 'guguk', name: '01. Guguk Panjang' },
+                        { key: 'mks', name: '02. Mandiangin Koto Selayan' },
+                        { key: 'abtb', name: '03. Aur Birugo Tigo Baleh' }
+                    ];
+
+                    let rowsHtml = '';
+                    rows.forEach(r => {
+                        let cells = `<td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle">${r.name}</td>`;
+                        for (let i = 0; i < 12; i++) {
+                            const val = getVal(r.key, i);
+                            cells += `<td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(val)}</td>`;
+                        }
+                        rowsHtml += `<tr class="hover:bg-amber-100/60 transition-colors" data-key="${r.key}">${cells}</tr>`;
+                    });
+
+                    // Baris Total / Jumlah
+                    let totalCells = `<td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle">Jumlah / <span class="italic font-bold">Total</span></td>`;
+                    for (let i = 0; i < 12; i++) {
+                        const val = getVal('total', i);
+                        totalCells += `<td class="py-1 px-2 border border-slate-700 text-center align-middle font-extrabold">${inp(val, 'font-bold')}</td>`;
+                    }
+                    rowsHtml += `<tr class="bg-[#fed7aa] font-bold" data-key="total">${totalCells}</tr>`;
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Tenaga Medis<sup>1</sup></div><div class="italic font-normal text-[11px] sm:text-xs">Medical Worker<sup>1</sup></div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Psikologi Klinis</div><div class="italic font-normal text-[11px] sm:text-xs">Clinical Psychology</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Tenaga Keperawatan</div><div class="italic font-normal text-[11px] sm:text-xs">Nursing Worker</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Tenaga Kebidanan</div><div class="italic font-normal text-[11px] sm:text-xs">Midwifery Worker</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Tenaga Kefarmasian</div><div class="italic font-normal text-[11px] sm:text-xs">Pharmaceutical Worker</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Tenaga Kesehatan Masyarakat</div><div class="italic font-normal text-[11px] sm:text-xs">Public Health Worker</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Tenaga Kesehatan Lingkungan</div><div class="italic font-normal text-[11px] sm:text-xs">Environmental Health Worker</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Tenaga Gizi</div><div class="italic font-normal text-[11px] sm:text-xs">Nutritionist</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Tenaga Keterapian Fisik</div><div class="italic font-normal text-[11px] sm:text-xs">Physical Therapists</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Tenaga Keteknisan Medis</div><div class="italic font-normal text-[11px] sm:text-xs">Medical Technicians</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Tenaga Teknik Biomedika</div><div class="italic font-normal text-[11px] sm:text-xs">Biomedical Engineer</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Tenaga Kesehatan Tradisional</div><div class="italic font-normal text-[11px] sm:text-xs">Traditional Health Worker</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700">(7)</th>
+                                <th class="py-1 px-3 border border-slate-700">(8)</th>
+                                <th class="py-1 px-3 border border-slate-700">(9)</th>
+                                <th class="py-1 px-3 border border-slate-700">(10)</th>
+                                <th class="py-1 px-3 border border-slate-700">(11)</th>
+                                <th class="py-1 px-3 border border-slate-700">(12)</th>
+                                <th class="py-1 px-3 border border-slate-700">(13)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+            '4.2.4': {
+                titleId: 'Jumlah Tempat Tidur Pada Rumah Sakit Pemerintah dan Swasta di Kota Bukittinggi',
+                titleEn: 'Number of Beds at Government and Private Hospital in Bukittinggi',
+                isMultiYear: true,
+                isExcludeSelectedYear: false,
+                source: 'Dinas Kesehatan Kota Bukittinggi / <span class="italic text-slate-500">Public Health Office of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const p = get5YearPeriod(yr);
+                    const years = p.yearsAsc;
+
+                    const officialData = {
+                        2019: { pemerintah: '536', swasta: '206', total: '742' },
+                        2020: { pemerintah: '536', swasta: '206', total: '742' },
+                        2021: { pemerintah: '550', swasta: '210', total: '760' },
+                        2022: { pemerintah: '550', swasta: '210', total: '760' },
+                        2023: { pemerintah: '559', swasta: '207', total: '766' },
+                        2024: { pemerintah: '696', swasta: '196', total: '892' },
+                        2025: { pemerintah: '696', swasta: '196', total: '892' }
+                    };
+
+                    const getVal = (y, key) => {
+                        if (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[y] && serverDbDataStore[y][key] !== undefined) {
+                            return serverDbDataStore[y][key];
+                        }
+                        if (officialData[y] && officialData[y][key] !== undefined) {
+                            return officialData[y][key];
+                        }
+                        return '-';
+                    };
+
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+
+                    const rowsHtml = years.map(y => {
+                        const isCurrent = (y === yr);
+                        const vPem = getVal(y, 'pemerintah');
+                        const vSwa = getVal(y, 'swasta');
+                        let vTot = getVal(y, 'total');
+                        if (vTot === '-' && vPem !== '-' && vSwa !== '-') {
+                            const nPem = parseFloat(vPem.replace(',', '.')) || 0;
+                            const nSwa = parseFloat(vSwa.replace(',', '.')) || 0;
+                            vTot = (nPem + nSwa).toString();
+                        }
+                        return `
+                            <tr class="hover:bg-amber-100/60 transition-colors ${isCurrent ? 'bg-amber-100/30' : ''}" data-year="${y}">
+                                <td class="py-2.5 px-4 font-semibold border border-slate-700 text-left align-middle ${isCurrent ? 'font-bold' : ''}">${y}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vPem)}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vSwa)}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vTot, 'font-bold bg-amber-100/50')}</td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Tahun</div><div class="italic font-normal text-[11px] sm:text-xs">Year</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Pemerintah</div><div class="italic font-normal text-[11px] sm:text-xs">Government</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+            '4.2.5': {
+                titleId: 'Jumlah Pengunjung Pada Rumah Sakit Pemerintah dan Swasta di Kota Bukittinggi',
+                titleEn: 'Number of Visitor at Hospital Government and Private in Bukittinggi',
+                isMultiYear: true,
+                isExcludeSelectedYear: false,
+                source: 'Dinas Kesehatan Kota Bukittinggi / <span class="italic text-slate-500">Public Health Office of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const p = get5YearPeriod(yr);
+                    const years = p.yearsAsc;
+
+                    const officialData = {
+                        2019: { pemerintah: '134841', swasta: '288153', total: '422994' },
+                        2020: { pemerintah: '154371', swasta: '304479', total: '458850' },
+                        2021: { pemerintah: '101276', swasta: '211187', total: '312463' },
+                        2022: { pemerintah: '170506', swasta: '169637', total: '340143' },
+                        2023: { pemerintah: '199642', swasta: '227969', total: '427611' },
+                        2024: { pemerintah: '205631', swasta: '234808', total: '440439' },
+                        2025: { pemerintah: '211800', swasta: '241852', total: '453652' }
+                    };
+
+                    const getVal = (y, key) => {
+                        if (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[y] && serverDbDataStore[y][key] !== undefined) {
+                            return serverDbDataStore[y][key];
+                        }
+                        if (officialData[y] && officialData[y][key] !== undefined) {
+                            return officialData[y][key];
+                        }
+                        return '-';
+                    };
+
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+
+                    const rowsHtml = years.map(y => {
+                        const isCurrent = (y === yr);
+                        const vPem = getVal(y, 'pemerintah');
+                        const vSwa = getVal(y, 'swasta');
+                        let vTot = getVal(y, 'total');
+                        if (vTot === '-' && vPem !== '-' && vSwa !== '-') {
+                            const nPem = parseFloat(vPem.replace(',', '.')) || 0;
+                            const nSwa = parseFloat(vSwa.replace(',', '.')) || 0;
+                            vTot = (nPem + nSwa).toString();
+                        }
+                        return `
+                            <tr class="hover:bg-amber-100/60 transition-colors ${isCurrent ? 'bg-amber-100/30' : ''}" data-year="${y}">
+                                <td class="py-2.5 px-4 font-semibold border border-slate-700 text-left align-middle ${isCurrent ? 'font-bold' : ''}">${y}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vPem)}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vSwa)}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vTot, 'font-bold bg-amber-100/50')}</td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Tahun</div><div class="italic font-normal text-[11px] sm:text-xs">Year</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Pemerintah</div><div class="italic font-normal text-[11px] sm:text-xs">Government</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+            '4.2.6': {
+                titleId: 'Jumlah Kasus Penyakit Terbanyak di Kota Bukittinggi',
+                titleEn: 'Number of Most Case of Disease in Bukittinggi Municipality',
+                isMultiYear: false,
+                isExcludeSelectedYear: false,
+                source: 'Dinas Kesehatan Kota Bukittinggi / <span class="italic text-slate-500">Public Health Office of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const histData = {
+                        2025: [
+                            ['01. Hipertensi / Hypertension', '12478'],
+                            ['02. ISPA / Acute Respiratory Infection', '5618'],
+                            ['03. Common Cold', '4999'],
+                            ['04. Necrosis of pulp', '3360'],
+                            ['05. Low vision', '2970'],
+                            ['06. Diabetes Mellitus', '2904'],
+                            ['07. Dispepsia / Dyspepsia', '1525'],
+                            ['08. Respiratory infection', '1487'],
+                            ['09. Faringitis / Pharyngitis', '1479'],
+                            ['10. Diabetes Mellitus komplikasi / Complicated Diabetes', '584'],
+                            ['total', '37404']
+                        ],
+                        2024: [
+                            ['01. Hipertensi / Hypertension', '11083'],
+                            ['02. ISPA / Acute Respiratory Infection', '5576'],
+                            ['03. Common Cold', '4849'],
+                            ['04. Low vision', '3565'],
+                            ['05. Necrosis of pulp', '2761'],
+                            ['06. Diabetes Mellitus', '2664'],
+                            ['07. Dispepsia / Dyspepsia', '942'],
+                            ['08. Pulpitis', '825'],
+                            ['09. Diabetes Mellitus komplikasi / Complicated Diabetes', '641'],
+                            ['10. Faringitis / Pharyngitis', '310'],
+                            ['total', '33216']
+                        ],
+                        2023: [
+                            ['01. Hipertensi / Hypertension', '9696'],
+                            ['02. Common Cold', '4445'],
+                            ['03. Diabetes Mellitus', '3437'],
+                            ['04. ISPA / Acute Respiratory Infection', '2087'],
+                            ['05. Hipertensive Heart Disease', '1921'],
+                            ['06. Congestive Heart Failure', '1848'],
+                            ['07. Respiratory Disorder', '1406'],
+                            ['08. Gastritis', '1079'],
+                            ['09. Low vision', '413'],
+                            ['10. Dispepsia / Dyspepsia', '343'],
+                            ['total', '26675']
+                        ]
+                    };
+
+                    const stdDiseases = [
+                        '01. Hipertensi / Hypertension',
+                        '02. ISPA / Acute Respiratory Infection',
+                        '03. Common Cold',
+                        '04. Necrosis of pulp',
+                        '05. Low vision',
+                        '06. Diabetes Mellitus',
+                        '07. Dispepsia / Dyspepsia',
+                        '08. Respiratory infection',
+                        '09. Faringitis / Pharyngitis',
+                        '10. Diabetes Mellitus komplikasi / Complicated Diabetes'
+                    ];
+
+                    let items = [];
+                    let totVal = '-';
+                    if (histData[yr]) {
+                        items = histData[yr].slice(0, 10).map(x => ({ name: x[0], val: x[1] }));
+                        totVal = histData[yr][10] ? histData[yr][10][1] : '-';
+                    } else {
+                        items = stdDiseases.map(d => ({ name: d, val: '-' }));
+                    }
+
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+                    const inpText = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-left bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+
+                    const rowsHtml = items.map((it, idx) => `
+                        <tr class="hover:bg-amber-100/60 transition-colors" data-row-index="${idx}">
+                            <td class="py-1 px-2 border border-slate-700 text-left align-middle">${inpText(it.name)}</td>
+                            <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(it.val)}</td>
+                        </tr>
+                    `).join('') + `
+                        <tr class="bg-amber-100/80 font-bold">
+                            <td class="py-2.5 px-4 border border-slate-700 text-left align-middle uppercase font-bold">Jumlah / Total</td>
+                            <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(totVal, 'font-bold bg-amber-100/50')}</td>
+                        </tr>
+                    `;
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Penyakit</div><div class="italic font-normal text-[11px] sm:text-xs">Desease</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+            '4.2.7': {
+                titleId: 'Banyak Lahir Hidup, lahir Mati, dan Kematian Ibu Sewaktu Melahirkan di Kota Bukittinggi',
+                titleEn: 'Number of Live Birth, Still Birth and Maternal Death in Bukittinggi Municipality',
+                isMultiYear: true,
+                isExcludeSelectedYear: false,
+                source: 'Dinas Kesehatan Kota Bukittinggi / <span class="italic text-slate-500">Public Health Office of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const p = get5YearPeriod(yr);
+                    const years = p.yearsAsc;
+
+                    const officialData = {
+                        2019: { hidup: '2156', mati: '7', ibu: '2' },
+                        2020: { hidup: '1865', mati: '7', ibu: '6' },
+                        2021: { hidup: '1863', mati: '3', ibu: '3' },
+                        2022: { hidup: '2286', mati: '16', ibu: '0' },
+                        2023: { hidup: '2297', mati: '3', ibu: '0' },
+                        2024: { hidup: '2161', mati: '20', ibu: '4' },
+                        2025: { hidup: '2097', mati: '14', ibu: '0' }
+                    };
+
+                    const getVal = (y, key) => {
+                        if (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[y] && serverDbDataStore[y][key] !== undefined) {
+                            return serverDbDataStore[y][key];
+                        }
+                        if (officialData[y] && officialData[y][key] !== undefined) {
+                            return officialData[y][key];
+                        }
+                        return '-';
+                    };
+
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+
+                    const rowsHtml = years.map(y => {
+                        const isCurrent = (y === yr);
+                        const vHidup = getVal(y, 'hidup');
+                        const vMati = getVal(y, 'mati');
+                        const vIbu = getVal(y, 'ibu');
+                        return `
+                            <tr class="hover:bg-amber-100/60 transition-colors ${isCurrent ? 'bg-amber-100/30' : ''}" data-year="${y}">
+                                <td class="py-2.5 px-4 font-semibold border border-slate-700 text-left align-middle ${isCurrent ? 'font-bold' : ''}">${y}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vHidup)}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vMati)}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vIbu)}</td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Tahun</div><div class="italic font-normal text-[11px] sm:text-xs">Year</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Lahir Hidup</div><div class="italic font-normal text-[11px] sm:text-xs">Live Birth</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Lahir Mati</div><div class="italic font-normal text-[11px] sm:text-xs">Still Birth</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Kematian Ibu Sewaktu Melahirkan</div><div class="italic font-normal text-[11px] sm:text-xs">Maternal Death</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+            '4.2.9': {
+                titleId: 'Jumlah Dokter Praktek Menurut Keahlian di Kota Bukittinggi',
+                titleEn: 'Number of Medical Specialist by Specialty in Bukittinggi',
+                isMultiYear: true,
+                isExcludeSelectedYear: false,
+                source: 'Dinas Kesehatan Kota Bukittinggi / <span class="italic text-slate-500">Public Health Office of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const p = get5YearPeriod(yr);
+                    const years = p.yearsAsc;
+
+                    const profs = [
+                        '01. Dokter Spesialis Penyakit Dalam / Internist',
+                        '02. Dokter Spesialis Anak / Paediatrician',
+                        '03. Dokter Spesialis Obstetri dan Ginekologi / Obstetrician and Gynecologist',
+                        '04. Dokter Spesialis Bedah / Surgeon',
+                        '05. Dokter Spesialis Radiologi / Radiologist',
+                        '06. Dokter Spesialis Anestesiologi / Anesthesiologist',
+                        '07. Dokter Spesialis Lainnya / Other Specialist Doctors',
+                        '08. Dokter Gigi Spesialis Lainnya / Other Specialist Dentists',
+                        '09. Dokter Umum / General Practitioner',
+                        '10. Dokter Gigi / Dentist',
+                        '11. Apoteker / Pharmacist',
+                        '12. Asisten Apoteker / Pharmacist Assistant',
+                        '13. Fisioterapis / Physiotherapist',
+                        '14. Analisis Kesehatan / Medical Analyst',
+                        '15. Radiografer / Radiographer',
+                        '16. Perekam Medik / Medical Record',
+                        '17. Refraksionis Optisien / Refractionist Optician'
+                    ];
+
+                    const histData = {
+                        2020: ['19', '14', '18', '27', '9', '14', '79', '2', '126', '54', '80', '133', '15', '53', '24', '42', '14'],
+                        2021: ['22', '15', '20', '29', '10', '16', '85', '2', '135', '58', '88', '140', '16', '58', '26', '45', '15'],
+                        2022: ['25', '17', '21', '30', '12', '18', '92', '3', '142', '60', '95', '145', '18', '62', '28', '48', '16'],
+                        2023: ['28', '19', '23', '32', '13', '20', '98', '3', '150', '63', '102', '152', '20', '66', '30', '52', '17'],
+                        2024: ['32', '21', '25', '35', '15', '22', '108', '4', '162', '67', '112', '160', '22', '72', '33', '56', '19'],
+                        2025: ['32', '21', '25', '35', '15', '22', '108', '4', '162', '67', '112', '160', '22', '72', '33', '56', '19']
+                    };
+
+                    const getVal = (idx, y) => {
+                        if (histData[y] && histData[y][idx] !== undefined) {
+                            return histData[y][idx];
+                        }
+                        return '-';
+                    };
+
+                    const totals = years.map(y => {
+                        let sum = 0;
+                        let hasData = false;
+                        for (let i = 0; i < 17; i++) {
+                            const val = getVal(i, y);
+                            if (val !== '-') {
+                                sum += parseFloat(val) || 0;
+                                hasData = true;
+                            }
+                        }
+                        return hasData ? sum.toString() : '-';
+                    });
+
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+
+                    const rowsHtml = profs.map((name, idx) => `
+                        <tr class="hover:bg-amber-100/60 transition-colors" data-prof-index="${idx}">
+                            <td class="py-2 px-3 font-semibold border border-slate-700 text-left align-middle text-xs sm:text-sm">${name}</td>
+                            ${years.map(y => `<td class="py-1 px-2 text-center border border-slate-700 align-middle">${inp(getVal(idx, y))}</td>`).join('')}
+                        </tr>
+                    `).join('') + `
+                        <tr class="bg-amber-100/80 font-bold">
+                            <td class="py-2.5 px-4 border border-slate-700 text-left align-middle uppercase font-bold">Jumlah / Total</td>
+                            ${totals.map(t => `<td class="py-1 px-2 text-center border border-slate-700 align-middle">${inp(t, 'font-bold bg-amber-100/50')}</td>`).join('')}
+                        </tr>
+                    `;
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700 text-xs sm:text-sm" rowspan="2">
+                                    <div>Jabatan</div><div class="italic font-normal text-[11px] sm:text-xs">Occupation</div>
+                                </th>
+                                <th class="py-2 px-4 font-bold border border-slate-700 text-xs sm:text-sm" colspan="5">
+                                    <div>Tahun</div><div class="italic font-normal text-[11px] sm:text-xs">Year</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs sm:text-sm">
+                                ${years.map(y => `<th class="py-2 px-3 border border-slate-700">${y}</th>`).join('')}
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                ${years.map((y, idx) => `<th class="py-1 px-3 border border-slate-700">(${idx + 2})</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+            '4.2.10': {
+                titleId: 'Jumlah Kunjungan dan Rata–rata Kunjungan per Hari pada Puskesmas Kota Bukittinggi di Kota Bukittinggi',
+                titleEn: 'Number of Attendence and Average Daily Attendence to puskesmas in Bukittinggi Municipality in Bukittinggi',
+                isMultiYear: true,
+                isExcludeSelectedYear: false,
+                source: 'DINAS KESEHATAN Kota Bukittinggi / <span class="italic text-slate-500">Public Health Office of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const p = get5YearPeriod(yr);
+                    const years = p.yearsAsc;
+
+                    const officialData = {
+                        2017: { baru: '26082', lama: '91162', kunjungan: '117244', rata: '58' },
+                        2018: { baru: '25272', lama: '90319', kunjungan: '115591', rata: '58' },
+                        2019: { baru: '20975', lama: '93073', kunjungan: '114048', rata: '58' },
+                        2020: { baru: '22375', lama: '91420', kunjungan: '114155', rata: '58' },
+                        2021: { baru: '22710', lama: '48812', kunjungan: '71522', rata: '35' },
+                        2022: { baru: '22428', lama: '89412', kunjungan: '111840', rata: '55' },
+                        2023: { baru: '18534', lama: '113450', kunjungan: '131984', rata: '63' },
+                        2024: { baru: '12023', lama: '122306', kunjungan: '134329', rata: '53' },
+                        2025: { baru: '10820', lama: '139147', kunjungan: '149967', rata: '81' }
+                    };
+
+                    const getVal = (y, key) => {
+                        if (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[y] && serverDbDataStore[y][key] !== undefined) {
+                            return serverDbDataStore[y][key];
+                        }
+                        if (officialData[y] && officialData[y][key] !== undefined) {
+                            return officialData[y][key];
+                        }
+                        return '-';
+                    };
+
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+
+                    const rowsHtml = years.map(y => {
+                        const isCurrent = (y === yr);
+                        const vBaru = getVal(y, 'baru');
+                        const vLama = getVal(y, 'lama');
+                        const vKunjungan = getVal(y, 'kunjungan');
+                        const vRata = getVal(y, 'rata');
+                        return `
+                            <tr class="hover:bg-amber-100/60 transition-colors ${isCurrent ? 'bg-amber-100/30' : ''}" data-year="${y}">
+                                <td class="py-2.5 px-4 font-semibold border border-slate-700 text-left align-middle ${isCurrent ? 'font-bold' : ''}">${y}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vBaru)}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vLama)}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vKunjungan)}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vRata)}</td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+                                    <div>Tahun</div><div class="italic font-normal text-[11px] sm:text-xs">Year</div>
+                                </th>
+                                <th class="py-2 px-3 font-bold border border-slate-700" colspan="2">
+                                    <div>Penderita</div><div class="italic font-normal text-[11px] sm:text-xs">Patient</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+                                    <div>Kunjungan</div><div class="italic font-normal text-[11px] sm:text-xs">Attendence</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+                                    <div>Rata–rata Kunjungan per Hari</div><div class="italic font-normal text-[11px] sm:text-xs">Average Daily Attendence</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs">
+                                <th class="py-2 px-3 border border-slate-700"><div>Baru</div><div class="italic font-normal text-[10px]">New</div></th>
+                                <th class="py-2 px-3 border border-slate-700"><div>Lama</div><div class="italic font-normal text-[10px]">Old</div></th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700">(5)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+            '4.2.12': {
+                titleId: 'Perkiraan Rata–rata Timbunan Sampah dan Volume Sampah yang Terangkut per Hari Setiap Bulan di Kota Bukittinggi',
+                titleEn: 'Estimation of Rubbish Heap and Volume of Rubbish Carry Out per Day Monthly in Bukittinggi',
+                isMultiYear: false,
+                source: 'Dinas Lingkungan Hidup Kota Bukittinggi / <span class="italic text-slate-500">Environmental Services Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const officialData = {
+                        1: { timbunan: '110.91', terangkut: '108.35' },
+                        2: { timbunan: '100.88', terangkut: '98.32' },
+                        3: { timbunan: '111.72', terangkut: '109.16' },
+                        4: { timbunan: '104.32', terangkut: '101.76' },
+                        5: { timbunan: '95.19', terangkut: '88.32' },
+                        6: { timbunan: '90.67', terangkut: '83.8' },
+                        7: { timbunan: '90.12', terangkut: '83.25' },
+                        8: { timbunan: '85.16', terangkut: '78.29' },
+                        9: { timbunan: '79', terangkut: '72.13' },
+                        10: { timbunan: '85.77', terangkut: '78.9' },
+                        11: { timbunan: '75.67', terangkut: '68.8' },
+                        12: { timbunan: '119.45', terangkut: '112.58' }
+                    };
+
+                    const months = [
+                        { no: '01', id: 'Januari', en: 'January' },
+                        { no: '02', id: 'Februari', en: 'February' },
+                        { no: '03', id: 'Maret', en: 'March' },
+                        { no: '04', id: 'April', en: 'April' },
+                        { no: '05', id: 'Mei', en: 'May' },
+                        { no: '06', id: 'Juni', en: 'June' },
+                        { no: '07', id: 'Juli', en: 'July' },
+                        { no: '08', id: 'Agustus', en: 'August' },
+                        { no: '09', id: 'September', en: 'September' },
+                        { no: '10', id: 'Oktober', en: 'October' },
+                        { no: '11', id: 'November', en: 'November' },
+                        { no: '12', id: 'Desember', en: 'December' }
+                    ];
+
+                    const getVal = (mNum, key) => {
+                        if (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[yr] && serverDbDataStore[yr][mNum] && serverDbDataStore[yr][mNum][key] !== undefined) {
+                            return serverDbDataStore[yr][mNum][key];
+                        }
+                        if (officialData[mNum] && officialData[mNum][key] !== undefined) {
+                            return officialData[mNum][key];
+                        }
+                        return '-';
+                    };
+
+                    const inp = (v) => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm" value="${v}">`;
+
+                    const rowsHtml = months.map((m, idx) => {
+                        const mNum = idx + 1;
+                        const vTim = getVal(mNum, 'timbunan');
+                        const vTer = getVal(mNum, 'terangkut');
+                        return `
+                            <tr class="hover:bg-amber-100/60 transition-colors" data-month="${mNum}">
+                                <td class="py-2.5 px-4 font-semibold border border-slate-700 text-left align-middle">
+                                    ${m.no}. ${m.id} / <span class="italic font-normal text-slate-700">${m.en}</span>
+                                </td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vTim)}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vTer)}</td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Bulan</div><div class="italic font-normal text-[11px] sm:text-xs">Month</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Sampah per Hari</div><div class="italic font-normal text-[11px] sm:text-xs">Number of Rubbish Heap (ton)</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Volume Sampah yang Terangkut per Hari</div><div class="italic font-normal text-[11px] sm:text-xs">Volume of Rubbish Carry Out by Day (ton)</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+            '4.2.13': {
+                titleId: 'Persentase Komposisi Sampah di Kota Bukittinggi (%)',
+                titleEn: 'Percentage of Rubbish Composition in Bukittinggi (%)',
+                isMultiYear: true,
+                isExcludeSelectedYear: false,
+                source: 'Dinas Lingkungan Hidup Kota Bukittinggi / <span class="italic text-slate-500">Environmental Services Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const p = get5YearPeriod(yr);
+                    const years = p.yearsAsc;
+
+                    const officialData = {
+                        2017: { organik: '-', logam: '-', plastik: '-', kaca: '-', kertas: '-', lainnya: '-', total: '-' },
+                        2018: { organik: '-', logam: '-', plastik: '-', kaca: '-', kertas: '-', lainnya: '-', total: '-' },
+                        2019: { organik: '-', logam: '-', plastik: '-', kaca: '-', kertas: '-', lainnya: '-', total: '-' },
+                        2020: { organik: '-', logam: '-', plastik: '-', kaca: '-', kertas: '-', lainnya: '-', total: '-' },
+                        2021: { organik: '67.06', logam: '0.64', plastik: '14.64', kaca: '0.7', kertas: '13.65', lainnya: '3.3', total: '100' },
+                        2022: { organik: '62.26', logam: '0.46', plastik: '18.72', kaca: '0.5', kertas: '16.5', lainnya: '1.56', total: '100' },
+                        2023: { organik: '69.39', logam: '0.48', plastik: '19.18', kaca: '0.3', kertas: '9.2', lainnya: '1.45', total: '100' },
+                        2024: { organik: '55.98', logam: '1.75', plastik: '21.96', kaca: '1.35', kertas: '5.51', lainnya: '13.45', total: '100' },
+                        2025: { organik: '55.98', logam: '1.75', plastik: '21.96', kaca: '1.35', kertas: '5.51', lainnya: '13.45', total: '100' }
+                    };
+
+                    const categories = [
+                        { key: 'organik', label: '01. Organik' },
+                        { key: 'logam', label: '02. Logam' },
+                        { key: 'plastik', label: '03. Plastik' },
+                        { key: 'kaca', label: '04. Gelas / Kaca' },
+                        { key: 'kertas', label: '05. Kertas' },
+                        { key: 'lainnya', label: '06. Lainnya' }
+                    ];
+
+                    const getVal = (y, key) => {
+                        if (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[y] && serverDbDataStore[y][key] !== undefined) {
+                            return serverDbDataStore[y][key];
+                        }
+                        if (officialData[y] && officialData[y][key] !== undefined) {
+                            return officialData[y][key];
+                        }
+                        return '-';
+                    };
+
+                    const inp = (v) => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm" value="${v}">`;
+
+                    let rowsHtml = categories.map(cat => {
+                        let cellsHtml = years.map(y => {
+                            const val = getVal(y, cat.key);
+                            return `<td class="py-1 px-2 border border-slate-700 text-center align-middle ${y === yr ? 'bg-amber-100/30' : ''}">${inp(val)}</td>`;
+                        }).join('');
+                        return `
+                            <tr class="hover:bg-amber-100/60 transition-colors" data-key="${cat.key}">
+                                <td class="py-2.5 px-4 font-semibold border border-slate-700 text-left align-middle">${cat.label}</td>
+                                ${cellsHtml}
+                            </tr>
+                        `;
+                    }).join('');
+
+                    // Total row
+                    let totalCellsHtml = years.map(y => {
+                        const val = getVal(y, 'total') !== '-' ? getVal(y, 'total') : '100';
+                        return `<td class="py-1 px-2 border border-slate-700 text-center align-middle font-bold ${y === yr ? 'bg-amber-200/50' : ''}">${inp(val, 'font-bold')}</td>`;
+                    }).join('');
+                    rowsHtml += `
+                        <tr class="bg-[#fed7aa] font-bold" data-key="total">
+                            <td class="py-2.5 px-4 border border-slate-700 text-left font-bold align-middle">Jumlah / Total</td>
+                            ${totalCellsHtml}
+                        </tr>
+                    `;
+
+                    let theadYearsHtml = '';
+                    let theadNumHtml = '';
+                    years.forEach((y, idx) => {
+                        theadYearsHtml += `<th class="py-3 px-4 font-bold border border-slate-700 ${y === yr ? 'bg-amber-600' : ''}"><div>${y}</div></th>`;
+                        theadNumHtml += `<th class="py-1 px-3 border border-slate-700">(${idx + 2})</th>`;
+                    });
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Jenis Sampah</div><div class="italic font-normal text-[11px] sm:text-xs">Kind of Rubbish</div>
+                                </th>
+                                ${theadYearsHtml}
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                ${theadNumHtml}
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+            '4.2.14': {
+                titleId: 'Rata–rata Timbunan Sampah yang Terangkut menurut Sumber Timbunan Sampah di Kota Bukittinggi',
+                titleEn: 'Rubbish Which is Carried by Source of Rubbish in Bukittinggi Municipality',
+                isMultiYear: false,
+                source: 'Dinas Lingkungan Hidup Kota Bukittinggi / <span class="italic text-slate-500">Environmental Services Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const officialData = [
+                        { label: '01. Rumah Tangga / Pemukiman', timbunan: '47.43', persentase: '52.51' },
+                        { label: '02. Pasar', timbunan: '17.10', persentase: '18.93' },
+                        { label: '03. Pertokoan/Komersial Fasilitas & Umum', timbunan: '8.94', persentase: '9.9' },
+                        { label: '04. Perkantoran', timbunan: '0.42', persentase: '0.46' },
+                        { label: '05. Sekolah', timbunan: '5.36', persentase: '5.93' },
+                        { label: '06. Rumah Sakit', timbunan: '2.43', persentase: '2.69' },
+                        { label: '07. Hotel', timbunan: '6.77', persentase: '7.49' },
+                        { label: '08. Restorant', timbunan: '1.19', persentase: '1.32' },
+                        { label: '09. Lainnya', timbunan: '0.70', persentase: '0.77' },
+                        { label: 'Jumlah/ Total', timbunan: '90.33', persentase: '100' }
+                    ];
+
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+
+                    const rowsHtml = officialData.map((row, idx) => {
+                        const isTotal = row.label.toLowerCase().includes('jumlah');
+                        const vTim = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[yr] && serverDbDataStore[yr][idx] && serverDbDataStore[yr][idx].timbunan !== undefined)
+                            ? serverDbDataStore[yr][idx].timbunan : row.timbunan;
+                        const vPer = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[yr] && serverDbDataStore[yr][idx] && serverDbDataStore[yr][idx].persentase !== undefined)
+                            ? serverDbDataStore[yr][idx].persentase : row.persentase;
+
+                        const trClass = isTotal ? 'bg-[#fed7aa] font-bold' : 'hover:bg-amber-100/60 transition-colors';
+                        const fontClass = isTotal ? 'font-bold' : 'font-semibold';
+                        return `
+                            <tr class="${trClass}" data-index="${idx}">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left ${fontClass} align-middle">${row.label}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vTim, isTotal ? 'font-bold' : '')}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vPer, isTotal ? 'font-bold' : '')}</td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Sumber</div><div class="italic font-normal text-[11px] sm:text-xs">Source</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Timbunan per Hari</div><div class="italic font-normal text-[11px] sm:text-xs">Rubbish Heap per Day (ton)</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Persentase</div><div class="italic font-normal text-[11px] sm:text-xs">Percentage</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+            '4.2.15': {
+                titleId: 'Jumlah Personil dan Sarana Kebersihan dan Pertamanan di Kota Bukittinggi',
+                titleEn: 'Number of Personal, Tools and Equipment Cleanners in Bukittinggi',
+                isMultiYear: true,
+                isExcludeSelectedYear: false,
+                source: 'Dinas Lingkungan Hidup Kota Bukittinggi / <span class="italic text-slate-500">Environmental Services Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const p = get5YearPeriod(yr);
+                    const years = p.yearsAsc;
+
+                    const officialData = {
+                        2017: { pegawai: '257', truk: '17', gerobak: '58', becak_dayung: '8', becak_motor: '58' },
+                        2018: { pegawai: '290', truk: '20', gerobak: '59', becak_dayung: '17', becak_motor: '62' },
+                        2019: { pegawai: '287', truk: '19', gerobak: '39', becak_dayung: '13', becak_motor: '46' },
+                        2020: { pegawai: '289', truk: '20', gerobak: '24', becak_dayung: '17', becak_motor: '45' },
+                        2021: { pegawai: '313', truk: '20', gerobak: '24', becak_dayung: '10', becak_motor: '42' },
+                        2022: { pegawai: '308', truk: '23', gerobak: '22', becak_dayung: '8', becak_motor: '45' },
+                        2023: { pegawai: '292', truk: '17', gerobak: '22', becak_dayung: '8', becak_motor: '40' },
+                        2024: { pegawai: '286', truk: '21', gerobak: '26', becak_dayung: '-', becak_motor: '39' },
+                        2025: { pegawai: '258', truk: '17', gerobak: '51', becak_dayung: '-', becak_motor: '51' }
+                    };
+
+                    const getVal = (y, key) => {
+                        if (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[y] && serverDbDataStore[y][key] !== undefined) {
+                            return serverDbDataStore[y][key];
+                        }
+                        if (officialData[y] && officialData[y][key] !== undefined) {
+                            return officialData[y][key];
+                        }
+                        return '-';
+                    };
+
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+
+                    const rowsHtml = years.map(y => {
+                        const isCurrent = (y === yr);
+                        const vPeg = getVal(y, 'pegawai');
+                        const vTruk = getVal(y, 'truk');
+                        const vGer = getVal(y, 'gerobak');
+                        const vBecD = getVal(y, 'becak_dayung');
+                        const vBecM = getVal(y, 'becak_motor');
+                        return `
+                            <tr class="hover:bg-amber-100/60 transition-colors ${isCurrent ? 'bg-amber-100/30' : ''}" data-year="${y}">
+                                <td class="py-2.5 px-4 font-semibold border border-slate-700 text-left align-middle ${isCurrent ? 'font-bold' : ''}">${y}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vPeg)}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vTruk)}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vGer)}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vBecD)}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vBecM)}</td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Tahun</div><div class="italic font-normal text-[11px] sm:text-xs">Year</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Pegawai</div><div class="italic font-normal text-[11px] sm:text-xs">Personil</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Truk Sampah</div><div class="italic font-normal text-[11px] sm:text-xs">Truck of Trash/ (unit)</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Gerobak</div><div class="italic font-normal text-[11px] sm:text-xs">Wagon (unit)</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Becak Dayung</div><div class="italic font-normal text-[11px] sm:text-xs">Tricycle (unit)</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Becak Motor</div><div class="italic font-normal text-[11px] sm:text-xs">Motor Tricycle (unit)</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700">(6)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+            '4.2.16': {
+                titleId: 'Jumlah Timbunan dan Volume Sampah yang Diangkut di Kota Bukittinggi',
+                titleEn: 'Rubbish Heap and Volume of Rubbish Carried in Bukittinggi Municipality',
+                isMultiYear: true,
+                isExcludeSelectedYear: false,
+                source: 'Dinas Lingkungan Hidup Kota Bukittinggi / <span class="italic text-slate-500">Environmental Services Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const p = get5YearPeriod(yr);
+                    const years = p.yearsAsc;
+
+                    const officialData = {
+                        2017: { timbunan: '-', terangkut: '-' },
+                        2018: { timbunan: '-', terangkut: '-' },
+                        2019: { timbunan: '-', terangkut: '-' },
+                        2020: { timbunan: '45.068 (ton)', terangkut: '40.424 (ton)' },
+                        2021: { timbunan: '51.254 (ton)', terangkut: '44.206 (ton)' },
+                        2022: { timbunan: '45.707 (ton)', terangkut: '38.235 (ton)' },
+                        2023: { timbunan: '47.450 (ton)', terangkut: '36.549 (ton)' },
+                        2024: { timbunan: '49.554 (ton)', terangkut: '35.394 (ton)' },
+                        2025: { timbunan: '49.170 (ton)', terangkut: '32.972 (ton)' }
+                    };
+
+                    const getVal = (y, key) => {
+                        if (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[y] && serverDbDataStore[y][key] !== undefined) {
+                            return serverDbDataStore[y][key];
+                        }
+                        if (officialData[y] && officialData[y][key] !== undefined) {
+                            return officialData[y][key];
+                        }
+                        return '-';
+                    };
+
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+
+                    const rowsHtml = years.map(y => {
+                        const isCurrent = (y === yr);
+                        const vTim = getVal(y, 'timbunan');
+                        const vTer = getVal(y, 'terangkut');
+                        return `
+                            <tr class="hover:bg-amber-100/60 transition-colors ${isCurrent ? 'bg-amber-100/30' : ''}" data-year="${y}">
+                                <td class="py-2.5 px-4 font-semibold border border-slate-700 text-left align-middle ${isCurrent ? 'font-bold' : ''}">${y}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vTim)}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vTer)}</td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Tahun</div><div class="italic font-normal text-[11px] sm:text-xs">Year</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Perkiraan Timbunan Sampah</div><div class="italic font-normal text-[11px] sm:text-xs">Estimation Heap of Rubbish (m3)</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Volume Sampah yang Terangkut</div><div class="italic font-normal text-[11px] sm:text-xs">Volume of Rubbish is Carried (m3)</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+            '4.1.20': {
+                titleId: 'Jumlah Klub/Persatuan Olahraga di Kota Bukittinggi',
+                titleEn: 'Number of Sport Club in Bukittinggi',
+                isMultiYear: true,
+                isExcludeSelectedYear: false,
+                source: 'Dinas Pemuda dan Olahraga Kota Bukittinggi / <span class="italic text-slate-500">Youth and Sports Agency of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const years = [yr - 3, yr - 2, yr - 1, yr];
+                    const sportsList = [
+                        { key: 'sport_1', name: '01. Sepak Bola / Soccer', def: { 2022: '3', 2023: '3', 2024: '3', 2025: '3' } },
+                        { key: 'sport_2', name: '02. Bola Volly / Volley Ball', def: { 2022: '16', 2023: '16', 2024: '5', 2025: '5' } },
+                        { key: 'sport_3', name: '03. Bola Basket / Basket Ball', def: { 2022: '17', 2023: '17', 2024: '18', 2025: '18' } },
+                        { key: 'sport_4', name: '04. Bulu Tangkis / Badminton', def: { 2022: '7', 2023: '7', 2024: '7', 2025: '7' } },
+                        { key: 'sport_5', name: '05. Tenis Meja / Table Tennis', def: { 2022: '3', 2023: '3', 2024: '3', 2025: '3' } },
+                        { key: 'sport_6', name: '06. Atletik / Atletic', def: { 2022: '3', 2023: '3', 2024: '3', 2025: '3' } },
+                        { key: 'sport_7', name: '07. Tenis / Tennis', def: { 2022: '7', 2023: '7', 2024: '6', 2025: '6' } },
+                        { key: 'sport_8', name: '08. Catur / Chess', def: { 2022: '1', 2023: '1', 2024: '1', 2025: '1' } },
+                        { key: 'sport_9', name: '09. Bridge / Bridge', def: { 2022: '1', 2023: '1', 2024: '1', 2025: '1' } },
+                        { key: 'sport_10', name: '10. Bola Sodok / Billiards', def: { 2022: '1', 2023: '1', 2024: '3', 2025: '3' } },
+                        { key: 'sport_11', name: '11. Renang / Swimming', def: { 2022: '6', 2023: '6', 2024: '6', 2025: '6' } },
+                        { key: 'sport_12', name: '12. Karate / Karate', def: { 2022: '2', 2023: '2', 2024: '2', 2025: '2' } },
+                        { key: 'sport_13', name: '13. Silat / Self Defence', def: { 2022: '26', 2023: '26', 2024: '26', 2025: '26' } },
+                        { key: 'sport_14', name: '14. Gulat / Wrestler', def: { 2022: '2', 2023: '2', 2024: '2', 2025: '2' } },
+                        { key: 'sport_15', name: '15. Aero Sport / Aero Sport', def: { 2022: '1', 2023: '1', 2024: '3', 2025: '3' } },
+                        { key: 'sport_16', name: '16. Kempo / Kempo', def: { 2022: '5', 2023: '5', 2024: '5', 2025: '5' } },
+                        { key: 'sport_17', name: '17. Wushu / Wushu', def: { 2022: '3', 2023: '3', 2024: '3', 2025: '3' } },
+                        { key: 'sport_18', name: '18. Hoki / Hockey', def: { 2022: '1', 2023: '1', 2024: '2', 2025: '2' } },
+                        { key: 'sport_19', name: '19. Menembak dan Berburu / Shooting', def: { 2022: '2', 2023: '2', 2024: '2', 2025: '2' } },
+                        { key: 'sport_20', name: '20. Senam / Exercise', def: { 2022: '4', 2023: '4', 2024: '1', 2025: '1' } },
+                        { key: 'sport_21', name: '21. Panahan / Archery', def: { 2022: '1', 2023: '1', 2024: '1', 2025: '1' } },
+                        { key: 'sport_22', name: '22. Balap Motor / Road Race', def: { 2022: '1', 2023: '1', 2024: '5', 2025: '5' } },
+                        { key: 'sport_23', name: '23. Sepau Roda / Roller sports', def: { 2022: '1', 2023: '1', 2024: '1', 2025: '1' } },
+                        { key: 'sport_24', name: '24. Tarung Derajat / Tarung Derajat', def: { 2022: '6', 2023: '6', 2024: '6', 2025: '6' } },
+                        { key: 'sport_25', name: '25. Tinju / Boxing', def: { 2022: '7', 2023: '7', 2024: '6', 2025: '6' } },
+                        { key: 'sport_26', name: '26. Muaythai / Muaythai', def: { 2022: '3', 2023: '3', 2024: '2', 2025: '2' } },
+                        { key: 'sport_27', name: '27. Taekwondo / Taekwondo', def: { 2022: '3', 2023: '3', 2024: '3', 2025: '3' } },
+                        { key: 'sport_28', name: '28. Dayung / Rowing', def: { 2022: '1', 2023: '1', 2024: '1', 2025: '1' } },
+                        { key: 'sport_29', name: '29. Balap Sepeda / Bike Racing', def: { 2022: '5', 2023: '5', 2024: '5', 2025: '5' } },
+                        { key: 'sport_30', name: '30. Panjat Tebing / Rock Climbing', def: { 2022: '3', 2023: '3', 2024: '1', 2025: '1' } },
+                        { key: 'sport_31', name: '31. Gate Ball / Gate Ball', def: { 2022: '1', 2023: '1', 2024: '1', 2025: '1' } },
+                        { key: 'sport_32', name: '32. Hapkido / Hapkido', def: { 2022: '1', 2023: '1', 2024: '1', 2025: '1' } },
+                        { key: 'sport_33', name: '33. Bola Tangan / Hand Ball', def: { 2022: '1', 2023: '1', 2024: '3', 2025: '3' } },
+                        { key: 'sport_34', name: '34. Kriket / Cricket', def: { 2022: '1', 2023: '1', 2024: '2', 2025: '2' } },
+                        { key: 'sport_35', name: '35. Beladiri Amatir / Mix Martial Arts', def: { 2022: '1', 2023: '1', 2024: '1', 2025: '1' } },
+                        { key: 'sport_36', name: '36. Kick Boxing / Kick Boxing', def: { 2022: '1', 2023: '1', 2024: '2', 2025: '2' } },
+                        { key: 'sport_37', name: '37. Binaraga / Bodybuilding', def: { 2022: '5', 2023: '5', 2024: '5', 2025: '5' } },
+                        { key: 'sport_38', name: '38. Angkat Berat / Powerlifting', def: { 2022: '1', 2023: '1', 2024: '1', 2025: '1' } },
+                        { key: 'sport_39', name: '39. Petanque / Petanque', def: { 2022: '1', 2023: '1', 2024: '2', 2025: '2' } },
+                        { key: 'sport_40', name: '40. Sambo / Sambo', def: { 2022: '1', 2023: '1', 2024: '1', 2025: '1' } },
+                        { key: 'sport_41', name: '41. Angkat Besi / Weightlifting', def: { 2022: '1', 2023: '1', 2024: '1', 2025: '1' } },
+                        { key: 'sport_42', name: '42. E–Sport / E–Sport', def: { 2022: '1', 2023: '1', 2024: '1', 2025: '1' } },
+                        { key: 'sport_43', name: '43. PJSI / Persatuan Judo Seluruh Indonesia', def: { 2022: '-', 2023: '-', 2024: '1', 2025: '1' } },
+                        { key: 'sport_44', name: '44. PORDASI / Persatuan Olahraga Berkuda Seluruh Indonesia', def: { 2022: '-', 2023: '-', 2024: '1', 2025: '1' } },
+                        { key: 'sport_45', name: '45. PSTI / Persatuan Sepak Takrau Indonesia', def: { 2022: '-', 2023: '-', 2024: '1', 2025: '1' } },
+                        { key: 'sport_46', name: '46. PTMSI / Persatuan Tenis Meja Seluruh Indoneisa', def: { 2022: '-', 2023: '-', 2024: '1', 2025: '1' } }
+                    ];
+
+                    const getVal = (y, key, defObj) => {
+                        if (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[y] && serverDbDataStore[y][key] !== undefined) {
+                            return serverDbDataStore[y][key];
+                        }
+                        if (defObj && defObj[y] !== undefined) {
+                            return defObj[y];
+                        }
+                        return '-';
+                    };
+
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+
+                    const rowsHtml = sportsList.map(sp => {
+                        let displayName = sp.name;
+                        if (displayName.includes('/')) {
+                            const parts = displayName.split('/');
+                            displayName = `${parts[0].trim()} / <span class="italic font-normal text-slate-600">${parts.slice(1).join('/').trim()}</span>`;
+                        }
+                        return `
+                            <tr class="hover:bg-amber-100/60 transition-colors" data-key="${sp.key}">
+                                <td class="py-2 px-4 font-semibold border border-slate-700 text-left align-middle">${displayName}</td>
+                                ${years.map(y => {
+                                    const val = getVal(y, sp.key, sp.def);
+                                    const isCur = (y === yr);
+                                    return `<td class="py-1 px-2 border border-slate-700 text-center align-middle ${isCur ? 'bg-amber-100/60 font-bold' : ''}" data-year="${y}">${inp(val, isCur ? 'font-bold' : '')}</td>`;
+                                }).join('')}
+                            </tr>
+                        `;
+                    }).join('');
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700 text-left align-middle">
+                                    <div>Jenis Olahraga</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Kind of Sport</div>
+                                </th>
+                                ${years.map(y => `<th class="py-3 px-4 border border-slate-700 text-center ${y === yr ? 'bg-amber-600 font-extrabold ring-1 ring-white/30' : ''}">${y}</th>`).join('')}
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700 text-center">(1)</th>
+                                ${years.map((y, idx) => `<th class="py-1 px-3 border border-slate-700 text-center">(${idx + 2})</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+            '4.3.4': {
+                titleId: 'Jumlah Kejadian Bencana Alam di Kota Bukittinggi Menurut Kecamatan',
+                titleEn: 'Number of Natural Disasters in Bukittinggi Municipality by District',
+                isMultiYear: false,
+                isExcludeSelectedYear: false,
+                source: 'Badan Penanggulangan Bencana Daerah (BPBD) Kota Bukittinggi / <span class="italic text-slate-500">Regional Agency for Disaster Management of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const isFuture = (yr > 2025);
+                    const officialData = {
+                        2023: {
+                            guguk_panjang: ['38', '297', '0', '1'],
+                            mandiangin_koto_selayan: ['48', '561', '2', '1'],
+                            aur_birugo_tigo_baleh: ['23', '98', '1', '0'],
+                            total: ['109', '956', '3', '2']
+                        },
+                        2024: {
+                            guguk_panjang: ['45', '249', '8', '0'],
+                            mandiangin_koto_selayan: ['31', '694', '0', '0'],
+                            aur_birugo_tigo_baleh: ['17', '712', '50', '1'],
+                            total: ['93', '1655', '58', '1']
+                        },
+                        2025: {
+                            guguk_panjang: ['21', '130', '33', '6'],
+                            mandiangin_koto_selayan: ['42', '74', '20', '8'],
+                            aur_birugo_tigo_baleh: ['4', '0', '1', '1'],
+                            total: ['67', '204', '54', '15']
+                        }
+                    };
+
+                    const yrData = officialData[yr] || {};
+
+                    const getVal = (distKey, colIdx, colName) => {
+                        const dbKey = `${distKey}_${colName}`;
+                        if (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[yr] && serverDbDataStore[yr][dbKey] !== undefined) {
+                            return serverDbDataStore[yr][dbKey];
+                        }
+                        if (isFuture) {
+                            return '-';
+                        }
+                        if (yrData[distKey] && yrData[distKey][colIdx] !== undefined) {
+                            return yrData[distKey][colIdx];
+                        }
+                        return '-';
+                    };
+
+                    const dists = [
+                        { key: 'guguk_panjang', label: '01. GUGUK PANJANG' },
+                        { key: 'mandiangin_koto_selayan', label: '02. MANDIANGIN KOTO SELAYAN' },
+                        { key: 'aur_birugo_tigo_baleh', label: '03. AUR BIRUGO TIGO BALEH' }
+                    ];
+
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+
+                    const rowsHtml = dists.map(d => `
+                        <tr class="hover:bg-amber-100/60 transition-colors" data-key="${d.key}">
+                            <td class="py-2.5 px-4 font-semibold border border-slate-700 text-left align-middle">${d.label}</td>
+                            <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(getVal(d.key, 0, 'kejadian'))}</td>
+                            <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(getVal(d.key, 1, 'korban'))}</td>
+                            <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(getVal(d.key, 2, 'rumah'))}</td>
+                            <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(getVal(d.key, 3, 'lainnya'))}</td>
+                        </tr>
+                    `).join('');
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+                                    <div>Kecamatan</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+                                    <div>Jumlah Kejadian Bencana Alam</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Number of Natural Disaster</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+                                    <div>Jumlah Korban Terdampak</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Number of Victims Affected</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="2">
+                                    <div>Jumlah Kerusakan Bangunan</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Amount of Damage to Buildings</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Rumah</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">House</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Lainnya</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Other</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700">(5)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                            <tr class="bg-[#fed7aa] font-bold" data-key="total">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-extrabold align-middle">Jumlah / <span class="italic font-bold">Total</span></td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(getVal('total', 0, 'kejadian'), 'font-extrabold')}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(getVal('total', 1, 'korban'), 'font-extrabold')}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(getVal('total', 2, 'rumah'), 'font-extrabold')}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(getVal('total', 3, 'lainnya'), 'font-extrabold')}</td>
+                            </tr>
+                        </tbody>
+                    `;
+                }
+            },
+            '9.2': {
+                titleId: 'Jumlah Koperasi Menurut Jenis Koperasi dan Kecamatan di Kota Bukittinggi',
+                titleEn: 'Number of Cooperative by Kind of Cooperative and Subdistrict in Bukittinggi Municipality',
+                isMultiYear: false,
+                isExcludeSelectedYear: false,
+                source: 'Dinas Koperasi, UKM dan Tenaga Kerja Kota Bukittinggi / <span class="italic text-slate-500">Cooperative, Small and Medium Business and Labor Services of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const officialData = {
+                        2023: {
+                            guguk_panjang: ['0', '13', '14', '25', '52'],
+                            mandiangin_koto_selayan: ['0', '4', '1', '10', '15'],
+                            aur_birugo_tigo_baleh: ['1', '12', '3', '11', '27'],
+                            total: ['1', '29', '18', '46', '94']
+                        },
+                        2024: {
+                            guguk_panjang: ['0', '13', '10', '34', '57'],
+                            mandiangin_koto_selayan: ['0', '4', '1', '20', '25'],
+                            aur_birugo_tigo_baleh: ['1', '10', '6', '14', '31'],
+                            total: ['1', '27', '17', '68', '113']
+                        },
+                        2025: {
+                            guguk_panjang: ['0', '29', '11', '22', '62'],
+                            mandiangin_koto_selayan: ['0', '4', '1', '25', '30'],
+                            aur_birugo_tigo_baleh: ['1', '10', '6', '19', '36'],
+                            total: ['1', '43', '18', '66', '128']
+                        }
+                    };
+
+                    const yrData = officialData[yr] || {};
+
+                    const getVal = (distKey, colIdx, colName) => {
+                        const dbKey = `${distKey}_${colName}`;
+                        if (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[yr] && serverDbDataStore[yr][dbKey] !== undefined) {
+                            return serverDbDataStore[yr][dbKey];
+                        }
+                        if (yrData[distKey] && yrData[distKey][colIdx] !== undefined) {
+                            return yrData[distKey][colIdx];
+                        }
+                        return '-';
+                    };
+
+                    const dists = [
+                        { key: 'guguk_panjang', label: 'Guguk Panjang' },
+                        { key: 'mandiangin_koto_selayan', label: 'Mandiangin Koto Selayan' },
+                        { key: 'aur_birugo_tigo_baleh', label: 'Aur Birugo Tigo Baleh' }
+                    ];
+
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+
+                    const rowsHtml = dists.map(d => `
+                        <tr class="hover:bg-amber-100/60 transition-colors" data-key="${d.key}">
+                            <td class="py-2.5 px-4 font-semibold border border-slate-700 text-left align-middle">${d.label}</td>
+                            <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(getVal(d.key, 0, 'kud'))}</td>
+                            <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(getVal(d.key, 1, 'kpri'))}</td>
+                            <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(getVal(d.key, 2, 'kopkar'))}</td>
+                            <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(getVal(d.key, 3, 'lainnya'))}</td>
+                            <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(getVal(d.key, 4, 'total'), 'font-bold bg-amber-50/50')}</td>
+                        </tr>
+                    `).join('');
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Kecamatan</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Subdistrict</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>KUD</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>KPRI</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>KOPKAR</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Lainnya</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Other</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Jumlah</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700">(6)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                            <tr class="bg-[#fed7aa] font-bold" data-key="total">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-extrabold align-middle">Jumlah / <span class="italic font-bold">Total</span></td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(getVal('total', 0, 'kud'), 'font-extrabold')}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(getVal('total', 1, 'kpri'), 'font-extrabold')}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(getVal('total', 2, 'kopkar'), 'font-extrabold')}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(getVal('total', 3, 'lainnya'), 'font-extrabold')}</td>
+                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(getVal('total', 4, 'total'), 'font-extrabold bg-amber-100/80')}</td>
+                            </tr>
+                        </tbody>
+                    `;
+                }
+            },
+            '9.3': {
+                titleId: 'Perkembangan Koperasi Dirinci Menurut Anggota, Simpanan dan Volume Usaha di Kota Bukittinggi',
+                titleEn: 'Growth of Cooperative by Member, Deposite and Omset in Bukittinggi',
+                isMultiYear: false,
+                isExcludeSelectedYear: false,
+                source: 'Dinas Koperasi, UKM dan Tenaga Kerja Kota Bukittinggi / <span class="italic text-slate-500">Cooperative, Small and Medium Business and Labor Services of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const p = get7YearPeriod(yr);
+                    const years = p.yearsAsc;
+
+                    const officialData = {
+                        2017: { koperasi: '92', anggota: '15736', simpanan: '177732269', volume_usaha: '480543113', permodalan: '272173141' },
+                        2018: { koperasi: '92', anggota: '15910', simpanan: '212256371', volume_usaha: '202499464', permodalan: '310499179' },
+                        2019: { koperasi: '93', anggota: '15111', simpanan: '183270080', volume_usaha: '195793390', permodalan: '291298760' },
+                        2020: { koperasi: '94', anggota: '14561', simpanan: '210868800', volume_usaha: '179916467', permodalan: '300268854' },
+                        2021: { koperasi: '95', anggota: '14403', simpanan: '202041670', volume_usaha: '175575520', permodalan: '304235940' },
+                        2022: { koperasi: '94', anggota: '14241', simpanan: '183893370', volume_usaha: '147951760', permodalan: '276352910' },
+                        2023: { koperasi: '94', anggota: '14204', simpanan: '116872110', volume_usaha: '139303060', permodalan: '221056024' },
+                        2024: { koperasi: '113', anggota: '13939', simpanan: '133938170', volume_usaha: '104568190', permodalan: '183952529' },
+                        2025: { koperasi: '128', anggota: '14081', simpanan: '137045463', volume_usaha: '82924543', permodalan: '185537956' }
+                    };
+
+                    const getVal = (y, key) => {
+                        if (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[y] && serverDbDataStore[y][key] !== undefined) {
+                            return serverDbDataStore[y][key];
+                        }
+                        if (officialData[y] && officialData[y][key] !== undefined) return officialData[y][key];
+                        return '-';
+                    };
+
+                    const rowsHtml = years.map(y => `
+                        <tr class="hover:bg-amber-100/60 transition-colors" data-year="${y}">
+                            <td class="py-2.5 px-4 font-semibold border border-slate-700 text-left align-middle ${y === yr ? 'font-bold bg-amber-100/60' : ''}">${y}</td>
+                            <td class="py-1 px-2 border border-slate-700 text-center align-middle ${y === yr ? 'bg-amber-100/60' : ''}">
+                                <input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm" data-key="koperasi" value="${getVal(y, 'koperasi')}">
+                            </td>
+                            <td class="py-1 px-2 border border-slate-700 text-center align-middle ${y === yr ? 'bg-amber-100/60' : ''}">
+                                <input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm" data-key="anggota" value="${getVal(y, 'anggota')}">
+                            </td>
+                            <td class="py-1 px-2 border border-slate-700 text-center align-middle ${y === yr ? 'bg-amber-100/60' : ''}">
+                                <input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm" data-key="simpanan" value="${getVal(y, 'simpanan')}">
+                            </td>
+                            <td class="py-1 px-2 border border-slate-700 text-center align-middle ${y === yr ? 'bg-amber-100/60' : ''}">
+                                <input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm" data-key="volume_usaha" value="${getVal(y, 'volume_usaha')}">
+                            </td>
+                            <td class="py-1 px-2 border border-slate-700 text-center align-middle ${y === yr ? 'bg-amber-100/60' : ''}">
+                                <input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm" data-key="permodalan" value="${getVal(y, 'permodalan')}">
+                            </td>
+                        </tr>
+                    `).join('');
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Tahun</div><div class="italic font-normal text-[11px] sm:text-xs">Year</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Jumlah Koperasi</div><div class="italic font-normal text-[11px] sm:text-xs">Number of Cooperative (Buah/Unit)</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Anggota</div><div class="italic font-normal text-[11px] sm:text-xs">Member (Orang/ Person)</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Simpanan</div><div class="italic font-normal text-[11px] sm:text-xs">Deposits (000)</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Volume Usaha</div><div class="italic font-normal text-[11px] sm:text-xs">Omsets (000)</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Permodalan</div><div class="italic font-normal text-[11px] sm:text-xs">Assets (000)</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700">(6)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+            '9.4': {
+                titleId: 'Jumlah Koperasi Menurut Jenisnya per Kecamatan di Kota Bukittinggi',
+                titleEn: 'Number of Cooperation by Kind in District in Bukittinggi',
+                isMultiYear: false,
+                isExcludeSelectedYear: false,
+                source: 'Dinas Koperasi, UKM dan Tenaga Kerja Kota Bukittinggi / <span class="italic text-slate-500">Cooperative, Small and Medium Business and Labor Services of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const categories = [
+                        { is_header: true, label: 'Koperasi Primer', key: 'primer_header' },
+                        { key: 'kop_pertanian', label: '1. Kop. Pertanian', sub: false },
+                        { key: 'kop_peternakan', label: '2. Kop. Peternakan', sub: false },
+                        { key: 'kop_serba_usaha', label: '3. Kop. Serba Usaha', sub: false },
+                        { key: 'kop_kerajinan', label: '4. Kop. Kerajinan', sub: false },
+                        { key: 'kop_simpan_pinjam', label: '5. Kop. Simpan Pinjam', sub: false },
+                        { key: 'kop_jasa_angkutan', label: '6. Kop. Jasa / <span class="italic font-normal text-slate-700">Angkutan</span>', raw_label: '6. Kop. Jasa / Angkutan', sub: false },
+                        { is_header: true, label: '7. Kop Menurut Golongan', key: 'golongan_header' },
+                        { key: 'gol_pegawai_negeri', label: '- Pegawai Negeri', sub: true },
+                        { key: 'gol_angkatan_darat', label: '- Angkatan Darat', sub: true },
+                        { key: 'gol_polri', label: '- Polri', sub: true },
+                        { key: 'gol_karyawan_perum', label: '- Karyawan / <span class="italic font-normal text-slate-700">Perum</span>', raw_label: '- Karyawan / Perum', sub: true },
+                        { key: 'gol_guru_swasta', label: '- Guru Swasta', sub: true },
+                        { key: 'gol_veteran', label: '- Veteran', sub: true },
+                        { key: 'gol_pensiun_abri', label: '- Pensiun ABRI', sub: true },
+                        { key: 'gol_pensiun_pn', label: '- Pensiun PN', sub: true },
+                        { key: 'gol_karyawan_bank', label: '- Karyawan Bank', sub: true },
+                        { key: 'gol_organisasi_wanita', label: '- Organisasi Wanita', sub: true },
+                        { key: 'kop_mahasiswa', label: '8. Kop. Mahasiswa', sub: false },
+                        { key: 'kop_sekolah', label: '9. Kop. Sekolah', sub: false },
+                        { key: 'koppas', label: '10. Koppas', sub: false },
+                        { key: 'kop_lainnya', label: '11. Koperasi lainnya', sub: false },
+                        { is_header: true, label: 'Koperasi Sekunder', key: 'sekunder_header' },
+                        { key: 'sek_pkppn', label: '1. PKPPN', sub: false },
+                        { key: 'sek_pusat_wanita', label: '2. Pusat Koperasi Wanita', sub: false }
+                    ];
+
+                    const officialDataByYear = {
+                        2025: {
+                            kop_pertanian: ['0', '0', '1', '1'],
+                            kop_peternakan: ['0', '0', '0', '0'],
+                            kop_serba_usaha: ['12', '3', '3', '18'],
+                            kop_kerajinan: ['0', '0', '0', '0'],
+                            kop_simpan_pinjam: ['4', '4', '1', '9'],
+                            kop_jasa_angkutan: ['1', '0', '0', '1'],
+                            gol_pegawai_negeri: ['13', '4', '10', '27'],
+                            gol_angkatan_darat: ['0', '0', '2', '2'],
+                            gol_polri: ['0', '0', '1', '1'],
+                            gol_karyawan_perum: ['11', '1', '6', '18'],
+                            gol_guru_swasta: ['0', '0', '0', '0'],
+                            gol_veteran: ['1', '0', '0', '1'],
+                            gol_pensiun_abri: ['1', '0', '0', '1'],
+                            gol_pensiun_pn: ['0', '0', '0', '0'],
+                            gol_karyawan_bank: ['0', '0', '0', '0'],
+                            gol_organisasi_wanita: ['2', '1', '1', '4'],
+                            kop_mahasiswa: ['0', '0', '0', '0'],
+                            kop_sekolah: ['0', '0', '0', '0'],
+                            koppas: ['2', '1', '0', '3'],
+                            kop_lainnya: ['15', '16', '11', '42'],
+                            sek_pkppn: ['0', '0', '0', '0'],
+                            sek_pusat_wanita: ['0', '0', '0', '0']
+                        },
+                        2024: {
+                            kop_pertanian: ['0', '0', '1', '1'],
+                            kop_peternakan: ['0', '0', '0', '0'],
+                            kop_serba_usaha: ['12', '3', '3', '18'],
+                            kop_kerajinan: ['1', '0', '0', '1'],
+                            kop_simpan_pinjam: ['12', '3', '3', '18'],
+                            kop_jasa_angkutan: ['1', '0', '0', '1'],
+                            gol_pegawai_negeri: ['12', '4', '10', '26'],
+                            gol_angkatan_darat: ['0', '0', '2', '2'],
+                            gol_polri: ['0', '0', '1', '1'],
+                            gol_karyawan_perum: ['11', '1', '6', '18'],
+                            gol_guru_swasta: ['0', '0', '0', '0'],
+                            gol_veteran: ['1', '0', '0', '1'],
+                            gol_pensiun_abri: ['1', '0', '0', '1'],
+                            gol_pensiun_pn: ['0', '0', '0', '0'],
+                            gol_karyawan_bank: ['0', '0', '0', '0'],
+                            gol_organisasi_wanita: ['0', '0', '0', '0'],
+                            kop_mahasiswa: ['0', '0', '0', '0'],
+                            kop_sekolah: ['0', '0', '0', '0'],
+                            koppas: ['2', '1', '-', '3'],
+                            kop_lainnya: ['4', '13', '5', '22'],
+                            sek_pkppn: ['-', '-', '-', '0'],
+                            sek_pusat_wanita: ['-', '-', '-', '0']
+                        },
+                        2023: {
+                            kop_pertanian: ['-', '-', '1', '1'],
+                            kop_peternakan: ['-', '-', '-', '-'],
+                            kop_serba_usaha: ['13', '3', '4', '20'],
+                            kop_kerajinan: ['1', '-', '-', '1'],
+                            kop_simpan_pinjam: ['3', '2', '-', '5'],
+                            kop_jasa_angkutan: ['-', '-', '-', '-'],
+                            gol_pegawai_negeri: ['13', '4', '12', '29'],
+                            gol_angkatan_darat: ['1', '-', '-', '1'],
+                            gol_polri: ['-', '-', '1', '1'],
+                            gol_karyawan_perum: ['14', '1', '3', '18'],
+                            gol_guru_swasta: ['-', '-', '-', '-'],
+                            gol_veteran: ['-', '-', '-', '-'],
+                            gol_pensiun_abri: ['-', '1', '-', '1'],
+                            gol_pensiun_pn: ['-', '-', '-', '-'],
+                            gol_karyawan_bank: ['-', '-', '-', '-'],
+                            gol_organisasi_wanita: ['2', '-', '1', '3'],
+                            kop_mahasiswa: ['-', '-', '-', '-'],
+                            kop_sekolah: ['-', '-', '-', '-'],
+                            koppas: ['-', '-', '-', '-'],
+                            kop_lainnya: ['5', '4', '5', '14'],
+                            sek_pkppn: ['-', '-', '-', '-'],
+                            sek_pusat_wanita: ['-', '-', '-', '-']
+                        }
+                    };
+
+                    const dataForYear = officialDataByYear[yr] || {};
+
+                    let rowsHtml = '';
+                    categories.forEach(cat => {
+                        if (cat.is_header) {
+                            rowsHtml += `
+                                <tr class="hover:bg-amber-100/60 transition-colors">
+                                    <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top" colspan="2">${cat.label}</td>
+                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top"><span class="text-slate-400 font-normal">-</span></td>
+                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top"><span class="text-slate-400 font-normal">-</span></td>
+                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top"><span class="text-slate-400 font-normal">-</span></td>
+                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top"><span class="text-slate-400 font-normal">-</span></td>
+                                </tr>
+                            `;
+                        } else {
+                            const vals = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[yr] && serverDbDataStore[yr][`${cat.key}_gp`] !== undefined)
+                                ? [serverDbDataStore[yr][`${cat.key}_gp`], serverDbDataStore[yr][`${cat.key}_mks`], serverDbDataStore[yr][`${cat.key}_abtb`], serverDbDataStore[yr][`${cat.key}_total`]]
+                                : (dataForYear[cat.key] || ['-', '-', '-', '-']);
+                            const subCls = cat.sub ? 'pl-8' : '';
+                            const inp = (v) => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm" value="${v}">`;
+                            rowsHtml += `
+                                <tr class="hover:bg-amber-100/60 transition-colors" data-key="${cat.key}">
+                                    <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top ${subCls}" colspan="2">${cat.label}</td>
+                                    <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vals[0])}</td>
+                                    <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vals[1])}</td>
+                                    <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vals[2])}</td>
+                                    <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vals[3])}</td>
+                                </tr>
+                            `;
+                        }
+                    });
+
+                    const officialTotals = {
+                        2025: { gp: '62', mks: '30', abtb: '36', total: '128' },
+                        2024: { gp: '57', mks: '25', abtb: '31', total: '113' },
+                        2023: { gp: '52', mks: '15', abtb: '27', total: '94' },
+                        2022: { gp: '53', mks: '17', abtb: '24', total: '94' },
+                        2021: { gp: '54', mks: '17', abtb: '24', total: '95' },
+                        2020: { gp: '54', mks: '17', abtb: '23', total: '94' },
+                        2019: { gp: '54', mks: '17', abtb: '23', total: '94' },
+                        2018: { gp: '54', mks: '16', abtb: '23', total: '93' }
+                    };
+
+                    const histYears = [yr, yr - 1, yr - 2, yr - 3, yr - 4, yr - 5];
+                    const totalRowsCount = histYears.length;
+
+                    histYears.forEach((hy, idx) => {
+                        const t = officialTotals[hy] || { gp: '-', mks: '-', abtb: '-', total: '-' };
+                        const isCur = (hy === yr);
+                        const trCls = isCur ? 'bg-[#fed7aa] font-bold' : 'hover:bg-amber-100/60 transition-colors';
+                        const boldCls = isCur ? 'font-extrabold' : '';
+
+                        rowsHtml += `<tr class="${trCls}">`;
+                        if (idx === 0) {
+                            rowsHtml += `<td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top" rowspan="${totalRowsCount}">Jumlah / <span class="italic font-bold">Total</span></td>`;
+                        }
+                        rowsHtml += `
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-top ${boldCls}">${hy}</td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-top ${boldCls}">${t.gp}</td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-top ${boldCls}">${t.mks}</td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-top ${boldCls}">${t.abtb}</td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-top ${boldCls}">${t.total}</td>
+                        </tr>`;
+                    });
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2" colspan="2">
+                                    <div>Jenis Koperasi</div><div class="italic font-normal text-[11px] sm:text-xs">Kind of Cooperative</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="3">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Guguk Panjang</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Mandiangin Koto Selayan</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Aur Birugo Tigo Baleh</div></th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700" colspan="2">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700">(5)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
             }
         };
 
@@ -2384,6 +7281,7 @@
         let serverDbDataStore = @json($dbDataStore ?? []);
         let serverDbMetadata = @json($dbMetadata ?? null);
         let serverDbFallbackMetadata = @json($dbFallbackMetadata ?? null);
+        window.serverDbCustomTables = @json($dbCustomTables ?? []);
         const csrfToken = '{{ csrf_token() }}';
 
         /**
@@ -2395,16 +7293,30 @@
             if (currentTableCode === '1.1.6' && tableSchemas['1.1.6']) {
                 return tableSchemas['1.1.6'].render(targetYear);
             }
+            if (currentTableCode.startsWith('4.1') && tableSchemas[currentTableCode]) {
+                return tableSchemas[currentTableCode].render(targetYear);
+            }
             const tempTable = document.createElement('table');
             tempTable.innerHTML = sourceHtml;
 
             // 1. thead: Ganti tahun lama di header jika ada teks tahun eksplisit
             if (sourceYear && targetYear && sourceYear.toString() !== targetYear.toString()) {
                 const theadThs = tempTable.querySelectorAll('thead th');
+                const delta = parseInt(targetYear) - parseInt(sourceYear);
                 theadThs.forEach(th => {
-                    const regexYr = new RegExp(`\\b${sourceYear}\\b`, 'g');
-                    if (regexYr.test(th.innerText)) {
-                        th.innerHTML = th.innerHTML.replace(regexYr, targetYear);
+                    if (/\b(?:19|20)\d{2}\s*\/\s*(?:19|20)\d{2}\b/.test(th.innerText)) {
+                        th.innerHTML = th.innerHTML.replace(/\b((?:19|20)\d{2})\s*\/\s*((?:19|20)\d{2})\b/g, (m, y1, y2) => {
+                            return `${parseInt(y1) + delta}/${parseInt(y2) + delta}`;
+                        });
+                    } else if (/\b(?:19|20)\d{2}\s*[–\-]\s*(?:19|20)\d{2}\b/.test(th.innerText)) {
+                        th.innerHTML = th.innerHTML.replace(/\b((?:19|20)\d{2})\s*[–\-]\s*((?:19|20)\d{2})\b/g, (m, y1, y2) => {
+                            return `${parseInt(y1) + delta}–${parseInt(y2) + delta}`;
+                        });
+                    } else {
+                        const regexYr = new RegExp(`\\b${sourceYear}\\b`, 'g');
+                        if (regexYr.test(th.innerText)) {
+                            th.innerHTML = th.innerHTML.replace(regexYr, targetYear);
+                        }
                     }
                 });
             }
@@ -2436,9 +7348,9 @@
                         }
                     }
 
-                    // Jangan timpa label tahun (misal: 2024, 2025, 2022(SIUP)) menjadi strip '-'
+                    // Jangan timpa label tahun khusus (misal: 2022(SIUP)) menjadi strip '-'
                     const rawText = td.innerText.trim();
-                    if (/^(19|20)\d{2}(\s*\(SIUP\))?$/.test(rawText)) {
+                    if (/^(19|20)\d{2}\s*\(SIUP\)$/.test(rawText)) {
                         return;
                     }
 
@@ -2452,25 +7364,30 @@
                 });
             });
 
-            // Khusus tabel 11.2: atur 6 rentang tahun historis pada bagian Jumlah [targetYear, targetYear-1, ..., targetYear-5]
-            if (currentTableCode === '11.2') {
+            // Khusus tabel 11.2, 3.1.8, & 3.2.8: atur 6 rentang tahun historis pada bagian Jumlah [targetYear, targetYear-1, ..., targetYear-5]
+            if (currentTableCode === '11.2' || currentTableCode === '3.1.8' || currentTableCode === '3.2.8') {
                 const yr = parseInt(targetYear) || 2026;
                 // Bersihkan baris siluman / orphaned row sebelum Jumlah jika ada
                 const allTrs = Array.from(tempTable.querySelectorAll('tbody tr'));
                 allTrs.forEach(tr => {
                     const tds = tr.querySelectorAll('td');
+                    // Jika sel pertama berisi '-' dengan rowspan besar pada kecamatan, bersihkan
+                    if (tds.length >= 2 && tds[1].getAttribute('rowspan') && tds[1].innerText.trim() === '-') {
+                        tds[1].remove();
+                        tds[0].setAttribute('colspan', '2');
+                    }
                     if (tds.length >= 2 && tds[0].innerText.trim() === '-' && tr.nextElementSibling && tr.nextElementSibling.innerText.includes('Jumlah')) {
                         tr.remove();
                     }
                 });
 
-                const jumlahCell = Array.from(tempTable.querySelectorAll('td')).find(td => td.innerText.trim() === 'Jumlah');
+                const jumlahCell = Array.from(tempTable.querySelectorAll('td')).find(td => td.innerText.trim().startsWith('Jumlah'));
                 if (jumlahCell) {
                     let currentRow = jumlahCell.parentElement;
                     for (let i = 0; i < 6; i++) {
                         if (!currentRow) break;
                         const y = yr - i;
-                        const label = (y <= 2022) ? `${y}(SIUP)` : `${y}`;
+                        const label = (y <= 2022 && currentTableCode === '11.2') ? `${y}(SIUP)` : `${y}`;
                         const tds = currentRow.querySelectorAll('td');
                         const yearTd = (i === 0) ? tds[1] : tds[0];
                         if (yearTd) {
@@ -2491,6 +7408,26 @@
         let currentOpdCode = urlParams.get('opd') || '{{ $currentOpdCode ?? "01" }}';
         let currentYear = urlParams.get('year') || '{{ $currentYear ?? "2025" }}';
         let currentType = urlParams.get('type') || '{{ $currentType ?? "opd" }}';
+
+        // Selaraskan instansi jika tabel saat ini milik instansi/OPD lain
+        if (typeof getAgencyInfoForTable === 'function') {
+            const autoAgency = getAgencyInfoForTable(currentTableCode, currentOpdCode, currentType);
+            if (autoAgency && autoAgency.opdCode && (autoAgency.opdCode !== currentOpdCode || (autoAgency.type && autoAgency.type !== currentType))) {
+                currentOpdCode = autoAgency.opdCode;
+                if (autoAgency.type) currentType = autoAgency.type;
+                if (window.history && window.history.replaceState) {
+                    const syncUrl = new URL(window.location.href);
+                    syncUrl.searchParams.set('opd', currentOpdCode);
+                    if (currentType) syncUrl.searchParams.set('type', currentType);
+                    window.history.replaceState({}, '', syncUrl.toString());
+                }
+            }
+        }
+
+        function cleanHtmlYearRanges(html) {
+            if (!html || typeof html !== 'string') return html;
+            return html.replace(/<div>\s*((?:19|20)\d{2})\s*<\/div>\s*<div class="italic[^>]*>\s*((?:19|20)\d{2})\s*<\/div>/gi, '<div>$1/$2</div>');
+        }
 
         // Initialize Page
         document.addEventListener('DOMContentLoaded', () => {
@@ -2526,10 +7463,67 @@
                         localStorage.removeItem(`simonda_table_source_2.3.3_${y}`);
                         localStorage.removeItem(`simonda_table_is_saved_2.3.3_${y}`);
                     }
+                    const tid311 = localStorage.getItem(`simonda_table_title_id_3.1.1_${y}`);
+                    if (tid311 && !tid311.includes('Rasio Jenis Kelamin')) {
+                        localStorage.removeItem(`simonda_table_title_id_3.1.1_${y}`);
+                        localStorage.removeItem(`simonda_table_title_en_3.1.1_${y}`);
+                    }
                 }
+
+                // Cleanup cache tahun ajaran dan title generik
+                const keysToRemove = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const k = localStorage.key(i);
+                    if (!k) continue;
+
+                    // 1. Bersihkan data Perpustakaan yang salah masuk ke tabel 4.3.5 (Damkar)
+                    if (k.includes('4.3.5')) {
+                        const val = localStorage.getItem(k) || '';
+                        if (val.includes('Perpustakaan') || val.includes('Library') || val.includes('Koleksi')) {
+                            keysToRemove.push(k);
+                            continue;
+                        }
+                    }
+
+                    // 2. Bersihkan cache tahun ajaran acak / korup pada tabel pendidikan 4.1.x
+                    if (k.startsWith('simonda_table_html_4.1.')) {
+                        const val = localStorage.getItem(k) || '';
+                        if (val.includes('2023/2026') || val.includes('2026/2025') || val.includes('2023/2025')) {
+                            keysToRemove.push(k);
+                            continue;
+                        }
+                    }
+
+                    if (k.startsWith('simonda_table_html_')) {
+                        const val = localStorage.getItem(k);
+                        if (val && val.includes('sm:text-xs">20')) {
+                            localStorage.setItem(k, cleanHtmlYearRanges(val));
+                        }
+                    }
+                    if (k.startsWith('simonda_table_title_en_')) {
+                        const val = localStorage.getItem(k);
+                        if (val && (val.trim().toLowerCase() === 'table' || val.trim().toLowerCase() === 'tabel')) {
+                            keysToRemove.push(k);
+                        }
+                    }
+                    if (k.startsWith('simonda_table_title_id_')) {
+                        const val = localStorage.getItem(k);
+                        if (val && (/2023\/20\d{2}/.test(val) || /2024\/20\d{2}/.test(val))) {
+                            keysToRemove.push(k);
+                        }
+                    }
+                }
+                keysToRemove.forEach(k => localStorage.removeItem(k));
             } catch(e) {}
 
             renderEditTablePage();
+            fetchTableComments();
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (typeof closeAddTableModal === 'function') closeAddTableModal();
+                    if (typeof closeCellCommentDrawer === 'function') closeCellCommentDrawer();
+                }
+            });
         });
 
         function get5YearPeriod(year) {
@@ -2545,20 +7539,86 @@
             };
         }
 
+        function get6YearPeriod(year) {
+            const yr = parseInt(year) || 2025;
+            const start = yr - 5;
+            const end = yr;
+            const yearsAsc = [];
+            const yearsDesc = [];
+            for (let y = start; y <= end; y++) {
+                yearsAsc.push(y);
+            }
+            for (let y = end; y >= start; y--) {
+                yearsDesc.push(y);
+            }
+            return {
+                start: start,
+                end: end,
+                yearsAsc: yearsAsc,
+                yearsDesc: yearsDesc,
+                label: `${start}–${end}`
+            };
+        }
+
+        function get7YearPeriod(year) {
+            const yr = parseInt(year) || 2025;
+            const start = yr - 6;
+            const end = yr;
+            const yearsAsc = [];
+            const yearsDesc = [];
+            for (let y = start; y <= end; y++) {
+                yearsAsc.push(y);
+            }
+            for (let y = end; y >= start; y--) {
+                yearsDesc.push(y);
+            }
+            return {
+                start: start,
+                end: end,
+                yearsAsc: yearsAsc,
+                yearsDesc: yearsDesc,
+                label: `${start}–${end}`
+            };
+        }
+
+        function get4YearPeriod(year) {
+            const yr = parseInt(year) || 2025;
+            const start = yr - 3;
+            const end = yr;
+            return {
+                start: start,
+                end: end,
+                yearsAsc: [yr - 3, yr - 2, yr - 1, yr],
+                yearsDesc: [yr, yr - 1, yr - 2, yr - 3],
+                label: `${start}–${end}`
+            };
+        }
+
+        function getTablePeriod(year, tableCode) {
+            if (tableCode === '4.1.20') {
+                return get4YearPeriod(year);
+            }
+            if (tableCode === '9.3') {
+                return get7YearPeriod(year);
+            }
+            return get5YearPeriod(year);
+        }
+
         function updateYearSwitcher(isMultiYear, isExcludeSelectedYear) {
             const selectYearEl = document.getElementById('yearSwitcher');
             if (!selectYearEl) return;
             const currentVal = currentYear.toString();
             const nowYear = new Date().getFullYear();
             const endYear = Math.max(2036, nowYear + 10);
+            const showRangeInDropdown = isMultiYear && currentTableCode !== '9.3' && currentTableCode !== '9.4';
             selectYearEl.innerHTML = '';
             for (let y = endYear; y >= 2018; y--) {
                 const opt = document.createElement('option');
                 opt.value = y.toString();
-                const p = get5YearPeriod(y);
+                const p = getTablePeriod(y, currentTableCode);
                 if (isExcludeSelectedYear) {
                     opt.textContent = `Tahun ${y} (${y - 5}–${y - 1})`;
-                } else if (isMultiYear) {
+                } else if (showRangeInDropdown) {
                     opt.textContent = `Tahun ${y} (${p.label})`;
                 } else {
                     opt.textContent = `Tahun ${y}`;
@@ -2572,10 +7632,10 @@
                 const customOpt = document.createElement('option');
                 customOpt.value = currentVal;
                 const cNum = parseInt(currentVal);
-                const p = get5YearPeriod(cNum);
+                const p = getTablePeriod(cNum, currentTableCode);
                 if (isExcludeSelectedYear && !isNaN(cNum)) {
                     customOpt.textContent = `Tahun ${currentVal} (${cNum - 5}–${cNum - 1})`;
-                } else if (isMultiYear && !isNaN(cNum)) {
+                } else if (showRangeInDropdown && !isNaN(cNum)) {
                     customOpt.textContent = `Tahun ${currentVal} (${p.label})`;
                 } else {
                     customOpt.textContent = `Tahun ${currentVal}`;
@@ -2590,12 +7650,21 @@
             const tableSelect = document.getElementById('tableSwitcher');
             if (!tableSelect) return;
 
+            // Selaraskan OPD jika tabel saat ini milik instansi/OPD lain
+            if (typeof getAgencyInfoForTable === 'function') {
+                const verified = getAgencyInfoForTable(currentTableCode, currentOpdCode, currentType);
+                if (verified && verified.opdCode && verified.opdCode !== currentOpdCode) {
+                    currentOpdCode = verified.opdCode;
+                    if (verified.type) currentType = verified.type;
+                }
+            }
+
             let tables = [];
             if (typeof getAgencyTables === 'function') {
                 tables = getAgencyTables(currentOpdCode, currentType);
             }
+            const cleanOpd = currentOpdCode ? currentOpdCode.toString().padStart(2, '0') : '01';
             if ((!tables || tables.length === 0) && typeof opdTablesCatalog !== 'undefined') {
-                const cleanOpd = currentOpdCode ? currentOpdCode.toString().padStart(2, '0') : '01';
                 const cat = (currentType === 'instansi' && typeof instansiTablesCatalog !== 'undefined') 
                     ? instansiTablesCatalog 
                     : opdTablesCatalog;
@@ -2609,7 +7678,7 @@
                 tables.forEach(t => {
                     const opt = document.createElement('option');
                     opt.value = t.code;
-                    opt.textContent = `Tabel ${t.code} - ${t.title || ''}`;
+                    opt.textContent = `Tabel ${t.code} - ${t.title || ''}${t.isCustom ? ' [Tabel Baru]' : ''}`;
                     opt.title = `Tabel ${t.code}: ${t.title || ''}`;
                     if (t.code === currentTableCode) {
                         opt.selected = true;
@@ -2651,16 +7720,31 @@
 
         function changeTableCode(newCode) {
             if (!newCode || newCode === currentTableCode) return;
-            if (confirm('Beralih ke tabel lain dalam instansi ini? Pastikan perubahan Anda telah disimpan terlebih dahulu.')) {
+
+            if (confirm('Beralih ke tabel lain? Pastikan perubahan Anda pada tabel ini telah disimpan terlebih dahulu.')) {
+                // Cari instansi/OPD yang memiliki tabel newCode secara otomatis
+                let targetOpd = currentOpdCode;
+                let targetType = currentType || 'opd';
+                if (typeof getAgencyInfoForTable === 'function') {
+                    const info = getAgencyInfoForTable(newCode, currentOpdCode, currentType);
+                    if (info && info.opdCode) {
+                        targetOpd = info.opdCode;
+                        targetType = info.type || 'opd';
+                    }
+                }
+
                 const newUrl = new URL(window.location.origin + window.location.pathname);
                 newUrl.searchParams.set('code', newCode);
-                newUrl.searchParams.set('opd', currentOpdCode);
+                newUrl.searchParams.set('opd', targetOpd);
                 newUrl.searchParams.set('year', currentYear);
-                if (currentType) {
-                    newUrl.searchParams.set('type', currentType);
+                if (targetType) {
+                    newUrl.searchParams.set('type', targetType);
                 }
+                newUrl.searchParams.delete('title');
+                newUrl.searchParams.delete('title_en');
+                newUrl.searchParams.delete('titleEn');
                 if (typeof getCatalogTableInfo === 'function') {
-                    const info = getCatalogTableInfo(newCode, currentOpdCode, currentType);
+                    const info = getCatalogTableInfo(newCode, targetOpd, targetType);
                     if (info && info.title) {
                         newUrl.searchParams.set('title', info.title);
                     }
@@ -2674,6 +7758,110 @@
                 if (sel) sel.value = currentTableCode;
             }
         }
+
+        // --- TAMBAH BARIS DATA BARU (EDITOR) ---
+        function addNewRow() {
+            const tableEl = document.getElementById('dataDisplayTable');
+            if (!tableEl) return;
+            const tbody = tableEl.querySelector('tbody');
+            if (!tbody) return;
+
+            // Bersihkan placeholder jika masih berupa pesan kosong
+            const emptyTd = tbody.querySelector('td[colspan]');
+            if (emptyTd && emptyTd.innerText.includes('Belum ada data')) {
+                tbody.innerHTML = '';
+            }
+
+            const theadThs = tableEl.querySelectorAll('thead tr:last-child th');
+            const totalCols = theadThs.length;
+
+            const existingRows = tbody.querySelectorAll('tr');
+            let nextNo = 1;
+            existingRows.forEach(tr => {
+                const firstTd = tr.querySelector('td');
+                if (firstTd && !isNaN(parseInt(firstTd.innerText))) {
+                    const n = parseInt(firstTd.innerText);
+                    if (n >= nextNo) nextNo = n + 1;
+                }
+            });
+
+            const tr = document.createElement('tr');
+
+            // Cek apakah tabel memiliki kolom aksi di thead
+            const hasActionCol = Boolean(tableEl.querySelector('thead .col-edit-action'));
+            const dataColsCount = hasActionCol ? (totalCols - 1) : totalCols;
+
+            let html = '';
+            // Kolom 1: No
+            html += `<td class="py-2.5 px-4 text-center border border-slate-700 font-bold">${nextNo}</td>`;
+
+            if (dataColsCount === 4) {
+                // Standar 4 Kolom BPS: No, Rincian Indikator, Capaian Nilai, Satuan
+                html += `
+                    <td class="py-2.5 px-4 font-semibold border border-slate-700 text-left">
+                        <input type="text" class="table-edit-input" value="Indikator ${nextNo}" style="text-align: left; font-weight: 600;" spellcheck="false" />
+                    </td>
+                    <td class="py-2.5 px-4 text-center border border-slate-700">
+                        <input type="text" class="table-edit-input" value="-" style="text-align: center; font-weight: 600;" spellcheck="false" />
+                    </td>
+                    <td class="py-2.5 px-4 text-center border border-slate-700">
+                        <input type="text" class="table-edit-input" value="-" style="text-align: center; font-weight: 600;" spellcheck="false" />
+                    </td>
+                `;
+            } else if (dataColsCount === 3) {
+                html += `
+                    <td class="py-2.5 px-4 font-semibold border border-slate-700 text-left">
+                        <input type="text" class="table-edit-input" value="Indikator ${nextNo}" style="text-align: left; font-weight: 600;" spellcheck="false" />
+                    </td>
+                    <td class="py-2.5 px-4 text-center border border-slate-700">
+                        <input type="text" class="table-edit-input" value="-" style="text-align: center; font-weight: 600;" spellcheck="false" />
+                    </td>
+                `;
+            } else {
+                html += `
+                    <td class="py-2.5 px-4 font-semibold border border-slate-700 text-left">
+                        <input type="text" class="table-edit-input" value="Indikator ${nextNo}" style="text-align: left; font-weight: 600;" spellcheck="false" />
+                    </td>
+                `;
+                for (let c = 2; c < dataColsCount; c++) {
+                    html += `
+                        <td class="py-2.5 px-4 text-center border border-slate-700">
+                            <input type="text" class="table-edit-input" value="-" style="text-align: center; font-weight: 600;" spellcheck="false" />
+                        </td>
+                    `;
+                }
+            }
+
+            // Kolom Aksi
+            html += `
+                <td class="col-edit-action py-1.5 px-2 text-center border border-slate-700 bg-amber-50/50 align-middle">
+                    <button type="button" onclick="deleteSpecificRow(this)" 
+                            class="p-1 px-2 text-rose-600 hover:text-white hover:bg-rose-600 border border-rose-300 hover:border-rose-600 rounded transition-all text-xs font-semibold flex items-center justify-center gap-1 shadow-2xs mx-auto cursor-pointer" 
+                            title="Hapus baris ini dari tabel">
+                        <i class="fa-solid fa-trash-can text-[11px]"></i>
+                    </button>
+                </td>
+            `;
+
+            tr.innerHTML = html;
+
+            tr.querySelectorAll('.table-edit-input').forEach(inp => {
+                inp.addEventListener('change', () => persistTableData(false));
+            });
+
+            tbody.appendChild(tr);
+
+            const firstInput = tr.querySelector('.table-edit-input');
+            if (firstInput) {
+                firstInput.focus();
+                firstInput.select();
+            }
+
+            persistTableData(false);
+            showToast('✅ Baris data baru berhasil ditambahkan!');
+        }
+
+
 
         function goToAdjacentTable(direction) {
             let tables = [];
@@ -2702,20 +7890,29 @@
             currentTableCode = p.get('code') || p.get('table') || '1.1.6';
             currentOpdCode = p.get('opd') || '01';
             currentYear = p.get('year') || '2025';
+
+            if (typeof getAgencyInfoForTable === 'function') {
+                const autoAgency = getAgencyInfoForTable(currentTableCode, currentOpdCode, currentType);
+                if (autoAgency && autoAgency.opdCode) {
+                    currentOpdCode = autoAgency.opdCode;
+                    if (autoAgency.type) currentType = autoAgency.type;
+                }
+            }
             renderEditTablePage();
         });
 
         function renderEditTablePage() {
             const isInstansi = currentType === 'instansi';
+            const isBps = currentType === 'bps';
             const agencyName = getAgencyName(currentOpdCode);
 
             const breadcrumbCatalogLink = document.getElementById('breadcrumbCatalogLink');
             const breadcrumbCatalogText = document.getElementById('breadcrumbCatalogText');
             if (breadcrumbCatalogLink) {
-                breadcrumbCatalogLink.href = isInstansi ? "{{ route('isi-data-instansi') }}" : "{{ route('isi-data-opd') }}";
+                breadcrumbCatalogLink.href = isBps ? "{{ route('data-bps') }}" : (isInstansi ? "{{ route('isi-data-instansi') }}" : "{{ route('isi-data-opd') }}");
             }
             if (breadcrumbCatalogText) {
-                breadcrumbCatalogText.innerText = isInstansi ? 'Daftar Instansi' : 'Daftar OPD';
+                breadcrumbCatalogText.innerText = isBps ? 'Data BPS' : (isInstansi ? 'Daftar Instansi' : 'Daftar OPD');
             }
 
             document.getElementById('breadcrumbOpdText').innerText = `${currentOpdCode}. ${agencyName}`;
@@ -2776,9 +7973,10 @@
             }
 
             const yr = parseInt(currentYear) || 2025;
-            const p = get5YearPeriod(yr);
-            const yearLabel = schema.isExcludeSelectedYear ? `${yr - 5}–${yr - 1}` : (schema.isMultiYear ? p.label : `${yr}`);
-            document.getElementById('pageMainHeading').innerText = (schema.isMultiYear || schema.isExcludeSelectedYear) ? `Edit Data Tabel ${currentTableCode} (${yearLabel})` : `Edit Data Tabel ${currentTableCode} Tahun ${currentYear}`;
+            const p = getTablePeriod(yr, currentTableCode);
+            const isRangeTable = (schema.isMultiYear || schema.isExcludeSelectedYear) && currentTableCode !== '9.3' && currentTableCode !== '9.4';
+            const yearLabel = schema.isExcludeSelectedYear ? `${yr - 5}–${yr - 1}` : (isRangeTable ? p.label : `${yr}`);
+            document.getElementById('pageMainHeading').innerText = isRangeTable ? `Edit Data Tabel ${currentTableCode} (${yearLabel})` : `Edit Data Tabel ${currentTableCode} Tahun ${currentYear}`;
 
             // Check for custom titles/source saved from Database, Fallback Structure, or Excel
             let customTitleId = (serverDbMetadata && serverDbMetadata.title_id) ? serverDbMetadata.title_id : (localStorage.getItem(`simonda_table_title_id_${currentTableCode}_${currentYear}`) || (serverDbFallbackMetadata && serverDbFallbackMetadata.title_id ? serverDbFallbackMetadata.title_id : null));
@@ -2786,7 +7984,17 @@
             let customSource = (serverDbMetadata && serverDbMetadata.source) ? serverDbMetadata.source : (localStorage.getItem(`simonda_table_source_text_${currentTableCode}_${currentYear}`) || (serverDbFallbackMetadata && serverDbFallbackMetadata.source ? serverDbFallbackMetadata.source : null));
             let customNote = (serverDbMetadata && serverDbMetadata.note !== undefined && serverDbMetadata.note !== null) ? serverDbMetadata.note : (localStorage.getItem(`simonda_table_note_${currentTableCode}_${currentYear}`) || (serverDbFallbackMetadata && serverDbFallbackMetadata.note !== undefined ? serverDbFallbackMetadata.note : null));
 
-            // Bersihkan custom title jika masih berupa placeholder generik lawas
+            // Bersihkan jika title hanya berisi kata 'Table' atau 'Tabel'
+            if (customTitleEn && (customTitleEn.trim().toLowerCase() === 'table' || customTitleEn.trim().toLowerCase() === 'tabel')) {
+                localStorage.removeItem(`simonda_table_title_en_${currentTableCode}_${currentYear}`);
+                customTitleEn = null;
+            }
+            if (customTitleId && (customTitleId.trim().toLowerCase() === 'table' || customTitleId.trim().toLowerCase() === 'tabel' || /2023\/20\d{2}/.test(customTitleId) || /2024\/20\d{2}/.test(customTitleId))) {
+                localStorage.removeItem(`simonda_table_title_id_${currentTableCode}_${currentYear}`);
+                customTitleId = null;
+            }
+
+            // Bersihkan custom title jika masih berupa placeholder generik lawas atau terpotong
             if (catInfo && catInfo.title) {
                 if (customTitleId && customTitleId.includes('Tabel Data Statistik Sektoral')) {
                     localStorage.removeItem(`simonda_table_title_id_${currentTableCode}_${currentYear}`);
@@ -2796,11 +8004,42 @@
                     localStorage.removeItem(`simonda_table_title_en_${currentTableCode}_${currentYear}`);
                     customTitleEn = null;
                 }
+                if (customTitleId && currentTableCode === '3.1.1' && !customTitleId.includes('Rasio Jenis Kelamin')) {
+                    localStorage.removeItem(`simonda_table_title_id_${currentTableCode}_${currentYear}`);
+                    customTitleId = null;
+                }
+                if (customTitleEn && currentTableCode === '3.1.1' && !customTitleEn.includes('Sex Ratio')) {
+                    localStorage.removeItem(`simonda_table_title_en_${currentTableCode}_${currentYear}`);
+                    customTitleEn = null;
+                }
+                // Jika tabel bukan 4.1.1 tetapi customTitleId memuat Taman Kanak-Kanak / (TK), bersihkan cache yang keliru
+                if (currentTableCode !== '4.1.1' && customTitleId && (customTitleId.includes('Taman Kanak') || customTitleId.includes('(TK)'))) {
+                    localStorage.removeItem(`simonda_table_title_id_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`simonda_table_title_en_${currentTableCode}_${currentYear}`);
+                    customTitleId = null;
+                    customTitleEn = null;
+                }
             }
 
             // Auto-detect dan perbaiki jika titleId dan titleEn terbalik (English di ID, Indonesia di EN)
+            // ATAU jika titleId memuat baris ganda (ID & EN tergabung dengan newline)
             function sanitizeBilingualTitles(tId, tEn) {
-                if (!tId || !tEn) return { id: tId, en: tEn };
+                if (!tId && !tEn) return { id: tId, en: tEn };
+                if (tId && tId.includes('\n')) {
+                    const lines = tId.split('\n').map(l => l.trim()).filter(Boolean);
+                    if (lines.length >= 2) {
+                        tId = lines[0];
+                        if (!tEn || tEn.toLowerCase() === 'table' || tEn === lines[1]) {
+                            tEn = lines[1];
+                        }
+                    }
+                }
+                if (tEn && tEn.includes('\n')) {
+                    const lines = tEn.split('\n').map(l => l.trim()).filter(Boolean);
+                    if (lines.length >= 2) {
+                        tEn = lines[1];
+                    }
+                }
                 const idHasEnglish = /\b(Actual|Number|Length|Population|Government|Expenditures|Revenues|Percentage|District|Kind of)\b/i.test(tId);
                 const enHasIndo = /\b(Realisasi|Jumlah|Panjang|Penduduk|Pemerintah|Belanja|Pendapatan|Menurut|Jenis|Kecamatan|Banyaknya)\b/i.test(tEn);
                 if (idHasEnglish && enHasIndo) {
@@ -2817,8 +8056,8 @@
             schema.titleId = cleanSchemaTitles.id;
             schema.titleEn = cleanSchemaTitles.en;
 
-            // For Table 8.1.1, 8.1.2, and 8.1.3, ensure title always reflects the exact 5-year range [yr-4, yr]
-            if (currentTableCode === '8.1.1' || currentTableCode === '8.1.2' || currentTableCode === '8.1.3') {
+            // For Table 8.1.1, 8.1.2, 8.1.3, and 9.1, ensure title always reflects the exact 5-year range [yr-4, yr]
+            if (currentTableCode === '8.1.1' || currentTableCode === '8.1.2' || currentTableCode === '8.1.3' || currentTableCode === '9.1' || currentTableCode === '4.2.4' || currentTableCode === '4.2.5' || currentTableCode === '4.2.7' || currentTableCode === '4.2.9' || currentTableCode === '4.2.10' || currentTableCode === '4.2.13' || currentTableCode === '4.2.15' || currentTableCode === '4.2.16') {
                 const yrInt = parseInt(currentYear) || 2025;
                 const expectedRange = `${yrInt - 4}–${yrInt}`;
                 if (customTitleId && !customTitleId.includes(expectedRange)) {
@@ -2826,6 +8065,19 @@
                     customTitleId = null;
                 }
                 if (customTitleEn && !customTitleEn.includes(expectedRange)) {
+                    localStorage.removeItem(`simonda_table_title_en_${currentTableCode}_${currentYear}`);
+                    customTitleEn = null;
+                }
+            }
+
+            // For Table 9.3 and 9.4, ensure title does not contain year range, but single year [yr]
+            if (currentTableCode === '9.3' || currentTableCode === '9.4') {
+                const yrInt = parseInt(currentYear) || 2025;
+                if (customTitleId && (customTitleId.match(/(19|20)\d{2}\s*[–\-]\s*(19|20)\d{2}/) || (currentTableCode === '9.4' && !customTitleId.includes(currentYear)))) {
+                    localStorage.removeItem(`simonda_table_title_id_${currentTableCode}_${currentYear}`);
+                    customTitleId = null;
+                }
+                if (customTitleEn && (customTitleEn.match(/(19|20)\d{2}\s*[–\-]\s*(19|20)\d{2}/) || (currentTableCode === '9.4' && !customTitleEn.includes(currentYear)))) {
                     localStorage.removeItem(`simonda_table_title_en_${currentTableCode}_${currentYear}`);
                     customTitleEn = null;
                 }
@@ -2851,8 +8103,41 @@
 
             // Ensure title always contains the appropriate year or year range label
             function formatTitleWithYear(title, defaultTitle, yLabel) {
+                // Khusus tabel pendidikan 4.1.x: tahun ajaran SiAngka Bukittinggi = Tahun + 1 (misal 2025 -> 2025/2026)
+                if (typeof currentTableCode === 'string' && currentTableCode.startsWith('4.1') && currentTableCode !== '4.1.20' && currentTableCode !== '4.1.24') {
+                    const yrInt = parseInt(yLabel) || 2025;
+                    const acadYr = `${yrInt}/${yrInt + 1}`;
+                    let raw = (defaultTitle || title || '').trim();
+                    if (raw.trim().toLowerCase() === 'table' || raw.trim().toLowerCase() === 'tabel') {
+                        raw = (defaultTitle || '').trim();
+                    }
+                    // Bersihkan pecahan tahun ajaran atau tahun acak di akhir judul
+                    const cleanBase = raw.replace(/([,\s]+)(19|20)\d{2}.*$/i, '').trim();
+                    return `${cleanBase}, ${acadYr}`;
+                }
+
+                // Khusus Tabel 4.1.20 (Dispora): multi-tahun 4 tahun [yr-3 s.d yr]
+                if (currentTableCode === '4.1.20') {
+                    const yrInt = parseInt(currentYear) || 2025;
+                    const range = `${yrInt - 3}–${yrInt}`;
+                    const raw = (defaultTitle || title || '').trim();
+                    const isEn = raw.toLowerCase().includes('sport') || (schema && schema.titleEn && defaultTitle === schema.titleEn);
+                    if (isEn) {
+                        return `Number of Sport Club in Bukittinggi, ${range}`;
+                    } else {
+                        return `Jumlah Klub/Persatuan Olahraga di Kota Bukittinggi, ${range}`;
+                    }
+                }
+
                 let t = (title && title.trim()) ? title.trim() : (defaultTitle || '');
                 if (!t) return '';
+
+                // Jika title masih memuat baris ganda / newline, ambil hanya baris pertama
+                if (t.includes('\n')) {
+                    const lines = t.split('\n').map(l => l.trim()).filter(Boolean);
+                    t = lines[0] || '';
+                }
+
                 if (t.includes(yLabel)) return t;
 
                 // 1. Cek jika ada nama bulan sebelum tahun (misal: "Desember 2021" atau "December 2021")
@@ -2867,10 +8152,10 @@
                     return t.replace(yearPattern, (match, prefix) => `${prefix}${yLabel}`);
                 }
 
-                // 3. Cek tahun 4 digit manapun di dalam judul
-                const anyYearPattern = /\b(19|20)\d{2}\b/;
-                if (anyYearPattern.test(t)) {
-                    return t.replace(anyYearPattern, yLabel);
+                // 3. Cek tahun 4 digit standalone di dalam judul (bukan di dalam format tahun ajaran bertanda /)
+                const standaloneYearPattern = /(?<!\/)\b(19|20)\d{2}\b(?!\/)/;
+                if (standaloneYearPattern.test(t)) {
+                    return t.replace(standaloneYearPattern, yLabel);
                 }
 
                 return `${t.replace(/,\s*$/, '')}, ${yLabel}`;
@@ -2890,7 +8175,9 @@
 
             document.getElementById('metaTableTitleId').innerText = formatTitleWithYear(customTitleId, schema.titleId, yearLabel);
             document.getElementById('metaTableTitleEn').innerText = formatTitleWithYear(customTitleEn, schema.titleEn, yearLabel);
-            document.getElementById('tableSourceContent').innerHTML = customSource ? customSource : schema.source;
+            const rawSource = customSource ? customSource : schema.source;
+            const cleanSourceHtml = (rawSource || '').replace(/^\s*(?:sumber\s*[\/:]\s*source|sumber\s*[\/:]|source\s*[\/:]|sumber|source)\s*:\s*/i, '').trim();
+            document.getElementById('tableSourceContent').innerHTML = cleanSourceHtml;
 
             const noteRowEl = document.getElementById('tableNoteRow');
             const noteContentEl = document.getElementById('tableNoteContent');
@@ -2917,6 +8204,7 @@
 
             // Check if user previously saved custom data (prioritas database, kemudian localStorage)
             let savedHtml = (serverDbMetadata && serverDbMetadata.table_html) ? serverDbMetadata.table_html : localStorage.getItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
+            if (savedHtml) savedHtml = cleanHtmlYearRanges(savedHtml);
 
             // Sanity check: jika savedHtml dari localStorage rusak atau tidak mengandung struktur <tr> dan <th>, bersihkan
             if (savedHtml && (!savedHtml.includes('<tr') || !savedHtml.includes('<th'))) {
@@ -2929,12 +8217,27 @@
                 savedHtml = savedHtml.replace(/Kind of Revenues/gi, 'Kind of Expenditures');
             }
 
-            // Validasi savedHtml untuk tabel multi-tahun (8.1.1, 8.1.2, 8.1.3, 8.1.4, 8.1.5, 2.2.5, 1.1.10 atau schema.isMultiYear)
+            // Validasi savedHtml untuk tabel multi-tahun (8.1.1, 8.1.2, 8.1.3, 8.1.4, 8.1.5, 2.2.5, 1.1.10, 9.1, 9.3 atau schema.isMultiYear)
             const isMultiYearTable = Boolean(schema && (schema.isMultiYear || schema.isExcludeSelectedYear)) || 
-                                     ['8.1.1', '8.1.2', '8.1.3', '8.1.4', '8.1.5', '2.2.5', '1.1.10'].includes(currentTableCode);
+                                     ['8.1.1', '8.1.2', '8.1.3', '8.1.4', '8.1.5', '2.2.5', '1.1.10', '9.1', '9.3'].includes(currentTableCode);
+
+            if (currentTableCode === '9.3' && savedHtml) {
+                const yrInt = parseInt(currentYear) || 2025;
+                const expectedStartYear = (yrInt - 6).toString();
+                const expectedEndYear = yrInt.toString();
+                if (!savedHtml.includes(expectedStartYear) || !savedHtml.includes(expectedEndYear)) {
+                    localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`simonda_table_source_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`);
+                    if (serverDbMetadata) {
+                        serverDbMetadata.table_html = null;
+                    }
+                    savedHtml = null;
+                }
+            }
 
             // Validasi kesesuaian periode tahun pada savedHtml untuk tabel multi-tahun
-            if (savedHtml && (currentTableCode === '1.1.10' || currentTableCode === '8.1.5' || currentTableCode === '8.1.4' || currentTableCode === '8.1.1' || currentTableCode === '8.1.2' || currentTableCode === '8.1.3' || currentTableCode === '2.2.5')) {
+            if (savedHtml && (currentTableCode === '1.1.10' || currentTableCode === '8.1.5' || currentTableCode === '8.1.4' || currentTableCode === '8.1.1' || currentTableCode === '8.1.2' || currentTableCode === '8.1.3' || currentTableCode === '2.2.5' || currentTableCode === '9.1')) {
                 const yrInt = parseInt(currentYear) || 2025;
                 if (!savedHtml.includes(yrInt.toString())) {
                     localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
@@ -2947,18 +8250,19 @@
                 }
             }
 
-            if (isMultiYearTable && savedHtml) {
+            if (isMultiYearTable && savedHtml && currentTableCode !== '9.3') {
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = savedHtml;
                 const allThs = Array.from(tempDiv.querySelectorAll('thead th'));
                 const yrInt = parseInt(currentYear) || 2025;
-                const p = get5YearPeriod(yrInt);
+                const p = getTablePeriod(yrInt, currentTableCode);
                 const expectedStartYear = p.start.toString();
                 const expectedEndYear = p.end.toString();
                 const hasStartYearInHeader = allThs.some(th => th.innerText.trim().includes(expectedStartYear));
                 const hasEndYearInHeader = allThs.some(th => th.innerText.trim().includes(expectedEndYear));
                 const firstRowTds = tempDiv.querySelector('tbody tr') ? tempDiv.querySelector('tbody tr').querySelectorAll('td') : [];
-                const isMissingCells = firstRowTds.length > 0 && firstRowTds.length < 6;
+                const minCols = (currentTableCode === '4.1.20') ? 5 : 6;
+                const isMissingCells = firstRowTds.length > 0 && firstRowTds.length < minCols;
 
                 if ((!hasStartYearInHeader || !hasEndYearInHeader || isMissingCells) && currentTableCode !== '8.1.4' && currentTableCode !== '8.1.5' && currentTableCode !== '1.1.10') {
                     localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
@@ -3041,19 +8345,19 @@
                 }
             }
 
-            // Self-healing tabel 11.2 (Dinas PMPTSP - NIB menurut Sektor)
-            if (currentTableCode === '11.2' && savedHtml) {
+            // Self-healing tabel 11.2, 3.1.8, & 3.2.8 (NIB Sektor, Penduduk Wajib KTP, Pencari Kerja)
+            if ((currentTableCode === '11.2' || currentTableCode === '3.1.8' || currentTableCode === '3.2.8') && savedHtml) {
                 const yrStr = currentYear.toString();
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = savedHtml;
-                const jumlahCell = Array.from(tempDiv.querySelectorAll('td')).find(td => td.innerText.trim() === 'Jumlah');
-                let isCorrupt112 = false;
+                const jumlahCell = Array.from(tempDiv.querySelectorAll('td')).find(td => td.innerText.trim().startsWith('Jumlah'));
+                let isCorruptMulti = false;
                 if (jumlahCell) {
                     const rowTds = jumlahCell.parentElement.querySelectorAll('td');
                     if (rowTds.length >= 2) {
                         const topYearText = rowTds[1].innerText.trim();
                         if (topYearText === '-' || topYearText !== yrStr) {
-                            isCorrupt112 = true;
+                            isCorruptMulti = true;
                         }
                     }
                 }
@@ -3061,9 +8365,15 @@
                     const tds = tr.querySelectorAll('td');
                     return tds.length >= 2 && tds[0].innerText.trim() === '-' && tr.nextElementSibling && tr.nextElementSibling.innerText.includes('Jumlah');
                 });
-                if (ghostRow) isCorrupt112 = true;
+                if (ghostRow) isCorruptMulti = true;
 
-                if (isCorrupt112) {
+                // Cek ghost cell rowspan di baris kecamatan untuk 3.1.8
+                const ghostCol318 = tempDiv.querySelector('tbody tr td[rowspan="3"]');
+                if (ghostCol318 && ghostCol318.innerText.trim() === '-') {
+                    isCorruptMulti = true;
+                }
+
+                if (isCorruptMulti) {
                     localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
                     localStorage.removeItem(`simonda_table_source_${currentTableCode}_${currentYear}`);
                     localStorage.removeItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`);
@@ -3138,9 +8448,9 @@
             }
 
             if (savedHtml) {
-                tableEl.innerHTML = savedHtml;
+                tableEl.innerHTML = cleanHtmlYearRanges(savedHtml);
             } else {
-                tableEl.innerHTML = schema.render(currentYear);
+                tableEl.innerHTML = cleanHtmlYearRanges(schema.render(currentYear));
             }
 
             cleanGhostColumns(tableEl);
@@ -3165,26 +8475,125 @@
                     td.style.verticalAlign = 'middle';
                 });
 
-                // Pastikan kolom No selalu 1 dan 2 (tidak pernah hilang atau berubah jadi strip)
+                // Rapikan kolom No kecamatan restart 1, 2 untuk masing-masing sungai
                 const trs = tableEl.querySelectorAll('tbody tr');
+                let currentNo = 1;
                 trs.forEach(tr => {
                     const tds = tr.querySelectorAll('td');
                     if (tds.length >= 4) {
-                        if (tds[2].innerText.trim() === '-' || tds[2].innerText.trim() === '') {
-                            tds[2].innerHTML = '1';
-                            tds[2].className = 'py-2 px-2 text-center border border-slate-700 font-bold';
-                        }
+                        currentNo = 1;
+                        tds[2].innerHTML = '1';
+                        tds[2].className = 'py-2.5 px-3 text-center border border-slate-700 align-middle font-medium text-slate-800';
+                        currentNo = 2;
                     } else if (tds.length >= 2) {
-                        if (tds[0].innerText.trim() === '-' || tds[0].innerText.trim() === '') {
-                            tds[0].innerHTML = '2';
-                            tds[0].className = 'py-2 px-2 text-center border border-slate-700 font-bold';
+                        tds[0].innerHTML = currentNo.toString();
+                        tds[0].className = 'py-2.5 px-3 text-center border border-slate-700 align-middle font-medium text-slate-800';
+                        currentNo++;
+                    }
+                });
+            }
+
+            // Khusus Tabel Dinas 08 / Tabel 4.1.x (Tabel Pendidikan: Sekolah, Guru, Murid)
+            const isEducation3in1 = ['4.1.1', '4.1.2', '4.1.3', '4.1.4', '4.1.5', '4.1.6', '4.1.7', '4.1.8', '4.1.9', '4.1.10', '4.1.11', '4.1.12', '4.1.13', '4.1.14', '4.1.15', '4.1.16', '4.1.17'].includes(currentTableCode);
+            if (isEducation3in1) {
+                const yrInt = parseInt(currentYear) || 2025;
+                const expectedY1 = `${yrInt - 2}/${yrInt - 1}`;
+                const expectedY2 = `${yrInt - 1}/${yrInt}`;
+                const expectedY3 = `${yrInt}/${yrInt + 1}`;
+                const validAcadYears = [expectedY1, expectedY2, expectedY3];
+
+                // 1. Enforce urutan tahun ajaran di thead
+                const theadThs = tableEl.querySelectorAll('thead th');
+                let thAcadIdx = 0;
+                theadThs.forEach(th => {
+                    if (/\b(?:19|20)\d{2}\s*\/\s*(?:19|20)\d{2}\b/.test(th.innerText)) {
+                        const correctYr = validAcadYears[thAcadIdx % 3];
+                        thAcadIdx++;
+                        th.innerHTML = `<div>${correctYr}</div>`;
+                    }
+                });
+
+                const trs = tableEl.querySelectorAll('tbody tr');
+                trs.forEach(tr => {
+                    const text = tr.innerText.trim();
+                    const tds = tr.querySelectorAll('td, th');
+                    
+                    // Cek jika baris adalah baris pemisah / gap antar sub-tabel
+                    if (tr.classList.contains('subtable-spacer-row') || (tds.length === 1 && (tds[0].getAttribute('colspan') >= 8 || tds[0].colSpan >= 8))) {
+                        tr.className = 'subtable-spacer-row pointer-events-none select-none';
+                        tds[0].className = 'h-7 sm:h-9 bg-[#f0f3f8] border-y border-slate-200/90 border-x-0 p-0 text-center';
+                        tds[0].innerHTML = '&nbsp;';
+                        return;
+                    }
+
+                    if (text.includes('Guru') || text.includes('Teachers') || text.includes('Murid') || text.includes('Students')) {
+                        // Pastikan ada baris pemisah / gap setidaknya 1 spasi sebelum header sub-tabel
+                        const prevTr = tr.previousElementSibling;
+                        if (prevTr && !prevTr.classList.contains('subtable-spacer-row')) {
+                            const spacer = document.createElement('tr');
+                            spacer.className = 'subtable-spacer-row pointer-events-none select-none';
+                            spacer.innerHTML = '<td colspan="10" class="h-7 sm:h-9 bg-[#f0f3f8] border-y border-slate-200/90 border-x-0 p-0 text-center">&nbsp;</td>';
+                            tr.parentNode.insertBefore(spacer, tr);
                         }
+
+                        tr.className = 'bg-[#f95a00] text-white text-center font-bold subtable-header-title';
+                        tds.forEach(td => {
+                            td.className = 'py-2.5 px-3 font-bold border border-slate-700 text-center align-middle';
+                            if ((td.innerText.includes('Guru') || td.innerText.includes('Murid')) && !td.querySelector('.italic')) {
+                                const isGuru = td.innerText.includes('Guru');
+                                td.innerHTML = isGuru 
+                                    ? '<div>Guru</div><div class="italic font-normal text-[11px] sm:text-xs">Teachers</div>'
+                                    : '<div>Murid</div><div class="italic font-normal text-[11px] sm:text-xs">Students</div>';
+                            } else if (td.innerText.includes('Kecamatan') && !td.querySelector('.italic')) {
+                                td.innerHTML = '<div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>';
+                            } else if (td.innerText.includes('Jumlah') && !td.querySelector('.italic')) {
+                                td.innerHTML = '<div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>';
+                            }
+                        });
+                    } else if (text.includes('Negeri') || text.includes('Swasta') || text.includes('Public') || text.includes('Private')) {
+                        tr.className = 'bg-[#f95a00] text-white text-center font-bold subtable-header-subtitle';
+                        tds.forEach(td => {
+                            td.className = 'py-2 px-3 font-bold border border-slate-700 text-center align-middle';
+                            if (td.innerText.includes('Negeri') && !td.querySelector('.italic')) {
+                                td.innerHTML = '<div>Negeri</div><div class="italic font-normal text-[11px] sm:text-xs">Public</div>';
+                            } else if (td.innerText.includes('Swasta') && !td.querySelector('.italic')) {
+                                td.innerHTML = '<div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>';
+                            }
+                        });
+                    } else if (text.includes('202') && (tds.length >= 8 || (tds[0] && tds[0].innerText.includes('202')))) {
+                        tr.className = 'bg-[#f95a00] text-white text-center font-bold text-xs subtable-header-years';
+                        let subAcadIdx = 0;
+                        tds.forEach(td => {
+                            td.className = 'py-1.5 px-2 font-bold border border-slate-700 text-center align-middle text-xs';
+                            if (/\b(?:19|20)\d{2}\s*\/\s*(?:19|20)\d{2}\b/.test(td.innerText)) {
+                                const correctYr = validAcadYears[subAcadIdx % 3];
+                                subAcadIdx++;
+                                td.innerHTML = `<div>${correctYr}</div>`;
+                            }
+                        });
+                    } else if (text.includes('-1') || text.includes('(1)') || (tds.length === 10 && (tds[0].innerText.trim() === '-1' || tds[0].innerText.trim() === '(1)'))) {
+                        tr.className = 'bg-[#fed7aa] text-slate-900 text-center font-bold text-xs subtable-header-numbering';
+                        tds.forEach((td, idx) => {
+                            td.className = 'py-1 px-2 border border-slate-700 text-center font-bold text-xs';
+                            td.innerText = `(${idx + 1})`;
+                        });
+                    } else if (text.startsWith('Bukittinggi') || (tds[0] && tds[0].innerText.trim() === 'Bukittinggi')) {
+                        tr.className = 'bg-amber-100/70 font-bold border-t-2 border-b-2 border-slate-700 hover:bg-amber-200/60 transition-colors';
+                        tds.forEach((td, idx) => {
+                            td.classList.add('font-bold');
+                            if (idx === 0) td.className = 'py-2.5 px-4 border border-slate-700 text-left font-bold align-middle';
+                            else td.className = 'py-2.5 px-3 border border-slate-700 text-center font-bold align-middle';
+                        });
                     }
                 });
             }
 
             // Transform cells to editable grid with orange inputs
             transformToEditableGrid(tableEl);
+
+            if (typeof renderCellCommentBadges === 'function') {
+                renderCellCommentBadges();
+            }
         }
 
         function cleanGhostColumns(table) {
@@ -3192,7 +8601,7 @@
             // JANGAN PERNAH potong kolom pada Tabel 1.1.6, 8.1.x, atau tabel multi-tahun
             const schema = (typeof tableSchemas !== 'undefined') ? tableSchemas[currentTableCode] : null;
             if (schema && (schema.isMultiYear || schema.isExcludeSelectedYear)) return;
-            if (currentTableCode === '1.1.6' || currentTableCode.startsWith('8.1')) return;
+            if (currentTableCode === '1.1.6' || currentTableCode.startsWith('8.1') || currentTableCode.startsWith('4.1') || currentOpdCode === '08') return;
 
             const bodyRows = table.querySelectorAll('tbody tr');
             if (bodyRows.length === 0) return;
@@ -3320,6 +8729,55 @@
                     });
                 });
                 appendActionColumnToEditor(tableEl);
+                return;
+            }
+
+            // Khusus Tabel Dinas 08 / Tabel 4.1.x: Tabel Pendidikan (Sekolah, Guru, Murid)
+            const isEducation3in1Edit = ['4.1.1', '4.1.2', '4.1.3', '4.1.4', '4.1.5', '4.1.6', '4.1.7', '4.1.8', '4.1.9', '4.1.10', '4.1.11', '4.1.12', '4.1.13', '4.1.14', '4.1.15', '4.1.16', '4.1.17'].includes(currentTableCode);
+            if (isEducation3in1Edit) {
+                rows.forEach(tr => {
+                    const text = tr.innerText.trim();
+                    const tds = tr.querySelectorAll('td, th');
+                    
+                    // Cek baris header dalam tbody (Guru / Murid headers) atau baris pemisah -> JANGAN jadikan input!
+                    const isHeader = tr.classList.contains('subtable-spacer-row') ||
+                                     text.includes('Guru') || text.includes('Teachers') || 
+                                     text.includes('Murid') || text.includes('Students') ||
+                                     text.includes('Negeri') || text.includes('Swasta') ||
+                                     (text.includes('202') && tds.length >= 8) ||
+                                     text.includes('(1)') || text.includes('-1') ||
+                                     tds.length === 1; // Baris separator
+                    
+                    if (isHeader) {
+                        return;
+                    }
+
+                    const isTotalRow = (tds[0] && tds[0].innerText.trim() === 'Bukittinggi');
+                    
+                    tds.forEach((td, idx) => {
+                        if (td.classList.contains('col-edit-action')) return;
+                        
+                        // Kolom 0: Kecamatan / Bukittinggi -> label tetap
+                        if (idx === 0) {
+                            td.classList.add('font-bold', 'text-left');
+                            return;
+                        }
+
+                        // Kolom Data & Total: buat editable input
+                        if (!td.querySelector('.table-edit-input')) {
+                            let val = td.innerText.trim();
+                            td.innerHTML = `
+                                <div class="flex items-center justify-center p-1">
+                                    <input type="text" class="table-edit-input" value="${val}" style="text-align: center; font-weight: ${isTotalRow ? '700' : '600'};" spellcheck="false" />
+                                </div>
+                            `;
+                            const inputEl = td.querySelector('.table-edit-input');
+                            if (inputEl) {
+                                inputEl.addEventListener('change', () => persistTableData(false));
+                            }
+                        }
+                    });
+                });
                 return;
             }
 
@@ -3473,7 +8931,7 @@
 
         function cleanGhostRows(table) {
             if (!table) return;
-            if (currentTableCode.startsWith('2.3.')) return;
+            if (currentTableCode.startsWith('2.3.') || currentTableCode.startsWith('4.1') || currentOpdCode === '08') return;
             const tbody = table.querySelector('tbody');
             if (!tbody) return;
             const rows = tbody.querySelectorAll('tr');
@@ -3681,7 +9139,7 @@
 
             // Simpan perubahan ke Database MySQL
             try {
-                const rowsData = {};
+                let rowsData = {};
                 if (currentTableCode === '1.1.6') {
                     rowsData[currentYear] = {};
                     const bodyRows = tableEl.querySelectorAll('tbody tr');
@@ -3892,6 +9350,274 @@
                             }
                         }
                     });
+                } else if (currentTableCode === '4.3.4') {
+                    rowsData = {};
+                    rowsData[currentYear] = {};
+                    const bodyRows = tableEl.querySelectorAll('tbody tr');
+                    bodyRows.forEach(tr => {
+                        const inputs = tr.querySelectorAll('.table-edit-input');
+                        const k = tr.getAttribute('data-key');
+                        if (k && inputs.length >= 4) {
+                            rowsData[currentYear][`${k}_kejadian`] = inputs[0].value.trim();
+                            rowsData[currentYear][`${k}_korban`] = inputs[1].value.trim();
+                            rowsData[currentYear][`${k}_rumah`] = inputs[2].value.trim();
+                            rowsData[currentYear][`${k}_lainnya`] = inputs[3].value.trim();
+                        }
+                    });
+                } else if (currentTableCode === '9.2') {
+                    rowsData = {};
+                    rowsData[currentYear] = {};
+                    const bodyRows = tableEl.querySelectorAll('tbody tr');
+                    bodyRows.forEach(tr => {
+                        const inputs = tr.querySelectorAll('.table-edit-input');
+                        const k = tr.getAttribute('data-key');
+                        if (k && inputs.length >= 5) {
+                            rowsData[currentYear][`${k}_kud`] = inputs[0].value.trim();
+                            rowsData[currentYear][`${k}_kpri`] = inputs[1].value.trim();
+                            rowsData[currentYear][`${k}_kopkar`] = inputs[2].value.trim();
+                            rowsData[currentYear][`${k}_lainnya`] = inputs[3].value.trim();
+                            rowsData[currentYear][`${k}_total`] = inputs[4].value.trim();
+                        }
+                    });
+                } else if (currentTableCode === '9.3') {
+                    rowsData = {};
+                    const bodyRows = tableEl.querySelectorAll('tbody tr');
+                    bodyRows.forEach(tr => {
+                        const rowYr = parseInt(tr.getAttribute('data-year') || tr.querySelector('td')?.innerText.trim(), 10);
+                        const inputs = tr.querySelectorAll('.table-edit-input');
+                        if (rowYr > 1900 && rowYr < 2100 && inputs.length >= 5) {
+                            if (!rowsData[rowYr]) rowsData[rowYr] = {};
+                            rowsData[rowYr]['koperasi'] = inputs[0].value.trim();
+                            rowsData[rowYr]['anggota'] = inputs[1].value.trim();
+                            rowsData[rowYr]['simpanan'] = inputs[2].value.trim();
+                            rowsData[rowYr]['volume_usaha'] = inputs[3].value.trim();
+                            rowsData[rowYr]['permodalan'] = inputs[4].value.trim();
+                        }
+                    });
+                } else if (currentTableCode === '9.4') {
+                    rowsData = {};
+                    rowsData[currentYear] = {};
+                    const bodyRows = tableEl.querySelectorAll('tbody tr');
+                    bodyRows.forEach(tr => {
+                        const inputs = tr.querySelectorAll('.table-edit-input');
+                        const k = tr.getAttribute('data-key') || (tr.querySelector('td') ? tr.querySelector('td').innerText.trim().toLowerCase().replace(/[^a-z0-9]/g, '_') : '');
+                        if (k && inputs.length >= 4) {
+                            rowsData[currentYear][`${k}_gp`] = inputs[0].value.trim();
+                            rowsData[currentYear][`${k}_mks`] = inputs[1].value.trim();
+                            rowsData[currentYear][`${k}_abtb`] = inputs[2].value.trim();
+                            rowsData[currentYear][`${k}_total`] = inputs[3].value.trim();
+                        }
+                    });
+                } else if (currentTableCode === '4.2.2') {
+                    rowsData = {};
+                    rowsData[currentYear] = {};
+                    const bodyRows = tableEl.querySelectorAll('tbody tr');
+                    bodyRows.forEach(tr => {
+                        const k = tr.getAttribute('data-key');
+                        if (k) {
+                            const inputs = tr.querySelectorAll('.table-edit-input');
+                            inputs.forEach((inp, idx) => {
+                                rowsData[currentYear][`${k}_col${idx}`] = inp.value.trim();
+                            });
+                        }
+                    });
+                } else if (currentTableCode === '4.2.4' || currentTableCode === '4.2.5') {
+                    rowsData = {};
+                    const bodyRows = tableEl.querySelectorAll('tbody tr');
+                    bodyRows.forEach(tr => {
+                        const rowYr = parseInt(tr.getAttribute('data-year') || tr.querySelector('td')?.innerText.trim(), 10);
+                        const inputs = tr.querySelectorAll('.table-edit-input');
+                        if (rowYr > 1900 && rowYr < 2100 && inputs.length >= 3) {
+                            if (!rowsData[rowYr]) rowsData[rowYr] = {};
+                            rowsData[rowYr]['pemerintah'] = inputs[0].value.trim();
+                            rowsData[rowYr]['swasta'] = inputs[1].value.trim();
+                            rowsData[rowYr]['total'] = inputs[2].value.trim();
+                        }
+                    });
+                } else if (currentTableCode === '4.2.7') {
+                    rowsData = {};
+                    const bodyRows = tableEl.querySelectorAll('tbody tr');
+                    bodyRows.forEach(tr => {
+                        const rowYr = parseInt(tr.getAttribute('data-year') || tr.querySelector('td')?.innerText.trim(), 10);
+                        const inputs = tr.querySelectorAll('.table-edit-input');
+                        if (rowYr > 1900 && rowYr < 2100 && inputs.length >= 3) {
+                            if (!rowsData[rowYr]) rowsData[rowYr] = {};
+                            rowsData[rowYr]['hidup'] = inputs[0].value.trim();
+                            rowsData[rowYr]['mati'] = inputs[1].value.trim();
+                            rowsData[rowYr]['ibu'] = inputs[2].value.trim();
+                        }
+                    });
+                } else if (currentTableCode === '4.2.10') {
+                    rowsData = {};
+                    const bodyRows = tableEl.querySelectorAll('tbody tr');
+                    bodyRows.forEach(tr => {
+                        const rowYr = parseInt(tr.getAttribute('data-year') || tr.querySelector('td')?.innerText.trim(), 10);
+                        const inputs = tr.querySelectorAll('.table-edit-input');
+                        if (rowYr > 1900 && rowYr < 2100 && inputs.length >= 4) {
+                            if (!rowsData[rowYr]) rowsData[rowYr] = {};
+                            rowsData[rowYr]['baru'] = inputs[0].value.trim();
+                            rowsData[rowYr]['lama'] = inputs[1].value.trim();
+                            rowsData[rowYr]['kunjungan'] = inputs[2].value.trim();
+                            rowsData[rowYr]['rata'] = inputs[3].value.trim();
+                        }
+                    });
+                } else if (currentTableCode === '4.2.15') {
+                    rowsData = {};
+                    const bodyRows = tableEl.querySelectorAll('tbody tr');
+                    bodyRows.forEach(tr => {
+                        const rowYr = parseInt(tr.getAttribute('data-year') || tr.querySelector('td')?.innerText.trim(), 10);
+                        const inputs = tr.querySelectorAll('.table-edit-input');
+                        if (rowYr > 1900 && rowYr < 2100 && inputs.length >= 5) {
+                            if (!rowsData[rowYr]) rowsData[rowYr] = {};
+                            rowsData[rowYr]['pegawai'] = inputs[0].value.trim();
+                            rowsData[rowYr]['truk'] = inputs[1].value.trim();
+                            rowsData[rowYr]['gerobak'] = inputs[2].value.trim();
+                            rowsData[rowYr]['becak_dayung'] = inputs[3].value.trim();
+                            rowsData[rowYr]['becak_motor'] = inputs[4].value.trim();
+                        }
+                    });
+                } else if (currentTableCode === '4.2.16') {
+                    rowsData = {};
+                    const bodyRows = tableEl.querySelectorAll('tbody tr');
+                    bodyRows.forEach(tr => {
+                        const rowYr = parseInt(tr.getAttribute('data-year') || tr.querySelector('td')?.innerText.trim(), 10);
+                        const inputs = tr.querySelectorAll('.table-edit-input');
+                        if (rowYr > 1900 && rowYr < 2100 && inputs.length >= 2) {
+                            if (!rowsData[rowYr]) rowsData[rowYr] = {};
+                            rowsData[rowYr]['timbunan'] = inputs[0].value.trim();
+                            rowsData[rowYr]['terangkut'] = inputs[1].value.trim();
+                        }
+                    });
+                } else if (currentTableCode === '4.2.12') {
+                    rowsData = { [currentYear]: {} };
+                    const bodyRows = tableEl.querySelectorAll('tbody tr');
+                    bodyRows.forEach((tr, trIdx) => {
+                        const mNum = trIdx + 1;
+                        const inputs = tr.querySelectorAll('.table-edit-input');
+                        if (inputs.length >= 2) {
+                            rowsData[currentYear][mNum] = {
+                                timbunan: inputs[0].value.trim(),
+                                terangkut: inputs[1].value.trim()
+                            };
+                        }
+                    });
+                } else if (currentTableCode === '4.2.13') {
+                    rowsData = {};
+                    const p = get5YearPeriod(currentYear);
+                    p.yearsAsc.forEach(y => { rowsData[y] = {}; });
+                    const catKeys = ['organik', 'logam', 'plastik', 'kaca', 'kertas', 'lainnya', 'total'];
+                    const bodyRows = tableEl.querySelectorAll('tbody tr');
+                    bodyRows.forEach((tr, trIdx) => {
+                        const inputs = tr.querySelectorAll('.table-edit-input');
+                        const key = catKeys[trIdx] || `cat_${trIdx}`;
+                        p.yearsAsc.forEach((y, yIdx) => {
+                            if (inputs[yIdx]) {
+                                rowsData[y][key] = inputs[yIdx].value.trim();
+                            }
+                        });
+                    });
+                } else if (currentTableCode === '4.2.14') {
+                    rowsData = { [currentYear]: {} };
+                    const bodyRows = tableEl.querySelectorAll('tbody tr');
+                    bodyRows.forEach((tr, trIdx) => {
+                        const inputs = tr.querySelectorAll('.table-edit-input');
+                        if (inputs.length >= 2) {
+                            rowsData[currentYear][trIdx] = {
+                                timbunan: inputs[0].value.trim(),
+                                persentase: inputs[1].value.trim()
+                            };
+                        }
+                    });
+                } else if (currentTableCode === '4.2.12') {
+                        let mIdx = 0;
+                        dataRows.forEach(r => {
+                            const first = (r[0] ?? '').toString().trim();
+                            if (first !== '' && !first.toLowerCase().includes('bulan') && !first.includes('(1)')) {
+                                if (trs[mIdx]) {
+                                    const inps = trs[mIdx].querySelectorAll('.table-edit-input');
+                                    const v1 = sanitizeExcelNumericCell(r[1]);
+                                    const v2 = sanitizeExcelNumericCell(r[2]);
+                                    if (inps[0] && v1 !== '' && v1 !== '-') {
+                                        inps[0].value = v1;
+                                        inps[0].classList.add('bg-amber-100');
+                                        filledCount++;
+                                    }
+                                    if (inps[1] && v2 !== '' && v2 !== '-') {
+                                        inps[1].value = v2;
+                                        inps[1].classList.add('bg-amber-100');
+                                        filledCount++;
+                                    }
+                                }
+                                mIdx++;
+                            }
+                        });
+                    } else if (currentTableCode === '4.2.13') {
+                        let catIdx = 0;
+                        dataRows.forEach(r => {
+                            const first = (r[0] ?? '').toString().trim();
+                            if (first !== '' && !first.toLowerCase().includes('jenis') && !first.includes('(1)')) {
+                                if (trs[catIdx]) {
+                                    const inps = trs[catIdx].querySelectorAll('.table-edit-input');
+                                    inps.forEach((inp, colI) => {
+                                        const v = sanitizeExcelNumericCell(r[colI + 1]);
+                                        if (v !== '' && v !== '-') {
+                                            inp.value = v;
+                                            inp.classList.add('bg-amber-100');
+                                            filledCount++;
+                                        }
+                                    });
+                                }
+                                catIdx++;
+                            }
+                        });
+                    } else if (currentTableCode === '4.2.14') {
+                        let srcIdx = 0;
+                        dataRows.forEach(r => {
+                            const first = (r[0] ?? '').toString().trim();
+                            if (first !== '' && !first.toLowerCase().includes('sumber') && !first.includes('(1)')) {
+                                if (trs[srcIdx]) {
+                                    const inps = trs[srcIdx].querySelectorAll('.table-edit-input');
+                                    const v1 = sanitizeExcelNumericCell(r[1]);
+                                    const v2 = sanitizeExcelNumericCell(r[2]);
+                                    if (inps[0] && v1 !== '' && v1 !== '-') {
+                                        inps[0].value = v1;
+                                        inps[0].classList.add('bg-amber-100');
+                                        filledCount++;
+                                    }
+                                    if (inps[1] && v2 !== '' && v2 !== '-') {
+                                        inps[1].value = v2;
+                                        inps[1].classList.add('bg-amber-100');
+                                        filledCount++;
+                                    }
+                                }
+                                srcIdx++;
+                            }
+                        });
+                    } else if (currentTableCode === '4.2.9') {
+                    rowsData = {};
+                    const p = get5YearPeriod(currentYear);
+                    p.yearsAsc.forEach(y => { rowsData[y] = {}; });
+                    const bodyRows = tableEl.querySelectorAll('tbody tr');
+                    bodyRows.forEach((tr, trIdx) => {
+                        const inputs = tr.querySelectorAll('.table-edit-input');
+                        p.yearsAsc.forEach((y, yIdx) => {
+                            if (inputs[yIdx]) {
+                                rowsData[y][`prof_${trIdx}`] = inputs[yIdx].value.trim();
+                            }
+                        });
+                    });
+                } else if (currentTableCode === '4.2.6') {
+                    rowsData = { [currentYear]: {} };
+                    const bodyRows = tableEl.querySelectorAll('tbody tr');
+                    bodyRows.forEach((tr, trIdx) => {
+                        const inputs = tr.querySelectorAll('.table-edit-input');
+                        if (inputs.length >= 2) {
+                            rowsData[currentYear][`name_${trIdx}`] = inputs[0].value.trim();
+                            rowsData[currentYear][`val_${trIdx}`] = inputs[1].value.trim();
+                        } else if (inputs.length === 1) {
+                            rowsData[currentYear][`val_${trIdx}`] = inputs[0].value.trim();
+                        }
+                    });
                 } else {
                     const theadThs = tableEl.querySelectorAll('thead tr:first-child th');
                     const colYears = [];
@@ -3920,6 +9646,8 @@
                             rowKey = trIdx === 0 ? 'aspal' : (trIdx === 1 ? 'kerikil' : (trIdx === 2 ? 'tanah' : (trIdx === 3 ? 'lainnya' : 'total')));
                         } else if (currentTableCode === '8.1.3') {
                             rowKey = trIdx === 0 ? 'baik' : (trIdx === 1 ? 'sedang' : (trIdx === 2 ? 'rusak' : (trIdx === 3 ? 'rusak_berat' : 'total')));
+                        } else if (currentTableCode === '9.1') {
+                            rowKey = trIdx === 0 ? 'guguk_panjang' : (trIdx === 1 ? 'mandiangin_koto_selayan' : (trIdx === 2 ? 'aur_birugo_tigo_baleh' : 'total'));
                         } else {
                             rowKey = trIdx === 0 ? 'negara' : (trIdx === 1 ? 'provinsi' : (trIdx === 2 ? 'kota' : 'total'));
                         }
@@ -4016,6 +9744,7 @@
                     alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
                     border: borderThin
                 };
+                const headerNumberStyle = headerPeachStyle;
 
                 const dataCellStyle = {
                     fill: { fgColor: { rgb: 'FFFFFF' } },
@@ -4038,6 +9767,13 @@
                     border: borderThin
                 };
 
+                const totalRowStyle = {
+                    fill: { fgColor: { rgb: 'FED7AA' } },
+                    font: { name: 'Calibri', sz: 9.5, bold: true, color: { rgb: '000000' } },
+                    alignment: { horizontal: 'left', vertical: 'center', wrapText: true },
+                    border: borderThin
+                };
+
                 const wb = XLSX.utils.book_new();
                 const ws = {};
                 const merges = [];
@@ -4052,6 +9788,7 @@
                 }
 
                 let r = 0;
+                let footerWritten = false;
                 setCell(r, 0, `Tabel ${currentTableCode}`, { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } } });
                 setCell(r, 1, titleId, { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } } });
                 r++;
@@ -4061,7 +9798,771 @@
 
                 let maxCol = 2;
 
-                if (currentTableCode === '2.3.3') {
+                if (currentTableCode === '3.1.1') {
+                    titleId = `Jumlah Penduduk, Laju Pertumbuhan Penduduk, Distribusi Persentase Penduduk, Kepadatan Penduduk, Rasio Jenis Kelamin Penduduk Menurut Kecamatan di Kota Bukittinggi, ${yr}`;
+                    titleEn = `Population, Population Growth Rate, Percentage Distribution of Population, Population Density, and Population Sex Ratio by District in Bukittinggi Municipality, ${yr}`;
+                    setCell(0, 1, titleId, { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } } });
+                    setCell(1, 1, titleEn, { font: { name: 'Calibri', sz: 10, italic: true, color: { rgb: '000000' } } });
+
+                    // Header Baris 1: Oranye BPS
+                    setCell(r, 0, 'Kecamatan / Subdistrict', headerOrangeStyle);
+                    setCell(r, 1, 'Jumlah Penduduk (jiwa) / Population (people)', headerOrangeStyle);
+                    setCell(r, 2, 'Persentase Penduduk / Percentage of Total Population (%)', headerOrangeStyle);
+                    setCell(r, 3, 'Rasio Jenis Kelamin / Population Sex Ratio', headerOrangeStyle);
+                    r++;
+
+                    // Header Baris 2: Peach Penomoran Kolom (1) s.d (4)
+                    setCell(r, 0, '(1)', headerPeachStyle);
+                    setCell(r, 1, '(2)', headerPeachStyle);
+                    setCell(r, 2, '(3)', headerPeachStyle);
+                    setCell(r, 3, '(4)', headerPeachStyle);
+                    r++;
+
+                    const defaultDataStore311 = {
+                        2025: {
+                            '01': { pop: '50.210', pct: '34,97', ratio: '100,73' },
+                            '02': { pop: '61.395', pct: '42,76', ratio: '100,60' },
+                            '03': { pop: '31.990', pct: '22,28', ratio: '100,09' },
+                            'total': { pop: '143.595', pct: '-', ratio: '100,53' }
+                        },
+                        2024: {
+                            '01': { pop: '49.614', pct: '34,99', ratio: '100,70' },
+                            '02': { pop: '60.751', pct: '42,84', ratio: '100,60' },
+                            '03': { pop: '31.439', pct: '22,17', ratio: '100,10' },
+                            'total': { pop: '141.804', pct: '-', ratio: '100,52' }
+                        }
+                    };
+
+                    const defData = defaultDataStore311[yr] || {};
+                    const rows311 = [
+                        { key: '01', label: '01. Guguk Panjang' },
+                        { key: '02', label: '02. Mandiangin Koto Selayan' },
+                        { key: '03', label: '03. Aur Birugo Tigo Baleh' },
+                        { key: 'total', label: 'Bukittinggi', isTotal: true }
+                    ];
+
+                    const d = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[yr]) ? serverDbDataStore[yr] : {};
+                    const tableEl = document.getElementById('dataDisplayTable');
+
+                    rows311.forEach(item => {
+                        const rowStyle = item.isTotal ? totalCenterStyle : dataCellStyle;
+                        const centerStyle = item.isTotal ? totalCenterStyle : dataCenterStyle;
+
+                        const def = defData[item.key] || { pop: '-', pct: '-', ratio: '-' };
+                        let popVal = d[`${item.key}_pop`] !== undefined ? d[`${item.key}_pop`] : def.pop;
+                        let pctVal = d[`${item.key}_pct`] !== undefined ? d[`${item.key}_pct`] : def.pct;
+                        let ratioVal = d[`${item.key}_ratio`] !== undefined ? d[`${item.key}_ratio`] : def.ratio;
+
+                        if (tableEl) {
+                            const trs = tableEl.querySelectorAll('tbody tr');
+                            trs.forEach(tr => {
+                                const firstTd = tr.querySelector('td');
+                                if (firstTd) {
+                                    const txt = firstTd.innerText.toLowerCase();
+                                    const match = item.key === '01' ? (txt.includes('guguk') || txt.includes('01')) :
+                                        item.key === '02' ? (txt.includes('mandiangin') || txt.includes('02')) :
+                                        item.key === '03' ? (txt.includes('aur') || txt.includes('birugo') || txt.includes('03')) :
+                                        (txt.includes('bukittinggi') || txt.includes('total') || txt.includes('jumlah'));
+                                    if (match) {
+                                        const tds = tr.querySelectorAll('td');
+                                        if (tds[1] && tds[1].innerText.trim()) popVal = tds[1].innerText.trim();
+                                        if (tds[2] && tds[2].innerText.trim()) pctVal = tds[2].innerText.trim();
+                                        if (tds[3] && tds[3].innerText.trim()) ratioVal = tds[3].innerText.trim();
+                                    }
+                                }
+                            });
+                        }
+
+                        setCell(r, 0, item.label, rowStyle);
+
+                        const numPop = parseFloat(String(popVal).replace(/\./g, '').replace(',', '.'));
+                        if (!isNaN(numPop) && String(popVal).trim() !== '-' && !String(popVal).includes('–')) {
+                            setCell(r, 1, numPop, centerStyle);
+                        } else {
+                            setCell(r, 1, popVal || '-', centerStyle);
+                        }
+
+                        const numPct = parseFloat(String(pctVal).replace(',', '.'));
+                        if (!isNaN(numPct) && String(pctVal).trim() !== '-' && !String(pctVal).includes('–')) {
+                            setCell(r, 2, numPct, centerStyle);
+                        } else {
+                            setCell(r, 2, pctVal || '-', centerStyle);
+                        }
+
+                        const numRatio = parseFloat(String(ratioVal).replace(',', '.'));
+                        if (!isNaN(numRatio) && String(ratioVal).trim() !== '-' && !String(ratioVal).includes('–')) {
+                            setCell(r, 3, numRatio, centerStyle);
+                        } else {
+                            setCell(r, 3, ratioVal || '-', centerStyle);
+                        }
+
+                        r++;
+                    });
+
+                    // Footer Sumber
+                    r++;
+                    setCell(r, 0, 'Sumber / Source: Dinas Kependudukan dan Pencatatan Sipil Kota Bukittinggi / Population and Civil Registration Office of Bukittinggi Municipality', { font: { name: 'Calibri', sz: 9, italic: true } });
+                    footerWritten = true;
+
+                    maxCol = 4;
+                    ws['!cols'] = [
+                        { wch: 32 },
+                        { wch: 28 },
+                        { wch: 30 },
+                        { wch: 26 }
+                    ];
+                } else if (currentTableCode === '3.1.2') {
+                    titleId = `Penduduk Menurut Golongan Umur dan Jenis Kelamin di Kota Bukittinggi, ${yr}`;
+                    titleEn = `Population by Age Group and Sex in Bukittinggi Municipality, ${yr}`;
+                    setCell(0, 1, titleId, { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } } });
+                    setCell(1, 1, titleEn, { font: { name: 'Calibri', sz: 10, italic: true, color: { rgb: '000000' } } });
+
+                    // Header Baris 1: Oranye BPS
+                    setCell(r, 0, 'Kelompok Umur / Age Group', headerOrangeStyle);
+                    setCell(r, 1, 'Laki–laki / Male', headerOrangeStyle);
+                    setCell(r, 2, 'Perempuan / Female', headerOrangeStyle);
+                    setCell(r, 3, 'Jumlah / Total', headerOrangeStyle);
+                    r++;
+
+                    // Header Baris 2: Peach Penomoran Kolom (1) s.d (4)
+                    setCell(r, 0, '(1)', headerPeachStyle);
+                    setCell(r, 1, '(2)', headerPeachStyle);
+                    setCell(r, 2, '(3)', headerPeachStyle);
+                    setCell(r, 3, '(4)', headerPeachStyle);
+                    r++;
+
+                    const ageGroups312 = [
+                        { key: '0_4', label: '0–4', l: '5.203', p: '4.882', tot: '10.085' },
+                        { key: '5_9', label: '5–9', l: '6.541', p: '6.044', tot: '12.585' },
+                        { key: '10_14', label: '10–14', l: '6.837', p: '6.469', tot: '13.306' },
+                        { key: '15_19', label: '15–19', l: '6.594', p: '6.223', tot: '12.817' },
+                        { key: '20_24', label: '20–24', l: '6.303', p: '5.946', tot: '12.249' },
+                        { key: '25_29', label: '25–29', l: '6.127', p: '5.937', tot: '12.064' },
+                        { key: '30_34', label: '30–34', l: '5.472', p: '5.429', tot: '10.901' },
+                        { key: '35_39', label: '35–39', l: '5.169', p: '5.094', tot: '10.263' },
+                        { key: '40_44', label: '40–44', l: '5.101', p: '5.096', tot: '10.197' },
+                        { key: '45_49', label: '45–49', l: '4.657', p: '4.476', tot: '9.133' },
+                        { key: '50_54', label: '50–54', l: '4.025', p: '4.025', tot: '8.050' },
+                        { key: '55_59', label: '55–59', l: '3.179', p: '3.369', tot: '6.548' },
+                        { key: '60_64', label: '60–64', l: '2.663', p: '2.866', tot: '5.529' },
+                        { key: '65_69', label: '65–69', l: '2.070', p: '2.262', tot: '4.332' },
+                        { key: '70_74', label: '70–74', l: '1.305', p: '1.507', tot: '2.812' },
+                        { key: '75_plus', label: '75+', l: '1.198', p: '1.898', tot: '3.096' }
+                    ];
+
+                    const d = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[yr]) ? serverDbDataStore[yr] : {};
+                    const is2025 = (yr === 2025);
+                    const tableEl = document.getElementById('dataDisplayTable');
+
+                    let totLSum = 0, totPSum = 0, totAllSum = 0;
+                    let hasData = false;
+
+                    ageGroups312.forEach(grp => {
+                        let vL = d[`${grp.key}_l`] !== undefined ? d[`${grp.key}_l`] : (is2025 ? grp.l : '-');
+                        let vP = d[`${grp.key}_p`] !== undefined ? d[`${grp.key}_p`] : (is2025 ? grp.p : '-');
+                        let vTot = d[`${grp.key}_tot`] !== undefined ? d[`${grp.key}_tot`] : (is2025 ? grp.tot : '-');
+
+                        if (tableEl) {
+                            const trs = tableEl.querySelectorAll('tbody tr');
+                            trs.forEach(tr => {
+                                const firstTd = tr.querySelector('td');
+                                if (firstTd && firstTd.innerText.trim() === grp.label) {
+                                    const tds = tr.querySelectorAll('td');
+                                    if (tds[1] && tds[1].innerText.trim()) vL = tds[1].innerText.trim();
+                                    if (tds[2] && tds[2].innerText.trim()) vP = tds[2].innerText.trim();
+                                    if (tds[3] && tds[3].innerText.trim()) vTot = tds[3].innerText.trim();
+                                }
+                            });
+                        }
+
+                        const numL = parseFloat(String(vL).replace(/\./g, '').replace(',', '.'));
+                        const numP = parseFloat(String(vP).replace(/\./g, '').replace(',', '.'));
+                        const numTot = parseFloat(String(vTot).replace(/\./g, '').replace(',', '.'));
+
+                        if (!isNaN(numL)) { totLSum += numL; hasData = true; }
+                        if (!isNaN(numP)) { totPSum += numP; hasData = true; }
+                        if (!isNaN(numTot)) { totAllSum += numTot; }
+
+                        setCell(r, 0, grp.label, dataCellStyle);
+                        setCell(r, 1, !isNaN(numL) ? numL : (vL || '-'), dataCenterStyle);
+                        setCell(r, 2, !isNaN(numP) ? numP : (vP || '-'), dataCenterStyle);
+                        setCell(r, 3, !isNaN(numTot) ? numTot : (vTot || '-'), dataCenterStyle);
+                        r++;
+                    });
+
+                    // Row Total
+                    const totalLVal = d['total_l'] !== undefined ? d['total_l'] : (is2025 ? 71987 : (hasData ? totLSum : '-'));
+                    const totalPVal = d['total_p'] !== undefined ? d['total_p'] : (is2025 ? 71608 : (hasData ? totPSum : '-'));
+                    const totalTotVal = d['total_tot'] !== undefined ? d['total_tot'] : (is2025 ? 143595 : (hasData ? totAllSum : '-'));
+
+                    setCell(r, 0, 'Jumlah / Total', headerPeachStyle);
+                    setCell(r, 1, typeof totalLVal === 'number' ? totalLVal : (parseFloat(String(totalLVal).replace(/\./g, '')) || totalLVal), totalCenterStyle);
+                    setCell(r, 2, typeof totalPVal === 'number' ? totalPVal : (parseFloat(String(totalPVal).replace(/\./g, '')) || totalPVal), totalCenterStyle);
+                    setCell(r, 3, typeof totalTotVal === 'number' ? totalTotVal : (parseFloat(String(totalTotVal).replace(/\./g, '')) || totalTotVal), totalCenterStyle);
+                    r++;
+
+                    // Footer Sumber
+                    r++;
+                    setCell(r, 0, 'Sumber / Source: Dinas Kependudukan dan Pencatatan Sipil Kota Bukittinggi / Population and Civil Registration Office of Bukittinggi Municipality', { font: { name: 'Calibri', sz: 9, italic: true } });
+                    footerWritten = true;
+
+                    maxCol = 4;
+                    ws['!cols'] = [
+                        { wch: 28 },
+                        { wch: 20 },
+                        { wch: 20 },
+                        { wch: 20 }
+                    ];
+                } else if (currentTableCode === '3.1.8') {
+                    titleId = `Jumlah Penduduk Wajib KTP (Kartu Tanda Penduduk) dan yang Telah Memiliki KTP dirinci Menurut Kecamatan di Kota Bukittinggi, ${yr}`;
+                    titleEn = `Number of Population Owner Identity Card and Be Possessed Identity Card Already by District in Bukittinggi Municipality, ${yr}`;
+                    setCell(0, 1, titleId, { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } } });
+                    setCell(1, 1, titleEn, { font: { name: 'Calibri', sz: 10, italic: true, color: { rgb: '000000' } } });
+
+                    // Header Baris 1: Oranye BPS
+                    setCell(r, 0, 'Kecamatan / District', headerOrangeStyle);
+                    setCell(r, 1, '', headerOrangeStyle);
+                    merges.push({ s: { r: r, c: 0 }, e: { r: r, c: 1 } });
+
+                    setCell(r, 2, 'Jumlah Penduduk / Number of Population', headerOrangeStyle);
+                    setCell(r, 3, 'Wajib KTP / Must Have ID', headerOrangeStyle);
+                    setCell(r, 4, 'Memiliki KTP Elektronik / Have Electronic ID', headerOrangeStyle);
+                    r++;
+
+                    // Header Baris 2: Peach Penomoran Kolom (1) s.d (4)
+                    setCell(r, 0, '(1)', headerPeachStyle);
+                    setCell(r, 1, '', headerPeachStyle);
+                    merges.push({ s: { r: r, c: 0 }, e: { r: r, c: 1 } });
+
+                    setCell(r, 2, '(2)', headerPeachStyle);
+                    setCell(r, 3, '(3)', headerPeachStyle);
+                    setCell(r, 4, '(4)', headerPeachStyle);
+                    r++;
+
+                    const kecList318 = [
+                        { key: '01', label: '01. GUGUK PANJANG' },
+                        { key: '02', label: '02. MANDIANGIN KOTO SELAYAN' },
+                        { key: '03', label: '03. AUR BIRUGO TIGO BALEH' }
+                    ];
+
+                    const defKecData = {
+                        2025: {
+                            '01': { pop: '50.210', wajib: '35.853', ktp: '35.348' },
+                            '02': { pop: '61.395', wajib: '43.995', ktp: '43.463' },
+                            '03': { pop: '31.990', wajib: '22.523', ktp: '22.214' }
+                        },
+                        2024: {
+                            '01': { pop: '49.614', wajib: '35.197', ktp: '34.988' },
+                            '02': { pop: '60.751', wajib: '43.195', ktp: '42.932' },
+                            '03': { pop: '31.439', wajib: '21.901', ktp: '21.764' }
+                        }
+                    };
+
+                    const knownTotals318 = {
+                        2025: { pop: '143.595', wajib: '102.371', ktp: '101.025' },
+                        2024: { pop: '141.804', wajib: '100.293', ktp: '99.684' },
+                        2023: { pop: '138.534', wajib: '99.849',  ktp: '95.690' },
+                        2022: { pop: '134.412', wajib: '96.195',  ktp: '92.459' },
+                        2021: { pop: '130.211', wajib: '90.846',  ktp: '90.790' },
+                        2020: { pop: '101.745', wajib: '88.327',  ktp: '88.289' },
+                        2019: { pop: '123.296', wajib: '85.296',  ktp: '85.454' }
+                    };
+
+                    const d = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[yr]) ? serverDbDataStore[yr] : {};
+                    const curDef = defKecData[yr] || {};
+                    const tableEl = document.getElementById('dataDisplayTable');
+
+                    kecList318.forEach(item => {
+                        const def = curDef[item.key] || { pop: '-', wajib: '-', ktp: '-' };
+                        let popVal = d[`${item.key}_pop`] !== undefined ? d[`${item.key}_pop`] : def.pop;
+                        let wajibVal = d[`${item.key}_wajib`] !== undefined ? d[`${item.key}_wajib`] : def.wajib;
+                        let ktpVal = d[`${item.key}_ktp`] !== undefined ? d[`${item.key}_ktp`] : def.ktp;
+
+                        if (tableEl) {
+                            const trs = tableEl.querySelectorAll('tbody tr');
+                            trs.forEach(tr => {
+                                const firstTd = tr.querySelector('td');
+                                if (firstTd) {
+                                    const txt = firstTd.innerText.toLowerCase();
+                                    const match = item.key === '01' ? txt.includes('guguk') :
+                                        item.key === '02' ? txt.includes('mandiangin') :
+                                        (txt.includes('aur') || txt.includes('birugo'));
+                                    if (match) {
+                                        const tds = tr.querySelectorAll('td');
+                                        if (tds.length >= 4) {
+                                            const cPop = tds[tds.length - 3] ? tds[tds.length - 3].innerText.trim() : '';
+                                            const cWajib = tds[tds.length - 2] ? tds[tds.length - 2].innerText.trim() : '';
+                                            const cKtp = tds[tds.length - 1] ? tds[tds.length - 1].innerText.trim() : '';
+                                            if (cPop && cPop !== '-') popVal = cPop;
+                                            if (cWajib && cWajib !== '-') wajibVal = cWajib;
+                                            if (cKtp && cKtp !== '-') ktpVal = cKtp;
+                                        }
+                                    }
+                                }
+                            });
+                        }
+
+                        setCell(r, 0, item.label, dataCellStyle);
+                        setCell(r, 1, '', dataCellStyle);
+                        merges.push({ s: { r: r, c: 0 }, e: { r: r, c: 1 } });
+
+                        const nPop = parseFloat(String(popVal).replace(/\./g, '').replace(',', '.'));
+                        const nWajib = parseFloat(String(wajibVal).replace(/\./g, '').replace(',', '.'));
+                        const nKtp = parseFloat(String(ktpVal).replace(/\./g, '').replace(',', '.'));
+
+                        setCell(r, 2, !isNaN(nPop) ? nPop : (popVal || '-'), dataCenterStyle);
+                        setCell(r, 3, !isNaN(nWajib) ? nWajib : (wajibVal || '-'), dataCenterStyle);
+                        setCell(r, 4, !isNaN(nKtp) ? nKtp : (ktpVal || '-'), dataCenterStyle);
+                        r++;
+                    });
+
+                    // Section Jumlah / Total (6 tahun historis: yr s.d yr - 5)
+                    const startTotalRow = r;
+                    for (let i = 0; i < 6; i++) {
+                        const y = yr - i;
+                        const kt = knownTotals318[y] || {};
+                        let valPop = d[`tot_${y}_pop`] !== undefined ? d[`tot_${y}_pop`] : (kt.pop || '-');
+                        let valWajib = d[`tot_${y}_wajib`] !== undefined ? d[`tot_${y}_wajib`] : (kt.wajib || '-');
+                        let valKtp = d[`tot_${y}_ktp`] !== undefined ? d[`tot_${y}_ktp`] : (kt.ktp || '-');
+
+                        if (tableEl) {
+                            const trs = tableEl.querySelectorAll('tbody tr');
+                            trs.forEach(tr => {
+                                const tds = tr.querySelectorAll('td');
+                                for (let c = 0; c < tds.length; c++) {
+                                    if (tds[c].innerText.trim() === String(y)) {
+                                        if (tds[c + 1] && tds[c + 1].innerText.trim()) valPop = tds[c + 1].innerText.trim();
+                                        if (tds[c + 2] && tds[c + 2].innerText.trim()) valWajib = tds[c + 2].innerText.trim();
+                                        if (tds[c + 3] && tds[c + 3].innerText.trim()) valKtp = tds[c + 3].innerText.trim();
+                                    }
+                                }
+                            });
+                        }
+
+                        const nPop = parseFloat(String(valPop).replace(/\./g, '').replace(',', '.'));
+                        const nWajib = parseFloat(String(valWajib).replace(/\./g, '').replace(',', '.'));
+                        const nKtp = parseFloat(String(valKtp).replace(/\./g, '').replace(',', '.'));
+
+                        if (i === 0) {
+                            setCell(r, 0, 'Jumlah / Total', headerPeachStyle);
+                        } else {
+                            setCell(r, 0, '', headerPeachStyle);
+                        }
+
+                        setCell(r, 1, y, headerPeachStyle);
+                        setCell(r, 2, !isNaN(nPop) ? nPop : (valPop || '-'), totalCenterStyle);
+                        setCell(r, 3, !isNaN(nWajib) ? nWajib : (valWajib || '-'), totalCenterStyle);
+                        setCell(r, 4, !isNaN(nKtp) ? nKtp : (valKtp || '-'), totalCenterStyle);
+                        r++;
+                    }
+                    merges.push({ s: { r: startTotalRow, c: 0 }, e: { r: r - 1, c: 0 } });
+
+                    // Footer Sumber
+                    r++;
+                    setCell(r, 0, 'Sumber / Source: Dinas Kependudukan dan Pencatatan Sipil Kota Bukittinggi / Population and Civil Registration Office of Bukittinggi Municipality', { font: { name: 'Calibri', sz: 9, italic: true } });
+                    footerWritten = true;
+
+                    maxCol = 5;
+                    ws['!cols'] = [
+                        { wch: 22 },
+                        { wch: 14 },
+                        { wch: 26 },
+                        { wch: 24 },
+                        { wch: 26 }
+                    ];
+                } else if (currentTableCode === '4.3.1') {
+                    titleId = `Jumlah Penduduk Menurut Agama yang Dianut di Kota Bukittinggi, ${yr}`;
+                    titleEn = `Number of Population by Religion in Bukittinggi, ${yr}`;
+                    setCell(0, 1, titleId, { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } } });
+                    setCell(1, 1, titleEn, { font: { name: 'Calibri', sz: 10, italic: true, color: { rgb: '000000' } } });
+
+                    // Header Baris 1: Oranye BPS
+                    setCell(r, 0, 'Kecamatan / District', headerOrangeStyle);
+                    setCell(r, 1, 'Islam / Moslem', headerOrangeStyle);
+                    setCell(r, 2, 'Protestan / Protestant', headerOrangeStyle);
+                    setCell(r, 3, 'Katholik / Catholic', headerOrangeStyle);
+                    setCell(r, 4, 'Hindu / Hindu', headerOrangeStyle);
+                    setCell(r, 5, 'Budha / Buddha', headerOrangeStyle);
+                    setCell(r, 6, 'Lainnya / Other', headerOrangeStyle);
+                    r++;
+
+                    // Header Baris 2: Peach Penomoran Kolom (1) s.d (7)
+                    setCell(r, 0, '(1)', headerPeachStyle);
+                    setCell(r, 1, '(2)', headerPeachStyle);
+                    setCell(r, 2, '(3)', headerPeachStyle);
+                    setCell(r, 3, '(4)', headerPeachStyle);
+                    setCell(r, 4, '(5)', headerPeachStyle);
+                    setCell(r, 5, '(6)', headerPeachStyle);
+                    setCell(r, 6, '(7)', headerPeachStyle);
+                    r++;
+
+                    const rowsDef431 = [
+                        { key: '01_total', label: '01. GUGUK PANJANG', isKec: true },
+                        { key: '01_01', label: '1. Tarok Dipo' },
+                        { key: '01_02', label: '2. Bukik Cangang Kayu Ramang' },
+                        { key: '01_03', label: '3. Pakan Kurai' },
+                        { key: '01_04', label: '4. Aur Tajungkang Tengah Sawah' },
+                        { key: '01_05', label: '5. Benteng Pasar Atas' },
+                        { key: '01_06', label: '6. Kayu Kubu' },
+                        { key: '01_07', label: '7. Bukik Apit Puhun' },
+                        { key: '02_total', label: '02. MANDIANGIN KOTO SELAYAN', isKec: true },
+                        { key: '02_01', label: '1. Campago Guguk Bulek' },
+                        { key: '02_02', label: '2. Campago Ipuh' },
+                        { key: '02_03', label: '3. Puhun Tembok' },
+                        { key: '02_04', label: '4. Kubu Gulai Bancah' },
+                        { key: '02_05', label: '5. Puhun Pintu Kabun' },
+                        { key: '02_06', label: '6. Pulai Anak Air' },
+                        { key: '02_07', label: '7. Koto Selayan' },
+                        { key: '02_08', label: '8. Garegeh' },
+                        { key: '02_09', label: '9. Manggis Ganting' },
+                        { key: '03_total', label: '03. AUR BIRUGO TIGO BALEH', isKec: true },
+                        { key: '03_01', label: '1. Aur Kuning' },
+                        { key: '03_02', label: '2. Birugo' },
+                        { key: '03_03', label: '3. Belakang Balok' },
+                        { key: '03_04', label: '4. Sapiran' },
+                        { key: '03_05', label: '5. Kubu Tanjung' },
+                        { key: '03_06', label: '6. Pakan Labuah' },
+                        { key: '03_07', label: '7. Parit Antang' },
+                        { key: '03_08', label: '8. Ladang Cakiah' },
+                        { key: 'total', label: 'Jumlah / Total', isTotal: true }
+                    ];
+
+                    const defaultDataByYear431 = {
+                        2025: {
+                            '01_total': { islam: '48.867', protestan: '656', katholik: '579', hindu: '5', budha: '103', lainnya: '0' },
+                            '01_01':    { islam: '18.160', protestan: '535', katholik: '322', hindu: '5', budha: '4',   lainnya: '0' },
+                            '01_02':    { islam: '2.543',  protestan: '22',  katholik: '30',  hindu: '0', budha: '2',   lainnya: '0' },
+                            '01_03':    { islam: '7.853',  protestan: '12',  katholik: '0',   hindu: '0', budha: '7',   lainnya: '0' },
+                            '01_04':    { islam: '8.481',  protestan: '20',  katholik: '21',  hindu: '0', budha: '3',   lainnya: '0' },
+                            '01_05':    { islam: '1.144',  protestan: '26',  katholik: '197', hindu: '0', budha: '87',  lainnya: '0' },
+                            '01_06':    { islam: '4.346',  protestan: '6',   katholik: '3',   hindu: '0', budha: '0',   lainnya: '0' },
+                            '01_07':    { islam: '6.340',  protestan: '35',  katholik: '6',   hindu: '0', budha: '0',   lainnya: '0' },
+                            '02_total': { islam: '59.317', protestan: '1.559', katholik: '494', hindu: '0', budha: '25', lainnya: '0' },
+                            '02_01':    { islam: '8.168',  protestan: '605', katholik: '124', hindu: '0', budha: '1',   lainnya: '0' },
+                            '02_02':    { islam: '11.942', protestan: '74',  katholik: '3',   hindu: '0', budha: '0',   lainnya: '0' },
+                            '02_03':    { islam: '6.657',  protestan: '13',  katholik: '15',  hindu: '0', budha: '3',   lainnya: '0' },
+                            '02_04':    { islam: '7.273',  protestan: '22',  katholik: '12',  hindu: '0', budha: '6',   lainnya: '0' },
+                            '02_05':    { islam: '8.330',  protestan: '13',  katholik: '8',   hindu: '0', budha: '7',   lainnya: '0' },
+                            '02_06':    { islam: '6.647',  protestan: '298', katholik: '161', hindu: '0', budha: '8',   lainnya: '0' },
+                            '02_07':    { islam: '1.996',  protestan: '0',   katholik: '0',   hindu: '0', budha: '0',   lainnya: '0' },
+                            '02_08':    { islam: '3.236',  protestan: '14',  katholik: '5',   hindu: '0', budha: '0',   lainnya: '0' },
+                            '02_09':    { islam: '5.068',  protestan: '520', katholik: '166', hindu: '0', budha: '0',   lainnya: '0' },
+                            '03_total': { islam: '31.749', protestan: '184', katholik: '53',  hindu: '0', budha: '4',   lainnya: '0' },
+                            '03_01':    { islam: '8.062',  protestan: '8',   katholik: '0',   hindu: '0', budha: '0',   lainnya: '0' },
+                            '03_02':    { islam: '6.986',  protestan: '49',  katholik: '6',   hindu: '0', budha: '0',   lainnya: '0' },
+                            '03_03':    { islam: '3.036',  protestan: '47',  katholik: '27',  hindu: '0', budha: '4',   lainnya: '0' },
+                            '03_04':    { islam: '3.691',  protestan: '80',  katholik: '20',  hindu: '0', budha: '0',   lainnya: '0' },
+                            '03_05':    { islam: '2.046',  protestan: '0',   katholik: '0',   hindu: '0', budha: '0',   lainnya: '0' },
+                            '03_06':    { islam: '3.830',  protestan: '0',   katholik: '0',   hindu: '0', budha: '0',   lainnya: '0' },
+                            '03_07':    { islam: '1.681',  protestan: '0',   katholik: '0',   hindu: '0', budha: '0',   lainnya: '0' },
+                            '03_08':    { islam: '2.417',  protestan: '0',   katholik: '0',   hindu: '0', budha: '0',   lainnya: '0' },
+                            'total':    { islam: '139.933',protestan: '2.399',katholik: '1.126',hindu: '5', budha: '132', lainnya: '0' }
+                        },
+                        2024: {
+                            '01_total': { islam: '48.238', protestan: '649', katholik: '617', hindu: '5', budha: '105', lainnya: '-' },
+                            '01_01':    { islam: '18.026', protestan: '523', katholik: '345', hindu: '5', budha: '4',   lainnya: '-' },
+                            '01_02':    { islam: '2.486',  protestan: '23',  katholik: '32',  hindu: '-', budha: '2',   lainnya: '-' },
+                            '01_03':    { islam: '7.709',  protestan: '12',  katholik: '5',   hindu: '-', budha: '7',   lainnya: '-' },
+                            '01_04':    { islam: '8.280',  protestan: '21',  katholik: '24',  hindu: '-', budha: '4',   lainnya: '-' },
+                            '01_05':    { islam: '1.145',  protestan: '24',  katholik: '202', hindu: '-', budha: '88',  lainnya: '-' },
+                            '01_06':    { islam: '4.307',  protestan: '6',   katholik: '3',   hindu: '-', budha: '-',   lainnya: '-' },
+                            '01_07':    { islam: '6.285',  protestan: '40',  katholik: '6',   hindu: '-', budha: '-',   lainnya: '-' },
+                            '02_total': { islam: '58.704', protestan: '1.540', katholik: '481', hindu: '-', budha: '26', lainnya: '-' },
+                            '02_01':    { islam: '8.080',  protestan: '603', katholik: '132', hindu: '-', budha: '1',   lainnya: '-' },
+                            '02_02':    { islam: '11.879', protestan: '72',  katholik: '2',   hindu: '-', budha: '-',   lainnya: '-' },
+                            '02_03':    { islam: '6.619',  protestan: '13',  katholik: '15',  hindu: '-', budha: '4',   lainnya: '-' },
+                            '02_04':    { islam: '7.144',  protestan: '22',  katholik: '12',  hindu: '-', budha: '7',   lainnya: '-' },
+                            '02_05':    { islam: '8.269',  protestan: '12',  katholik: '8',   hindu: '-', budha: '6',   lainnya: '-' },
+                            '02_06':    { islam: '6.582',  protestan: '291', katholik: '162', hindu: '-', budha: '8',   lainnya: '-' },
+                            '02_07':    { islam: '1.930',  protestan: '2',   katholik: '-',   hindu: '-', budha: '-',   lainnya: '-' },
+                            '02_08':    { islam: '3.242',  protestan: '29',  katholik: '4',   hindu: '-', budha: '-',   lainnya: '-' },
+                            '02_09':    { islam: '4.959',  protestan: '496', katholik: '146', hindu: '-', budha: '-',   lainnya: '-' },
+                            '03_total': { islam: '31.205', protestan: '178', katholik: '52',  hindu: '-', budha: '4',   lainnya: '-' },
+                            '03_01':    { islam: '7.980',  protestan: '9',   katholik: '-',   hindu: '-', budha: '-',   lainnya: '-' },
+                            '03_02':    { islam: '6.831',  protestan: '44',  katholik: '7',   hindu: '-', budha: '-',   lainnya: '-' },
+                            '03_03':    { islam: '2.989',  protestan: '45',  katholik: '25',  hindu: '-', budha: '4',   lainnya: '-' },
+                            '03_04':    { islam: '3.561',  protestan: '79',  katholik: '20',  hindu: '-', budha: '-',   lainnya: '-' },
+                            '03_05':    { islam: '1.989',  protestan: '-',   katholik: '-',   hindu: '-', budha: '-',   lainnya: '-' },
+                            '03_06':    { islam: '3.742',  protestan: '-',   katholik: '-',   hindu: '-', budha: '-',   lainnya: '-' },
+                            '03_07':    { islam: '1.675',  protestan: '-',   katholik: '-',   hindu: '-', budha: '-',   lainnya: '-' },
+                            '03_08':    { islam: '2.438',  protestan: '1',   katholik: '-',   hindu: '-', budha: '-',   lainnya: '-' },
+                            'total':    { islam: '138.147',protestan: '2.367',katholik: '1.150',hindu: '5', budha: '135', lainnya: '-' }
+                        }
+                    };
+
+                    const curDef431 = defaultDataByYear431[yr] || {};
+                    const d = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[yr]) ? serverDbDataStore[yr] : {};
+                    const tableEl = document.getElementById('dataDisplayTable');
+
+                    // DOM lookup map
+                    const domMap = {};
+                    if (tableEl) {
+                        const trs = tableEl.querySelectorAll('tbody tr');
+                        trs.forEach(tr => {
+                            const tds = tr.querySelectorAll('td');
+                            if (tds.length >= 7) {
+                                const lbl = tds[0].innerText.trim().toLowerCase();
+                                domMap[lbl] = [
+                                    tds[1].innerText.trim(),
+                                    tds[2].innerText.trim(),
+                                    tds[3].innerText.trim(),
+                                    tds[4].innerText.trim(),
+                                    tds[5].innerText.trim(),
+                                    tds[6].innerText.trim()
+                                ];
+                            }
+                        });
+                    }
+
+                    rowsDef431.forEach(item => {
+                        const def = curDef431[item.key] || {};
+                        let vIslam = d[`${item.key}_islam`] !== undefined ? d[`${item.key}_islam`] : (def.islam || '-');
+                        let vProtestan = d[`${item.key}_protestan`] !== undefined ? d[`${item.key}_protestan`] : (def.protestan || '-');
+                        let vKatholik = d[`${item.key}_katholik`] !== undefined ? d[`${item.key}_katholik`] : (def.katholik || '-');
+                        let vHindu = d[`${item.key}_hindu`] !== undefined ? d[`${item.key}_hindu`] : (def.hindu || '-');
+                        let vBudha = d[`${item.key}_budha`] !== undefined ? d[`${item.key}_budha`] : (def.budha || '-');
+                        let vLainnya = d[`${item.key}_lainnya`] !== undefined ? d[`${item.key}_lainnya`] : (def.lainnya || '-');
+
+                        // Check DOM
+                        const searchLbl = item.label.toLowerCase();
+                        for (const k in domMap) {
+                            if (searchLbl.includes(k) || k.includes(searchLbl) || (item.isTotal && (k.includes('total') || k.includes('jumlah')))) {
+                                vIslam = domMap[k][0] || vIslam;
+                                vProtestan = domMap[k][1] || vProtestan;
+                                vKatholik = domMap[k][2] || vKatholik;
+                                vHindu = domMap[k][3] || vHindu;
+                                vBudha = domMap[k][4] || vBudha;
+                                vLainnya = domMap[k][5] || vLainnya;
+                                break;
+                            }
+                        }
+
+                        const rowStyle = item.isTotal ? totalRowStyle : (item.isKec ? { ...dataCellStyle, font: { name: 'Calibri', sz: 9.5, bold: true, color: { rgb: '000000' } } } : dataCellStyle);
+                        const centerStyle = item.isTotal ? totalCenterStyle : (item.isKec ? { ...dataCenterStyle, font: { name: 'Calibri', sz: 9.5, bold: true, color: { rgb: '000000' } } } : dataCenterStyle);
+
+                        setCell(r, 0, item.label, rowStyle);
+
+                        [vIslam, vProtestan, vKatholik, vHindu, vBudha, vLainnya].forEach((val, cIdx) => {
+                            const num = parseFloat(String(val).replace(/\./g, '').replace(',', '.'));
+                            if (!isNaN(num) && String(val).trim() !== '-' && !String(val).includes('–')) {
+                                setCell(r, cIdx + 1, num, centerStyle);
+                            } else {
+                                setCell(r, cIdx + 1, val || '-', centerStyle);
+                            }
+                        });
+                        r++;
+                    });
+
+                    // Footer Sumber
+                    r++;
+                    setCell(r, 0, 'Sumber / Source: Dinas Kependudukan dan Pencatatan Sipil Kota Bukittinggi / Population and Civil Registration Office of Bukittinggi Municipality', { font: { name: 'Calibri', sz: 9, italic: true } });
+                    footerWritten = true;
+
+                    maxCol = 7;
+                    ws['!cols'] = [
+                        { wch: 32 },
+                        { wch: 14 },
+                        { wch: 14 },
+                        { wch: 14 },
+                        { wch: 14 },
+                        { wch: 14 },
+                        { wch: 14 }
+                    ];
+                } else if (currentTableCode === '3.2.8') {
+                    titleId = `Jumlah Pencari Kerja yang Terdaftar Menurut Tingkat Pendidikan yang Ditamatkan di Kota Bukittinggi, ${yr}`;
+                    titleEn = `Number of Job Seeker Registered by Educational Attainment in Bukittinggi Municipality, ${yr}`;
+                    setCell(0, 1, titleId, { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } } });
+                    setCell(1, 1, titleEn, { font: { name: 'Calibri', sz: 10, italic: true, color: { rgb: '000000' } } });
+
+                    // Header Baris 1: Oranye BPS
+                    setCell(r, 0, 'Pendidikan Ditamatkan / Educational Attainment', headerOrangeStyle);
+                    setCell(r, 1, '', headerOrangeStyle);
+                    merges.push({ s: { r: r, c: 0 }, e: { r: r + 1, c: 1 } });
+
+                    setCell(r, 2, 'Belum Ditempatkan Tahun Ini / Not Placed This Year Yet', headerOrangeStyle);
+                    setCell(r, 3, '', headerOrangeStyle);
+                    setCell(r, 4, '', headerOrangeStyle);
+                    merges.push({ s: { r: r, c: 2 }, e: { r: r, c: 4 } });
+
+                    setCell(r, 5, 'Terdaftar / Registered', headerOrangeStyle);
+                    setCell(r, 6, '', headerOrangeStyle);
+                    setCell(r, 7, '', headerOrangeStyle);
+                    merges.push({ s: { r: r, c: 5 }, e: { r: r, c: 7 } });
+
+                    setCell(r, 8, 'Ditempatkan Tahun Ini / Placed This Year', headerOrangeStyle);
+                    setCell(r, 9, '', headerOrangeStyle);
+                    setCell(r, 10, '', headerOrangeStyle);
+                    merges.push({ s: { r: r, c: 8 }, e: { r: r, c: 10 } });
+
+                    setCell(r, 11, 'Dihapuskan Tahun Ini / Cleared This Year', headerOrangeStyle);
+                    setCell(r, 12, '', headerOrangeStyle);
+                    setCell(r, 13, '', headerOrangeStyle);
+                    merges.push({ s: { r: r, c: 11 }, e: { r: r, c: 13 } });
+                    r++;
+
+                    // Header Baris 2: Sub-kolom Laki-laki / Perempuan / Jumlah
+                    setCell(r, 0, '', headerOrangeStyle);
+                    setCell(r, 1, '', headerOrangeStyle);
+                    for (let k = 0; k < 4; k++) {
+                        const cBase = 2 + (k * 3);
+                        setCell(r, cBase, 'Laki–laki / Male', headerOrangeStyle);
+                        setCell(r, cBase + 1, 'Perempuan / Female', headerOrangeStyle);
+                        setCell(r, cBase + 2, 'Jumlah / Total', headerOrangeStyle);
+                    }
+                    r++;
+
+                    // Header Baris 3: Peach Penomoran Kolom (1) s.d (13)
+                    setCell(r, 0, '(1)', headerPeachStyle);
+                    setCell(r, 1, '', headerPeachStyle);
+                    merges.push({ s: { r: r, c: 0 }, e: { r: r, c: 1 } });
+                    for (let col = 2; col <= 13; col++) {
+                        setCell(r, col, `(${col})`, headerPeachStyle);
+                    }
+                    r++;
+
+                    const eduList = [
+                        '01. SD/SLTP',
+                        '02. SLTA',
+                        '03. Akademik',
+                        '04. Perguruan Tinggi'
+                    ];
+
+                    const defaultEduValues = {
+                        2025: [
+                            [5, 0, 5, 7, 0, 7, 1, 0, 1, 2, 0, 2],
+                            [281, 142, 423, 139, 127, 266, 23, 6, 29, 90, 32, 122],
+                            [125, 208, 333, 58, 65, 123, 11, 17, 28, 45, 49, 94],
+                            [284, 551, 835, 68, 162, 230, 19, 21, 40, 55, 130, 185]
+                        ]
+                    };
+
+                    const defaultTotals = {
+                        2025: [695, 901, 1596, 272, 354, 626, 54, 44, 98, 192, 211, 403],
+                        2024: [647, 777, 1424, 336, 376, 712, 127, 98, 225, 181, 257, 438],
+                        2023: [658, 784, 1442, 302, 423, 725, 102, 206, 308, 161, 211, 372],
+                        2022: [619, 778, 1397, 362, 541, 903, 103, 120, 223, 619, 778, 1397],
+                        2021: [520, 624, 1144, 269, 301, 572, 229, 295, 524, 520, 624, 1144],
+                        2020: [649, 798, 1447, 188, 285, 473, 211, 483, 692, 649, 798, 1447]
+                    };
+
+                    // Ambil nilai dari DOM jika tersedia
+                    const domEdu = [];
+                    const domTotals = {};
+                    if (tableEl) {
+                        const trs = tableEl.querySelectorAll('tbody tr');
+                        let eIdx = 0;
+                        trs.forEach(tr => {
+                            const tds = tr.querySelectorAll('td');
+                            if (tds.length === 0) return;
+                            const txt0 = tds[0].innerText.trim();
+                            if (txt0.startsWith('01.') || txt0.startsWith('02.') || txt0.startsWith('03.') || txt0.startsWith('04.')) {
+                                const rowVals = [];
+                                for (let c = 1; c < tds.length; c++) {
+                                    const v = tds[c].innerText.trim();
+                                    const n = parseFloat(v.replace(/\./g, '').replace(',', '.'));
+                                    rowVals.push(!isNaN(n) && v !== '-' ? n : v);
+                                }
+                                domEdu[eIdx] = rowVals;
+                                eIdx++;
+                            } else {
+                                const isFirstTotal = txt0.includes('Jumlah') || txt0.includes('Total');
+                                const yTxt = isFirstTotal ? (tds[1] ? tds[1].innerText.trim() : '') : txt0;
+                                const m = yTxt.match(/\b(20\d{2}|19\d{2})\b/);
+                                if (m) {
+                                    const y = parseInt(m[1], 10);
+                                    const startCol = isFirstTotal ? 2 : 1;
+                                    const rowVals = [];
+                                    for (let c = startCol; c < tds.length; c++) {
+                                        const v = tds[c].innerText.trim();
+                                        const n = parseFloat(v.replace(/\./g, '').replace(',', '.'));
+                                        rowVals.push(!isNaN(n) && v !== '-' ? n : v);
+                                    }
+                                    domTotals[y] = rowVals;
+                                }
+                            }
+                        });
+                    }
+
+                    // 4 Baris Tingkat Pendidikan
+                    eduList.forEach((label, idx) => {
+                        setCell(r, 0, label, dataCellStyle);
+                        setCell(r, 1, '', dataCellStyle);
+                        merges.push({ s: { r: r, c: 0 }, e: { r: r, c: 1 } });
+
+                        const curDef = (defaultEduValues[yr] && defaultEduValues[yr][idx]) ? defaultEduValues[yr][idx] : [];
+                        const rowVals = domEdu[idx] || curDef;
+
+                        for (let c = 0; c < 12; c++) {
+                            const val = rowVals[c] !== undefined ? rowVals[c] : '-';
+                            if (typeof val === 'number') {
+                                setCell(r, c + 2, val, dataCenterStyle);
+                            } else {
+                                const n = parseFloat(String(val).replace(/\./g, '').replace(',', '.'));
+                                setCell(r, c + 2, !isNaN(n) && String(val).trim() !== '-' ? n : (val || '-'), dataCenterStyle);
+                            }
+                        }
+                        r++;
+                    });
+
+                    // 6 Baris Historis Jumlah / Total [yr, yr-1, ..., yr-5]
+                    const totalStartR = r;
+                    for (let i = 0; i < 6; i++) {
+                        const y = yr - i;
+                        const curDef = defaultTotals[y] || [];
+                        const rowVals = domTotals[y] || curDef;
+
+                        if (i === 0) {
+                            setCell(r, 0, 'Jumlah / Total', totalRowStyle);
+                            setCell(r, 1, y, totalCenterStyle);
+                            for (let c = 0; c < 12; c++) {
+                                const val = rowVals[c] !== undefined ? rowVals[c] : '-';
+                                if (typeof val === 'number') {
+                                    setCell(r, c + 2, val, totalCenterStyle);
+                                } else {
+                                    const n = parseFloat(String(val).replace(/\./g, '').replace(',', '.'));
+                                    setCell(r, c + 2, !isNaN(n) && String(val).trim() !== '-' ? n : (val || '-'), totalCenterStyle);
+                                }
+                            }
+                        } else {
+                            setCell(r, 0, '', dataCellStyle);
+                            setCell(r, 1, y, dataCenterStyle);
+                            for (let c = 0; c < 12; c++) {
+                                const val = rowVals[c] !== undefined ? rowVals[c] : '-';
+                                if (typeof val === 'number') {
+                                    setCell(r, c + 2, val, dataCenterStyle);
+                                } else {
+                                    const n = parseFloat(String(val).replace(/\./g, '').replace(',', '.'));
+                                    setCell(r, c + 2, !isNaN(n) && String(val).trim() !== '-' ? n : (val || '-'), dataCenterStyle);
+                                }
+                            }
+                        }
+                        r++;
+                    }
+                    merges.push({ s: { r: totalStartR, c: 0 }, e: { r: r - 1, c: 0 } });
+
+                    // Footer Sumber
+                    r++;
+                    setCell(r, 0, 'Sumber / Source: Dinas Koperasi, UKM dan Tenaga Kerja Kota Bukittinggi / Cooperative, Small and Medium Business and Labor Services of Bukittinggi Municipality', { font: { name: 'Calibri', sz: 9, italic: true } });
+                    footerWritten = true;
+
+                    maxCol = 14;
+                    ws['!cols'] = [
+                        { wch: 22 },
+                        { wch: 10 },
+                        { wch: 12 },
+                        { wch: 12 },
+                        { wch: 12 },
+                        { wch: 12 },
+                        { wch: 12 },
+                        { wch: 12 },
+                        { wch: 12 },
+                        { wch: 12 },
+                        { wch: 12 },
+                        { wch: 12 },
+                        { wch: 12 },
+                        { wch: 12 }
+                    ];
+                } else if (currentTableCode === '2.3.3') {
                     // Header Baris 1: Oranye BPS
                     setCell(r, 0, 'Pangkat / Golongan / Ruang / Hierarchy / Range', headerOrangeStyle);
                     setCell(r, 1, '', headerOrangeStyle);
@@ -4304,7 +10805,7 @@
                     setCell(r, 3, '(4)', headerPeachStyle);
                     r++;
 
-                    ﻿const units235 = [
+                    const units235 = [
     { key: 'unit_1', no: 1, name: "01. Sekretaris Daerah", pns25: '104', pppk25: '5', pns24: '99', pppk24: '4' },
     { key: 'unit_2', no: 2, name: "02. Badan Kepegawaian dan Pengembangan Sumber Daya Manusia", pns25: '27', pppk25: '2', pns24: '27', pppk24: '0' },
     { key: 'unit_3', no: 3, name: "03. Badan Keuangan", pns25: '57', pppk25: '5', pns24: '50', pppk24: '3' },
@@ -4439,6 +10940,1187 @@
                         { wch: 18 }, // PPPK
                         { wch: 20 }  // Total
                     ];
+                } else if (currentTableCode === '4.1.24') {
+                    // TEMPLATE TABEL 4.1.24 - PERPUSTAKAAN
+                    setCell(0, 1, `Jumlah Lembaga Perpustakaan, Koleksi, dan Pengunjung Perpustakaan di Kota Bukittinggi, ${yr}`, { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } } });
+                    setCell(1, 1, `Number of Library Institutions, Collections, and Library Visitors in the City of Bukittinggi, ${yr}`, { font: { name: 'Calibri', sz: 10, italic: true, color: { rgb: '000000' } } });
+
+                    // Baris Header 1 (Orange)
+                    setCell(r, 0, 'Jenis Perpustakaan / Type of Library', headerOrangeStyle);
+                    setCell(r, 1, 'Jumlah Perpustakaan / Number of Library', headerOrangeStyle);
+                    setCell(r, 2, 'Jumlah Koleksi / Number of Collection', headerOrangeStyle);
+                    setCell(r, 3, '', headerOrangeStyle);
+                    setCell(r, 4, 'Jumlah Pengunjung / Number of Visitor', headerOrangeStyle);
+
+                    merges.push({ s: { r: r, c: 0 }, e: { r: r + 1, c: 0 } });
+                    merges.push({ s: { r: r, c: 1 }, e: { r: r + 1, c: 1 } });
+                    merges.push({ s: { r: r, c: 2 }, e: { r: r, c: 3 } });     // Jumlah Koleksi colspan 2
+                    merges.push({ s: { r: r, c: 4 }, e: { r: r + 1, c: 4 } });
+                    r++;
+
+                    // Baris Header 2 (Orange)
+                    setCell(r, 0, '', headerOrangeStyle);
+                    setCell(r, 1, '', headerOrangeStyle);
+                    setCell(r, 2, 'Judul / Title', headerOrangeStyle);
+                    setCell(r, 3, 'Eksemplar / Copies', headerOrangeStyle);
+                    setCell(r, 4, '', headerOrangeStyle);
+                    r++;
+
+                    // Baris Header 3: Peach Numbering (1) - (5)
+                    for (let c = 0; c < 5; c++) {
+                        setCell(r, c, `(${c + 1})`, headerPeachStyle);
+                    }
+                    r++;
+
+                    // Baris Data
+                    const libRows = [
+                        { label: 'Umum / General', key: 'umum' },
+                        { label: 'SD / MI / Primary School', key: 'sd_mi' },
+                        { label: 'SMP / MTs / Junior High School', key: 'smp_mts' },
+                        { label: 'SMA / SMK/MA / Senior High School', key: 'sma_smk_ma' },
+                        { label: 'Perguruan Tinggi / College', key: 'perguruan_tinggi' },
+                        { label: 'Taman Bacaan / Perpustakaan Masyarakat / Public Library', key: 'taman_bacaan' },
+                        { label: 'Jumlah / Total', key: 'total', isTotal: true }
+                    ];
+
+                    const d = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[yr]) ? serverDbDataStore[yr] : {};
+
+                    libRows.forEach(item => {
+                        const rowStyle = item.isTotal ? totalRowStyle : dataCellStyle;
+                        const numStyle = item.isTotal ? totalCenterStyle : dataCenterStyle;
+
+                        setCell(r, 0, item.label, rowStyle);
+
+                        const cols = ['perpus', 'judul', 'eksemplar', 'pengunjung'];
+                        for (let c = 0; c < 4; c++) {
+                            const dbKey = `${item.key}_${cols[c]}`;
+                            let val = '-';
+                            if (d[dbKey] !== undefined && d[dbKey] !== '') {
+                                val = d[dbKey];
+                            }
+                            const numVal = parseFloat(String(val).replace(',', '.'));
+                            if (!isNaN(numVal) && String(val).trim() !== '-' && !String(val).includes('–')) {
+                                setCell(r, 1 + c, numVal, numStyle);
+                            } else {
+                                setCell(r, 1 + c, val || '-', numStyle);
+                            }
+                        }
+                        r++;
+                    });
+
+                    // Footer Sumber
+                    r++;
+                    setCell(r, 0, 'Sumber / Source: Dinas Perpustakaan dan Kearsipan Kota Bukittinggi / Library and Archives Service of Bukittinggi Municipality', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    footerWritten = true;
+
+                    maxCol = 5;
+                    ws['!cols'] = [
+                        { wch: 45 },
+                        { wch: 22 },
+                        { wch: 20 },
+                        { wch: 22 },
+                        { wch: 22 }
+                    ];
+                } else if (currentTableCode === '4.2.2') {
+                    // TEMPLATE TABEL 4.2.2 - DINAS KESEHATAN (TENAGA KESEHATAN)
+                    setCell(0, 1, `Jumlah Tenaga Kesehatan Menurut Kecamatan di Kota Bukittinggi, ${yr}`, { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } } });
+                    setCell(1, 1, `Number of Health Human Resources by District in Bukittinggi Municipality, ${yr}`, { font: { name: 'Calibri', sz: 10, italic: true, color: { rgb: '000000' } } });
+
+                    // Baris Header 1 (Orange)
+                    const colLabels = [
+                        'Kecamatan / District',
+                        'Tenaga Medis¹ / Medical Worker¹',
+                        'Psikologi Klinis / Clinical Psychology',
+                        'Tenaga Keperawatan / Nursing Worker',
+                        'Tenaga Kebidanan / Midwifery Worker',
+                        'Tenaga Kefarmasian / Pharmaceutical Worker',
+                        'Tenaga Kesehatan Masyarakat / Public Health Worker',
+                        'Tenaga Kesehatan Lingkungan / Environmental Health Worker',
+                        'Tenaga Gizi / Nutritionist',
+                        'Tenaga Keterapian Fisik / Physical Therapists',
+                        'Tenaga Keteknisan Medis / Medical Technicians',
+                        'Tenaga Teknik Biomedika / Biomedical Engineer',
+                        'Tenaga Kesehatan Tradisional / Traditional Health Worker'
+                    ];
+
+                    colLabels.forEach((lbl, c) => {
+                        setCell(r, c, lbl, headerOrangeStyle);
+                    });
+                    r++;
+
+                    // Baris Header 2: Peach Numbering (1) - (13)
+                    for (let c = 0; c < 13; c++) {
+                        setCell(r, c, `(${c + 1})`, headerPeachStyle);
+                    }
+                    r++;
+
+                    // Baris Data
+                    const healthRows = [
+                        { label: '01. Guguk Panjang', key: 'guguk' },
+                        { label: '02. Mandiangin Koto Selayan', key: 'mks' },
+                        { label: '03. Aur Birugo Tigo Baleh', key: 'abtb' },
+                        { label: 'Jumlah / Total', key: 'total', isTotal: true }
+                    ];
+
+                    const officialHealthData = {
+                        2024: {
+                            guguk: [12, 0, 20, 17, 5, 10, 3, 2, 0, 2, 0, 0],
+                            mks: [48, 0, 120, 62, 40, 85, 6, 21, 1, 17, 0, 0],
+                            abtb: [211, 2, 546, 85, 205, 32, 21, 33, 29, 93, 86, 0],
+                            total: [271, 2, 686, 164, 250, 127, 30, 56, 30, 112, 86, 0]
+                        },
+                        2025: {
+                            guguk: [153, 1, 197, 69, 72, 21, 10, 16, 13, 53, 90, 0],
+                            mks: [25, 0, 167, 40, 35, 8, 6, 8, 8, 14, 19, 0],
+                            abtb: [211, 2, 546, 85, 205, 32, 21, 33, 29, 93, 86, 0],
+                            total: [389, 3, 910, 194, 312, 61, 37, 57, 50, 160, 195, 0]
+                        }
+                    };
+                    const yrHealthData = officialHealthData[yr] || {};
+                    const tableEl = document.getElementById('dataDisplayTable');
+
+                    healthRows.forEach(item => {
+                        const rowStyle = item.isTotal ? totalRowStyle : dataCellStyle;
+                        const numStyle = item.isTotal ? totalCenterStyle : dataCenterStyle;
+                        setCell(r, 0, item.label, rowStyle);
+
+                        let domRow = null;
+                        if (tableEl) {
+                            domRow = tableEl.querySelector(`tr[data-key="${item.key}"]`);
+                        }
+
+                        for (let c = 0; c < 12; c++) {
+                            let val = '-';
+                            if (domRow) {
+                                const inputs = domRow.querySelectorAll('input');
+                                if (inputs[c] && inputs[c].value !== undefined && inputs[c].value !== '') {
+                                    val = inputs[c].value.trim();
+                                }
+                            }
+                            if (val === '-' && yrHealthData[item.key] && yrHealthData[item.key][c] !== undefined) {
+                                val = yrHealthData[item.key][c];
+                            }
+                            const numVal = parseFloat(String(val).replace(',', '.'));
+                            if (!isNaN(numVal) && String(val).trim() !== '-' && !String(val).includes('–')) {
+                                setCell(r, 1 + c, numVal, numStyle);
+                            } else {
+                                setCell(r, 1 + c, val || '-', numStyle);
+                            }
+                        }
+                        r++;
+                    });
+
+                    // Footer Sumber & Catatan
+                    r++;
+                    setCell(r, 0, 'Catatan / Note:', { font: { name: 'Calibri', sz: 9.5, bold: true } });
+                    setCell(r, 1, '¹ Tenaga medis terdiri atas dokter, dokter gigi, dokter spesialis, dan dokter gigi spesialis baik di dalam maupun di luar negeri yang diakui oleh Pemerintah RI sesuai dengan peraturan perundang-undangan (UU No. 29 Tahun 2004 tentang Praktik Kedokteran) / Medical worker includes doctor, dentist, medical specialist, and dentist specialist at home and abroad recognized by Indonesian government in accordance with the laws and regulations (Law No. 29 year 2004 about Medical Practice)', { font: { name: 'Calibri', sz: 9, italic: true } });
+                    r++;
+                    setCell(r, 0, 'Sumber / Source:', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    setCell(r, 1, 'DINAS KESEHATAN Kota Bukittinggi / Bukittinggi Municipality Health Office', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    footerWritten = true;
+
+                    maxCol = 13;
+                    ws['!cols'] = [
+                        { wch: 30 },
+                        { wch: 18 },
+                        { wch: 18 },
+                        { wch: 20 },
+                        { wch: 18 },
+                        { wch: 20 },
+                        { wch: 22 },
+                        { wch: 22 },
+                        { wch: 16 },
+                        { wch: 20 },
+                        { wch: 20 },
+                        { wch: 22 },
+                        { wch: 24 }
+                    ];
+                } else if (currentTableCode === '4.2.4') {
+                    // TEMPLATE TABEL 4.2.4 - DINAS KESEHATAN (TEMPAT TIDUR RUMAH SAKIT)
+                    const p424 = get5YearPeriod(yr);
+                    setCell(0, 1, `Jumlah Tempat Tidur Pada Rumah Sakit Pemerintah dan Swasta di Kota Bukittinggi, ${p424.label}`, { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } } });
+                    setCell(1, 1, `Number of Beds at Government and Private Hospital in Bukittinggi, ${p424.label}`, { font: { name: 'Calibri', sz: 10, italic: true, color: { rgb: '000000' } } });
+
+                    // Baris Header 1 (Orange)
+                    setCell(r, 0, 'Tahun / Year', headerOrangeStyle);
+                    setCell(r, 1, 'Pemerintah / Government', headerOrangeStyle);
+                    setCell(r, 2, 'Swasta / Private', headerOrangeStyle);
+                    setCell(r, 3, 'Jumlah / Total', headerOrangeStyle);
+                    r++;
+
+                    // Baris Header 2 (Peach): (1) - (4)
+                    setCell(r, 0, '(1)', headerPeachStyle);
+                    setCell(r, 1, '(2)', headerPeachStyle);
+                    setCell(r, 2, '(3)', headerPeachStyle);
+                    setCell(r, 3, '(4)', headerPeachStyle);
+                    r++;
+
+                    const officialData424 = {
+                        2019: { pemerintah: 536, swasta: 206, total: 742 },
+                        2020: { pemerintah: 536, swasta: 206, total: 742 },
+                        2021: { pemerintah: 550, swasta: 210, total: 760 },
+                        2022: { pemerintah: 550, swasta: 210, total: 760 },
+                        2023: { pemerintah: 559, swasta: 207, total: 766 },
+                        2024: { pemerintah: 696, swasta: 196, total: 892 },
+                        2025: { pemerintah: 696, swasta: 196, total: 892 }
+                    };
+
+                    const tableEl = document.getElementById('dataDisplayTable');
+                    const years424 = p424.yearsAsc;
+                    years424.forEach(y => {
+                        let rowData = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[y]) ? serverDbDataStore[y] : (officialData424[y] || {});
+                        let vPem = rowData.pemerintah !== undefined ? rowData.pemerintah : '-';
+                        let vSwa = rowData.swasta !== undefined ? rowData.swasta : '-';
+                        let vTot = rowData.total !== undefined ? rowData.total : '-';
+
+                        if (tableEl) {
+                            const domRow = tableEl.querySelector(`tr[data-year="${y}"]`);
+                            if (domRow) {
+                                const inputs = domRow.querySelectorAll('input');
+                                if (inputs[0] && inputs[0].value.trim() !== '') vPem = inputs[0].value.trim();
+                                if (inputs[1] && inputs[1].value.trim() !== '') vSwa = inputs[1].value.trim();
+                                if (inputs[2] && inputs[2].value.trim() !== '') vTot = inputs[2].value.trim();
+                            }
+                        }
+
+                        setCell(r, 0, y, dataCellStyle);
+
+                        const nPem = parseFloat(String(vPem).replace(',', '.'));
+                        const nSwa = parseFloat(String(vSwa).replace(',', '.'));
+                        if (!isNaN(nPem) && String(vPem) !== '-') {
+                            setCell(r, 1, nPem, dataCenterStyle);
+                        } else {
+                            setCell(r, 1, vPem, dataCenterStyle);
+                        }
+
+                        if (!isNaN(nSwa) && String(vSwa) !== '-') {
+                            setCell(r, 2, nSwa, dataCenterStyle);
+                        } else {
+                            setCell(r, 2, vSwa, dataCenterStyle);
+                        }
+
+                        if (!isNaN(nPem) && !isNaN(nSwa) && (vTot === '-' || !vTot)) {
+                            vTot = nPem + nSwa;
+                        }
+                        const nTot = parseFloat(String(vTot).replace(',', '.'));
+                        if (!isNaN(nTot) && String(vTot) !== '-') {
+                            setCell(r, 3, nTot, totalCenterStyle);
+                        } else {
+                            setCell(r, 3, vTot, totalCenterStyle);
+                        }
+                        r++;
+                    });
+
+                    // Footer Sumber
+                    r++;
+                    setCell(r, 0, 'Sumber / Source:', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    setCell(r, 1, 'DINAS KESEHATAN Kota Bukittinggi / Bukittinggi Municipality Health Office', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    footerWritten = true;
+
+                    maxCol = 4;
+                    ws['!cols'] = [
+                        { wch: 20 },
+                        { wch: 26 },
+                        { wch: 26 },
+                        { wch: 26 }
+                    ];
+                } else if (currentTableCode === '4.2.5') {
+                    // TEMPLATE TABEL 4.2.5 - DINAS KESEHATAN (PENGUNJUNG RUMAH SAKIT)
+                    const p425 = get5YearPeriod(yr);
+                    setCell(0, 1, `Jumlah Pengunjung Pada Rumah Sakit Pemerintah dan Swasta di Kota Bukittinggi, ${p425.label}`, { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } } });
+                    setCell(1, 1, `Number of Visitor at Hospital Government and Private in Bukittinggi, ${p425.label}`, { font: { name: 'Calibri', sz: 10, italic: true, color: { rgb: '000000' } } });
+
+                    // Baris Header 1 (Orange)
+                    setCell(r, 0, 'Tahun / Year', headerOrangeStyle);
+                    setCell(r, 1, 'Pemerintah / Government', headerOrangeStyle);
+                    setCell(r, 2, 'Swasta / Private', headerOrangeStyle);
+                    setCell(r, 3, 'Jumlah / Total', headerOrangeStyle);
+                    r++;
+
+                    // Baris Header 2 (Peach): (1) - (4)
+                    setCell(r, 0, '(1)', headerPeachStyle);
+                    setCell(r, 1, '(2)', headerPeachStyle);
+                    setCell(r, 2, '(3)', headerPeachStyle);
+                    setCell(r, 3, '(4)', headerPeachStyle);
+                    r++;
+
+                    const officialData425 = {
+                        2019: { pemerintah: 134841, swasta: 288153, total: 422994 },
+                        2020: { pemerintah: 154371, swasta: 304479, total: 458850 },
+                        2021: { pemerintah: 101276, swasta: 211187, total: 312463 },
+                        2022: { pemerintah: 170506, swasta: 169637, total: 340143 },
+                        2023: { pemerintah: 199642, swasta: 227969, total: 427611 },
+                        2024: { pemerintah: 205631, swasta: 234808, total: 440439 },
+                        2025: { pemerintah: 211800, swasta: 241852, total: 453652 }
+                    };
+
+                    const tableEl = document.getElementById('dataDisplayTable');
+                    const years425 = p425.yearsAsc;
+                    years425.forEach(y => {
+                        let rowData = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[y]) ? serverDbDataStore[y] : (officialData425[y] || {});
+                        let vPem = rowData.pemerintah !== undefined ? rowData.pemerintah : '-';
+                        let vSwa = rowData.swasta !== undefined ? rowData.swasta : '-';
+                        let vTot = rowData.total !== undefined ? rowData.total : '-';
+
+                        if (tableEl) {
+                            const domRow = tableEl.querySelector(`tr[data-year="${y}"]`);
+                            if (domRow) {
+                                const inputs = domRow.querySelectorAll('input');
+                                if (inputs[0] && inputs[0].value.trim() !== '') vPem = inputs[0].value.trim();
+                                if (inputs[1] && inputs[1].value.trim() !== '') vSwa = inputs[1].value.trim();
+                                if (inputs[2] && inputs[2].value.trim() !== '') vTot = inputs[2].value.trim();
+                            }
+                        }
+
+                        setCell(r, 0, y, dataCellStyle);
+
+                        const nPem = parseFloat(String(vPem).replace(',', '.'));
+                        const nSwa = parseFloat(String(vSwa).replace(',', '.'));
+                        if (!isNaN(nPem) && String(vPem) !== '-') {
+                            setCell(r, 1, nPem, dataCenterStyle);
+                        } else {
+                            setCell(r, 1, vPem, dataCenterStyle);
+                        }
+
+                        if (!isNaN(nSwa) && String(vSwa) !== '-') {
+                            setCell(r, 2, nSwa, dataCenterStyle);
+                        } else {
+                            setCell(r, 2, vSwa, dataCenterStyle);
+                        }
+
+                        if (!isNaN(nPem) && !isNaN(nSwa) && (vTot === '-' || !vTot)) {
+                            vTot = nPem + nSwa;
+                        }
+                        const nTot = parseFloat(String(vTot).replace(',', '.'));
+                        if (!isNaN(nTot) && String(vTot) !== '-') {
+                            setCell(r, 3, nTot, totalCenterStyle);
+                        } else {
+                            setCell(r, 3, vTot, totalCenterStyle);
+                        }
+                        r++;
+                    });
+
+                    // Footer Sumber
+                    r++;
+                    setCell(r, 0, 'Sumber / Source:', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    setCell(r, 1, 'DINAS KESEHATAN Kota Bukittinggi / Bukittinggi Municipality Health Office', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    footerWritten = true;
+
+                    maxCol = 4;
+                    ws['!cols'] = [
+                        { wch: 20 },
+                        { wch: 26 },
+                        { wch: 26 },
+                        { wch: 26 }
+                    ];
+                } else if (currentTableCode === '4.2.6') {
+                    // TEMPLATE TABEL 4.2.6 - DINAS KESEHATAN (KASUS PENYAKIT TERBANYAK)
+                    setCell(0, 1, `Jumlah Kasus Penyakit Terbanyak di Kota Bukittinggi, ${yr}`, { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } } });
+                    setCell(1, 1, `Number of Most Case of Disease in Bukittinggi Municipality, ${yr}`, { font: { name: 'Calibri', sz: 10, italic: true, color: { rgb: '000000' } } });
+
+                    setCell(r, 0, 'Penyakit / Desease', headerOrangeStyle);
+                    setCell(r, 1, 'Jumlah / Total', headerOrangeStyle);
+                    r++;
+
+                    setCell(r, 0, '(1)', headerPeachStyle);
+                    setCell(r, 1, '(2)', headerPeachStyle);
+                    r++;
+
+                    const histData426 = {
+                        2025: [
+                            ['01. Hipertensi / Hypertension', 12478],
+                            ['02. ISPA / Acute Respiratory Infection', 5618],
+                            ['03. Common Cold', 4999],
+                            ['04. Necrosis of pulp', 3360],
+                            ['05. Low vision', 2970],
+                            ['06. Diabetes Mellitus', 2904],
+                            ['07. Dispepsia / Dyspepsia', 1525],
+                            ['08. Respiratory infection', 1487],
+                            ['09. Faringitis / Pharyngitis', 1479],
+                            ['10. Diabetes Mellitus komplikasi / Complicated Diabetes', 584],
+                            ['total', 37404]
+                        ],
+                        2024: [
+                            ['01. Hipertensi / Hypertension', 11083],
+                            ['02. ISPA / Acute Respiratory Infection', 5576],
+                            ['03. Common Cold', 4849],
+                            ['04. Low vision', 3565],
+                            ['05. Necrosis of pulp', 2761],
+                            ['06. Diabetes Mellitus', 2664],
+                            ['07. Dispepsia / Dyspepsia', 942],
+                            ['08. Pulpitis', 825],
+                            ['09. Diabetes Mellitus komplikasi / Complicated Diabetes', 641],
+                            ['10. Faringitis / Pharyngitis', 310],
+                            ['total', 33216]
+                        ],
+                        2023: [
+                            ['01. Hipertensi / Hypertension', 9696],
+                            ['02. Common Cold', 4445],
+                            ['03. Diabetes Mellitus', 3437],
+                            ['04. ISPA / Acute Respiratory Infection', 2087],
+                            ['05. Hipertensive Heart Disease', 1921],
+                            ['06. Congestive Heart Failure', 1848],
+                            ['07. Respiratory Disorder', 1406],
+                            ['08. Gastritis', 1079],
+                            ['09. Low vision', 413],
+                            ['10. Dispepsia / Dyspepsia', 343],
+                            ['total', 26675]
+                        ]
+                    };
+
+                    const stdDiseases = [
+                        '01. Hipertensi / Hypertension',
+                        '02. ISPA / Acute Respiratory Infection',
+                        '03. Common Cold',
+                        '04. Necrosis of pulp',
+                        '05. Low vision',
+                        '06. Diabetes Mellitus',
+                        '07. Dispepsia / Dyspepsia',
+                        '08. Respiratory infection',
+                        '09. Faringitis / Pharyngitis',
+                        '10. Diabetes Mellitus komplikasi / Complicated Diabetes'
+                    ];
+
+                    let items426 = [];
+                    let tot426 = '-';
+                    if (histData426[yr]) {
+                        items426 = histData426[yr].slice(0, 10).map(x => [x[0], x[1]]);
+                        tot426 = histData426[yr][10][1];
+                    } else {
+                        items426 = stdDiseases.map(d => [d, '-']);
+                    }
+
+                    const tableEl = document.getElementById('dataDisplayTable');
+                    if (tableEl) {
+                        const trs = tableEl.querySelectorAll('tbody tr');
+                        trs.forEach((tr, trIdx) => {
+                            const inputs = tr.querySelectorAll('input');
+                            if (trIdx < 10 && items426[trIdx]) {
+                                if (inputs.length >= 2) {
+                                    if (inputs[0].value.trim()) items426[trIdx][0] = inputs[0].value.trim();
+                                    if (inputs[1].value.trim()) items426[trIdx][1] = inputs[1].value.trim();
+                                } else if (inputs.length === 1 && inputs[0].value.trim()) {
+                                    items426[trIdx][1] = inputs[0].value.trim();
+                                }
+                            } else if (trIdx === 10 && inputs[0] && inputs[0].value.trim()) {
+                                tot426 = inputs[0].value.trim();
+                            }
+                        });
+                    }
+
+                    items426.forEach(it => {
+                        setCell(r, 0, it[0], dataCellStyle);
+                        const nVal = parseFloat(String(it[1]).replace(',', '.'));
+                        setCell(r, 1, (!isNaN(nVal) && String(it[1]) !== '-') ? nVal : it[1], dataCenterStyle);
+                        r++;
+                    });
+
+                    setCell(r, 0, 'Jumlah / Total', totalCellStyle);
+                    const nTot = parseFloat(String(tot426).replace(',', '.'));
+                    setCell(r, 1, (!isNaN(nTot) && String(tot426) !== '-') ? nTot : tot426, totalCenterStyle);
+                    r++;
+
+                    r++;
+                    setCell(r, 0, 'Sumber / Source:', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    setCell(r, 1, 'Dinas Kesehatan Kota Bukittinggi / Public Health Office of Bukittinggi Municipality', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    footerWritten = true;
+
+                    maxCol = 2;
+                    ws['!cols'] = [
+                        { wch: 48 },
+                        { wch: 20 }
+                    ];
+                } else if (currentTableCode === '4.2.7') {
+                    // TEMPLATE TABEL 4.2.7 - DINAS KESEHATAN (LAHIR HIDUP, LAHIR MATI, KEMATIAN IBU)
+                    const p427 = get5YearPeriod(yr);
+                    setCell(0, 1, `Banyak Lahir Hidup, lahir Mati, dan Kematian Ibu Sewaktu Melahirkan di Kota Bukittinggi, ${p427.label}`, { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } } });
+                    setCell(1, 1, `Number of Live Birth, Still Birth and Maternal Death in Bukittinggi Municipality, ${p427.label}`, { font: { name: 'Calibri', sz: 10, italic: true, color: { rgb: '000000' } } });
+
+                    setCell(r, 0, 'Tahun / Year', headerOrangeStyle);
+                    setCell(r, 1, 'Lahir Hidup / Live Birth', headerOrangeStyle);
+                    setCell(r, 2, 'Lahir Mati / Still Birth', headerOrangeStyle);
+                    setCell(r, 3, 'Kematian Ibu Sewaktu Melahirkan / Maternal Death', headerOrangeStyle);
+                    r++;
+
+                    setCell(r, 0, '(1)', headerPeachStyle);
+                    setCell(r, 1, '(2)', headerPeachStyle);
+                    setCell(r, 2, '(3)', headerPeachStyle);
+                    setCell(r, 3, '(4)', headerPeachStyle);
+                    r++;
+
+                    const officialData427 = {
+                        2019: { hidup: 2156, mati: 7, ibu: 2 },
+                        2020: { hidup: 1865, mati: 7, ibu: 6 },
+                        2021: { hidup: 1863, mati: 3, ibu: 3 },
+                        2022: { hidup: 2286, mati: 16, ibu: 0 },
+                        2023: { hidup: 2297, mati: 3, ibu: 0 },
+                        2024: { hidup: 2161, mati: 20, ibu: 4 },
+                        2025: { hidup: 2097, mati: 14, ibu: 0 }
+                    };
+
+                    const tableEl = document.getElementById('dataDisplayTable');
+                    const years427 = p427.yearsAsc;
+                    years427.forEach(y => {
+                        let rowData = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[y]) ? serverDbDataStore[y] : (officialData427[y] || {});
+                        let vH = rowData.hidup !== undefined ? rowData.hidup : '-';
+                        let vM = rowData.mati !== undefined ? rowData.mati : '-';
+                        let vI = rowData.ibu !== undefined ? rowData.ibu : '-';
+
+                        if (tableEl) {
+                            const domRow = tableEl.querySelector(`tr[data-year="${y}"]`);
+                            if (domRow) {
+                                const inputs = domRow.querySelectorAll('input');
+                                if (inputs[0] && inputs[0].value.trim() !== '') vH = inputs[0].value.trim();
+                                if (inputs[1] && inputs[1].value.trim() !== '') vM = inputs[1].value.trim();
+                                if (inputs[2] && inputs[2].value.trim() !== '') vI = inputs[2].value.trim();
+                            }
+                        }
+
+                        setCell(r, 0, y, dataCellStyle);
+                        const nH = parseFloat(String(vH).replace(',', '.'));
+                        const nM = parseFloat(String(vM).replace(',', '.'));
+                        const nI = parseFloat(String(vI).replace(',', '.'));
+
+                        setCell(r, 1, (!isNaN(nH) && String(vH) !== '-') ? nH : vH, dataCenterStyle);
+                        setCell(r, 2, (!isNaN(nM) && String(vM) !== '-') ? nM : vM, dataCenterStyle);
+                        setCell(r, 3, (!isNaN(nI) && String(vI) !== '-') ? nI : vI, dataCenterStyle);
+                        r++;
+                    });
+
+                    r++;
+                    setCell(r, 0, 'Sumber / Source:', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    setCell(r, 1, 'Dinas Kesehatan Kota Bukittinggi / Public Health Office of Bukittinggi Municipality', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    footerWritten = true;
+
+                    maxCol = 4;
+                    ws['!cols'] = [
+                        { wch: 18 },
+                        { wch: 25 },
+                        { wch: 25 },
+                        { wch: 32 }
+                    ];
+                } else if (currentTableCode === '4.2.12') {
+                        let mIdx = 0;
+                        dataRows.forEach(r => {
+                            const first = (r[0] ?? '').toString().trim();
+                            if (first !== '' && !first.toLowerCase().includes('bulan') && !first.includes('(1)')) {
+                                if (trs[mIdx]) {
+                                    const inps = trs[mIdx].querySelectorAll('.table-edit-input');
+                                    const v1 = sanitizeExcelNumericCell(r[1]);
+                                    const v2 = sanitizeExcelNumericCell(r[2]);
+                                    if (inps[0] && v1 !== '' && v1 !== '-') {
+                                        inps[0].value = v1;
+                                        inps[0].classList.add('bg-amber-100');
+                                        filledCount++;
+                                    }
+                                    if (inps[1] && v2 !== '' && v2 !== '-') {
+                                        inps[1].value = v2;
+                                        inps[1].classList.add('bg-amber-100');
+                                        filledCount++;
+                                    }
+                                }
+                                mIdx++;
+                            }
+                        });
+                    } else if (currentTableCode === '4.2.13') {
+                        let catIdx = 0;
+                        dataRows.forEach(r => {
+                            const first = (r[0] ?? '').toString().trim();
+                            if (first !== '' && !first.toLowerCase().includes('jenis') && !first.includes('(1)')) {
+                                if (trs[catIdx]) {
+                                    const inps = trs[catIdx].querySelectorAll('.table-edit-input');
+                                    inps.forEach((inp, colI) => {
+                                        const v = sanitizeExcelNumericCell(r[colI + 1]);
+                                        if (v !== '' && v !== '-') {
+                                            inp.value = v;
+                                            inp.classList.add('bg-amber-100');
+                                            filledCount++;
+                                        }
+                                    });
+                                }
+                                catIdx++;
+                            }
+                        });
+                    } else if (currentTableCode === '4.2.14') {
+                        let srcIdx = 0;
+                        dataRows.forEach(r => {
+                            const first = (r[0] ?? '').toString().trim();
+                            if (first !== '' && !first.toLowerCase().includes('sumber') && !first.includes('(1)')) {
+                                if (trs[srcIdx]) {
+                                    const inps = trs[srcIdx].querySelectorAll('.table-edit-input');
+                                    const v1 = sanitizeExcelNumericCell(r[1]);
+                                    const v2 = sanitizeExcelNumericCell(r[2]);
+                                    if (inps[0] && v1 !== '' && v1 !== '-') {
+                                        inps[0].value = v1;
+                                        inps[0].classList.add('bg-amber-100');
+                                        filledCount++;
+                                    }
+                                    if (inps[1] && v2 !== '' && v2 !== '-') {
+                                        inps[1].value = v2;
+                                        inps[1].classList.add('bg-amber-100');
+                                        filledCount++;
+                                    }
+                                }
+                                srcIdx++;
+                            }
+                        });
+                    } else if (currentTableCode === '4.2.9') {
+                    // TEMPLATE TABEL 4.2.9 - DINAS KESEHATAN (DOKTER PRAKTEK MENURUT KEAHLIAN)
+                    const p429 = get5YearPeriod(yr);
+                    setCell(0, 1, `Jumlah Dokter Praktek Menurut Keahlian di Kota Bukittinggi, ${p429.label}`, { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } } });
+                    setCell(1, 1, `Number of Medical Specialist by Specialty in Bukittinggi, ${p429.label}`, { font: { name: 'Calibri', sz: 10, italic: true, color: { rgb: '000000' } } });
+
+                    const years429 = p429.yearsAsc;
+                    setCell(r, 0, 'Jabatan / Occupation', headerOrangeStyle);
+                    years429.forEach((y, i) => setCell(r, 1 + i, y, headerOrangeStyle));
+                    r++;
+
+                    setCell(r, 0, '(1)', headerPeachStyle);
+                    years429.forEach((y, i) => setCell(r, 1 + i, `(${i + 2})`, headerPeachStyle));
+                    r++;
+
+                    const profs429 = [
+                        '01. Dokter Spesialis Penyakit Dalam / Internist',
+                        '02. Dokter Spesialis Anak / Paediatrician',
+                        '03. Dokter Spesialis Obstetri dan Ginekologi / Obstetrician and Gynecologist',
+                        '04. Dokter Spesialis Bedah / Surgeon',
+                        '05. Dokter Spesialis Radiologi / Radiologist',
+                        '06. Dokter Spesialis Anestesiologi / Anesthesiologist',
+                        '07. Dokter Spesialis Lainnya / Other Specialist Doctors',
+                        '08. Dokter Gigi Spesialis Lainnya / Other Specialist Dentists',
+                        '09. Dokter Umum / General Practitioner',
+                        '10. Dokter Gigi / Dentist',
+                        '11. Apoteker / Pharmacist',
+                        '12. Asisten Apoteker / Pharmacist Assistant',
+                        '13. Fisioterapis / Physiotherapist',
+                        '14. Analisis Kesehatan / Medical Analyst',
+                        '15. Radiografer / Radiographer',
+                        '16. Perekam Medik / Medical Record',
+                        '17. Refraksionis Optisien / Refractionist Optician'
+                    ];
+
+                    const histData429 = {
+                        2020: [19, 14, 18, 27, 9, 14, 79, 2, 126, 54, 80, 133, 15, 53, 24, 42, 14],
+                        2021: [22, 15, 20, 29, 10, 16, 85, 2, 135, 58, 88, 140, 16, 58, 26, 45, 15],
+                        2022: [25, 17, 21, 30, 12, 18, 92, 3, 142, 60, 95, 145, 18, 62, 28, 48, 16],
+                        2023: [28, 19, 23, 32, 13, 20, 98, 3, 150, 63, 102, 152, 20, 66, 30, 52, 17],
+                        2024: [32, 21, 25, 35, 15, 22, 108, 4, 162, 67, 112, 160, 22, 72, 33, 56, 19],
+                        2025: [32, 21, 25, 35, 15, 22, 108, 4, 162, 67, 112, 160, 22, 72, 33, 56, 19]
+                    };
+
+                    const tableEl = document.getElementById('dataDisplayTable');
+                    profs429.forEach((profName, pIdx) => {
+                        setCell(r, 0, profName, dataCellStyle);
+                        years429.forEach((y, i) => {
+                            let val = (histData429[y] && histData429[y][pIdx] !== undefined) ? histData429[y][pIdx] : '-';
+                            if (tableEl) {
+                                const domRow = tableEl.querySelector(`tr[data-prof-index="${pIdx}"]`);
+                                if (domRow) {
+                                    const inputs = domRow.querySelectorAll('input');
+                                    if (inputs[i] && inputs[i].value.trim() !== '') val = inputs[i].value.trim();
+                                }
+                            }
+                            const nVal = parseFloat(String(val).replace(',', '.'));
+                            setCell(r, 1 + i, (!isNaN(nVal) && String(val) !== '-') ? nVal : val, dataCenterStyle);
+                        });
+                        r++;
+                    });
+
+                    // Total Row
+                    setCell(r, 0, 'Jumlah / Total', totalCellStyle);
+                    years429.forEach((y, i) => {
+                        let colSum = 0;
+                        let hasData = false;
+                        for (let pIdx = 0; pIdx < 17; pIdx++) {
+                            let val = (histData429[y] && histData429[y][pIdx] !== undefined) ? histData429[y][pIdx] : '-';
+                            if (tableEl) {
+                                const domRow = tableEl.querySelector(`tr[data-prof-index="${pIdx}"]`);
+                                if (domRow) {
+                                    const inputs = domRow.querySelectorAll('input');
+                                    if (inputs[i] && inputs[i].value.trim() !== '') val = inputs[i].value.trim();
+                                }
+                            }
+                            const num = parseFloat(String(val).replace(',', '.'));
+                            if (!isNaN(num) && String(val) !== '-') {
+                                colSum += num;
+                                hasData = true;
+                            }
+                        }
+                        setCell(r, 1 + i, hasData ? colSum : '-', totalCenterStyle);
+                    });
+                    r++;
+
+                    r++;
+                    setCell(r, 0, 'Sumber / Source:', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    setCell(r, 1, 'Dinas Kesehatan Kota Bukittinggi / Public Health Office of Bukittinggi Municipality', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    footerWritten = true;
+
+                    maxCol = 6;
+                    ws['!cols'] = [
+                        { wch: 48 },
+                        { wch: 15 },
+                        { wch: 15 },
+                        { wch: 15 },
+                        { wch: 15 },
+                        { wch: 15 }
+                    ];
+                } else if (currentTableCode === '4.2.10') {
+                    // TEMPLATE TABEL 4.2.10 - DINAS KESEHATAN (KUNJUNGAN PUSKESMAS)
+                    const p4210 = get5YearPeriod(yr);
+                    setCell(0, 1, `Jumlah Kunjungan dan Rata–rata Kunjungan per Hari pada Puskesmas Kota Bukittinggi di Kota Bukittinggi, ${p4210.label}`, { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } } });
+                    setCell(1, 1, `Number of Attendence and Average Daily Attendence to puskesmas in Bukittinggi Municipality in Bukittinggi, ${p4210.label}`, { font: { name: 'Calibri', sz: 10, italic: true, color: { rgb: '000000' } } });
+
+                    setCell(r, 0, 'Tahun / Year', headerOrangeStyle);
+                    setCell(r, 1, 'Penderita / Patient - Baru / New', headerOrangeStyle);
+                    setCell(r, 2, 'Penderita / Patient - Lama / Old', headerOrangeStyle);
+                    setCell(r, 3, 'Kunjungan / Attendence', headerOrangeStyle);
+                    setCell(r, 4, 'Rata–rata Kunjungan per Hari / Average Daily Attendence', headerOrangeStyle);
+                    r++;
+
+                    setCell(r, 0, '(1)', headerPeachStyle);
+                    setCell(r, 1, '(2)', headerPeachStyle);
+                    setCell(r, 2, '(3)', headerPeachStyle);
+                    setCell(r, 3, '(4)', headerPeachStyle);
+                    setCell(r, 4, '(5)', headerPeachStyle);
+                    r++;
+
+                    const officialData4210 = {
+                        2017: { baru: 26082, lama: 91162, kunjungan: 117244, rata: 58 },
+                        2018: { baru: 25272, lama: 90319, kunjungan: 115591, rata: 58 },
+                        2019: { baru: 20975, lama: 93073, kunjungan: 114048, rata: 58 },
+                        2020: { baru: 22375, lama: 91420, kunjungan: 114155, rata: 58 },
+                        2021: { baru: 22710, lama: 48812, kunjungan: 71522, rata: 35 },
+                        2022: { baru: 22428, lama: 89412, kunjungan: 111840, rata: 55 },
+                        2023: { baru: 18534, lama: 113450, kunjungan: 131984, rata: 63 },
+                        2024: { baru: 12023, lama: 122306, kunjungan: 134329, rata: 53 },
+                        2025: { baru: 10820, lama: 139147, kunjungan: 149967, rata: 81 }
+                    };
+
+                    const tableEl = document.getElementById('dataDisplayTable');
+                    const years4210 = p4210.yearsAsc;
+                    years4210.forEach(y => {
+                        let rowData = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[y]) ? serverDbDataStore[y] : (officialData4210[y] || {});
+                        let vB = rowData.baru !== undefined ? rowData.baru : '-';
+                        let vL = rowData.lama !== undefined ? rowData.lama : '-';
+                        let vK = rowData.kunjungan !== undefined ? rowData.kunjungan : '-';
+                        let vR = rowData.rata !== undefined ? rowData.rata : '-';
+
+                        if (tableEl) {
+                            const domRow = tableEl.querySelector(`tr[data-year="${y}"]`);
+                            if (domRow) {
+                                const inputs = domRow.querySelectorAll('input');
+                                if (inputs[0] && inputs[0].value.trim() !== '') vB = inputs[0].value.trim();
+                                if (inputs[1] && inputs[1].value.trim() !== '') vL = inputs[1].value.trim();
+                                if (inputs[2] && inputs[2].value.trim() !== '') vK = inputs[2].value.trim();
+                                if (inputs[3] && inputs[3].value.trim() !== '') vR = inputs[3].value.trim();
+                            }
+                        }
+
+                        setCell(r, 0, y, dataCellStyle);
+                        const nB = parseFloat(String(vB).replace(',', '.'));
+                        const nL = parseFloat(String(vL).replace(',', '.'));
+                        const nK = parseFloat(String(vK).replace(',', '.'));
+                        const nR = parseFloat(String(vR).replace(',', '.'));
+
+                        setCell(r, 1, (!isNaN(nB) && String(vB) !== '-') ? nB : vB, dataCenterStyle);
+                        setCell(r, 2, (!isNaN(nL) && String(vL) !== '-') ? nL : vL, dataCenterStyle);
+                        setCell(r, 3, (!isNaN(nK) && String(vK) !== '-') ? nK : vK, dataCenterStyle);
+                        setCell(r, 4, (!isNaN(nR) && String(vR) !== '-') ? nR : vR, dataCenterStyle);
+                        r++;
+                    });
+
+                    r++;
+                    setCell(r, 0, 'Sumber / Source:', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    setCell(r, 1, 'DINAS KESEHATAN Kota Bukittinggi / Public Health Office of Bukittinggi Municipality', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    footerWritten = true;
+
+                    maxCol = 5;
+                    ws['!cols'] = [
+                        { wch: 18 },
+                        { wch: 25 },
+                        { wch: 25 },
+                        { wch: 25 },
+                        { wch: 28 }
+                    ];
+                } else if (currentTableCode === '4.2.15') {
+                    // TEMPLATE TABEL 4.2.15 - DINAS LINGKUNGAN HIDUP (PERSONIL & SARANA KEBERSIHAN)
+                    const p4215 = get5YearPeriod(yr);
+                    setCell(0, 1, `Jumlah Personil dan Sarana Kebersihan dan Pertamanan di Kota Bukittinggi, ${p4215.label}`, { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } } });
+                    setCell(1, 1, `Number of Personal, Tools and Equipment Cleanners in Bukittinggi, ${p4215.label}`, { font: { name: 'Calibri', sz: 10, italic: true, color: { rgb: '000000' } } });
+
+                    setCell(r, 0, 'Tahun / Year', headerOrangeStyle);
+                    setCell(r, 1, 'Pegawai / Personil', headerOrangeStyle);
+                    setCell(r, 2, 'Truk Sampah / Truck of Trash (unit)', headerOrangeStyle);
+                    setCell(r, 3, 'Gerobak / Wagon (unit)', headerOrangeStyle);
+                    setCell(r, 4, 'Becak Dayung / Tricycle (unit)', headerOrangeStyle);
+                    setCell(r, 5, 'Becak Motor / Motor Tricycle (unit)', headerOrangeStyle);
+                    r++;
+
+                    setCell(r, 0, '(1)', headerPeachStyle);
+                    setCell(r, 1, '(2)', headerPeachStyle);
+                    setCell(r, 2, '(3)', headerPeachStyle);
+                    setCell(r, 3, '(4)', headerPeachStyle);
+                    setCell(r, 4, '(5)', headerPeachStyle);
+                    setCell(r, 5, '(6)', headerPeachStyle);
+                    r++;
+
+                    const officialData4215 = {
+                        2017: { pegawai: 257, truk: 17, gerobak: 58, becak_dayung: 8, becak_motor: 58 },
+                        2018: { pegawai: 290, truk: 20, gerobak: 59, becak_dayung: 17, becak_motor: 62 },
+                        2019: { pegawai: 287, truk: 19, gerobak: 39, becak_dayung: 13, becak_motor: 46 },
+                        2020: { pegawai: 289, truk: 20, gerobak: 24, becak_dayung: 17, becak_motor: 45 },
+                        2021: { pegawai: 313, truk: 20, gerobak: 24, becak_dayung: 10, becak_motor: 42 },
+                        2022: { pegawai: 308, truk: 23, gerobak: 22, becak_dayung: 8, becak_motor: 45 },
+                        2023: { pegawai: 292, truk: 17, gerobak: 22, becak_dayung: 8, becak_motor: 40 },
+                        2024: { pegawai: 286, truk: 21, gerobak: 26, becak_dayung: '-', becak_motor: 39 },
+                        2025: { pegawai: 258, truk: 17, gerobak: 51, becak_dayung: '-', becak_motor: 51 }
+                    };
+
+                    const tableEl = document.getElementById('dataDisplayTable');
+                    const years4215 = p4215.yearsAsc;
+                    years4215.forEach(y => {
+                        let rowData = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[y]) ? serverDbDataStore[y] : (officialData4215[y] || {});
+                        let vP = rowData.pegawai !== undefined ? rowData.pegawai : '-';
+                        let vT = rowData.truk !== undefined ? rowData.truk : '-';
+                        let vG = rowData.gerobak !== undefined ? rowData.gerobak : '-';
+                        let vBD = rowData.becak_dayung !== undefined ? rowData.becak_dayung : '-';
+                        let vBM = rowData.becak_motor !== undefined ? rowData.becak_motor : '-';
+
+                        if (tableEl) {
+                            const domRow = tableEl.querySelector(`tr[data-year="${y}"]`);
+                            if (domRow) {
+                                const inputs = domRow.querySelectorAll('input');
+                                if (inputs[0] && inputs[0].value.trim() !== '') vP = inputs[0].value.trim();
+                                if (inputs[1] && inputs[1].value.trim() !== '') vT = inputs[1].value.trim();
+                                if (inputs[2] && inputs[2].value.trim() !== '') vG = inputs[2].value.trim();
+                                if (inputs[3] && inputs[3].value.trim() !== '') vBD = inputs[3].value.trim();
+                                if (inputs[4] && inputs[4].value.trim() !== '') vBM = inputs[4].value.trim();
+                            }
+                        }
+
+                        setCell(r, 0, y, dataCellStyle);
+                        const nP = parseFloat(String(vP).replace(',', '.'));
+                        const nT = parseFloat(String(vT).replace(',', '.'));
+                        const nG = parseFloat(String(vG).replace(',', '.'));
+                        const nBD = parseFloat(String(vBD).replace(',', '.'));
+                        const nBM = parseFloat(String(vBM).replace(',', '.'));
+
+                        setCell(r, 1, (!isNaN(nP) && String(vP) !== '-') ? nP : vP, dataCenterStyle);
+                        setCell(r, 2, (!isNaN(nT) && String(vT) !== '-') ? nT : vT, dataCenterStyle);
+                        setCell(r, 3, (!isNaN(nG) && String(vG) !== '-') ? nG : vG, dataCenterStyle);
+                        setCell(r, 4, (!isNaN(nBD) && String(vBD) !== '-') ? nBD : vBD, dataCenterStyle);
+                        setCell(r, 5, (!isNaN(nBM) && String(vBM) !== '-') ? nBM : vBM, dataCenterStyle);
+                        r++;
+                    });
+
+                    r++;
+                    setCell(r, 0, 'Sumber / Source:', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    setCell(r, 1, 'Dinas Lingkungan Hidup Kota Bukittinggi / Environmental Services Bukittinggi Municipality', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    footerWritten = true;
+
+                    maxCol = 6;
+                    ws['!cols'] = [
+                        { wch: 18 },
+                        { wch: 22 },
+                        { wch: 32 },
+                        { wch: 24 },
+                        { wch: 28 },
+                        { wch: 32 }
+                    ];
+                } else if (currentTableCode === '4.2.16') {
+                    // TEMPLATE TABEL 4.2.16 - DINAS LINGKUNGAN HIDUP (TIMBUNAN & VOLUME SAMPAH)
+                    const p4216 = get5YearPeriod(yr);
+                    setCell(0, 1, `Jumlah Timbunan dan Volume Sampah yang Diangkut di Kota Bukittinggi, ${p4216.label}`, { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } } });
+                    setCell(1, 1, `Rubbish Heap and Volume of Rubbish Carried in Bukittinggi Municipality, ${p4216.label}`, { font: { name: 'Calibri', sz: 10, italic: true, color: { rgb: '000000' } } });
+
+                    setCell(r, 0, 'Tahun / Year', headerOrangeStyle);
+                    setCell(r, 1, 'Perkiraan Timbunan Sampah / Estimation Heap of Rubbish (m3)', headerOrangeStyle);
+                    setCell(r, 2, 'Volume Sampah yang Terangkut / Volume of Rubbish is Carried (m3)', headerOrangeStyle);
+                    r++;
+
+                    setCell(r, 0, '(1)', headerPeachStyle);
+                    setCell(r, 1, '(2)', headerPeachStyle);
+                    setCell(r, 2, '(3)', headerPeachStyle);
+                    r++;
+
+                    const officialData4216 = {
+                        2017: { timbunan: '-', terangkut: '-' },
+                        2018: { timbunan: '-', terangkut: '-' },
+                        2019: { timbunan: '-', terangkut: '-' },
+                        2020: { timbunan: '45.068 (ton)', terangkut: '40.424 (ton)' },
+                        2021: { timbunan: '51.254 (ton)', terangkut: '44.206 (ton)' },
+                        2022: { timbunan: '45.707 (ton)', terangkut: '38.235 (ton)' },
+                        2023: { timbunan: '47.450 (ton)', terangkut: '36.549 (ton)' },
+                        2024: { timbunan: '49.554 (ton)', terangkut: '35.394 (ton)' },
+                        2025: { timbunan: '49.170 (ton)', terangkut: '32.972 (ton)' }
+                    };
+
+                    const tableEl = document.getElementById('dataDisplayTable');
+                    const years4216 = p4216.yearsAsc;
+                    years4216.forEach(y => {
+                        let rowData = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[y]) ? serverDbDataStore[y] : (officialData4216[y] || {});
+                        let vTim = rowData.timbunan !== undefined ? rowData.timbunan : '-';
+                        let vTer = rowData.terangkut !== undefined ? rowData.terangkut : '-';
+
+                        if (tableEl) {
+                            const domRow = tableEl.querySelector(`tr[data-year="${y}"]`);
+                            if (domRow) {
+                                const inputs = domRow.querySelectorAll('input');
+                                if (inputs[0] && inputs[0].value.trim() !== '') vTim = inputs[0].value.trim();
+                                if (inputs[1] && inputs[1].value.trim() !== '') vTer = inputs[1].value.trim();
+                            }
+                        }
+
+                        setCell(r, 0, y, dataCellStyle);
+                        setCell(r, 1, vTim, dataCenterStyle);
+                        setCell(r, 2, vTer, dataCenterStyle);
+                        r++;
+                    });
+
+                    r++;
+                    setCell(r, 0, 'Sumber / Source:', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    setCell(r, 1, 'Dinas Lingkungan Hidup Kota Bukittinggi / Environmental Services Bukittinggi Municipality', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    footerWritten = true;
+
+                    maxCol = 3;
+                    ws['!cols'] = [
+                        { wch: 18 },
+                        { wch: 38 },
+                        { wch: 38 }
+                    ];
+                } else if (currentTableCode === '4.2.12') {
+                    // TEMPLATE TABEL 4.2.12 - DINAS LINGKUNGAN HIDUP (TIMBUNAN & VOLUME SAMPAH BULANAN)
+                    titleId = `Perkiraan Rata–rata Timbunan Sampah dan Volume Sampah yang Terangkut per Hari Setiap Bulan di Kota Bukittinggi, ${yr}`;
+                    titleEn = `Estimation of Rubbish Heap and Volume of Rubbish Carry Out per Day Monthly in Bukittinggi, ${yr}`;
+                    setCell(0, 1, titleId, { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } } });
+                    setCell(1, 1, titleEn, { font: { name: 'Calibri', sz: 10, italic: true, color: { rgb: '000000' } } });
+
+                    setCell(r, 0, 'Bulan / Month', headerOrangeStyle);
+                    setCell(r, 1, 'Sampah per Hari / Number of Rubbish Heap (ton)', headerOrangeStyle);
+                    setCell(r, 2, 'Volume Sampah yang Terangkut per Hari / Volume of Rubbish Carry Out by Day (ton)', headerOrangeStyle);
+                    r++;
+
+                    setCell(r, 0, '(1)', headerPeachStyle);
+                    setCell(r, 1, '(2)', headerPeachStyle);
+                    setCell(r, 2, '(3)', headerPeachStyle);
+                    r++;
+
+                    const officialData4212 = {
+                        1: { timbunan: 110.91, terangkut: 108.35 },
+                        2: { timbunan: 100.88, terangkut: 98.32 },
+                        3: { timbunan: 111.72, terangkut: 109.16 },
+                        4: { timbunan: 104.32, terangkut: 101.76 },
+                        5: { timbunan: 95.19, terangkut: 88.32 },
+                        6: { timbunan: 90.67, terangkut: 83.8 },
+                        7: { timbunan: 90.12, terangkut: 83.25 },
+                        8: { timbunan: 85.16, terangkut: 78.29 },
+                        9: { timbunan: 79, terangkut: 72.13 },
+                        10: { timbunan: 85.77, terangkut: 78.9 },
+                        11: { timbunan: 75.67, terangkut: 68.8 },
+                        12: { timbunan: 119.45, terangkut: 112.58 }
+                    };
+
+                    const months4212 = [
+                        '01. Januari / January', '02. Februari / February', '03. Maret / March',
+                        '04. April / April', '05. Mei / May', '06. Juni / June',
+                        '07. Juli / July', '08. Agustus / August', '09. September / September',
+                        '10. Oktober / October', '11. November / November', '12. Desember / December'
+                    ];
+
+                    const tableEl = document.getElementById('dataDisplayTable');
+                    months4212.forEach((mLabel, mIdx) => {
+                        const mNum = mIdx + 1;
+                        let rowData = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[yr] && serverDbDataStore[yr][mNum]) ? serverDbDataStore[yr][mNum] : (officialData4212[mNum] || {});
+                        let vTim = rowData.timbunan !== undefined ? rowData.timbunan : '-';
+                        let vTer = rowData.terangkut !== undefined ? rowData.terangkut : '-';
+
+                        if (tableEl) {
+                            const domRow = tableEl.querySelector(`tr[data-month="${mNum}"]`);
+                            if (domRow) {
+                                const inputs = domRow.querySelectorAll('input');
+                                if (inputs[0] && inputs[0].value.trim() !== '') vTim = inputs[0].value.trim();
+                                if (inputs[1] && inputs[1].value.trim() !== '') vTer = inputs[1].value.trim();
+                            }
+                        }
+
+                        setCell(r, 0, mLabel, dataCellStyle);
+                        const nTim = parseFloat(String(vTim).replace(',', '.'));
+                        const nTer = parseFloat(String(vTer).replace(',', '.'));
+                        setCell(r, 1, (!isNaN(nTim) && String(vTim) !== '-') ? nTim : vTim, dataCenterStyle);
+                        setCell(r, 2, (!isNaN(nTer) && String(vTer) !== '-') ? nTer : vTer, dataCenterStyle);
+                        r++;
+                    });
+
+                    r++;
+                    setCell(r, 0, 'Sumber / Source:', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    setCell(r, 1, 'Dinas Lingkungan Hidup Kota Bukittinggi / Environmental Services Bukittinggi Municipality', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    footerWritten = true;
+
+                    maxCol = 3;
+                    ws['!cols'] = [
+                        { wch: 30 },
+                        { wch: 35 },
+                        { wch: 45 }
+                    ];
+                } else if (currentTableCode === '4.2.13') {
+                    // TEMPLATE TABEL 4.2.13 - DINAS LINGKUNGAN HIDUP (KOMPOSISI SAMPAH 5 TAHUN)
+                    const p4213 = get5YearPeriod(yr);
+                    titleId = `Persentase Komposisi Sampah di Kota Bukittinggi (%), ${p4213.label}`;
+                    titleEn = `Percentage of Rubbish Composition in Bukittinggi (%), ${p4213.label}`;
+                    setCell(0, 1, titleId, { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } } });
+                    setCell(1, 1, titleEn, { font: { name: 'Calibri', sz: 10, italic: true, color: { rgb: '000000' } } });
+
+                    const years4213 = p4213.yearsAsc;
+                    setCell(r, 0, 'Jenis Sampah / Kind of Rubbish', headerOrangeStyle);
+                    years4213.forEach((y, i) => setCell(r, 1 + i, y, headerOrangeStyle));
+                    r++;
+
+                    setCell(r, 0, '(1)', headerPeachStyle);
+                    years4213.forEach((y, i) => setCell(r, 1 + i, `(${i + 2})`, headerPeachStyle));
+                    r++;
+
+                    const officialData4213 = {
+                        2017: { organik: '-', logam: '-', plastik: '-', kaca: '-', kertas: '-', lainnya: '-', total: '-' },
+                        2018: { organik: '-', logam: '-', plastik: '-', kaca: '-', kertas: '-', lainnya: '-', total: '-' },
+                        2019: { organik: '-', logam: '-', plastik: '-', kaca: '-', kertas: '-', lainnya: '-', total: '-' },
+                        2020: { organik: '-', logam: '-', plastik: '-', kaca: '-', kertas: '-', lainnya: '-', total: '-' },
+                        2021: { organik: 67.06, logam: 0.64, plastik: 14.64, kaca: 0.7, kertas: 13.65, lainnya: 3.3, total: 100 },
+                        2022: { organik: 62.26, logam: 0.46, plastik: 18.72, kaca: 0.5, kertas: 16.5, lainnya: 1.56, total: 100 },
+                        2023: { organik: 69.39, logam: 0.48, plastik: 19.18, kaca: 0.3, kertas: 9.2, lainnya: 1.45, total: 100 },
+                        2024: { organik: 55.98, logam: 1.75, plastik: 21.96, kaca: 1.35, kertas: 5.51, lainnya: 13.45, total: 100 },
+                        2025: { organik: 55.98, logam: 1.75, plastik: 21.96, kaca: 1.35, kertas: 5.51, lainnya: 13.45, total: 100 }
+                    };
+
+                    const categories4213 = [
+                        { key: 'organik', label: '01. Organik' },
+                        { key: 'logam', label: '02. Logam' },
+                        { key: 'plastik', label: '03. Plastik' },
+                        { key: 'kaca', label: '04. Gelas / Kaca' },
+                        { key: 'kertas', label: '05. Kertas' },
+                        { key: 'lainnya', label: '06. Lainnya' }
+                    ];
+
+                    const tableEl = document.getElementById('dataDisplayTable');
+                    categories4213.forEach(cat => {
+                        setCell(r, 0, cat.label, dataCellStyle);
+                        years4213.forEach((y, i) => {
+                            let val = '-';
+                            if (tableEl) {
+                                const domRow = tableEl.querySelector(`tr[data-key="${cat.key}"]`);
+                                if (domRow) {
+                                    const inps = domRow.querySelectorAll('input');
+                                    if (inps[i] && inps[i].value.trim() !== '') val = inps[i].value.trim();
+                                }
+                            }
+                            if (val === '-') {
+                                const rowData = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[y]) ? serverDbDataStore[y] : (officialData4213[y] || {});
+                                val = rowData[cat.key] !== undefined ? rowData[cat.key] : '-';
+                            }
+                            const nVal = parseFloat(String(val).replace(',', '.'));
+                            setCell(r, 1 + i, (!isNaN(nVal) && String(val) !== '-') ? nVal : val, dataCenterStyle);
+                        });
+                        r++;
+                    });
+
+                    // Baris Total
+                    setCell(r, 0, 'Jumlah / Total', headerPeachStyle);
+                    years4213.forEach((y, i) => {
+                        let val = '-';
+                        if (tableEl) {
+                            const domRow = tableEl.querySelector(`tr[data-key="total"]`);
+                            if (domRow) {
+                                const inps = domRow.querySelectorAll('input');
+                                if (inps[i] && inps[i].value.trim() !== '') val = inps[i].value.trim();
+                            }
+                        }
+                        if (val === '-') {
+                            const rowData = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[y]) ? serverDbDataStore[y] : (officialData4213[y] || {});
+                            val = rowData.total !== undefined ? rowData.total : 100;
+                        }
+                        const nVal = parseFloat(String(val).replace(',', '.'));
+                        setCell(r, 1 + i, (!isNaN(nVal) && String(val) !== '-') ? nVal : val, headerPeachStyle);
+                    });
+                    r++;
+
+                    r++;
+                    setCell(r, 0, 'Sumber / Source:', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    setCell(r, 1, 'Dinas Lingkungan Hidup Kota Bukittinggi / Environmental Services Bukittinggi Municipality', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    footerWritten = true;
+
+                    maxCol = 1 + years4213.length;
+                    ws['!cols'] = [
+                        { wch: 30 },
+                        { wch: 15 },
+                        { wch: 15 },
+                        { wch: 15 },
+                        { wch: 15 },
+                        { wch: 15 }
+                    ];
+                } else if (currentTableCode === '4.2.14') {
+                    // TEMPLATE TABEL 4.2.14 - DINAS LINGKUNGAN HIDUP (SUMBER TIMBUNAN SAMPAH)
+                    titleId = `Rata–rata Timbunan Sampah yang Terangkut menurut Sumber Timbunan Sampah di Kota Bukittinggi, ${yr}`;
+                    titleEn = `Rubbish Which is Carried by Source of Rubbish in Bukittinggi Municipality, ${yr}`;
+                    setCell(0, 1, titleId, { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } } });
+                    setCell(1, 1, titleEn, { font: { name: 'Calibri', sz: 10, italic: true, color: { rgb: '000000' } } });
+
+                    setCell(r, 0, 'Sumber / Source', headerOrangeStyle);
+                    setCell(r, 1, 'Timbunan per Hari (ton)', headerOrangeStyle);
+                    setCell(r, 2, 'Persentase / Percentage', headerOrangeStyle);
+                    r++;
+
+                    setCell(r, 0, '(1)', headerPeachStyle);
+                    setCell(r, 1, '(2)', headerPeachStyle);
+                    setCell(r, 2, '(3)', headerPeachStyle);
+                    r++;
+
+                    const sources4214 = [
+                        { label: '01. Rumah Tangga / Pemukiman', timbunan: 47.43, persentase: 52.51 },
+                        { label: '02. Pasar', timbunan: 17.10, persentase: 18.93 },
+                        { label: '03. Pertokoan/Komersial Fasilitas & Umum', timbunan: 8.94, persentase: 9.9 },
+                        { label: '04. Perkantoran', timbunan: 0.42, persentase: 0.46 },
+                        { label: '05. Sekolah', timbunan: 5.36, persentase: 5.93 },
+                        { label: '06. Rumah Sakit', timbunan: 2.43, persentase: 2.69 },
+                        { label: '07. Hotel', timbunan: 6.77, persentase: 7.49 },
+                        { label: '08. Restorant', timbunan: 1.19, persentase: 1.32 },
+                        { label: '09. Lainnya', timbunan: 0.70, persentase: 0.77 },
+                        { label: 'Jumlah/ Total', timbunan: 90.33, persentase: 100 }
+                    ];
+
+                    const tableEl = document.getElementById('dataDisplayTable');
+                    sources4214.forEach((row, idx) => {
+                        let vTim = row.timbunan;
+                        let vPer = row.persentase;
+                        if (tableEl) {
+                            const domRow = tableEl.querySelector(`tr[data-index="${idx}"]`);
+                            if (domRow) {
+                                const inputs = domRow.querySelectorAll('input');
+                                if (inputs[0] && inputs[0].value.trim() !== '') vTim = inputs[0].value.trim();
+                                if (inputs[1] && inputs[1].value.trim() !== '') vPer = inputs[1].value.trim();
+                            }
+                        }
+
+                        const isTotal = row.label.toLowerCase().includes('jumlah');
+                        const styleLabel = isTotal ? headerPeachStyle : dataCellStyle;
+                        const styleVal = isTotal ? headerPeachStyle : dataCenterStyle;
+                        setCell(r, 0, row.label, styleLabel);
+                        const nTim = parseFloat(String(vTim).replace(',', '.'));
+                        const nPer = parseFloat(String(vPer).replace(',', '.'));
+                        setCell(r, 1, (!isNaN(nTim) && String(vTim) !== '-') ? nTim : vTim, styleVal);
+                        setCell(r, 2, (!isNaN(nPer) && String(vPer) !== '-') ? nPer : vPer, styleVal);
+                        r++;
+                    });
+
+                    r++;
+                    setCell(r, 0, 'Sumber / Source:', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    setCell(r, 1, 'Dinas Lingkungan Hidup Kota Bukittinggi / Environmental Services Bukittinggi Municipality', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    footerWritten = true;
+
+                    maxCol = 3;
+                    ws['!cols'] = [
+                        { wch: 40 },
+                        { wch: 25 },
+                        { wch: 25 }
+                    ];
                 } else {
                     const tableEl = document.getElementById('dataDisplayTable');
                     if (tableEl) {
@@ -4460,11 +12142,16 @@
                     }
                 }
 
-                // Footer
-                r++;
-                setCell(r, 0, `Catatan / Note: Data per-31 Desember ${yr}`, { font: { name: 'Calibri', sz: 9, italic: true } });
-                r++;
-                setCell(r, 0, `Sumber / Source: ${opdName} Kota Bukittinggi`, { font: { name: 'Calibri', sz: 9, italic: true } });
+                // Footer (hanya jika belum ditulis oleh blok tabel khusus)
+                if (!footerWritten) {
+                    r++;
+                    if (!currentTableCode.startsWith('8.1.')) {
+                        setCell(r, 0, `Catatan / Note: Data per-31 Desember ${yr}`, { font: { name: 'Calibri', sz: 9, italic: true } });
+                        r++;
+                    }
+                    const cleanFinalSource = (tableSchemas[currentTableCode] ? tableSchemas[currentTableCode].source.replace(/<[^>]*>?/gm, '').replace(/\s+/g, ' ').trim() : `${opdName} Kota Bukittinggi`).replace(/^\s*(?:sumber\s*[\/:]\s*source|sumber\s*[\/:]|source\s*[\/:]|sumber|source)\s*:\s*/i, '').trim();
+                    setCell(r, 0, `Sumber / Source: ${cleanFinalSource}`, { font: { name: 'Calibri', sz: 9, italic: true } });
+                }
 
                 ws['!merges'] = merges;
                 ws['!ref'] = XLSX.utils.encode_range({
@@ -4472,9 +12159,12 @@
                     e: { r: r + 1, c: Math.max(maxCol - 1, 1) }
                 });
 
+                const isMultiYearTable = ['4.2.4', '4.2.5', '4.2.7', '4.2.9', '4.2.10', '4.2.13', '4.2.15', '4.2.16', '8.1.1', '8.1.2', '8.1.3'].includes(currentTableCode);
+                const pFile = isMultiYearTable ? getTablePeriod(yr, currentTableCode).label.replace('–', '_') : currentYear;
+                const pLabel = isMultiYearTable ? getTablePeriod(yr, currentTableCode).label : currentYear;
                 XLSX.utils.book_append_sheet(wb, ws, `Template_${currentTableCode}`.substring(0, 31));
-                XLSX.writeFile(wb, `Template_Tabel_${currentTableCode.replace(/\./g, '_')}_${currentYear}.xlsx`);
-                showToast(`📥 Berkas template Excel Tabel ${currentTableCode} Tahun ${currentYear} berhasil diunduh!`);
+                XLSX.writeFile(wb, `Template_Tabel_${currentTableCode.replace(/\./g, '_')}_${pFile}.xlsx`);
+                showToast(`📥 Berkas template Excel Tabel ${currentTableCode} Tahun ${pLabel} berhasil diunduh!`);
             } catch (err) {
                 console.error('Error generating template in edit view:', err);
                 alert('Gagal mengunduh template Excel: ' + (err.message || err));
@@ -4500,12 +12190,39 @@
                         return;
                     }
 
+                    function sanitizeExcelNumericCell(rawVal) {
+                        if (rawVal === null || rawVal === undefined) return '-';
+                        let s = rawVal.toString().trim();
+                        if (s === '' || s === '-' || s === '–' || s === '—') return '-';
+                        if (/^\d+\.\d+\.00$/.test(s)) {
+                            return s.replace(/\.00$/, '');
+                        }
+                        const dtMatch = s.match(/(\d+)\/(\d+)\/1900\s+(\d+)[\.:](\d+)/);
+                        if (dtMatch) {
+                            const days = parseInt(dtMatch[1], 10);
+                            const hours = parseInt(dtMatch[3], 10);
+                            const mins = parseInt(dtMatch[4], 10);
+                            const totalHours = (days * 24) + hours;
+                            return `${totalHours}.${mins < 10 ? '0' + mins : mins}`;
+                        }
+                        if (typeof rawVal === 'number' && rawVal > 1 && rawVal < 10 && (rawVal % 1 !== 0)) {
+                            const rawHours = rawVal * 24;
+                            const totalHoursInt = Math.floor(rawHours);
+                            const mins = Math.round((rawHours - totalHoursInt) * 60);
+                            if (mins >= 0 && mins < 60) {
+                                return `${totalHoursInt}.${mins < 10 ? '0' + mins : mins}`;
+                            }
+                        }
+                        return s;
+                    }
+
                     // Find header row
                     let headerIdx = 0;
                     for (let i = 0; i < cleanRows.length; i++) {
                         const nonEmpties = cleanRows[i].filter(c => c !== null && c !== undefined && c.toString().trim() !== '');
                         const firstVal = (cleanRows[i][0] || '').toString().toLowerCase();
-                        if (nonEmpties.length >= 2 && !firstVal.includes('badan pusat') && !firstVal.includes('tabel ') && !firstVal.includes('bps')) {
+                        const isTitleRow = firstVal.startsWith('tabel') || firstVal.startsWith('table') || firstVal.includes('badan pusat') || firstVal.includes('bps') || /^(?:tabel|table)\b/i.test(firstVal);
+                        if (nonEmpties.length >= 2 && !isTitleRow) {
                             headerIdx = i;
                             break;
                         }
@@ -4524,6 +12241,16 @@
                             dataRows = dataRows.slice(1);
                         }
                     }
+
+                    // Filter out footer rows (e.g. Sumber / Source, Catatan / Note) from dataRows
+                    dataRows = dataRows.filter(r => {
+                        const nonEmpties = r.filter(c => c !== null && c !== undefined && c.toString().trim() !== '');
+                        if (nonEmpties.length === 0) return false;
+                        const first = (nonEmpties[0] || '').toString().toLowerCase();
+                        const isFooter = /^(?:sumber\s*[\/:]|source\s*[\/:]|catatan\s*[\/:]|note\s*[\/:]|sumber\s*:|source\s*:|catatan\s*:|note\s*:)/i.test(first) ||
+                                         ((first === 'sumber' || first === 'source' || first === 'catatan' || first === 'note') && nonEmpties.length <= 2);
+                        return !isFooter;
+                    });
 
                     const tableEl = document.getElementById('dataDisplayTable');
                     const tbody = tableEl.querySelector('tbody');
@@ -4661,7 +12388,7 @@
                             }
                         });
                     } else if (currentTableCode === '2.3.5') {
-                        ﻿const units235 = [
+                        const units235 = [
     { key: 'unit_1', no: 1, name: "01. Sekretaris Daerah", pns25: '104', pppk25: '5', pns24: '99', pppk24: '4' },
     { key: 'unit_2', no: 2, name: "02. Badan Kepegawaian dan Pengembangan Sumber Daya Manusia", pns25: '27', pppk25: '2', pns24: '27', pppk24: '0' },
     { key: 'unit_3', no: 3, name: "03. Badan Keuangan", pns25: '57', pppk25: '5', pns24: '50', pppk24: '3' },
@@ -5006,6 +12733,310 @@
                                 filledCount++;
                             }
                         });
+                    } else if (currentTableCode === '4.3.4') {
+                        const distDefs = [
+                            { key: 'guguk_panjang', match: ['guguk'] },
+                            { key: 'mandiangin_koto_selayan', match: ['mandiangin'] },
+                            { key: 'aur_birugo_tigo_baleh', match: ['aur', 'birugo'] },
+                            { key: 'total', match: ['jumlah', 'total', 'bukittinggi'] }
+                        ];
+                        const extractedMap = {};
+                        dataRows.forEach(r => {
+                            const rStr = r.map(c => (c ?? '').toString().trim()).join(' ').toLowerCase();
+                            const firstCell = (r[0] ?? r[1] ?? '').toString().toLowerCase().trim();
+                            let matched = null;
+                            for (let d of distDefs) {
+                                if (d.match.some(m => firstCell.includes(m) || rStr.includes(m))) {
+                                    matched = d.key;
+                                    break;
+                                }
+                            }
+                            if (matched) {
+                                const nums = [];
+                                for (let c = 0; c < r.length; c++) {
+                                    const raw = (r[c] !== null && r[c] !== undefined) ? r[c].toString().trim() : '';
+                                    if (!raw) continue;
+                                    if (/^(01\.|02\.|03\.|guguk|mandiangin|aur|birugo|jumlah|total|bukittinggi|\/|\s)+$/i.test(raw)) continue;
+                                    const clean = (raw === '-' || raw === '–' || raw === '—') ? '-' : raw;
+                                    nums.push(clean);
+                                }
+                                if (nums.length >= 3) {
+                                    extractedMap[matched] = nums;
+                                }
+                            }
+                        });
+
+                        trs.forEach(tr => {
+                            const k = tr.getAttribute('data-key');
+                            const inputs = tr.querySelectorAll('.table-edit-input');
+                            if (k && extractedMap[k] && inputs.length >= 4) {
+                                const vals = extractedMap[k];
+                                inputs.forEach((inp, i) => {
+                                    if (vals[i] !== undefined) {
+                                        inp.value = vals[i];
+                                        inp.classList.add('bg-amber-100');
+                                    }
+                                });
+                                filledCount++;
+                            }
+                        });
+                    } else if (currentTableCode === '9.2') {
+                        const distDefs = [
+                            { key: 'guguk_panjang', match: ['guguk'] },
+                            { key: 'mandiangin_koto_selayan', match: ['mandiangin'] },
+                            { key: 'aur_birugo_tigo_baleh', match: ['aur', 'birugo'] },
+                            { key: 'total', match: ['jumlah', 'total', 'bukittinggi'] }
+                        ];
+                        const extractedMap = {};
+                        dataRows.forEach(r => {
+                            const rStr = r.map(c => (c ?? '').toString().trim()).join(' ').toLowerCase();
+                            const firstCell = (r[0] ?? r[1] ?? '').toString().toLowerCase().trim();
+                            let matched = null;
+                            for (let d of distDefs) {
+                                if (d.match.some(m => firstCell.includes(m) || rStr.includes(m))) {
+                                    matched = d.key;
+                                    break;
+                                }
+                            }
+                            if (matched) {
+                                const nums = [];
+                                for (let c = 0; c < r.length; c++) {
+                                    const raw = (r[c] !== null && r[c] !== undefined) ? r[c].toString().trim() : '';
+                                    if (!raw) continue;
+                                    if (/^(guguk|mandiangin|aur|birugo|jumlah|total|bukittinggi|\/|\s)+$/i.test(raw)) continue;
+                                    const clean = (raw === '-' || raw === '–' || raw === '—') ? '-' : raw;
+                                    nums.push(clean);
+                                }
+                                if (nums.length >= 4) {
+                                    extractedMap[matched] = nums;
+                                }
+                            }
+                        });
+
+                        trs.forEach(tr => {
+                            const k = tr.getAttribute('data-key');
+                            const inputs = tr.querySelectorAll('.table-edit-input');
+                            if (k && extractedMap[k] && inputs.length >= 4) {
+                                const vals = extractedMap[k];
+                                inputs.forEach((inp, i) => {
+                                    if (vals[i] !== undefined) {
+                                        inp.value = vals[i];
+                                        inp.classList.add('bg-amber-100');
+                                    }
+                                });
+                                filledCount++;
+                            }
+                        });
+                    } else if (currentTableCode === '9.3') {
+                        // Match each row by Year in Excel!
+                        const yearRowMap = {};
+                        dataRows.forEach(r => {
+                            const rStr = r.map(c => (c ?? '').toString().trim()).join(' ');
+                            const m = rStr.match(/\b(20\d{2}|19\d{2})\b/);
+                            if (m) {
+                                const yr = parseInt(m[1], 10);
+                                let yrCol = 0;
+                                r.forEach((c, cIdx) => {
+                                    if ((c ?? '').toString().trim() === m[1]) yrCol = cIdx;
+                                });
+                                const nums = [];
+                                for (let c = yrCol + 1; c < r.length; c++) {
+                                    const v = (r[c] ?? '').toString().trim();
+                                    if (v !== '') nums.push(v);
+                                }
+                                yearRowMap[yr] = nums;
+                            }
+                        });
+
+                        trs.forEach(tr => {
+                            const yr = parseInt(tr.getAttribute('data-year') || tr.querySelector('td')?.innerText.trim(), 10);
+                            const inputs = tr.querySelectorAll('.table-edit-input');
+                            if (yearRowMap[yr] && inputs.length > 0) {
+                                const vals = yearRowMap[yr];
+                                inputs.forEach((inp, i) => {
+                                    if (vals[i] !== undefined) {
+                                        inp.value = vals[i];
+                                        inp.classList.add('bg-amber-100');
+                                        filledCount++;
+                                    }
+                                });
+                            }
+                        });
+                    } else if (currentTableCode === '4.2.2') {
+                        const healthMap = {};
+                        dataRows.forEach(r => {
+                            const firstCell = (r[0] || '').toString().toLowerCase();
+                            let key = null;
+                            if (firstCell.includes('guguk')) key = 'guguk';
+                            else if (firstCell.includes('mandiangin')) key = 'mks';
+                            else if (firstCell.includes('aur') || firstCell.includes('birugo')) key = 'abtb';
+                            else if (firstCell.includes('jumlah') || firstCell.includes('total')) key = 'total';
+
+                            if (key) {
+                                const vals = [];
+                                for (let c = 1; c <= 12; c++) {
+                                    const v = r[c] !== undefined && r[c] !== null ? r[c].toString().trim() : '-';
+                                    vals.push(v !== '' ? v : '-');
+                                }
+                                healthMap[key] = vals;
+                            }
+                        });
+
+                        trs.forEach(tr => {
+                            const k = tr.getAttribute('data-key');
+                            const inputs = tr.querySelectorAll('.table-edit-input');
+                            if (k && healthMap[k] && inputs.length >= 12) {
+                                const vals = healthMap[k];
+                                inputs.forEach((inp, i) => {
+                                    if (vals[i] !== undefined) {
+                                        inp.value = vals[i];
+                                        inp.classList.add('bg-amber-100');
+                                    }
+                                });
+                                filledCount++;
+                            }
+                        });
+                    } else if (currentTableCode === '4.2.4' || currentTableCode === '4.2.5' || currentTableCode === '4.2.7' || currentTableCode === '4.2.10' || currentTableCode === '4.2.15' || currentTableCode === '4.2.16') {
+                        const yearRowMap = {};
+                        dataRows.forEach(r => {
+                            const rStr = r.map(c => (c ?? '').toString().trim()).join(' ');
+                            const m = rStr.match(/\b(20\d{2}|19\d{2})\b/);
+                            if (m) {
+                                const yr = parseInt(m[1], 10);
+                                let yrCol = 0;
+                                r.forEach((c, cIdx) => {
+                                    if ((c ?? '').toString().trim() === m[1]) yrCol = cIdx;
+                                });
+                                const nums = [];
+                                for (let c = yrCol + 1; c < r.length; c++) {
+                                    const v = (r[c] ?? '').toString().trim();
+                                    if (v !== '') nums.push(v);
+                                }
+                                yearRowMap[yr] = nums;
+                            }
+                        });
+
+                        trs.forEach(tr => {
+                            const yr = parseInt(tr.getAttribute('data-year') || tr.querySelector('td')?.innerText.trim(), 10);
+                            const inputs = tr.querySelectorAll('.table-edit-input');
+                            if (yearRowMap[yr] && inputs.length > 0) {
+                                const vals = yearRowMap[yr];
+                                inputs.forEach((inp, i) => {
+                                    if (vals[i] !== undefined) {
+                                        inp.value = vals[i];
+                                        inp.classList.add('bg-amber-100');
+                                        filledCount++;
+                                    }
+                                });
+                            }
+                        });
+                    } else if (currentTableCode === '4.2.6') {
+                        let rowIdx = 0;
+                        dataRows.forEach(r => {
+                            const name = (r[0] ?? '').toString().trim();
+                            const val = (r[1] ?? '').toString().trim();
+                            if (name !== '' && val !== '' && !name.toLowerCase().includes('penyakit') && !name.includes('(1)')) {
+                                if (trs[rowIdx]) {
+                                    const inps = trs[rowIdx].querySelectorAll('.table-edit-input');
+                                    if (inps.length >= 2) {
+                                        inps[0].value = name;
+                                        inps[1].value = val;
+                                        inps[0].classList.add('bg-amber-100');
+                                        inps[1].classList.add('bg-amber-100');
+                                        filledCount++;
+                                    } else if (inps.length === 1) {
+                                        inps[0].value = val;
+                                        inps[0].classList.add('bg-amber-100');
+                                        filledCount++;
+                                    }
+                                }
+                                rowIdx++;
+                            }
+                        });
+                    } else if (currentTableCode === '4.2.12') {
+                        let mIdx = 0;
+                        dataRows.forEach(r => {
+                            const first = (r[0] ?? '').toString().trim();
+                            if (first !== '' && !first.toLowerCase().includes('bulan') && !first.includes('(1)')) {
+                                if (trs[mIdx]) {
+                                    const inps = trs[mIdx].querySelectorAll('.table-edit-input');
+                                    const v1 = sanitizeExcelNumericCell(r[1]);
+                                    const v2 = sanitizeExcelNumericCell(r[2]);
+                                    if (inps[0] && v1 !== '' && v1 !== '-') {
+                                        inps[0].value = v1;
+                                        inps[0].classList.add('bg-amber-100');
+                                        filledCount++;
+                                    }
+                                    if (inps[1] && v2 !== '' && v2 !== '-') {
+                                        inps[1].value = v2;
+                                        inps[1].classList.add('bg-amber-100');
+                                        filledCount++;
+                                    }
+                                }
+                                mIdx++;
+                            }
+                        });
+                    } else if (currentTableCode === '4.2.13') {
+                        let catIdx = 0;
+                        dataRows.forEach(r => {
+                            const first = (r[0] ?? '').toString().trim();
+                            if (first !== '' && !first.toLowerCase().includes('jenis') && !first.includes('(1)')) {
+                                if (trs[catIdx]) {
+                                    const inps = trs[catIdx].querySelectorAll('.table-edit-input');
+                                    inps.forEach((inp, colI) => {
+                                        const v = sanitizeExcelNumericCell(r[colI + 1]);
+                                        if (v !== '' && v !== '-') {
+                                            inp.value = v;
+                                            inp.classList.add('bg-amber-100');
+                                            filledCount++;
+                                        }
+                                    });
+                                }
+                                catIdx++;
+                            }
+                        });
+                    } else if (currentTableCode === '4.2.14') {
+                        let srcIdx = 0;
+                        dataRows.forEach(r => {
+                            const first = (r[0] ?? '').toString().trim();
+                            if (first !== '' && !first.toLowerCase().includes('sumber') && !first.includes('(1)')) {
+                                if (trs[srcIdx]) {
+                                    const inps = trs[srcIdx].querySelectorAll('.table-edit-input');
+                                    const v1 = sanitizeExcelNumericCell(r[1]);
+                                    const v2 = sanitizeExcelNumericCell(r[2]);
+                                    if (inps[0] && v1 !== '' && v1 !== '-') {
+                                        inps[0].value = v1;
+                                        inps[0].classList.add('bg-amber-100');
+                                        filledCount++;
+                                    }
+                                    if (inps[1] && v2 !== '' && v2 !== '-') {
+                                        inps[1].value = v2;
+                                        inps[1].classList.add('bg-amber-100');
+                                        filledCount++;
+                                    }
+                                }
+                                srcIdx++;
+                            }
+                        });
+                    } else if (currentTableCode === '4.2.9') {
+                        let profIdx = 0;
+                        dataRows.forEach(r => {
+                            const first = (r[0] ?? '').toString().trim();
+                            if (first !== '' && !first.toLowerCase().includes('jabatan') && !first.includes('(1)')) {
+                                if (trs[profIdx]) {
+                                    const inps = trs[profIdx].querySelectorAll('.table-edit-input');
+                                    inps.forEach((inp, colI) => {
+                                        const v = (r[colI + 1] ?? '').toString().trim();
+                                        if (v !== '') {
+                                            inp.value = v;
+                                            inp.classList.add('bg-amber-100');
+                                            filledCount++;
+                                        }
+                                    });
+                                }
+                                profIdx++;
+                            }
+                        });
                     } else {
                     trs.forEach((tr, rowIdx) => {
                         const excelRow = dataRows[rowIdx];
@@ -5069,6 +13100,334 @@
                     toast.classList.remove('translate-y-0', 'opacity-100');
                     toast.classList.add('translate-y-20', 'opacity-0');
                 }, 3500);
+            }
+        }
+        // ==========================================
+        // FITUR CATATAN / KOMENTAR RINCIAN DATA (DRAWER CHAT)
+        // ==========================================
+        let activeCellKey = null;
+        let activeCellLabel = '';
+        let activeCellValue = '';
+        let tableCommentsMap = {}; // key: cell_key -> [comments]
+        const currentUserData = @json(session('user') ?? ['name' => 'Pengguna', 'role' => 'opd', 'displayName' => 'Pengguna']);
+
+        async function fetchTableComments() {
+            try {
+                const res = await fetch(`{{ route('tabel-opd.api.comments') }}?table_code=${encodeURIComponent(currentTableCode)}&opd_code=${encodeURIComponent(currentOpdCode)}&year=${encodeURIComponent(currentYear)}`);
+                if (!res.ok) return;
+                const json = await res.json();
+                tableCommentsMap = json.grouped || {};
+                renderCellCommentBadges();
+            } catch (err) {
+                console.warn('Gagal memuat catatan tabel:', err);
+            }
+        }
+
+        function getHeaderTitleForCol(colIdx) {
+            const table = document.getElementById('dataDisplayTable');
+            if (!table) return `Kolom ${colIdx + 1}`;
+            const theadRows = table.querySelectorAll('thead tr');
+            if (theadRows.length === 0) return `Kolom ${colIdx + 1}`;
+
+            let title = '';
+            for (let r = theadRows.length - 1; r >= 0; r--) {
+                const ths = theadRows[r].querySelectorAll('th');
+                if (ths[colIdx] && ths[colIdx].innerText.trim() && !ths[colIdx].innerText.trim().startsWith('(')) {
+                    title = ths[colIdx].innerText.replace(/[\n\r]+/g, ' ').replace(/\s+/g, ' ').trim();
+                    break;
+                }
+            }
+            return title || `Kolom ${colIdx + 1}`;
+        }
+
+        function renderCellCommentBadges() {
+            const table = document.getElementById('dataDisplayTable');
+            if (!table) return;
+            const bodyRows = table.querySelectorAll('tbody tr');
+
+            let totalComments = 0;
+            Object.values(tableCommentsMap).forEach(arr => {
+                if (Array.isArray(arr)) totalComments += arr.length;
+            });
+            const badgeTotalEl = document.getElementById('headerTotalCommentsCount');
+            if (badgeTotalEl) badgeTotalEl.innerText = totalComments;
+
+            bodyRows.forEach((tr, rIdx) => {
+                const rowKey = tr.getAttribute('data-key') || ('row_' + rIdx);
+                const tds = tr.querySelectorAll('td');
+                if (tds.length === 0) return;
+
+                const firstTdText = tds[0].innerText.replace(/[\n\r]+/g, ' ').replace(/\s+/g, ' ').trim();
+
+                tds.forEach((td, cIdx) => {
+                    if (cIdx === 0 && tds.length > 1) return;
+
+                    const cellKey = `${rowKey}_col_${cIdx}`;
+                    td.setAttribute('data-cell-key', cellKey);
+                    td.classList.add('relative', 'group');
+
+                    const colTitle = getHeaderTitleForCol(cIdx);
+                    const cellLabel = `${firstTdText} • ${colTitle}`;
+
+                    const existingBadge = td.querySelector('.cell-comment-badge-wrap');
+                    if (existingBadge) existingBadge.remove();
+
+                    const comments = tableCommentsMap[cellKey] || [];
+                    const count = comments.length;
+
+                    const inputEl = td.querySelector('input');
+                    const cellVal = inputEl ? inputEl.value : td.innerText.replace(/[\n\r]+/g, ' ').trim();
+
+                    const badgeWrap = document.createElement('span');
+                    badgeWrap.className = 'cell-comment-badge-wrap inline-flex items-center align-middle ml-1.5';
+
+                    // Bersihkan corner pin lama jika ada
+                    const oldPin = td.querySelector('.cell-comment-corner-pin');
+                    if (oldPin) oldPin.remove();
+
+                    if (count > 0) {
+                        td.classList.add('bg-amber-100/80', 'ring-1', 'ring-orange-400');
+                        td.classList.remove('bg-orange-50/70', 'ring-orange-300');
+
+                        // Tambahkan indikator corner pin aktif di sudut kanan atas sel
+                        const cornerPin = document.createElement('span');
+                        cornerPin.className = 'cell-comment-corner-pin absolute top-0 right-0 w-2 h-2 bg-[#f95a00] rounded-bl-sm pointer-events-none';
+                        td.appendChild(cornerPin);
+
+                        // Badge hidup / jelas kelihatan dengan warna oranye SiAngka
+                        badgeWrap.innerHTML = `
+                            <button type="button" onclick="event.stopPropagation(); openCellCommentDrawer('${cellKey}', '${escapeHtml(cellLabel)}', '${escapeHtml(cellVal)}')"
+                                class="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded-full bg-[#f95a00] hover:bg-[#ea5300] text-white font-extrabold text-[10px] shadow-2xs transition-all transform hover:scale-105 cursor-pointer"
+                                title="${count} Catatan Aktif (Klik untuk buka diskusi)">
+                                <i class="fa-solid fa-comment-dots text-[9px]"></i>
+                                <span>${count}</span>
+                            </button>
+                        `;
+                    } else {
+                        td.classList.remove('bg-amber-100/80', 'ring-1', 'ring-orange-400', 'bg-orange-50/70', 'ring-orange-300');
+                        badgeWrap.innerHTML = `
+                            <button type="button" onclick="event.stopPropagation(); openCellCommentDrawer('${cellKey}', '${escapeHtml(cellLabel)}', '${escapeHtml(cellVal)}')"
+                                class="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 text-slate-400 hover:text-[#f95a00] cursor-pointer"
+                                title="Beri catatan / komentar pada data ini">
+                                <i class="fa-regular fa-comment text-[10px]"></i>
+                            </button>
+                        `;
+                    }
+
+                    td.appendChild(badgeWrap);
+                });
+            });
+        }
+
+        function openTableCommentOverview() {
+            const table = document.getElementById('dataDisplayTable');
+            const keysWithComments = Object.keys(tableCommentsMap);
+            if (keysWithComments.length > 0) {
+                const firstKey = keysWithComments[0];
+                const list = tableCommentsMap[firstKey] || [];
+                const first = list[0] || {};
+                openCellCommentDrawer(firstKey, first.cell_label || 'Rincian Data', first.cell_value || '-');
+            } else if (table) {
+                const firstTd = table.querySelector('tbody tr td[data-cell-key]');
+                if (firstTd) {
+                    const k = firstTd.getAttribute('data-cell-key');
+                    const row = firstTd.closest('tr');
+                    const rowLabel = row ? row.querySelector('td').innerText.trim() : 'Rincian';
+                    const cIdx = Array.from(row.children).indexOf(firstTd);
+                    const colTitle = getHeaderTitleForCol(cIdx);
+                    const inputEl = firstTd.querySelector('input');
+                    const val = inputEl ? inputEl.value : firstTd.innerText.trim();
+                    openCellCommentDrawer(k, `${rowLabel} • ${colTitle}`, val);
+                } else {
+                    openCellCommentDrawer(`table_${currentTableCode}_general`, `Tabel ${currentTableCode} (${currentYear})`, '-');
+                }
+            } else {
+                openCellCommentDrawer(`table_${currentTableCode}_general`, `Tabel ${currentTableCode} (${currentYear})`, '-');
+            }
+        }
+
+        function openCellCommentDrawer(cellKey, cellLabel, cellValue) {
+            activeCellKey = cellKey;
+            activeCellLabel = cellLabel || 'Rincian Data';
+            activeCellValue = cellValue || '-';
+
+            const labelEl = document.getElementById('drawerCellLabel');
+            if (labelEl) {
+                labelEl.innerText = activeCellLabel;
+                labelEl.title = activeCellLabel;
+            }
+
+            const valEl = document.getElementById('drawerCellValue');
+            if (valEl) {
+                valEl.innerText = activeCellValue || '-';
+            }
+
+            renderDrawerStream();
+
+            const drawer = document.getElementById('cellCommentDrawer');
+            const backdrop = document.getElementById('cellCommentDrawerBackdrop');
+            if (drawer) {
+                drawer.classList.remove('translate-x-full');
+            }
+            if (backdrop) {
+                backdrop.classList.remove('opacity-0', 'pointer-events-none');
+            }
+
+            setTimeout(() => {
+                const input = document.getElementById('drawerCommentInput');
+                if (input) input.focus();
+            }, 200);
+        }
+
+        function closeCellCommentDrawer() {
+            const drawer = document.getElementById('cellCommentDrawer');
+            const backdrop = document.getElementById('cellCommentDrawerBackdrop');
+            if (drawer) {
+                drawer.classList.add('translate-x-full');
+            }
+            if (backdrop) {
+                backdrop.classList.add('opacity-0', 'pointer-events-none');
+            }
+            activeCellKey = null;
+        }
+
+        function renderDrawerStream() {
+            const stream = document.getElementById('drawerCommentsStream');
+            const countBadge = document.getElementById('drawerCommentCountBadge');
+            if (!stream) return;
+
+            const comments = (activeCellKey && tableCommentsMap[activeCellKey]) ? tableCommentsMap[activeCellKey] : [];
+            if (countBadge) {
+                countBadge.innerText = `${comments.length} catatan`;
+            }
+
+            if (comments.length === 0) {
+                stream.innerHTML = `
+                    <div class="my-auto py-8 px-4 text-center">
+                        <div class="border border-dashed border-slate-300 rounded-2xl p-6 text-center bg-white shadow-2xs max-w-sm mx-auto">
+                            <div class="w-14 h-14 rounded-full bg-orange-100/80 text-[#f95a00] flex items-center justify-center mx-auto mb-3.5 shadow-2xs">
+                                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                </svg>
+                            </div>
+                            <h4 class="font-bold text-slate-800 text-sm mb-1.5">Tidak ada catatan</h4>
+                            <p class="text-xs text-slate-500 leading-relaxed max-w-[240px] mx-auto">
+                                Belum ada catatan untuk rincian ini. Pencacah dan pengawas dapat saling memberikan komentar di bawah.
+                            </p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                let html = '<div class="space-y-3">';
+                comments.forEach(c => {
+                    const isAdmin = (c.user_role === 'admin');
+                    const roleBadgeClass = isAdmin ? 'bg-orange-100 text-orange-800' : 'bg-emerald-100 text-emerald-800';
+                    const roleLabel = isAdmin ? 'BPS' : (c.user_role === 'instansi' ? 'INSTANSI' : 'OPD');
+                    const dateFormatted = c.created_at ? new Date(c.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+                    const canDelete = (currentUserData.role === 'admin') || (currentUserData.name === c.user_name) || (currentUserData.displayName === c.user_name);
+
+                    html += `
+                        <div class="p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs space-y-1.5">
+                            <div class="flex items-center justify-between gap-2">
+                                <div class="flex items-center space-x-1.5 min-w-0">
+                                    <span class="font-bold text-slate-900 text-xs truncate">${escapeHtml(c.user_name)}</span>
+                                    <span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded ${roleBadgeClass}">${roleLabel}</span>
+                                </div>
+                                <span class="text-[10px] text-slate-400 shrink-0">${dateFormatted}</span>
+                            </div>
+                            <p class="text-xs text-slate-700 whitespace-pre-wrap leading-relaxed">${escapeHtml(c.comment)}</p>
+                            ${canDelete ? `
+                                <div class="text-right pt-1 border-t border-slate-100">
+                                    <button type="button" onclick="deleteCommentItem(${c.id})" class="text-[10px] text-rose-500 hover:text-rose-700 font-semibold cursor-pointer">
+                                        <i class="fa-solid fa-trash-can text-[9px] mr-1"></i>Hapus
+                                    </button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                stream.innerHTML = html;
+
+                setTimeout(() => {
+                    stream.scrollTop = stream.scrollHeight;
+                }, 50);
+            }
+        }
+
+        async function handleSendComment(e) {
+            e.preventDefault();
+            if (!activeCellKey) return;
+            const input = document.getElementById('drawerCommentInput');
+            const commentText = input ? input.value.trim() : '';
+            if (!commentText) return;
+
+            const btn = document.getElementById('btnSubmitDrawerComment');
+            if (btn) btn.disabled = true;
+
+            try {
+                const res = await fetch(`{{ route('tabel-opd.api.save-comment') }}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        table_code: currentTableCode,
+                        opd_code: currentOpdCode,
+                        year: parseInt(currentYear) || 2025,
+                        cell_key: activeCellKey,
+                        cell_label: activeCellLabel,
+                        cell_value: activeCellValue,
+                        comment: commentText
+                    })
+                });
+
+                const data = await res.json();
+                if (data.status === 'success') {
+                    if (input) input.value = '';
+                    if (!tableCommentsMap[activeCellKey]) {
+                        tableCommentsMap[activeCellKey] = [];
+                    }
+                    tableCommentsMap[activeCellKey].push(data.data);
+                    renderDrawerStream();
+                    renderCellCommentBadges();
+                    showToast('💬 Catatan berhasil dikirim!');
+                } else {
+                    alert('Gagal mengirim catatan: ' + (data.message || 'Terjadi kesalahan.'));
+                }
+            } catch (err) {
+                console.error('Error sending comment:', err);
+                alert('Gagal mengirim catatan. Periksa koneksi Anda.');
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        async function deleteCommentItem(id) {
+            if (!confirm('Hapus catatan ini?')) return;
+            try {
+                const res = await fetch(`/api/tabel-opd/comments/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    if (activeCellKey && tableCommentsMap[activeCellKey]) {
+                        tableCommentsMap[activeCellKey] = tableCommentsMap[activeCellKey].filter(c => c.id !== id);
+                        if (tableCommentsMap[activeCellKey].length === 0) {
+                            delete tableCommentsMap[activeCellKey];
+                        }
+                    }
+                    renderDrawerStream();
+                    renderCellCommentBadges();
+                    showToast('🗑️ Catatan berhasil dihapus.');
+                }
+            } catch (err) {
+                console.error('Error deleting comment:', err);
+                alert('Gagal menghapus catatan.');
             }
         }
     </script>

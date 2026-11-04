@@ -47,7 +47,36 @@ class CheckSimondaAuth
         // 3. Check page permissions for non-admin users
         $managedPages = array_keys(config('simonda.pages', []));
         if ($role !== 'admin' && in_array($routeName, $managedPages, true)) {
+            // General table data view and edit are essential workflows for all authenticated OPD/Instansi
+            if (in_array($routeName, ['tabel-opd', 'edit-tabel-opd'], true)) {
+                return $next($request);
+            }
+
+            // Always allow default data entry & monitoring according to role
+            if ($role === 'instansi' && in_array($routeName, ['isi-data-instansi', 'monitoring-instansi'], true)) {
+                return $next($request);
+            }
+            if ($role === 'opd' && in_array($routeName, ['isi-data-opd', 'monitoring-opd'], true)) {
+                return $next($request);
+            }
+
+            // Refresh allowed_pages from database in case user session is stale
             $allowedPages = $user['allowed_pages'] ?? [];
+            if (isset($user['id']) && $user['id'] > 0) {
+                try {
+                    $dbUser = \App\Models\User::find($user['id']);
+                    if ($dbUser && !empty($dbUser->allowed_pages)) {
+                        $allowedPages = is_array($dbUser->allowed_pages)
+                            ? $dbUser->allowed_pages
+                            : json_decode($dbUser->allowed_pages, true);
+                        $user['allowed_pages'] = $allowedPages;
+                        session(['user' => $user]);
+                    }
+                } catch (\Throwable $e) {
+                    // Fallback to existing session
+                }
+            }
+
             if (!in_array($routeName, $allowedPages, true)) {
                 $dinasName = $user['dinas_name'] ?? 'Dinas';
                 return redirect()->route('home')->with('error', "Akses Ditolak: Akun {$dinasName} tidak memiliki hak akses untuk membuka halaman ini.");
