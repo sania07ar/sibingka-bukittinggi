@@ -63,11 +63,29 @@ class AuthController extends Controller
             return redirect()->route('home')->with('success', 'Selamat datang kembali, Administrator BPS Kota Bukittinggi!');
         }
 
-        // 2. Check Database Users (Dinas / OPD / Registered Admin)
+        // 2. Check Database Users (Dinas / OPD / Registered Admin / Wali Data)
         $dbUser = User::where('username', $username)
             ->orWhere('email', $username)
             ->orWhere('nip', $username)
             ->first();
+
+        // Fallback auto-provision for default Wali Data Kominfo account
+        if (!$dbUser && ($username === 'walidata_kominfo' || strcasecmp($username, 'walidata') === 0)) {
+            if ($password === 'kominfo123') {
+                $dbUser = User::updateOrCreate(
+                    ['username' => 'walidata_kominfo'],
+                    [
+                        'name' => 'Wali Data Statistik Sektoral (Diskominfo)',
+                        'email' => 'walidata@bukittinggikota.go.id',
+                        'password' => Hash::make('kominfo123'),
+                        'role' => 'walidata',
+                        'dinas_name' => 'Dinas Komunikasi dan Informatika (Wali Data)',
+                        'allowed_pages' => ['isi-data-opd', 'isi-data-instansi', 'data-bps', 'monitoring-opd', 'monitoring-instansi', 'tabel-opd', 'edit-tabel-opd'],
+                        'is_active' => true,
+                    ]
+                );
+            }
+        }
 
         if ($dbUser) {
             // Verify password (hash or legacy fallback)
@@ -86,6 +104,17 @@ class AuthController extends Controller
                     ? $dbUser->allowed_pages 
                     : json_decode($dbUser->allowed_pages ?? '[]', true);
 
+                if ($role === 'walidata') {
+                    $allowedPages = ['isi-data-opd', 'isi-data-instansi', 'data-bps', 'monitoring-opd', 'monitoring-instansi', 'tabel-opd', 'edit-tabel-opd'];
+                }
+
+                $roleLabel = match ($role) {
+                    'admin' => 'Administrator BPS',
+                    'walidata' => 'Wali Data (Diskominfo Kota Bukittinggi)',
+                    'instansi' => ($dbUser->dinas_name ?? 'User Instansi Vertikal'),
+                    default => ($dbUser->dinas_name ?? 'User OPD'),
+                };
+
                 $userData = [
                     'id' => $dbUser->id,
                     'isLoggedIn' => true,
@@ -95,7 +124,7 @@ class AuthController extends Controller
                     'nip' => $dbUser->nip,
                     'phone' => $dbUser->phone,
                     'role' => $role,
-                    'roleLabel' => $role === 'admin' ? 'Administrator BPS' : ($dbUser->dinas_name ?? 'User OPD'),
+                    'roleLabel' => $roleLabel,
                     'dinas_name' => $dbUser->dinas_name ?? $dbUser->name,
                     'opd_code' => $dbUser->opd_code,
                     'allowed_pages' => $allowedPages,
@@ -140,9 +169,28 @@ class AuthController extends Controller
      */
     public function showKelolaAkun(Request $request)
     {
+        if (session('user.role') !== 'admin') {
+            return redirect()->route('home')->with('error', 'Halaman Kelola Akun hanya dapat diakses oleh Administrator BPS.');
+        }
+
+        // Auto-seed Akun Wali Data (Diskominfo) jika belum ada
+        if (User::where('role', 'walidata')->doesntExist()) {
+            User::create([
+                'name' => 'Wali Data Statistik Sektoral (Diskominfo)',
+                'username' => 'walidata_kominfo',
+                'email' => 'walidata@bukittinggikota.go.id',
+                'password' => Hash::make('kominfo123'),
+                'role' => 'walidata',
+                'opd_code' => '00',
+                'dinas_name' => 'Dinas Komunikasi dan Informatika (Wali Data)',
+                'allowed_pages' => ['isi-data-opd', 'isi-data-instansi', 'data-bps', 'monitoring-opd', 'monitoring-instansi', 'tabel-opd', 'edit-tabel-opd'],
+                'is_active' => true,
+            ]);
+        }
+
         $search = $request->query('q');
         $filterStatus = $request->query('status');
-        $filterType = $request->query('type'); // 'opd', 'instansi', or null (all)
+        $filterType = $request->query('type'); // 'opd', 'instansi', 'walidata', or null (all)
 
         $query = User::where('role', '!=', 'admin')->orWhereNull('role');
 
@@ -167,6 +215,8 @@ class AuthController extends Controller
                 });
             } elseif ($filterType === 'instansi') {
                 $query->where('role', 'instansi');
+            } elseif ($filterType === 'walidata') {
+                $query->where('role', 'walidata');
             }
         }
 
@@ -179,12 +229,12 @@ class AuthController extends Controller
     }
 
     /**
-     * Create a new Dinas / Instansi User.
+     * Create a new Dinas / Instansi / Wali Data User.
      */
     public function createDinasUser(Request $request)
     {
         $request->validate([
-            'role' => 'nullable|string|in:opd,instansi',
+            'role' => 'nullable|string|in:opd,instansi,walidata',
             'opd_code' => 'nullable|string|max:20',
             'dinas_name' => 'required|string|max:150',
             'name' => 'nullable|string|max:100',
@@ -196,7 +246,7 @@ class AuthController extends Controller
             'allowed_pages' => 'nullable|array',
             'is_active' => 'nullable',
         ], [
-            'dinas_name.required' => 'Nama Dinas / Instansi wajib dipilih.',
+            'dinas_name.required' => 'Nama Dinas / Instansi / Satuan Kerja wajib diisi.',
             'username.required' => 'Username login wajib diisi.',
             'username.unique' => 'Username ini sudah digunakan, silakan pilih username lain.',
             'password.required' => 'Kata sandi wajib diisi.',
@@ -206,9 +256,11 @@ class AuthController extends Controller
         $role = $request->input('role', 'opd');
         $allowedPages = $request->input('allowed_pages');
         if (empty($allowedPages)) {
-            $allowedPages = ($role === 'instansi')
-                ? ['isi-data-instansi']
-                : ['isi-data-opd', 'tabel-opd', 'edit-tabel-opd'];
+            $allowedPages = match ($role) {
+                'walidata' => ['monitoring-opd', 'monitoring-instansi', 'tabel-opd', 'isi-data-opd', 'isi-data-instansi'],
+                'instansi' => ['isi-data-instansi'],
+                default => ['isi-data-opd', 'tabel-opd', 'edit-tabel-opd'],
+            };
         }
         $username = trim($request->input('username'));
         $dinasName = trim($request->input('dinas_name'));
@@ -239,20 +291,24 @@ class AuthController extends Controller
             'is_active' => $request->has('is_active') ? true : false,
         ]);
 
-        $typeLabel = $role === 'instansi' ? 'Instansi Vertikal' : 'Dinas / OPD';
+        $typeLabel = match ($role) {
+            'walidata' => 'Wali Data (Diskominfo)',
+            'instansi' => 'Instansi Vertikal',
+            default => 'Dinas / OPD',
+        };
         return redirect()->route('kelola-akun')
             ->with('success', "Akun {$typeLabel} untuk {$dinasName} berhasil dibuat.");
     }
 
     /**
-     * Update an existing Dinas / Instansi User.
+     * Update an existing Dinas / Instansi / Wali Data User.
      */
     public function updateDinasUser(Request $request, $id)
     {
         $user = User::findOrFail($id);
 
         $request->validate([
-            'role' => 'nullable|string|in:opd,instansi',
+            'role' => 'nullable|string|in:opd,instansi,walidata',
             'opd_code' => 'nullable|string|max:20',
             'dinas_name' => 'required|string|max:150',
             'name' => 'nullable|string|max:100',
@@ -264,7 +320,7 @@ class AuthController extends Controller
             'allowed_pages' => 'nullable|array',
             'is_active' => 'nullable',
         ], [
-            'dinas_name.required' => 'Nama Dinas / Instansi wajib dipilih.',
+            'dinas_name.required' => 'Nama Dinas / Instansi / Satuan Kerja wajib diisi.',
             'username.required' => 'Username login wajib diisi.',
             'username.unique' => 'Username ini sudah digunakan.',
             'password.min' => 'Kata sandi baru minimal 6 karakter.',
@@ -291,9 +347,11 @@ class AuthController extends Controller
         if (!empty($allowedPages)) {
             $user->allowed_pages = $allowedPages;
         } else {
-            $user->allowed_pages = ($user->role === 'instansi')
-                ? ['isi-data-instansi']
-                : ['isi-data-opd', 'tabel-opd', 'edit-tabel-opd'];
+            $user->allowed_pages = match ($user->role) {
+                'walidata' => ['monitoring-opd', 'monitoring-instansi', 'tabel-opd', 'isi-data-opd', 'isi-data-instansi'],
+                'instansi' => ['isi-data-instansi'],
+                default => ['isi-data-opd', 'tabel-opd', 'edit-tabel-opd'],
+            };
         }
         $user->is_active = $request->has('is_active') ? true : false;
 

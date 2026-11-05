@@ -304,62 +304,16 @@ const instansiTablesCatalog = {
 };
 
 const bpsTablesCatalog = {
-    '01': [ // PODES
-        { code: '4.1.1', title: 'Jumlah Desa/Kelurahan Menurut Ketersediaan Fasilitas Pendidikan di Kota Bukittinggi', titleEn: 'Number of Villages by Availability of Educational Facilities in Bukittinggi Municipality' },
-        { code: '4.1.2', title: 'Jumlah Fasilitas Kesehatan Menurut Kecamatan di Kota Bukittinggi', titleEn: 'Number of Health Facilities by District in Bukittinggi Municipality' },
-        { code: '4.1.3', title: 'Keberadaan Sarana Transportasi Antar Desa/Kelurahan Menurut Kecamatan di Kota Bukittinggi', titleEn: 'Existence of Transportation Facilities Between Villages by District in Bukittinggi Municipality' },
-        { code: '4.1.4', title: 'Banyaknya Sarana Perekonomian Utama Menurut Kelurahan di Kota Bukittinggi', titleEn: 'Number of Main Economic Facilities by Village in Bukittinggi Municipality' }
-    ],
-    '02': [ // PENDUDUK
-        { code: '3.1.1', title: 'Jumlah Penduduk Menurut Kecamatan dan Jenis Kelamin di Kota Bukittinggi', titleEn: 'Number of Population by District and Sex in Bukittinggi Municipality' },
-        { code: '3.1.2', title: 'Laju Pertumbuhan Penduduk, Distribusi Persentase, dan Kepadatan Penduduk di Kota Bukittinggi', titleEn: 'Population Growth Rate, Percentage Distribution, and Density in Bukittinggi Municipality' },
-        { code: '3.1.3', title: 'Penduduk Menurut Kelompok Umur dan Jenis Kelamin di Kota Bukittinggi', titleEn: 'Population by Age Group and Sex in Bukittinggi Municipality' },
-        { code: '3.1.4', title: 'Proyeksi Penduduk Menurut Kelompok Umur di Kota Bukittinggi', titleEn: 'Population Projections by Age Group in Bukittinggi Municipality' }
-    ],
-    '03': [ // SUSENAS
-        { code: '4.2.1', title: 'Rata-rata Pengeluaran per Kapita Sebulan Menurut Kelompok Komoditas di Kota Bukittinggi', titleEn: 'Monthly Average Expenditure per Capita by Commodity Group in Bukittinggi Municipality' },
-        { code: '4.2.2', title: 'Persentase Penduduk Miskin dan Garis Kemiskinan di Kota Bukittinggi', titleEn: 'Percentage of Poor People and Poverty Line in Bukittinggi Municipality' },
-        { code: '4.2.3', title: 'Indeks Pembangunan Manusia (IPM) Menurut Komponen di Kota Bukittinggi', titleEn: 'Human Development Index (HDI) by Component in Bukittinggi Municipality' }
-    ],
-    '04': [ // SAKERNAS
-        { code: '3.2.1', title: 'Penduduk Usia 15 Tahun ke Atas Menurut Jenis Kegiatan Selama Seminggu yang Lalu', titleEn: 'Population Aged 15 Years and Over by Type of Activity During Previous Week' },
-        { code: '3.2.2', title: 'Tingkat Partisipasi Angkatan Kerja (TPAK) dan Tingkat Pengangguran Terbuka (TPT)', titleEn: 'Labor Force Participation Rate and Open Unemployment Rate in Bukittinggi Municipality' },
-        { code: '3.2.3', title: 'Penduduk yang Bekerja Menurut Lapangan Pekerjaan Utama di Kota Bukittinggi', titleEn: 'Working Population by Main Employment Field in Bukittinggi Municipality' }
-    ],
-    '05': [ // HORTI
-        { code: '5.1.1', title: 'Luas Panen Tanaman Sayuran Menurut Jenis Tanaman di Kota Bukittinggi', titleEn: 'Harvested Area of Vegetables by Kind of Plant in Bukittinggi Municipality' },
-        { code: '5.1.2', title: 'Produksi Tanaman Sayuran Menurut Jenis Tanaman di Kota Bukittinggi', titleEn: 'Production of Vegetables by Kind of Plant in Bukittinggi Municipality' },
-        { code: '5.1.3', title: 'Produksi Tanaman Buah-buahan Menurut Jenis Tanaman di Kota Bukittinggi', titleEn: 'Production of Fruits by Kind of Plant in Bukittinggi Municipality' },
-        { code: '5.1.4', title: 'Produksi Tanaman Biofarmaka Menurut Jenis Tanaman di Kota Bukittinggi', titleEn: 'Production of Medicinal Plants by Kind of Plant in Bukittinggi Municipality' }
-    ],
-    '06': [ // IMK
-        { code: '6.1.1', title: 'Banyaknya Usaha Industri Mikro dan Kecil (IMK) Menurut Klasifikasi Industri', titleEn: 'Number of Micro and Small Scale Manufacturing Establishments by Industry Classification' },
-        { code: '6.1.2', title: 'Banyaknya Tenaga Kerja Industri Mikro dan Kecil Menurut Klasifikasi Industri', titleEn: 'Number of Workers of Micro and Small Scale Manufacturing by Industry Classification' },
-        { code: '6.1.3', title: 'Nilai Pengeluaran dan Pendapatan Usaha Industri Mikro dan Kecil di Kota Bukittinggi', titleEn: 'Expenditure and Revenue of Micro and Small Industry in Bukittinggi Municipality' }
-    ],
-    '07': [ // HOTEL
-        { code: '7.1.1', title: 'Jumlah Hotel Bintang dan Non Bintang Menurut Kecamatan di Kota Bukittinggi', titleEn: 'Number of Star and Non-Star Hotels by District in Bukittinggi Municipality' },
-        { code: '7.1.2', title: 'Jumlah Kamar dan Tempat Tidur yang Tersedia pada Akomodasi Hotel di Kota Bukittinggi', titleEn: 'Number of Rooms and Beds Available in Accommodation in Bukittinggi Municipality' },
-        { code: '7.1.3', title: 'Tingkat Penghunian Kamar (TPK) Hotel Bintang Menurut Bulan di Kota Bukittinggi', titleEn: 'Room Occupancy Rate (ROR) of Star Rated Hotels by Month in Bukittinggi Municipality' },
-        { code: '7.1.4', title: 'Rata-rata Lama Menginap Tamu Asing dan Domestik di Hotel di Kota Bukittinggi', titleEn: 'Average Length of Stay of Foreign and Domestic Guests at Hotels in Bukittinggi Municipality' }
-    ],
-    '08': [ // IHK
-        { code: '8.3.1', title: 'Indeks Harga Konsumen (IHK) Menurut Kelompok Pengeluaran di Kota Bukittinggi', titleEn: 'Consumer Price Index by Expenditure Group in Bukittinggi Municipality' },
-        { code: '8.3.2', title: 'Laju Inflasi Bulanan dan Tahunan Menurut Kelompok Pengeluaran di Kota Bukittinggi', titleEn: 'Monthly and Year on Year Inflation Rate by Expenditure Group in Bukittinggi Municipality' },
-        { code: '8.3.3', title: 'Rata-rata Harga Beberapa Komoditas Bahan Pokok Menurut Bulan di Kota Bukittinggi', titleEn: 'Average Price of Selected Essential Commodities by Month in Bukittinggi Municipality' }
-    ],
-    '09': [ // PDRB LAPUS
-        { code: '11.1.1', title: 'Produk Domestik Regional Bruto Atas Dasar Harga Berlaku Menurut Lapangan Usaha di Kota Bukittinggi', titleEn: 'Gross Regional Domestic Product at Current Market Prices by Industry in Bukittinggi Municipality' },
-        { code: '11.1.2', title: 'Produk Domestik Regional Bruto Atas Dasar Harga Konstan 2010 Menurut Lapangan Usaha', titleEn: 'Gross Regional Domestic Product at 2010 Constant Market Prices by Industry in Bukittinggi Municipality' },
-        { code: '11.1.3', title: 'Laju Pertumbuhan PDRB Atas Dasar Harga Konstan 2010 Menurut Lapangan Usaha', titleEn: 'Growth Rate of GRDP at 2010 Constant Market Prices by Industry in Bukittinggi Municipality' },
-        { code: '11.1.4', title: 'Distribusi Persentase PDRB Atas Dasar Harga Berlaku Menurut Lapangan Usaha', titleEn: 'Percentage Distribution of GRDP at Current Market Prices by Industry in Bukittinggi Municipality' }
-    ],
-    '10': [ // PDRB PENGELUARAN
-        { code: '11.2.1', title: 'Produk Domestik Regional Bruto Atas Dasar Harga Berlaku Menurut Pengeluaran di Kota Bukittinggi', titleEn: 'Gross Regional Domestic Product at Current Market Prices by Expenditure in Bukittinggi Municipality' },
-        { code: '11.2.2', title: 'Produk Domestik Regional Bruto Atas Dasar Harga Konstan 2010 Menurut Pengeluaran', titleEn: 'Gross Regional Domestic Product at 2010 Constant Market Prices by Expenditure in Bukittinggi Municipality' },
-        { code: '11.2.3', title: 'Laju Pertumbuhan PDRB Pengeluaran Atas Dasar Harga Konstan 2010 di Kota Bukittinggi', titleEn: 'Growth Rate of GRDP Expenditure at 2010 Constant Market Prices in Bukittinggi Municipality' },
-        { code: '11.2.4', title: 'Distribusi Persentase PDRB Atas Dasar Harga Berlaku Menurut Pengeluaran', titleEn: 'Percentage Distribution of GRDP at Current Market Prices by Expenditure in Bukittinggi Municipality' }
-    ]
+    '01': [], // PODES
+    '02': [], // PENDUDUK
+    '03': [], // SUSENAS
+    '04': [], // SAKERNAS
+    '05': [], // HORTI
+    '06': [], // IMK
+    '07': [], // HOTEL
+    '08': [], // IHK & INFLASI
+    '09': [], // PDRB LAPUS
+    '10': []  // PDRB PENGELUARAN
 };
 
 /**

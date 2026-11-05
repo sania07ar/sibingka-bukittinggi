@@ -60,7 +60,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if user is Super Administrator.
+     * Check if user is Super Administrator (BPS Admin).
      */
     public function isAdmin(): bool
     {
@@ -68,11 +68,27 @@ class User extends Authenticatable
     }
 
     /**
+     * Check if user is Wali Data (Diskominfo Bukittinggi).
+     */
+    public function isWaliData(): bool
+    {
+        return $this->role === 'walidata';
+    }
+
+    /**
+     * Check if user can verify sectoral data (Admin BPS or Wali Data Kominfo).
+     */
+    public function canVerifyData(): bool
+    {
+        return $this->isAdmin() || $this->isWaliData();
+    }
+
+    /**
      * Check if user has permission to access a specific page.
      */
     public function canAccessPage(string $page): bool
     {
-        if ($this->isAdmin()) {
+        if ($this->isAdmin() || $this->isWaliData()) {
             return true;
         }
 

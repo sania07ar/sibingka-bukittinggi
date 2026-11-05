@@ -1,8 +1,5 @@
 @php
     $currentTab = $activeTab ?? 'opd';
-    $spreadsheetLink = ($currentTab === 'instansi') 
-        ? 'https://docs.google.com/spreadsheets/d/1jDnlrttqLshCZvn9BGnk3w7hLfczeO1l/edit?gid=1947622778#gid=1947622778'
-        : 'https://docs.google.com/spreadsheets/d/1LPukf54Rx7Z30Osw2lCR4ardM240I62c/edit?gid=1978844678#gid=1978844678';
 @endphp
 
 <!-- TITLE HEADER & CONTROLS -->
@@ -38,16 +35,6 @@
             </div>
         </div>
 
-        <!-- Google Spreadsheet Button (Publikasi Pusat BPS) -->
-        <a href="{{ $spreadsheetLink }}" target="_blank" 
-           class="inline-flex items-center space-x-2 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-2xs hover:shadow transition-all cursor-pointer no-underline shrink-0"
-           title="Buka Google Spreadsheet Publikasi Pusat BPS (Langsung Salin / Buka di Tab Baru)">
-            <i class="fa-solid fa-file-excel text-sm"></i>
-            <span class="hidden md:inline">Google Spreadsheet (Pusat)</span>
-            <span class="md:hidden">Spreadsheet</span>
-            <i class="fa-solid fa-arrow-up-right-from-square text-[10px] opacity-80"></i>
-        </a>
-
         <!-- Export Dropdown -->
         <div class="relative shrink-0">
             <button type="button" 
@@ -82,11 +69,6 @@
                         <div class="text-[10px] text-slate-400">Format cetak Tahun {{ $selectedYear }}</div>
                     </div>
                 </button>
-                <div class="border-t border-slate-100 my-1"></div>
-                <a href="{{ $spreadsheetLink }}" target="_blank" class="w-full text-left px-3.5 py-2 hover:bg-orange-50 text-slate-600 hover:text-slate-900 flex items-center space-x-2.5 transition-colors no-underline">
-                    <i class="fa-solid fa-arrow-up-right-from-square text-slate-400 w-4"></i>
-                    <span>Buka Google Spreadsheet</span>
-                </a>
             </div>
         </div>
 

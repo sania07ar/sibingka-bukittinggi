@@ -85,13 +85,22 @@
         $currentUser = session('user', []);
         $role = $currentUser['role'] ?? 'opd';
         $isInstansiUser = $role === 'instansi';
+        $isWaliData = $role === 'walidata';
         $allowedPages = $currentUser['allowed_pages'] ?? [];
         $dinasName = $currentUser['dinas_name'] ?? ($currentUser['displayName'] ?? 'Dinas');
         $username = $currentUser['username'] ?? 'User';
         $opdCode = $currentUser['opd_code'] ?? '01';
 
-        $targetRoute = $isInstansiUser ? route('isi-data-instansi') : route('isi-data-opd');
-        $btnLabel = $isInstansiUser ? 'Mulai Isi Data Instansi' : 'Mulai Isi Data OPD';
+        if ($isWaliData) {
+            $targetRoute = route('monitoring-opd');
+            $btnLabel = 'Mulai Monitoring & Verifikasi Data';
+        } elseif ($isInstansiUser) {
+            $targetRoute = route('isi-data-instansi');
+            $btnLabel = 'Mulai Isi Data Instansi';
+        } else {
+            $targetRoute = route('isi-data-opd');
+            $btnLabel = 'Mulai Isi Data OPD';
+        }
     @endphp
 
     <!-- Flash Alert Notification if Access Denied -->
@@ -181,7 +190,13 @@
                         <div class="flex flex-col text-left">
                             <span class="font-bold text-slate-900 leading-tight truncate max-w-[120px] sm:max-w-xs text-[11px] sm:text-xs">{{ $dinasName }}</span>
                             <span class="text-[9px] font-semibold text-slate-500">
-                                {{ $isInstansiUser ? 'Instansi Vertikal' : 'Akun Dinas Pemko' }}
+                                @if($isWaliData)
+                                    Wali Data (Diskominfo)
+                                @elseif($isInstansiUser)
+                                    Instansi Vertikal
+                                @else
+                                    Akun Dinas Pemko
+                                @endif
                             </span>
                         </div>
                     </div>
@@ -210,7 +225,7 @@
             
             <!-- Right side FGD Bukittinggi Exact Image & Mask -->
             <div class="absolute inset-y-0 right-0 w-full sm:w-1/2 lg:w-[46%] xl:w-2/5 overflow-hidden pointer-events-none">
-                <img src="{{ asset('images/fgd-bukittinggi-exact.png') }}" alt="FGD Bukittinggi dalam Angka" class="w-full h-full object-cover object-center">
+                <img src="{{ asset('images/fgd-bukittinggi-exact.png') }}?v={{ file_exists(public_path('images/fgd-bukittinggi-exact.png')) ? filemtime(public_path('images/fgd-bukittinggi-exact.png')) : time() }}" alt="FGD Bukittinggi dalam Angka" class="w-full h-full object-cover object-center">
                 <!-- Gradasi halus pinggir kiri foto -->
                 <div class="absolute inset-y-0 left-0 w-14 sm:w-20 bg-gradient-to-r from-white to-transparent"></div>
             </div>
@@ -250,14 +265,28 @@
                     Satu sistem informasi untuk pengelolaan, pemantauan, dan penyajian data statistik sektor pembangunan Kota Bukittinggi secara terintegrasi.
                 </p>
 
-                <!-- CTA Button (Direct to their tables) -->
-                <div class="mt-6 sm:mt-8 flex items-center gap-3">
-                    <a href="{{ $targetRoute }}" 
-                       class="btn-orange-glow inline-flex items-center gap-2.5 bg-[#f95a00] hover:bg-[#ea580c] text-white font-bold text-sm px-6 py-3.5 rounded-xl shadow-lg shadow-orange-500/30 transition-all transform hover:-translate-y-0.5 no-underline">
-                        <i class="fa-solid fa-file-pen text-sm"></i>
-                        <span>{{ $btnLabel }}</span>
-                        <i class="fa-solid fa-arrow-right text-xs"></i>
-                    </a>
+                <!-- CTA Button (Direct to tables or monitoring for Wali Data) -->
+                <div class="mt-6 sm:mt-8 flex flex-wrap items-center gap-3">
+                    @if($isWaliData)
+                        <a href="{{ route('monitoring-opd') }}" 
+                           class="btn-orange-glow inline-flex items-center gap-2.5 bg-[#f95a00] hover:bg-[#ea580c] text-white font-bold text-sm px-5 py-3 rounded-xl shadow-lg shadow-orange-500/30 transition-all transform hover:-translate-y-0.5 no-underline">
+                            <i class="fa-solid fa-chart-line text-sm"></i>
+                            <span>Monitoring OPD (Verifikasi)</span>
+                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </a>
+                        <a href="{{ route('monitoring-instansi') }}" 
+                           class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm px-5 py-3 rounded-xl shadow-md transition-all transform hover:-translate-y-0.5 no-underline">
+                            <i class="fa-solid fa-landmark text-sm"></i>
+                            <span>Monitoring Instansi</span>
+                        </a>
+                    @else
+                        <a href="{{ $targetRoute }}" 
+                           class="btn-orange-glow inline-flex items-center gap-2.5 bg-[#f95a00] hover:bg-[#ea580c] text-white font-bold text-sm px-6 py-3.5 rounded-xl shadow-lg shadow-orange-500/30 transition-all transform hover:-translate-y-0.5 no-underline">
+                            <i class="fa-solid fa-file-pen text-sm"></i>
+                            <span>{{ $btnLabel }}</span>
+                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </a>
+                    @endif
                 </div>
             </div>
         </div>

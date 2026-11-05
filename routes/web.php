@@ -76,14 +76,23 @@ Route::middleware(['simonda.auth'])->group(function () {
     })->name('monitoring-instansi');
 
     Route::post('/monitoring/update-stage', function (\Illuminate\Http\Request $request) {
+        // Khusus Admin BPS yang berhak mengubah / menyetujui Validasi BPS
+        if (session('user.role') !== 'admin') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya Administrator BPS yang berhak mengubah status Validasi BPS.',
+            ], 403);
+        }
+
         $validated = $request->validate([
             'agency_type' => 'required|in:opd,instansi',
             'agency_code' => 'required|string',
             'year' => 'required|integer',
-            'stage' => 'required|integer|between:1,5',
+            'stage' => 'required|integer|between:1,3',
         ]);
 
-        $stageInfo = \App\Models\MonitoringStage::getStageInfo($validated['stage']);
+        $stage = (int) $validated['stage'];
+        $stageInfo = \App\Models\MonitoringStage::getStageInfo($stage);
 
         $record = \App\Models\MonitoringStage::updateOrCreate(
             [
@@ -92,14 +101,18 @@ Route::middleware(['simonda.auth'])->group(function () {
                 'year' => $validated['year'],
             ],
             [
-                'stage' => $validated['stage'],
-                'status_text' => $stageInfo['label'],
+                'stage' => $stage,
+                'status_text' => $stage === 3 ? 'Validasi BPS Selesai' : $stageInfo['label'],
             ]
         );
 
+        $msg = ($stage === 3)
+            ? 'Validasi BPS berhasil disetujui (ACC)!'
+            : 'Validasi BPS berhasil dibatalkan.';
+
         return response()->json([
             'success' => true,
-            'message' => 'Tahapan berhasil diubah ke ' . $stageInfo['label'],
+            'message' => $msg,
             'data' => $record,
             'stageInfo' => $stageInfo,
         ]);

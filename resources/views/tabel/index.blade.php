@@ -543,21 +543,6 @@
                                 </div>
 
                                 <div class="p-1.5 space-y-1">
-                                    <!-- Option 0: Salin ke Google Sheets / Clipboard -->
-                                    <button onclick="copyTableForSpreadsheet(false); closeAllExportDropdowns();" 
-                                            class="w-full text-left flex items-start space-x-3 p-2.5 rounded-xl hover:bg-emerald-50/90 transition-all group cursor-pointer border border-transparent hover:border-emerald-200/60">
-                                        <div class="w-8 h-8 rounded-xl bg-emerald-100 text-[#0F9D58] group-hover:bg-[#0F9D58] group-hover:text-white flex items-center justify-center shrink-0 transition-colors shadow-2xs">
-                                            <i class="fa-solid fa-copy text-sm"></i>
-                                        </div>
-                                        <div class="flex-1 min-w-0">
-                                            <div class="flex items-center justify-between">
-                                                <span class="text-xs font-bold text-slate-800 group-hover:text-emerald-950">Salin ke Google Sheets</span>
-                                                <span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-mono">SALIN CEPAT</span>
-                                            </div>
-                                            <p class="text-[10.5px] text-slate-500 leading-tight mt-0.5">Format rapi siap Paste (Ctrl+V) ke publikasi pusat</p>
-                                        </div>
-                                    </button>
-
                                     <!-- Option 1: Excel (.xlsx / .xls) -->
                                     <button onclick="exportToExcel(); closeAllExportDropdowns();" 
                                             class="w-full text-left flex items-start space-x-3 p-2.5 rounded-xl hover:bg-emerald-50/90 transition-all group cursor-pointer border border-transparent hover:border-emerald-200/60">
@@ -7535,6 +7520,241 @@
                         </tbody>
                     `;
                 }
+            },
+            '5.1.15': {
+                titleId: 'Luas Areal Sawah Menurut Jenis Pengairan per Kecamatan di Kota Bukittinggi',
+                titleEn: 'Area of Wetland by Type of Irrigation per District in Bukittinggi Municipality',
+                isMultiYear: false,
+                source: 'Dinas Pertanian dan Pangan Kota Bukittinggi / <span class="italic text-slate-500">Agriculture and Food Services of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const dists = [
+                        '01. GUGUK PANJANG',
+                        '02. MANDIANGIN KOTO SELAYAN',
+                        '03. AUR BIRUGO TIGO BALEH'
+                    ];
+
+                    let rowsHtml = '';
+                    dists.forEach(label => {
+                        rowsHtml += `
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td colspan="2" class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${label}</td>
+                                ${Array(6).fill(0).map(() => `<td class="py-2.5 px-3 border border-slate-700 text-center">-</td>`).join('')}
+                            </tr>
+                        `;
+                    });
+
+                    const yearsDesc = [];
+                    for (let y = yr; y >= yr - 4; y--) {
+                        yearsDesc.push(y);
+                    }
+
+                    yearsDesc.forEach((y, idx) => {
+                        const isFirstYear = (idx === 0);
+                        const rowCls = isFirstYear ? 'bg-[#fed7aa] font-bold' : 'hover:bg-amber-100/60 transition-colors font-medium';
+
+                        rowsHtml += `
+                            <tr class="${rowCls}">
+                                ${isFirstYear ? `<td rowspan="5" class="py-2.5 px-4 border border-slate-700 text-center font-extrabold align-middle bg-[#fed7aa]">Jumlah / Total</td>` : ''}
+                                <td class="py-2.5 px-3 border border-slate-700 text-center font-bold align-middle bg-[#fed7aa]">${y}</td>
+                                ${Array(6).fill(0).map(() => `<td class="py-2.5 px-3 border border-slate-700 text-center">-</td>`).join('')}
+                            </tr>
+                        `;
+                    });
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2" colspan="2">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="5">
+                                    <div>Jenis Pengairan</div><div class="italic font-normal text-[11px] sm:text-xs">Type of Irrigation</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs">
+                                <th class="py-2 px-3 border border-slate-700"><div>Teknis</div><div class="italic font-normal text-[10px]">Technical</div></th>
+                                <th class="py-2 px-3 border border-slate-700"><div>½ Teknis</div><div class="italic font-normal text-[10px]">Semi Technical</div></th>
+                                <th class="py-2 px-3 border border-slate-700"><div>Sederhana</div><div class="italic font-normal text-[10px]">Simple</div></th>
+                                <th class="py-2 px-3 border border-slate-700"><div>Irigasi Non PU</div><div class="italic font-normal text-[10px]">Non PU Irrigation</div></th>
+                                <th class="py-2 px-3 border border-slate-700"><div>Tadah Hujan</div><div class="italic font-normal text-[10px]">Non Irrigation</div></th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700" colspan="2">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700">(7)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+            '5.1.16': {
+                titleId: 'Target dan Realisasi Intensifikasi Palawija per Kecamatan di Kota Bukittinggi',
+                titleEn: 'Target and Realization of Secondary Food Crops per District in Bukittinggi Municipality',
+                isMultiYear: false,
+                source: 'Dinas Pertanian dan Pangan Kota Bukittinggi / <span class="italic text-slate-500">Agriculture and Food Services of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const dists = [
+                        '01. GUGUK PANJANG',
+                        '02. MANDIANGIN KOTO SELAYAN',
+                        '03. AUR BIRUGO TIGO BALEH'
+                    ];
+
+                    let rowsHtml = '';
+                    dists.forEach(label => {
+                        rowsHtml += `
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td colspan="2" class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${label}</td>
+                                ${Array(12).fill(0).map(() => `<td class="py-2 px-1 border border-slate-700 text-center">-</td>`).join('')}
+                            </tr>
+                        `;
+                    });
+
+                    const yearsDesc = [];
+                    for (let y = yr; y >= yr - 4; y--) {
+                        yearsDesc.push(y);
+                    }
+
+                    yearsDesc.forEach((y, idx) => {
+                        const isFirstYear = (idx === 0);
+                        const rowCls = isFirstYear ? 'bg-[#fed7aa] font-bold' : 'hover:bg-amber-100/60 transition-colors font-medium';
+
+                        rowsHtml += `
+                            <tr class="${rowCls}">
+                                ${isFirstYear ? `<td rowspan="5" class="py-2.5 px-4 border border-slate-700 text-center font-extrabold align-middle bg-[#fed7aa]">Jumlah / Total</td>` : ''}
+                                <td class="py-2.5 px-3 border border-slate-700 text-center font-bold align-middle bg-[#fed7aa]">${y}</td>
+                                ${Array(12).fill(0).map(() => `<td class="py-2 px-1 border border-slate-700 text-center">-</td>`).join('')}
+                            </tr>
+                        `;
+                    });
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2" colspan="2">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="6">
+                                    <div>Target</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="6">
+                                    <div>Realisasi</div><div class="italic font-normal text-[11px] sm:text-xs">Realization</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs">
+                                <th class="py-2 px-1 border border-slate-700">Jagung</th>
+                                <th class="py-2 px-1 border border-slate-700">Kacang Tanah</th>
+                                <th class="py-2 px-1 border border-slate-700">Kedelai</th>
+                                <th class="py-2 px-1 border border-slate-700">Kacang Hijau</th>
+                                <th class="py-2 px-1 border border-slate-700">Ubi Kayu</th>
+                                <th class="py-2 px-1 border border-slate-700">Ubi Jalar</th>
+                                <th class="py-2 px-1 border border-slate-700">Jagung</th>
+                                <th class="py-2 px-1 border border-slate-700">Kacang Tanah</th>
+                                <th class="py-2 px-1 border border-slate-700">Kedelai</th>
+                                <th class="py-2 px-1 border border-slate-700">Kacang Hijau</th>
+                                <th class="py-2 px-1 border border-slate-700">Ubi Kayu</th>
+                                <th class="py-2 px-1 border border-slate-700">Ubi Jalar</th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700" colspan="2">(1)</th>
+                                ${Array(12).fill(0).map((_, i) => `<th class="py-1 px-1 border border-slate-700">(${i + 2})</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+            '5.1.17': {
+                titleId: 'Target dan Realisasi Intensifikasi Sayur–Sayuran per Kecamatan di Kota Bukittinggi',
+                titleEn: 'Target and Realization of Vegetables Intensification per District in Bukittinggi Municipality',
+                isMultiYear: false,
+                source: 'Dinas Pertanian dan Pangan Kota Bukittinggi / <span class="italic text-slate-500">Agriculture and Food Services of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const dists = [
+                        '01. GUGUK PANJANG',
+                        '02. MANDIANGIN KOTO SELAYAN',
+                        '03. AUR BIRUGO TIGO BALEH'
+                    ];
+
+                    let rowsHtml = '';
+                    dists.forEach(label => {
+                        rowsHtml += `
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td colspan="2" class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${label}</td>
+                                ${Array(12).fill(0).map(() => `<td class="py-2 px-1 border border-slate-700 text-center">-</td>`).join('')}
+                            </tr>
+                        `;
+                    });
+
+                    const yearsDesc = [];
+                    for (let y = yr; y >= yr - 4; y--) {
+                        yearsDesc.push(y);
+                    }
+
+                    yearsDesc.forEach((y, idx) => {
+                        const isFirstYear = (idx === 0);
+                        const rowCls = isFirstYear ? 'bg-[#fed7aa] font-bold' : 'hover:bg-amber-100/60 transition-colors font-medium';
+
+                        rowsHtml += `
+                            <tr class="${rowCls}">
+                                ${isFirstYear ? `<td rowspan="5" class="py-2.5 px-4 border border-slate-700 text-center font-extrabold align-middle bg-[#fed7aa]">Jumlah / Total</td>` : ''}
+                                <td class="py-2.5 px-3 border border-slate-700 text-center font-bold align-middle bg-[#fed7aa]">${y}</td>
+                                ${Array(12).fill(0).map(() => `<td class="py-2 px-1 border border-slate-700 text-center">-</td>`).join('')}
+                            </tr>
+                        `;
+                    });
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2" colspan="2">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="6">
+                                    <div>Target</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="6">
+                                    <div>Realisasi</div><div class="italic font-normal text-[11px] sm:text-xs">Realization</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs">
+                                <th class="py-2 px-1 border border-slate-700">Kentang</th>
+                                <th class="py-2 px-1 border border-slate-700">Tomat</th>
+                                <th class="py-2 px-1 border border-slate-700">Lombok</th>
+                                <th class="py-2 px-1 border border-slate-700">Bawang Daun</th>
+                                <th class="py-2 px-1 border border-slate-700">Lainnya</th>
+                                <th class="py-2 px-1 border border-slate-700">Jumlah</th>
+                                <th class="py-2 px-1 border border-slate-700">Kentang</th>
+                                <th class="py-2 px-1 border border-slate-700">Tomat</th>
+                                <th class="py-2 px-1 border border-slate-700">Lombok</th>
+                                <th class="py-2 px-1 border border-slate-700">Bawang Daun</th>
+                                <th class="py-2 px-1 border border-slate-700">Lainnya</th>
+                                <th class="py-2 px-1 border border-slate-700">Jumlah</th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700" colspan="2">(1)</th>
+                                ${Array(12).fill(0).map((_, i) => `<th class="py-1 px-1 border border-slate-700">(${i + 2})</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
             }
         };
 
@@ -7676,6 +7896,13 @@
                 localStorage.removeItem('simonda_table_html_8.1.2_2026');
                 localStorage.removeItem('simonda_table_html_8.1.2_2027');
                 for (let y = 2015; y <= 2030; y++) {
+                    ['5.1.15', '5.1.16', '5.1.17'].forEach(code => {
+                        const k = `simonda_table_html_${code}_${y}`;
+                        const val = localStorage.getItem(k);
+                        if (val && (val.includes('212,10') || val.includes('105,22'))) {
+                            localStorage.setItem(k, val.replace(/212,10/g, '8,84').replace(/105,22/g, '4,39'));
+                        }
+                    });
                     const k = `simonda_table_html_8.1.3_${y}`;
                     const val = localStorage.getItem(k);
                     if (val && (val.includes('72,40') || val.includes('123,20') || val.includes('74,10') || y <= 2020 || y >= 2026)) {
@@ -8386,6 +8613,17 @@
                 savedHtml = savedHtml.replace(/Kind of Revenues/gi, 'Kind of Expenditures');
             }
 
+            // Self-healing tabel 5.1.15, 5.1.16, 5.1.17: pulihkan nilai desimal dari serial-hour conversion
+            if (savedHtml && (currentTableCode === '5.1.15' || currentTableCode === '5.1.16' || currentTableCode === '5.1.17')) {
+                if (savedHtml.includes('212,10') || savedHtml.includes('105,22')) {
+                    savedHtml = savedHtml.replace(/212,10/g, '8,84').replace(/105,22/g, '4,39');
+                    localStorage.setItem(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                    if (serverDbMetadata) {
+                        serverDbMetadata.table_html = savedHtml;
+                    }
+                }
+            }
+
             // Validasi savedHtml untuk tabel multi-tahun (8.1.1, 8.1.2, 8.1.3, 8.1.4, 8.1.5, 2.2.5, 1.1.10 atau schema.isMultiYear)
             const isMultiYearTable = Boolean(schema && (schema.isMultiYear || schema.isExcludeSelectedYear)) || 
                                      ['8.1.1', '8.1.2', '8.1.3', '8.1.4', '8.1.5', '2.2.5', '1.1.10'].includes(currentTableCode);
@@ -9004,6 +9242,7 @@
 
         function cleanGhostRows(table) {
             if (!table) return;
+            if (currentTableCode.startsWith('1.1.') || currentTableCode.startsWith('2.3.') || currentTableCode.startsWith('4.1') || currentTableCode.startsWith('5.1.') || currentTableCode.startsWith('5.2.') || currentOpdCode === '08' || currentOpdCode === '04') return;
             const tbody = table.querySelector('tbody');
             if (!tbody) return;
             const rows = tbody.querySelectorAll('tr');
@@ -9204,6 +9443,75 @@
 
             const formattedInt = cleanDigits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
             return (isNegative ? '-' : '') + formattedInt + decPart;
+        }
+
+        // Format angka BPS: angka < 1.000 jangan pakai titik, angka >= 1.000 pakai titik ribuan, desimal selalu koma (bukan titik)
+        function formatBpsNumber(val) {
+            if (val === null || val === undefined) return val;
+            let str = val.toString().trim();
+            if (!str || str === '-' || str === '–' || str === '—') return str;
+            if (/[a-zA-Z]/.test(str)) return str;
+            if (/^\s*\(\s*\d+\s*\)\s*$/.test(str)) return str;
+            if (/^(19|20)\d{2}$/.test(str)) return str;
+            if (/^\d+\s*[-–\/]\s*\d+$/.test(str)) return str;
+
+            // Sudah berformat desimal koma standar Indonesia: misal "333,02" atau "1.234,56" atau "207,00"
+            if (str.includes(',')) {
+                const parts = str.split(',');
+                const intPart = parts[0].replace(/\./g, '');
+                const decPart = parts.slice(1).join(',');
+                const numInt = parseInt(intPart, 10);
+                if (isNaN(numInt)) return str;
+                let formattedInt = intPart;
+                if (Math.abs(numInt) >= 1000) {
+                    formattedInt = (intPart.startsWith('-') ? '-' : '') + Math.abs(numInt).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                } else {
+                    formattedInt = intPart.startsWith('-') ? '-' + Math.abs(numInt).toString() : Math.abs(numInt).toString();
+                }
+                return formattedInt + ',' + decPart;
+            }
+
+            // Memuat titik: bisa berupa desimal (8.84) atau pemisah ribuan (50.210)
+            if (str.includes('.')) {
+                const dotCount = (str.match(/\./g) || []).length;
+                if (dotCount > 1) {
+                    // Lebih dari satu titik: sudah merupakan pemisah ribuan standar BPS, misal 1.500.000
+                    return str;
+                }
+                const parts = str.split('.');
+                const left = parts[0];
+                const right = parts[1];
+
+                // Desimal jika: digit belakang titik bukan 3 angka ATAU digit depan adalah 0 / -0
+                // Contoh: 8.84 (2 digit), 87.4 (1 digit), 0.0034 (4 digit), 0.86 (2 digit)
+                if (right.length !== 3 || left === '0' || left === '-0') {
+                    const numLeft = parseInt(left.replace(/\./g, ''), 10);
+                    if (isNaN(numLeft)) return str;
+                    let formattedLeft = left;
+                    if (Math.abs(numLeft) >= 1000) {
+                        formattedLeft = (left.startsWith('-') ? '-' : '') + Math.abs(numLeft).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                    } else {
+                        formattedLeft = left.startsWith('-') ? '-' + Math.abs(numLeft).toString() : Math.abs(numLeft).toString();
+                    }
+                    return formattedLeft + ',' + right;
+                }
+
+                // 3 digit di belakang titik pada nilai ribuan BPS (misal 50.210 atau 1.596)
+                return str;
+            }
+
+            // Bilangan bulat murni tanpa koma dan tanpa titik
+            if (/^-?\d+$/.test(str)) {
+                const num = parseInt(str, 10);
+                if (isNaN(num)) return str;
+                if (Math.abs(num) >= 1000) {
+                    return (str.startsWith('-') ? '-' : '') + Math.abs(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                }
+                // Nilai di bawah 1.000: TIDAK PAKAI TITIK (misal 417, 100, 54, 0)
+                return str;
+            }
+
+            return str;
         }
 
         // ==========================================
@@ -12984,16 +13292,7 @@
                     const totalHours = (days * 24) + hours;
                     return `${totalHours}.${mins < 10 ? '0' + mins : mins}`;
                 }
-                // 3. Serial day fraction e.g. 4.524305555555555 -> 108.35
-                if (typeof rawVal === 'number' && rawVal > 1 && rawVal < 10 && (rawVal % 1 !== 0)) {
-                    const rawHours = rawVal * 24;
-                    const totalHoursInt = Math.floor(rawHours);
-                    const mins = Math.round((rawHours - totalHoursInt) * 60);
-                    if (mins >= 0 && mins < 60) {
-                        return `${totalHoursInt}.${mins < 10 ? '0' + mins : mins}`;
-                    }
-                }
-                return s;
+                return (typeof formatBpsNumber === 'function') ? formatBpsNumber(s) : s;
             }
 
             // 2. Helper to check numbering rows like (1), (2), (3) or -1, -2, -3 or 1, 2, 3

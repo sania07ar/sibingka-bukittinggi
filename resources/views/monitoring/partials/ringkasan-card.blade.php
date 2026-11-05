@@ -30,31 +30,31 @@
         </div>
     </div>
 
-    <!-- Legend Items (Dynamic Values) -->
+    <!-- Legend Items (Dynamic Values for 3 Stages) -->
     <div class="space-y-2.5 mt-5 pt-4 border-t border-slate-100 text-xs font-semibold">
-        <!-- Selesai -->
+        <!-- Tahap 3: Validasi BPS (Selesai) -->
         <div class="flex items-center justify-between text-slate-700">
             <div class="flex items-center space-x-2.5">
                 <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                <span>Selesai (Publikasi)</span>
+                <span>3. Validasi BPS Admin</span>
             </div>
             <span class="font-bold text-slate-900">{{ $countSelesai }}</span>
         </div>
 
-        <!-- Berjalan -->
+        <!-- Tahap 2: Verifikasi Wali Data (Proses) -->
         <div class="flex items-center justify-between text-slate-700">
             <div class="flex items-center space-x-2.5">
                 <span class="w-2.5 h-2.5 rounded-full bg-[#f95a00]"></span>
-                <span>Berjalan</span>
+                <span>2. Verifikasi Wali Data</span>
             </div>
             <span class="font-bold text-slate-900">{{ $countBerjalan }}</span>
         </div>
 
-        <!-- Belum Mulai -->
+        <!-- Tahap 1: Input Data (Pengisian) -->
         <div class="flex items-center justify-between text-slate-700">
             <div class="flex items-center space-x-2.5">
                 <span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span>
-                <span>Belum Mulai</span>
+                <span>1. Input Data Dinas</span>
             </div>
             <span class="font-bold text-slate-900">{{ $countBelum }}</span>
         </div>

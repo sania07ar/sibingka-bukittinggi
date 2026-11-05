@@ -60,7 +60,9 @@
                 usernameInput.value = defUsername;
             }
 
-            if (role === 'instansi') {
+            if (role === 'walidata') {
+                setPageCheckboxes('create', ['monitoring-opd', 'monitoring-instansi', 'tabel-opd', 'isi-data-opd', 'isi-data-instansi']);
+            } else if (role === 'instansi') {
                 setPageCheckboxes('create', ['isi-data-instansi', 'monitoring-instansi']);
             } else {
                 setPageCheckboxes('create', ['isi-data-opd', 'monitoring-opd', 'tabel-opd']);
@@ -68,7 +70,10 @@
         } else if (mode === 'edit') {
             const opdRadio = document.getElementById('edit_role_opd');
             const instansiRadio = document.getElementById('edit_role_instansi');
-            if (role === 'instansi' && instansiRadio) {
+            const waliRadio = document.getElementById('edit_role_walidata');
+            if (role === 'walidata' && waliRadio) {
+                waliRadio.checked = true;
+            } else if (role === 'instansi' && instansiRadio) {
                 instansiRadio.checked = true;
             } else if (opdRadio) {
                 opdRadio.checked = true;
@@ -80,13 +85,20 @@
     function toggleCategoryFilter(mode, type) {
         const opdGroup = document.getElementById(`${mode}_opd_group`);
         const instGroup = document.getElementById(`${mode}_instansi_group`);
+        const waliGroup = document.getElementById(`${mode}_walidata_group`);
         if (opdGroup && instGroup) {
             if (type === 'opd') {
                 opdGroup.style.display = '';
                 instGroup.style.display = 'none';
-            } else {
+                if (waliGroup) waliGroup.style.display = 'none';
+            } else if (type === 'instansi') {
                 opdGroup.style.display = 'none';
                 instGroup.style.display = '';
+                if (waliGroup) waliGroup.style.display = 'none';
+            } else if (type === 'walidata') {
+                opdGroup.style.display = 'none';
+                instGroup.style.display = 'none';
+                if (waliGroup) waliGroup.style.display = '';
             }
         }
     }
@@ -122,12 +134,15 @@
         document.getElementById('editModalTitle').innerText = 'Edit Akun: ' + (userData.dinas_name || userData.name);
         document.getElementById('formEditDinas').action = `/kelola-akun/dinas/${userData.id}/update`;
 
+        const isWali = (userData.role === 'walidata');
         const isInst = (userData.role === 'instansi');
         const opdRadio = document.getElementById('edit_role_opd');
         const instansiRadio = document.getElementById('edit_role_instansi');
-        if (opdRadio) opdRadio.checked = !isInst;
+        const waliRadio = document.getElementById('edit_role_walidata');
+        if (opdRadio) opdRadio.checked = (!isInst && !isWali);
         if (instansiRadio) instansiRadio.checked = isInst;
-        toggleCategoryFilter('edit', isInst ? 'instansi' : 'opd');
+        if (waliRadio) waliRadio.checked = isWali;
+        toggleCategoryFilter('edit', isWali ? 'walidata' : (isInst ? 'instansi' : 'opd'));
 
         const opdCodeInput = document.getElementById('edit_opd_code');
         if (opdCodeInput) opdCodeInput.value = userData.opd_code || '';

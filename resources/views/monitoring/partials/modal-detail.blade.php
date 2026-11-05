@@ -31,32 +31,32 @@
             </div>
         </div>
 
-        <!-- Modal Stage Selector: Ubah Status Tahapan -->
+        <!-- Modal Action: Status Validasi BPS (Khusus Admin Pembina Data) -->
+        @php
+            $isAdmin = (session('user.role') === 'admin');
+        @endphp
         <div class="my-3.5 p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
             <div class="flex items-center justify-between mb-2.5">
                 <div>
-                    <span class="text-xs font-bold text-slate-800">Ubah Tahapan Status Progres:</span>
-                    <p class="text-[10px] text-slate-500">Sesuaikan tahapan riil (Persiapan s.d. Publikasi BPS)</p>
+                    <span class="text-xs font-bold text-slate-800">Status Validasi BPS:</span>
+                    <p class="text-[10px] text-slate-500">Tahap akhir validasi data statistik sektoral oleh Pembina Data (BPS Bukittinggi)</p>
                 </div>
-                <span id="modalCurrentStageBadge" class="px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-orange-100 text-[#f95a00]">Validasi BPS</span>
+                <span id="modalCurrentStageBadge" class="px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-orange-100 text-[#f95a00]">Verifikasi</span>
             </div>
-            <div class="grid grid-cols-2 sm:grid-cols-5 gap-1.5 text-center">
-                <button type="button" onclick="changeModalStage(1)" id="modalStageBtn1" class="modal-stage-btn px-2 py-1.5 rounded-xl text-[11px] font-bold border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 transition-all cursor-pointer">
-                    1. Persiapan
-                </button>
-                <button type="button" onclick="changeModalStage(2)" id="modalStageBtn2" class="modal-stage-btn px-2 py-1.5 rounded-xl text-[11px] font-bold border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 transition-all cursor-pointer">
-                    2. Input Data
-                </button>
-                <button type="button" onclick="changeModalStage(3)" id="modalStageBtn3" class="modal-stage-btn px-2 py-1.5 rounded-xl text-[11px] font-bold border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 transition-all cursor-pointer">
-                    3. Verifikasi
-                </button>
-                <button type="button" onclick="changeModalStage(4)" id="modalStageBtn4" class="modal-stage-btn px-2 py-1.5 rounded-xl text-[11px] font-bold border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 transition-all cursor-pointer">
-                    4. Validasi BPS
-                </button>
-                <button type="button" onclick="changeModalStage(5)" id="modalStageBtn5" class="modal-stage-btn px-2 py-1.5 rounded-xl text-[11px] font-bold border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 transition-all cursor-pointer">
-                    5. Publikasi
-                </button>
-            </div>
+            @if($isAdmin)
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-center">
+                    <button type="button" onclick="changeModalValidasiBps(3)" id="modalBpsValidateBtn" class="px-3 py-2 rounded-xl text-xs font-bold border border-emerald-300 bg-emerald-50 hover:bg-emerald-600 hover:text-white text-emerald-800 transition-all cursor-pointer flex items-center justify-center space-x-1.5 shadow-2xs">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Beri Validasi BPS (ACC Selesai)</span>
+                    </button>
+                    <button type="button" onclick="changeModalValidasiBps(2)" id="modalBpsUnvalidateBtn" class="px-3 py-2 rounded-xl text-xs font-bold border border-slate-200 bg-white hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300 text-slate-600 transition-all cursor-pointer flex items-center justify-center space-x-1.5 shadow-2xs">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span>Batalkan Validasi BPS</span>
+                    </button>
+                </div>
+            @else
+                <p class="text-[11px] font-medium text-slate-500 italic">Status validasi hanya dapat diubah oleh Administrator BPS Kota Bukittinggi.</p>
+            @endif
         </div>
 
         <!-- Modal Body: Vertical Timeline -->

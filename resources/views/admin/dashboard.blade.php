@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SiAngka Kota Bukittinggi - Administrator BPS Kota Bukittinggi</title>
+    <title>SiAngka Kota Bukittinggi - {{ (session('user.role') === 'walidata') ? 'Wali Data (Diskominfo)' : 'Administrator BPS Kota Bukittinggi' }}</title>
     
     <!-- Favicon Logo BPS -->
     <link rel="icon" type="image/png" href="{{ asset('images/bps-symbol.png') }}">
@@ -83,7 +83,10 @@
 
     @php
         $currentUser = session('user', []);
-        $dinasName = $currentUser['displayName'] ?? 'Administrator BPS';
+        $userRole = $currentUser['role'] ?? 'admin';
+        $isAdmin = ($userRole === 'admin');
+        $isWaliData = ($userRole === 'walidata');
+        $dinasName = $currentUser['displayName'] ?? ($isWaliData ? 'Wali Data (Diskominfo)' : 'Administrator BPS');
         $allowedPages = $currentUser['allowed_pages'] ?? array_keys(config('simonda.pages', []));
 
         $totalOpd = 20;
@@ -158,11 +161,13 @@
                    class="nav-tab text-[#f95a00] border-b-2 border-[#f95a00] pb-1 transition-all cursor-pointer">
                     Beranda
                 </a>
-                <a href="{{ route('kelola-akun') }}" 
-                   data-nav="kelola-akun"
-                   class="nav-tab text-slate-700 hover:text-[#f95a00] border-b-2 border-transparent hover:border-[#f95a00] pb-1 transition-all cursor-pointer">
-                    Kelola Akun
-                </a>
+                @if($isAdmin)
+                    <a href="{{ route('kelola-akun') }}" 
+                       data-nav="kelola-akun"
+                       class="nav-tab text-slate-700 hover:text-[#f95a00] border-b-2 border-transparent hover:border-[#f95a00] pb-1 transition-all cursor-pointer">
+                        Kelola Akun
+                    </a>
+                @endif
                 <a href="#tentang-section" 
                    data-nav="tentang"
                    onclick="selectNavTab('tentang', event)"
@@ -181,12 +186,18 @@
                 <!-- Admin Profile & Logout -->
                 <div class="flex items-center gap-2">
                     <div class="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200/80 text-slate-800 text-xs shadow-2xs">
-                        <div class="w-5 h-5 rounded-full overflow-hidden shrink-0 border border-slate-200 shadow-2xs" style="width: 20px; height: 20px; min-width: 20px; min-height: 20px;">
-                            <img src="{{ asset('images/default-avatar.png') }}" alt="Avatar Admin BPS" class="w-full h-full object-cover block rounded-full">
+                        <div class="w-5 h-5 rounded-full overflow-hidden shrink-0 border border-slate-200 shadow-2xs flex items-center justify-center {{ $isWaliData ? 'bg-teal-600 text-white' : 'bg-slate-100' }}" style="width: 20px; height: 20px; min-width: 20px; min-height: 20px;">
+                            @if($isWaliData)
+                                <i class="fa-solid fa-shield-halved text-[10px]"></i>
+                            @else
+                                <img src="{{ asset('images/default-avatar.png') }}" alt="Avatar Admin BPS" class="w-full h-full object-cover block rounded-full">
+                            @endif
                         </div>
                         <div class="flex flex-col text-left">
                             <span class="font-bold text-slate-900 leading-tight truncate max-w-[120px] sm:max-w-xs text-[11px] sm:text-xs">{{ $dinasName }}</span>
-                            <span class="text-[9px] font-semibold text-slate-500">Administrator BPS</span>
+                            <span class="text-[9px] font-semibold {{ $isWaliData ? 'text-teal-700 font-bold' : 'text-slate-500' }}">
+                                {{ $isWaliData ? 'Wali Data (Diskominfo)' : 'Administrator BPS' }}
+                            </span>
                         </div>
                     </div>
 
@@ -212,7 +223,7 @@
         <div id="beranda-section" class="scroll-mt-24 relative w-full rounded-3xl overflow-hidden border border-slate-200/80 shadow-sm bg-white min-h-[380px] sm:min-h-[420px] lg:min-h-[440px] flex items-center">
             
             <div class="absolute inset-y-0 right-0 w-full sm:w-1/2 lg:w-[46%] xl:w-2/5 overflow-hidden pointer-events-none">
-                <img src="{{ asset('images/fgd-bukittinggi-exact.png') }}" alt="FGD Bukittinggi dalam Angka" class="w-full h-full object-cover object-center">
+                <img src="{{ asset('images/fgd-bukittinggi-exact.png') }}?v={{ file_exists(public_path('images/fgd-bukittinggi-exact.png')) ? filemtime(public_path('images/fgd-bukittinggi-exact.png')) : time() }}" alt="FGD Bukittinggi dalam Angka" class="w-full h-full object-cover object-center">
                 <div class="absolute inset-y-0 left-0 w-14 sm:w-20 bg-gradient-to-r from-white to-transparent"></div>
             </div>
 

@@ -29,7 +29,7 @@
                 <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                     Kategori Mitra / Akun <span class="text-red-500">*</span>
                 </label>
-                <div class="grid grid-cols-2 gap-2.5">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                     <label class="flex items-center space-x-2 p-2.5 rounded-xl border border-slate-200 hover:border-orange-400 cursor-pointer transition-all bg-orange-50/30">
                         <input type="radio" name="role" id="create_role_opd" value="opd" checked onchange="toggleCategoryFilter('create', 'opd')" class="w-4 h-4 text-orange-600 focus:ring-orange-500">
                         <div class="leading-tight">
@@ -41,7 +41,14 @@
                         <input type="radio" name="role" id="create_role_instansi" value="instansi" onchange="toggleCategoryFilter('create', 'instansi')" class="w-4 h-4 text-indigo-600 focus:ring-indigo-500">
                         <div class="leading-tight">
                             <span class="font-bold text-xs text-slate-900 block">Instansi Vertikal & Lainnya</span>
-                            <span class="text-[10px] text-slate-500">37 Mitra Vertikal & Perguruan Tinggi</span>
+                            <span class="text-[10px] text-slate-500">37 Mitra Vertikal</span>
+                        </div>
+                    </label>
+                    <label class="flex items-center space-x-2 p-2.5 rounded-xl border border-slate-200 hover:border-teal-400 cursor-pointer transition-all bg-teal-50/30">
+                        <input type="radio" name="role" id="create_role_walidata" value="walidata" onchange="toggleCategoryFilter('create', 'walidata')" class="w-4 h-4 text-teal-600 focus:ring-teal-500">
+                        <div class="leading-tight">
+                            <span class="font-bold text-xs text-slate-900 block">Wali Data (Diskominfo)</span>
+                            <span class="text-[10px] text-slate-500">Bagian Sistem Informasi</span>
                         </div>
                     </label>
                 </div>
@@ -75,6 +82,11 @@
                                 {{ $ic }}. {{ $inst['short_name'] }} - {{ $inst['name'] }}
                             </option>
                         @endforeach
+                    </optgroup>
+                    <optgroup label="Wali Data Statistik Sektoral" id="create_walidata_group">
+                        <option value="Dinas Komunikasi dan Informatika (Wali Data)" data-code="00" data-role="walidata" data-short="DISKOMINFO" data-username="walidata_kominfo">
+                            00. DISKOMINFO - Bagian Sistem Informasi (Wali Data Kota)
+                        </option>
                     </optgroup>
                 </select>
                 <p class="text-[10.5px] text-slate-500 mt-1">Pilih dinas atau instansi dari daftar resmi Pemerintah Kota Bukittinggi</p>

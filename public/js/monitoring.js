@@ -215,38 +215,56 @@ function closeAgencyDetailModal() {
 function closeOpdDetailModal() { closeAgencyDetailModal(); }
 function closeInstansiDetailModal() { closeAgencyDetailModal(); }
 
-// Stage Stage Names
+// Stage Stage Names (3 Tahapan Monitoring)
 const stageNames = {
-    1: 'Persiapan',
-    2: 'Input Data',
-    3: 'Verifikasi',
-    4: 'Validasi BPS',
-    5: 'Publikasi'
+    1: 'Input Data',
+    2: 'Verifikasi',
+    3: 'Validasi BPS'
 };
 
 function highlightModalStageButtons(activeStep) {
     const badge = document.getElementById('modalCurrentStageBadge');
     if (badge) {
-        badge.innerText = stageNames[activeStep] || `Tahap ${activeStep}`;
-        if (activeStep === 5) {
+        if (activeStep === 3) {
+            badge.innerText = 'Tervalidasi BPS';
             badge.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-700';
-        } else if (activeStep === 1) {
-            badge.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-slate-100 text-slate-700';
-        } else {
+        } else if (activeStep === 2) {
+            badge.innerText = 'Verifikasi Wali Data';
             badge.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-orange-100 text-[#f95a00]';
+        } else {
+            badge.innerText = 'Input Data (Pengisian)';
+            badge.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-slate-100 text-slate-700';
         }
     }
 
-    for (let s = 1; s <= 5; s++) {
-        const btn = document.getElementById('modalStageBtn' + s);
-        if (btn) {
-            if (s === activeStep) {
-                btn.className = 'modal-stage-btn px-2 py-1.5 rounded-xl text-[11px] font-bold border-2 border-[#f95a00] bg-orange-50 text-[#f95a00] shadow-2xs transition-all cursor-pointer ring-2 ring-orange-200';
-            } else {
-                btn.className = 'modal-stage-btn px-2 py-1.5 rounded-xl text-[11px] font-bold border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 transition-all cursor-pointer';
-            }
+    const validateBtn = document.getElementById('modalBpsValidateBtn');
+    const unvalidateBtn = document.getElementById('modalBpsUnvalidateBtn');
+    if (validateBtn && unvalidateBtn) {
+        if (activeStep === 3) {
+            validateBtn.className = 'px-3 py-2 rounded-xl text-xs font-bold border-2 border-emerald-600 bg-emerald-600 text-white shadow-2xs transition-all cursor-default flex items-center justify-center space-x-1.5 pointer-events-none opacity-90';
+            validateBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i><span>Sudah Tervalidasi BPS</span>';
+            unvalidateBtn.className = 'px-3 py-2 rounded-xl text-xs font-bold border border-slate-200 bg-white hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300 text-slate-600 transition-all cursor-pointer flex items-center justify-center space-x-1.5 shadow-2xs';
+        } else {
+            validateBtn.className = 'px-3 py-2 rounded-xl text-xs font-bold border border-emerald-400 bg-emerald-50 hover:bg-emerald-600 hover:text-white text-emerald-800 transition-all cursor-pointer flex items-center justify-center space-x-1.5 shadow-2xs';
+            validateBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i><span>Beri Validasi BPS (ACC Selesai)</span>';
+            unvalidateBtn.className = 'px-3 py-2 rounded-xl text-xs font-bold border border-slate-200 bg-slate-100 text-slate-400 transition-all cursor-not-allowed pointer-events-none flex items-center justify-center space-x-1.5';
         }
     }
+}
+
+function changeModalValidasiBps(targetStage) {
+    if (!currentModalAgency) return;
+    toggleBpsValidation(currentModalAgency.type, currentModalAgency.code, targetStage);
+}
+
+function toggleBpsValidation(agencyType, agencyCode, targetStage) {
+    const isApproving = (parseInt(targetStage) === 3);
+    const confirmMsg = isApproving 
+        ? 'Apakah Anda yakin ingin menyetujui Validasi BPS (ACC) untuk dinas/instansi ini?' 
+        : 'Apakah Anda yakin ingin membatalkan Validasi BPS?';
+    if (!confirm(confirmMsg)) return;
+
+    updateStageQuick(agencyType, agencyCode, targetStage);
 }
 
 function changeModalStage(newStage) {

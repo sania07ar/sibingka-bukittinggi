@@ -29,14 +29,18 @@
                 <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                     Kategori Akun
                 </label>
-                <div class="grid grid-cols-2 gap-2.5">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                     <label class="flex items-center space-x-2 p-2 rounded-xl border border-slate-200 cursor-pointer">
                         <input type="radio" name="role" id="edit_role_opd" value="opd" onchange="toggleCategoryFilter('edit', 'opd')" class="w-4 h-4 text-orange-600 focus:ring-orange-500">
                         <span class="font-bold text-xs text-slate-800">Dinas / OPD Kota</span>
                     </label>
                     <label class="flex items-center space-x-2 p-2 rounded-xl border border-slate-200 cursor-pointer">
                         <input type="radio" name="role" id="edit_role_instansi" value="instansi" onchange="toggleCategoryFilter('edit', 'instansi')" class="w-4 h-4 text-indigo-600 focus:ring-indigo-500">
-                        <span class="font-bold text-xs text-slate-800">Instansi Vertikal & Lainnya</span>
+                        <span class="font-bold text-xs text-slate-800">Instansi Vertikal</span>
+                    </label>
+                    <label class="flex items-center space-x-2 p-2 rounded-xl border border-slate-200 cursor-pointer">
+                        <input type="radio" name="role" id="edit_role_walidata" value="walidata" onchange="toggleCategoryFilter('edit', 'walidata')" class="w-4 h-4 text-teal-600 focus:ring-teal-500">
+                        <span class="font-bold text-xs text-slate-800">Wali Data (Diskominfo)</span>
                     </label>
                 </div>
             </div>
@@ -69,6 +73,11 @@
                                 {{ $ic }}. {{ $inst['short_name'] }} - {{ $inst['name'] }}
                             </option>
                         @endforeach
+                    </optgroup>
+                    <optgroup label="Wali Data Statistik Sektoral" id="edit_walidata_group">
+                        <option value="Dinas Komunikasi dan Informatika (Wali Data)" data-code="00" data-role="walidata" data-short="DISKOMINFO" data-username="walidata_kominfo">
+                            00. DISKOMINFO - Bagian Sistem Informasi (Wali Data Kota)
+                        </option>
                     </optgroup>
                 </select>
             </div>

@@ -72,7 +72,7 @@
                 $loggedInstansiCode = session('user.opd_code');
                 $loggedInstansiName = session('user.dinas_name');
                 $userRole = session('user.role');
-                $isAdmin = $userRole === 'admin';
+                $isAdmin = in_array($userRole, ['admin', 'walidata']);
                 $isInstansiUser = !$isAdmin && ($userRole === 'instansi' || !empty($loggedInstansiCode));
 
                 $instansiList = [

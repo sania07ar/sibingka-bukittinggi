@@ -192,11 +192,26 @@
                 $inst['verified'] = $verifiedCountsInstansi[$code] ?? ($verifiedCountsInstansi[ltrim($code, '0')] ?? 0);
                 $inst['revision'] = $revisionCountsInstansi[$code] ?? ($revisionCountsInstansi[ltrim($code, '0')] ?? 0);
 
-                if ($pct === 100) {
-                    $inst['step'] = 4;
+                if ($inst['verified'] > 0) {
+                    $inst['step'] = 3;
                     $inst['step_label'] = 'Validasi BPS';
                     $inst['status'] = 'Validasi BPS';
+                    $inst['status_type'] = 'selesai';
+                } elseif ($inst['submitted'] > 0 || $pct >= 80) {
+                    $inst['step'] = 2;
+                    $inst['step_label'] = 'Verifikasi';
+                    $inst['status'] = 'Verifikasi Wali Data';
                     $inst['status_type'] = 'berjalan';
+                } elseif ($pct > 0) {
+                    $inst['step'] = 1;
+                    $inst['step_label'] = 'Input Data';
+                    $inst['status'] = 'Pengisian';
+                    $inst['status_type'] = 'berjalan';
+                } else {
+                    $inst['step'] = 1;
+                    $inst['step_label'] = 'Input Data';
+                    $inst['status'] = 'Belum Mulai';
+                    $inst['status_type'] = 'belum';
                 }
 
                 if (isset($manualStagesInstansi[$code])) {
@@ -208,9 +223,9 @@
                     $inst['status_type'] = $info['type'];
                 }
 
-                if ($inst['step'] === 5) {
+                if ($inst['step'] === 3) {
                     $countSelesai++;
-                } elseif ($inst['step'] >= 2) {
+                } elseif ($inst['step'] === 2 || ($inst['step'] === 1 && $pct > 0)) {
                     $countBerjalan++;
                 } else {
                     $countBelum++;
@@ -234,13 +249,6 @@
             
             <!-- HEADER, YEAR SELECTOR, EXPORT DROPDOWN & TAB SWITCHER -->
             @include('monitoring.partials.header', [
-                'activeTab' => 'instansi',
-                'selectedYear' => $selectedYear,
-                'availableYears' => $availableYears
-            ])
-
-            <!-- CARD MONITORING TABEL PER INSTANSI & PER TABEL (SESUAI REQUEST USER) -->
-            @include('monitoring.partials.monitoring-tabel-card', [
                 'activeTab' => 'instansi',
                 'selectedYear' => $selectedYear,
                 'availableYears' => $availableYears

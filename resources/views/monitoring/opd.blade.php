@@ -199,26 +199,29 @@
                     $tablesDesc = "{$totalCat} Tabel Data (Belum Diisi Data Angka)";
                 }
 
-                // Tahapan default sesuai data riil angka
-                if ($pct === 100) {
-                    $step = 4;
+                // Tahapan default sesuai data riil angka dan status verifikasi (3 Tahap Sektoral)
+                $vCount = $verifiedCounts[$code] ?? ($verifiedCounts[ltrim($code, '0')] ?? 0);
+                $sCount = $submittedCounts[$code] ?? ($submittedCounts[ltrim($code, '0')] ?? 0);
+
+                if ($vCount >= $totalCat && $totalCat > 0) {
+                    $step = 3;
                     $stepLabel = 'Validasi BPS';
                     $statusText = 'Validasi BPS';
-                    $statusType = 'berjalan';
-                } elseif ($pct >= 40) {
-                    $step = 3;
-                    $stepLabel = 'Sedang Berjalan';
-                    $statusText = 'Verifikasi';
+                    $statusType = 'selesai';
+                } elseif ($sCount > 0 || $vCount > 0) {
+                    $step = 2;
+                    $stepLabel = 'Verifikasi';
+                    $statusText = 'Verifikasi Wali Data';
                     $statusType = 'berjalan';
                 } elseif ($pct > 0) {
-                    $step = 2;
-                    $stepLabel = 'Pengisian';
-                    $statusText = 'Input Data';
+                    $step = 1;
+                    $stepLabel = 'Input Data';
+                    $statusText = 'Pengisian';
                     $statusType = 'berjalan';
                 } else {
                     $step = 1;
-                    $stepLabel = 'Belum Mulai';
-                    $statusText = 'Belum Terisi';
+                    $stepLabel = 'Input Data';
+                    $statusText = 'Belum Mulai';
                     $statusType = 'belum';
                 }
 
@@ -231,9 +234,9 @@
                     $statusType = $stageInfo['type'];
                 }
 
-                if ($step === 5) {
+                if ($step === 3) {
                     $countSelesai++;
-                } elseif ($step >= 2) {
+                } elseif ($step === 2 || ($step === 1 && $pct > 0)) {
                     $countBerjalan++;
                 } else {
                     $countBelum++;
@@ -277,13 +280,6 @@
             
             <!-- HEADER, YEAR SELECTOR, EXPORT DROPDOWN & TAB SWITCHER -->
             @include('monitoring.partials.header', [
-                'activeTab' => 'opd',
-                'selectedYear' => $selectedYear,
-                'availableYears' => $availableYears
-            ])
-
-            <!-- CARD MONITORING TABEL PER DINAS & PER TABEL (SESUAI REQUEST USER) -->
-            @include('monitoring.partials.monitoring-tabel-card', [
                 'activeTab' => 'opd',
                 'selectedYear' => $selectedYear,
                 'availableYears' => $availableYears

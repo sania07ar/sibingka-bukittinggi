@@ -59,7 +59,8 @@
             height: 38px;
             font-family: inherit;
             outline: none;
-            text-align: center;
+            text-align: right;
+            padding-right: 12px;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
             transition: all 0.15s ease-in-out;
         }
@@ -200,7 +201,7 @@
                     <span id="breadcrumbOpdText" class="font-bold text-slate-800">01. DINAS PUPR</span>
                     <i class="fa-solid fa-chevron-right text-[9px] text-slate-400"></i>
                     <a href="javascript:void(0)" onclick="backToTableView()" class="hover:text-[#f95a00] transition-colors">
-                        <span id="breadcrumbTableText" class="font-bold text-slate-700">Tabel 1.1.6</span>
+                        <span id="breadcrumbTableText" class="font-bold text-slate-700">Tabel {{ $currentTableCode ?? '1.1.6' }}</span>
                     </a>
                     <i class="fa-solid fa-chevron-right text-[9px] text-slate-400"></i>
                     <span class="font-extrabold text-[#f95a00]">Edit Data</span>
@@ -230,7 +231,7 @@
                         <div>
                             <div class="flex items-center gap-2">
                                 <h2 id="pageMainHeading" class="text-base sm:text-lg md:text-xl font-extrabold text-slate-900 tracking-tight leading-tight">
-                                    Edit Data Tabel 1.1.6 Tahun 2025
+                                    Edit Data Tabel {{ $currentTableCode ?? '1.1.6' }} Tahun {{ $currentYear ?? '2025' }}
                                 </h2>
                                 <span class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold text-[10px] uppercase tracking-wider">
                                     Mode Editor
@@ -303,14 +304,18 @@
                         </button>
 
                         @php
-                            $isAdmin = session('user.role') === 'admin';
+                            $userRole = session('user.role');
+                            $isAdmin = ($userRole === 'admin');
+                            $isWali = ($userRole === 'walidata');
+                            $canVerify = ($isAdmin || $isWali);
                             $isLocked = (bool) ($dbMetadata?->is_locked ?? false);
+                            $vStatus = $dbMetadata?->verification_status ?? 'draft';
                         @endphp
 
                         @if($isLocked && !$isAdmin)
                             <button disabled 
                                     class="px-4 py-1.5 rounded-lg bg-slate-300 text-slate-500 font-bold text-xs flex items-center space-x-1.5 cursor-not-allowed"
-                                    title="Tabel terkunci karena sudah di-ACC oleh BPS Bukittinggi.">
+                                    title="Tabel terkunci karena sudah diverifikasi/ACC.">
                                 <i class="fa-solid fa-lock text-xs"></i>
                                 <span>Terkunci</span>
                             </button>
@@ -351,7 +356,7 @@
                             <span class="italic font-normal text-slate-600">Table</span>
                         </div>
                         <div class="flex flex-col font-bold text-slate-900 space-y-1">
-                            <span id="metaTableCode">1.1.6</span>
+                            <span id="metaTableCode">{{ $currentTableCode ?? '1.1.6' }}</span>
                             <span class="opacity-0">.</span>
                         </div>
                     </div>
@@ -5505,7 +5510,7 @@
                         return '-';
                     };
 
-                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
 
                     const rows = [
                         { key: 'umum', label: 'Umum / <span class="italic font-normal text-slate-600">General</span>' },
@@ -5615,7 +5620,7 @@
                         return isFuture ? '-' : '-';
                     };
 
-                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
 
                     const rows = [
                         { key: 'guguk', name: '01. Guguk Panjang' },
@@ -5737,7 +5742,7 @@
                         return '-';
                     };
 
-                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
 
                     const rowsHtml = years.map(y => {
                         const isCurrent = (y === yr);
@@ -5819,7 +5824,7 @@
                         return '-';
                     };
 
-                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
 
                     const rowsHtml = years.map(y => {
                         const isCurrent = (y === yr);
@@ -5942,7 +5947,7 @@
                         items = stdDiseases.map(d => ({ name: d, val: '-' }));
                     }
 
-                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
                     const inpText = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-left bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
 
                     const rowsHtml = items.map((it, idx) => `
@@ -6009,7 +6014,7 @@
                         return '-';
                     };
 
-                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
 
                     const rowsHtml = years.map(y => {
                         const isCurrent = (y === yr);
@@ -6115,7 +6120,7 @@
                         return hasData ? sum.toString() : '-';
                     });
 
-                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
 
                     const rowsHtml = profs.map((name, idx) => `
                         <tr class="hover:bg-amber-100/60 transition-colors" data-prof-index="${idx}">
@@ -6186,7 +6191,7 @@
                         return '-';
                     };
 
-                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
 
                     const rowsHtml = years.map(y => {
                         const isCurrent = (y === yr);
@@ -6286,7 +6291,7 @@
                         return '-';
                     };
 
-                    const inp = (v) => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm" value="${v}">`;
+                    const inp = (v) => `<input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm" value="${v}">`;
 
                     const rowsHtml = months.map((m, idx) => {
                         const mNum = idx + 1;
@@ -6370,7 +6375,7 @@
                         return '-';
                     };
 
-                    const inp = (v) => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm" value="${v}">`;
+                    const inp = (v) => `<input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm" value="${v}">`;
 
                     let rowsHtml = categories.map(cat => {
                         let cellsHtml = years.map(y => {
@@ -6443,7 +6448,7 @@
                         { label: 'Jumlah/ Total', timbunan: '90.33', persentase: '100' }
                     ];
 
-                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
 
                     const rowsHtml = officialData.map((row, idx) => {
                         const isTotal = row.label.toLowerCase().includes('jumlah');
@@ -6521,7 +6526,7 @@
                         return '-';
                     };
 
-                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
 
                     const rowsHtml = years.map(y => {
                         const isCurrent = (y === yr);
@@ -6612,7 +6617,7 @@
                         return '-';
                     };
 
-                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
 
                     const rowsHtml = years.map(y => {
                         const isCurrent = (y === yr);
@@ -6652,6 +6657,437 @@
                     `;
                 }
             },
+                        '4.2.17': {
+                titleId: 'Jumlah Akseptor Aktif Keluarga Berencana Menurut Alat Kontrasepsi di Kota Bukittinggi',
+                titleEn: 'Number of Family Planning Acceptors by Contraception in Bukittinggi',
+                isMultiYear: false,
+                isExcludeSelectedYear: false,
+                source: 'Dinas P3APPKB Kota Bukittinggi / <span class="italic text-slate-500">Women Empowerment & Children Protection, Control of Population and Family Planning Services of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const officialDistricts = {
+                        2025: {
+                            '01. Guguk Panjang': ['254', '255', '672', '909', '600', '175', '11'],
+                            '02. Mandiangin Koto Selayan': ['204', '336', '1010', '960', '686', '156', '5'],
+                            '03. Aur Birugo Tigo Baleh': ['112', '488', '316', '674', '406', '125', '2']
+                        },
+                        2024: {
+                            '01. Guguk Panjang': ['198', '355', '544', '1131', '753', '171', '10'],
+                            '02. Mandiangin Koto Selayan': ['172', '562', '935', '1412', '841', '146', '8'],
+                            '03. Aur Birugo Tigo Baleh': ['137', '168', '398', '772', '470', '170', '3']
+                        },
+                        2023: {
+                            '01. Guguk Panjang': ['232', '372', '628', '684', '741', '188', '14'],
+                            '02. Mandiangin Koto Selayan': ['305', '418', '1118', '714', '1075', '184', '9'],
+                            '03. Aur Birugo Tigo Baleh': ['128', '222', '392', '550', '504', '145', '3']
+                        }
+                    };
+
+                    const officialYearTotals = {
+                        2019: ['1088', '1154', '3551', '844', '4135', '500', '56'],
+                        2020: ['1146', '1168', '3529', '854', '3844', '481', '50'],
+                        2021: ['1109', '1073', '3544', '925', '3544', '521', '43'],
+                        2022: ['475', '656', '2065', '1285', '2170', '549', '37'],
+                        2023: ['665', '1012', '2138', '1948', '2320', '517', '26'],
+                        2024: ['507', '1085', '1877', '3315', '2064', '487', '21'],
+                        2025: ['570', '1079', '1998', '2543', '1692', '456', '18']
+                    };
+
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+
+                    const districts = [
+                        { name: '01. Guguk Panjang', key: 'guguk_panjang' },
+                        { name: '02. Mandiangin Koto Selayan', key: 'mandiangin_koto_selayan' },
+                        { name: '03. Aur Birugo Tigo Baleh', key: 'aur_birugo_tigo_baleh' }
+                    ];
+
+                    const dData = officialDistricts[yr] || {};
+
+                    let districtRowsHtml = districts.map((d, dIdx) => {
+                        const vals = dData[d.name] || ['-', '-', '-', '-', '-', '-', '-'];
+                        let sum = 0;
+                        const cells = vals.map((v, cIdx) => {
+                            const num = parseFloat(v.toString().replace(',', '.')) || 0;
+                            sum += num;
+                            return `<td class="py-2.5 px-4 border border-slate-700 text-center align-top">${inp(v, `kb-input-dist dist-${dIdx} col-${cIdx}`)}</td>`;
+                        }).join('');
+                        const sumFormatted = (sum > 0) ? sum.toString() : '-';
+                        return `
+                            <tr class="hover:bg-amber-100/60 transition-colors kb-dist-row" data-dist="${dIdx}">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${d.name}</td>
+                                ${cells}
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-bold kb-dist-total">${inp(sumFormatted, 'kb-row-total font-bold')}</td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    let pastYearsHtml = '';
+                    for (let pastY = yr - 5; pastY < yr; pastY++) {
+                        const pVals = officialYearTotals[pastY] || ['-', '-', '-', '-', '-', '-', '-'];
+                        let pSum = 0;
+                        const cells = pVals.map((v, cIdx) => {
+                            const num = parseFloat(v.toString().replace(',', '.')) || 0;
+                            pSum += num;
+                            return `<td class="py-2.5 px-4 border border-slate-700 text-center align-top">${inp(v, `kb-input-past past-${pastY} col-${cIdx}`)}</td>`;
+                        }).join('');
+                        const pSumFormatted = (pSum > 0) ? pSum.toString() : '-';
+                        pastYearsHtml += `
+                            <tr class="hover:bg-amber-100/60 transition-colors kb-past-row" data-year="${pastY}">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${pastY}</td>
+                                ${cells}
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-bold">${inp(pSumFormatted, 'kb-row-total font-bold')}</td>
+                            </tr>
+                        `;
+                    }
+
+                    const currTotals = officialYearTotals[yr] || ['-', '-', '-', '-', '-', '-', '-'];
+                    let currSum = 0;
+                    const currTotalCells = currTotals.map((v, cIdx) => {
+                        const num = parseFloat(v.toString().replace(',', '.')) || 0;
+                        currSum += num;
+                        return `<td class="py-2.5 px-4 border border-slate-700 text-center align-top font-bold">${inp(v, `kb-total-input col-${cIdx} font-bold`)}</td>`;
+                    }).join('');
+                    const currSumFormatted = (currSum > 0) ? currSum.toString() : '-';
+
+                    const totalRowHtml = `
+                        <tr class="bg-[#fed7aa] font-bold text-slate-900 hover:bg-amber-200/70 transition-colors kb-curr-total-row">
+                            <td class="py-2.5 px-4 border border-slate-700 text-left font-bold align-top">Jumlah / Total ${yr}</td>
+                            ${currTotalCells}
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-extrabold">${inp(currSumFormatted, 'kb-grand-total font-extrabold')}</td>
+                        </tr>
+                    `;
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="7">
+                                    <div>Alat Kontrasepsi</div><div class="italic font-normal text-[11px] sm:text-xs">Contraception Tools</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>IMP</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>PIL</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>IUD</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Kondom</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Suntik</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>MOW</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>MOP</div></th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700">(7)</th>
+                                <th class="py-1 px-3 border border-slate-700">(8)</th>
+                                <th class="py-1 px-3 border border-slate-700">(9)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${districtRowsHtml}
+                            ${pastYearsHtml}
+                            ${totalRowHtml}
+                        </tbody>
+                    `;
+                }
+            },
+
+            '4.2.18': {
+                titleId: 'Jumlah PPKBD, Kelompok UPPKS, PLKB dan CU Menurut Kecamatan di Kota Bukittinggi',
+                titleEn: 'Number of PPKBD, UPPKS Society, PLKB and CU by District in Bukittinggi',
+                isMultiYear: false,
+                isExcludeSelectedYear: false,
+                source: 'Dinas P3APPKB Kota Bukittinggi / <span class="italic text-slate-500">Women Empowerment & Children Protection, Control of Population and Family Planning Services of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const officialDistricts = {
+                        2025: {
+                            '01. Guguk Panjang': ['7', '33', '9', '5', '66.21', '23', '10', '12'],
+                            '02. Mandiangin Koto Selayan': ['9', '36', '16', '5', '57.98', '24', '9', '12'],
+                            '03. Aur Birugo Tigo Baleh': ['8', '35', '7', '4', '68.72', '18', '8', '9']
+                        },
+                        2024: {
+                            '01. Guguk Panjang': ['7', '64', '9', '5', '70.89', '23', '10', '12'],
+                            '02. Mandiangin Koto Selayan': ['9', '55', '14', '5', '64.91', '22', '8', '12'],
+                            '03. Aur Birugo Tigo Baleh': ['8', '44', '7', '4', '61.75', '18', '8', '9']
+                        },
+                        2023: {
+                            '01. Guguk Panjang': ['7', '64', '9', '3', '67.13', '21', '8', '10'],
+                            '02. Mandiangin Koto Selayan': ['9', '55', '10', '4', '63.62', '20', '7', '12'],
+                            '03. Aur Birugo Tigo Baleh': ['8', '44', '7', '3', '57.65', '18', '7', '8']
+                        }
+                    };
+
+                    const officialYearTotals = {
+                        2019: ['24', '164', '30', '8', '68.16', '54', '19', '27'],
+                        2020: ['24', '165', '27', '9', '68.1', '51', '19', '27'],
+                        2021: ['24', '165', '26', '7', '67.72', '52', '20', '20'],
+                        2022: ['24', '165', '26', '11', '55.3', '55', '21', '27'],
+                        2023: ['24', '163', '26', '10', '62.8', '59', '22', '30'],
+                        2024: ['24', '163', '30', '14', '66.02', '63', '26', '33'],
+                        2025: ['24', '104', '32', '14', '64.3', '65', '27', '33']
+                    };
+
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+
+                    const districts = ['01. Guguk Panjang', '02. Mandiangin Koto Selayan', '03. Aur Birugo Tigo Baleh'];
+                    const dData = officialDistricts[yr] || {};
+
+                    let districtRowsHtml = districts.map(dName => {
+                        const vals = dData[dName] || ['-', '-', '-', '-', '-', '-', '-', '-'];
+                        const cells = vals.map(v => `<td class="py-2.5 px-4 border border-slate-700 text-center align-top">${inp(v)}</td>`).join('');
+                        return `
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${dName}</td>
+                                ${cells}
+                            </tr>
+                        `;
+                    }).join('');
+
+                    let pastYearsHtml = '';
+                    for (let pastY = yr - 5; pastY < yr; pastY++) {
+                        const pVals = officialYearTotals[pastY] || ['-', '-', '-', '-', '-', '-', '-', '-'];
+                        const cells = pVals.map(v => `<td class="py-2.5 px-4 border border-slate-700 text-center align-top">${inp(v)}</td>`).join('');
+                        pastYearsHtml += `
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${pastY}</td>
+                                ${cells}
+                            </tr>
+                        `;
+                    }
+
+                    const currTotals = officialYearTotals[yr] || ['-', '-', '-', '-', '-', '-', '-', '-'];
+                    const currTotalCells = currTotals.map(v => `<td class="py-2.5 px-4 border border-slate-700 text-center align-top font-bold">${inp(v, 'font-bold')}</td>`).join('');
+                    const totalRowHtml = `
+                        <tr class="bg-[#fed7aa] font-bold text-slate-900 hover:bg-amber-200/70 transition-colors">
+                            <td class="py-2.5 px-4 border border-slate-700 text-left font-bold align-top">Jumlah / Total ${yr}</td>
+                            ${currTotalCells}
+                        </tr>
+                    `;
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>PPKBD</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Sub PPKBD</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>UPPKS / UPPKA</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>PLKB / PKB</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>CU (%)</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>BKB</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>BKR</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>BKL</div></th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700">(7)</th>
+                                <th class="py-1 px-3 border border-slate-700">(8)</th>
+                                <th class="py-1 px-3 border border-slate-700">(9)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${districtRowsHtml}
+                            ${pastYearsHtml}
+                            ${totalRowHtml}
+                        </tbody>
+                    `;
+                }
+            },
+
+            '4.2.19': {
+                titleId: 'Jumlah Klinik dan Tenaga Medis Keluarga Berencana di Kota Bukittinggi',
+                titleEn: 'Number of Clinics and Medical Personal of Family Planning in Bukittinggi',
+                isMultiYear: false,
+                isExcludeSelectedYear: false,
+                source: 'Dinas P3APPKB Kota Bukittinggi / <span class="italic text-slate-500">Women Empowerment & Children Protection, Control of Population and Family Planning Services of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const officialDistricts = {
+                        2025: {
+                            '01. Guguk Panjang': ['6', '14', '46'],
+                            '02. Mandiangin Koto Selayan': ['9', '1', '35'],
+                            '03. Aur Birugo Tigo Baleh': ['8', '1', '18']
+                        },
+                        2024: {
+                            '01. Guguk Panjang': ['6', '22', '48'],
+                            '02. Mandiangin Koto Selayan': ['10', '11', '39'],
+                            '03. Aur Birugo Tigo Baleh': ['8', '2', '17']
+                        },
+                        2023: {
+                            '01. Guguk Panjang': ['7', '12', '48'],
+                            '02. Mandiangin Koto Selayan': ['9', '2', '46'],
+                            '03. Aur Birugo Tigo Baleh': ['7', '1', '18']
+                        }
+                    };
+
+                    const officialYearTotals = {
+                        2019: ['24', '28', '98', '126'],
+                        2020: ['24', '28', '98', '126'],
+                        2021: ['27', '18', '64', '82'],
+                        2022: ['24', '15', '85', '100'],
+                        2023: ['23', '15', '115', '130'],
+                        2024: ['24', '33', '104', '137'],
+                        2025: ['23', '16', '99', '115']
+                    };
+
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+
+                    const districts = ['01. Guguk Panjang', '02. Mandiangin Koto Selayan', '03. Aur Birugo Tigo Baleh'];
+                    const dData = officialDistricts[yr] || {};
+
+                    let districtRowsHtml = districts.map(dName => {
+                        const vals = dData[dName] || ['-', '-', '-'];
+                        const vKlinik = vals[0] || '-';
+                        const vDokter = vals[1] || '-';
+                        const vBidan = vals[2] || '-';
+                        const nDokter = parseFloat(vDokter.toString().replace(',', '.')) || 0;
+                        const nBidan = parseFloat(vBidan.toString().replace(',', '.')) || 0;
+                        const nJml = nDokter + nBidan;
+                        const vJml = (nJml > 0) ? nJml.toString() : '-';
+
+                        return `
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${dName}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${inp(vKlinik)}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${inp(vDokter)}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${inp(vBidan)}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-bold">${inp(vJml, 'font-bold')}</td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    let pastYearsHtml = '';
+                    for (let pastY = yr - 5; pastY < yr; pastY++) {
+                        const pVals = officialYearTotals[pastY] || ['-', '-', '-', '-'];
+                        const cells = pVals.map((v, idx) => `<td class="py-2.5 px-4 border border-slate-700 text-center align-top ${idx === 3 ? 'font-bold' : ''}">${inp(v, idx === 3 ? 'font-bold' : '')}</td>`).join('');
+                        pastYearsHtml += `
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${pastY}</td>
+                                ${cells}
+                            </tr>
+                        `;
+                    }
+
+                    const currTotals = officialYearTotals[yr] || ['-', '-', '-', '-'];
+                    const currTotalCells = currTotals.map((v, idx) => `<td class="py-2.5 px-4 border border-slate-700 text-center align-top ${idx === 3 ? 'font-extrabold' : 'font-bold'}">${inp(v, idx === 3 ? 'font-extrabold' : 'font-bold')}</td>`).join('');
+                    const totalRowHtml = `
+                        <tr class="bg-[#fed7aa] font-bold text-slate-900 hover:bg-amber-200/70 transition-colors">
+                            <td class="py-2.5 px-4 border border-slate-700 text-left font-bold align-top">Jumlah / Total ${yr}</td>
+                            ${currTotalCells}
+                        </tr>
+                    `;
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2"><div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2"><div>Klinik KB</div><div class="italic font-normal text-[11px] sm:text-xs">Clinic</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="3"><div>Tenaga Medis</div><div class="italic font-normal text-[11px] sm:text-xs">Medical Personal</div></th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Dokter</div><div class="italic font-normal text-[11px] sm:text-xs">Doctor</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Bidan</div><div class="italic font-normal text-[11px] sm:text-xs">Midwive</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div></th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700">(5)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${districtRowsHtml}
+                            ${pastYearsHtml}
+                            ${totalRowHtml}
+                        </tbody>
+                    `;
+                }
+            },
+
+                        '4.2.20': {
+                titleId: 'Target dan Realisasi Keluarga Berencana di Kota Bukittinggi',
+                titleEn: 'Target and Realization of Family Planning in Bukittinggi',
+                isMultiYear: true,
+                isExcludeSelectedYear: false,
+                source: 'Dinas P3APPKB Kota Bukittinggi / <span class="italic text-slate-500">Women Empowerment & Children Protection, Control of Population and Family Planning Services of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const p = get7YearPeriod(yr);
+                    const years = p.yearsAsc;
+
+                    const officialData = {
+                        2017: { target: '3659', realisasi: '3864', persentase: '105.60' },
+                        2018: { target: '3570', realisasi: '3581', persentase: '100.31' },
+                        2019: { target: '3514', realisasi: '3386', persentase: '96.36' },
+                        2020: { target: '2356', realisasi: '2558', persentase: '108.57' },
+                        2021: { target: '2162', realisasi: '2767', persentase: '127.98' },
+                        2022: { target: '3271', realisasi: '1687', persentase: '51.57' },
+                        2023: { target: '2920', realisasi: '2770', persentase: '94.86' },
+                        2024: { target: '3115', realisasi: '3707', persentase: '119.00' },
+                        2025: { target: '2841', realisasi: '1670', persentase: '58.78' }
+                    };
+
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+
+                    const rowsHtml = years.map(y => {
+                        const isCurrent = (y === yr);
+                        const d = officialData[y] || { target: '-', realisasi: '-', persentase: '-' };
+                        const rowClass = isCurrent ? 'bg-[#fed7aa] font-bold text-slate-900 hover:bg-amber-200/70' : 'hover:bg-amber-100/60';
+                        return `
+                            <tr class="${rowClass} transition-colors kb-target-row" data-year="${y}">
+                                <td class="py-2.5 px-4 font-semibold border border-slate-700 text-left align-middle ${isCurrent ? 'font-bold' : ''}">${y}</td>
+                                <td class="py-2.5 px-4 text-center border border-slate-700 align-middle">${inp(d.target, 'kb-target-val')}</td>
+                                <td class="py-2.5 px-4 text-center border border-slate-700 align-middle">${inp(d.realisasi, 'kb-realisasi-val')}</td>
+                                <td class="py-2.5 px-4 text-center border border-slate-700 align-middle">${inp(d.persentase, 'kb-persen-val font-bold')}</td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Tahun</div><div class="italic font-normal text-[11px] sm:text-xs">Year</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Target</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Realisasi</div><div class="italic font-normal text-[11px] sm:text-xs">Realization</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Persentase</div><div class="italic font-normal text-[11px] sm:text-xs">Percentage (%)</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+
             '4.1.20': {
                 titleId: 'Jumlah Klub/Persatuan Olahraga di Kota Bukittinggi',
                 titleEn: 'Number of Sport Club in Bukittinggi',
@@ -6720,7 +7156,7 @@
                         return '-';
                     };
 
-                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
 
                     const rowsHtml = sportsList.map(sp => {
                         let displayName = sp.name;
@@ -6760,6 +7196,538 @@
                     `;
                 }
             },
+                                    '4.3.13': {
+                titleId: 'Jumlah Pekerja Sosial Masyarakat, Karang Taruna, Tenaga Kerja Sosial dan Organisasi Sosial di Kota Bukittinggi',
+                titleEn: 'Number of Public Social Officers, Youth Club, Social Workers and Social Organization in Bukittinggi',
+                isMultiYear: false,
+                isExcludeSelectedYear: false,
+                source: 'Dinas Sosial Kota Bukittinggi / <span class="italic text-slate-500">Social Services of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const officialDistricts = {
+                        2025: {
+                            '01. GUGUK PANJANG': ['47', 'Tidak Aktif', '1', '6'],
+                            '02. MANDIANGIN KOTO SELAYAN': ['60', 'Tidak Aktif', '1', '4'],
+                            '03. AUR BIRUGO TIGO BALEH': ['28', 'Tidak Aktif', '1', '4']
+                        },
+                        2024: {
+                            '01. GUGUK PANJANG': ['109', '7', '1', '8'],
+                            '02. MANDIANGIN KOTO SELAYAN': ['130', '9', '1', '7'],
+                            '03. AUR BIRUGO TIGO BALEH': ['60', '8', '1', '2']
+                        }
+                    };
+                    const officialTotals = {
+                        2018: ['-', '-', '-', '-'],
+                        2019: ['123', '21', '3', '17'],
+                        2020: ['130', '121', '3', '17'],
+                        2021: ['130', '83', '3', '18'],
+                        2022: ['130', '24', '3', '18'],
+                        2023: ['300', '24', '3', '17'],
+                        2024: ['299', '24', '3', '17'],
+                        2025: ['135', 'Tidak Aktif', '3', '14']
+                    };
+
+                    const inp = (v) => `<input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm" value="${v}">`;
+
+                    const districts = ['01. GUGUK PANJANG', '02. MANDIANGIN KOTO SELAYAN', '03. AUR BIRUGO TIGO BALEH'];
+                    const dData = officialDistricts[yr] || {};
+
+                    const distRowsHtml = districts.map(dName => {
+                        const vals = dData[dName] || ['-', '-', '-', '-'];
+                        const cells = vals.map(v => `<td class="py-2.5 px-4 border border-slate-700 text-center align-top">${inp(v)}</td>`).join('');
+                        return `
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${dName}</td>
+                                ${cells}
+                            </tr>
+                        `;
+                    }).join('');
+
+                    let pastYearsHtml = '';
+                    for (let py = yr - 5; py < yr; py++) {
+                        const pVals = officialTotals[py] || ['-', '-', '-', '-'];
+                        const cells = pVals.map(v => `<td class="py-2.5 px-4 border border-slate-700 text-center align-top">${inp(v)}</td>`).join('');
+                        pastYearsHtml += `
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${py}</td>
+                                ${cells}
+                            </tr>
+                        `;
+                    }
+
+                    const currTot = officialTotals[yr] || ['-', '-', '-', '-'];
+                    const totCells = currTot.map(v => `<td class="py-2.5 px-4 border border-slate-700 text-center align-top font-extrabold">${inp(v)}</td>`).join('');
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Pekerja Sosial Masyarakat</div><div class="italic font-normal text-[11px] sm:text-xs">Public Social Officers</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Karang Taruna</div><div class="italic font-normal text-[11px] sm:text-xs">Youth Club</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Tenaga Kerja Sosial</div><div class="italic font-normal text-[11px] sm:text-xs">Social Workers</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Organisasi Sosial</div><div class="italic font-normal text-[11px] sm:text-xs">Social Organization</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700">(5)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${distRowsHtml}
+                            ${pastYearsHtml}
+                            <tr class="bg-[#fed7aa] font-bold">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">Jumlah / <span class="italic font-bold">Total ${yr}</span></td>
+                                ${totCells}
+                            </tr>
+                        </tbody>
+                    `;
+                }
+            },
+            '4.3.14': {
+                titleId: 'Jumlah Penyandang Disabilitas, Anak Terlantar dan Lanjut Usia Menurut Kecamatan di Kota Bukittinggi',
+                titleEn: 'Number of Disable People, Homeless Child, and Old Age Person by District in Bukittinggi',
+                isMultiYear: false,
+                isExcludeSelectedYear: false,
+                source: 'Dinas Sosial Kota Bukittinggi / <span class="italic text-slate-500">Social Services of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const officialDistricts = {
+                        2025: {
+                            '01. GUGUK PANJANG': ['175', '0', '760'],
+                            '02. MANDIANGIN KOTO SELAYAN': ['220', '1', '967'],
+                            '03. AUR BIRUGO TIGO BALEH': ['88', '0', '387']
+                        },
+                        2024: {
+                            '01. GUGUK PANJANG': ['132', '-', '1584'],
+                            '02. MANDIANGIN KOTO SELAYAN': ['164', '-', '2016'],
+                            '03. AUR BIRUGO TIGO BALEH': ['66', '-', '802']
+                        }
+                    };
+                    const officialTotals = {
+                        2018: ['-', '-', '-'],
+                        2019: ['580', '15', '565'],
+                        2020: ['566', '23', '745'],
+                        2021: ['563', '42', '456'],
+                        2022: ['533', '31', '450'],
+                        2023: ['533', '15', '3879'],
+                        2024: ['362', '-', '4402'],
+                        2025: ['483', '1', '2114']
+                    };
+
+                    const inp = (v) => `<input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm" value="${v}">`;
+
+                    const districts = ['01. GUGUK PANJANG', '02. MANDIANGIN KOTO SELAYAN', '03. AUR BIRUGO TIGO BALEH'];
+                    const dData = officialDistricts[yr] || {};
+
+                    const distRowsHtml = districts.map(dName => {
+                        const vals = dData[dName] || ['-', '-', '-'];
+                        const cells = vals.map(v => `<td class="py-2.5 px-4 border border-slate-700 text-center align-top">${inp(v)}</td>`).join('');
+                        return `
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${dName}</td>
+                                ${cells}
+                            </tr>
+                        `;
+                    }).join('');
+
+                    let pastYearsHtml = '';
+                    for (let py = yr - 5; py < yr; py++) {
+                        const pVals = officialTotals[py] || ['-', '-', '-'];
+                        const cells = pVals.map(v => `<td class="py-2.5 px-4 border border-slate-700 text-center align-top">${inp(v)}</td>`).join('');
+                        pastYearsHtml += `
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${py}</td>
+                                ${cells}
+                            </tr>
+                        `;
+                    }
+
+                    const currTot = officialTotals[yr] || ['-', '-', '-'];
+                    const totCells = currTot.map(v => `<td class="py-2.5 px-4 border border-slate-700 text-center align-top font-extrabold">${inp(v)}</td>`).join('');
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Penyandang Disabilitas (DTSEN)</div><div class="italic font-normal text-[11px] sm:text-xs">Disable People (KK)</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Anak Terlantar</div><div class="italic font-normal text-[11px] sm:text-xs">Homeless Child (orang)</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Lanjut Usia (Penerima Bansos APBN & APBD)</div><div class="italic font-normal text-[11px] sm:text-xs">Old Age (orang)</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${distRowsHtml}
+                            ${pastYearsHtml}
+                            <tr class="bg-[#fed7aa] font-bold">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">Jumlah / <span class="italic font-bold">Total ${yr}</span></td>
+                                ${totCells}
+                            </tr>
+                        </tbody>
+                    `;
+                }
+            },
+            '4.3.15': {
+                titleId: 'Jumlah Orang Terlantar, Bekas Narapidana, Penyandang Disabilitas dan Penghuni Panti Asuhan yang Dibantu di Kota Bukittinggi',
+                titleEn: 'Number of Homeless People, Ex Prisoner, Disable People, Refective Person in Bukittinggi',
+                isMultiYear: true,
+                isExcludeSelectedYear: false,
+                source: 'Dinas Sosial Kota Bukittinggi / <span class="italic text-slate-500">Social Services of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const p = get7YearPeriod(yr);
+                    const years = p.yearsAsc;
+
+                    const officialData = {
+                        2015: ['-', '-', '-', '-', '-'],
+                        2016: ['-', '-', '-', '-', '-'],
+                        2017: ['61', '15', '390', '94', '560'],
+                        2018: ['39', '0', '123', '94', '256'],
+                        2019: ['40', '2', '28', '96', '166'],
+                        2020: ['54', '0', '482', '96', '632'],
+                        2021: ['53', '78', '563', '107', '801'],
+                        2022: ['55', '0', '345', '79', '479'],
+                        2023: ['75', '12', '256', '72', '415'],
+                        2024: ['44', '0', '302', '77', '423'],
+                        2025: ['25', '0', '280', '75', '380']
+                    };
+
+                    const inp = (v) => `<input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm" value="${v}">`;
+
+                    const rowsHtml = years.map(y => {
+                        const isCurrent = (y === yr);
+                        const vals = officialData[y] || ['-', '-', '-', '-', '-'];
+                        const rowClass = isCurrent ? 'bg-[#fed7aa] font-bold text-slate-900 hover:bg-amber-200/70' : 'hover:bg-amber-100/60';
+                        const cells = vals.map(v => `<td class="py-2.5 px-4 text-center border border-slate-700 align-middle">${inp(v)}</td>`).join('');
+                        return `
+                            <tr class="${rowClass} transition-colors" data-year="${y}">
+                                <td class="py-2.5 px-4 font-semibold border border-slate-700 text-left align-middle ${isCurrent ? 'font-bold' : ''}">${y}</td>
+                                ${cells}
+                            </tr>
+                        `;
+                    }).join('');
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Tahun</div><div class="italic font-normal text-[11px] sm:text-xs">Year</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Orang Terlantar</div><div class="italic font-normal text-[11px] sm:text-xs">Homeless People</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Bekas Napi</div><div class="italic font-normal text-[11px] sm:text-xs">Ex-prisoner</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Penyandang Disabilitas</div><div class="italic font-normal text-[11px] sm:text-xs">Disable People</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Penghuni Panti Asuhan</div><div class="italic font-normal text-[11px] sm:text-xs">Inhabitants of Social Institution</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700">(6)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+
+            '4.3.5': {
+                titleId: 'Jumlah Kejadian Kebakaran di Kota Bukittinggi Menurut Bulan',
+                titleEn: 'Number of Fire Incident in Bukittinggi Municipality by Month',
+                isMultiYear: false,
+                isExcludeSelectedYear: false,
+                source: 'Dinas Kebakaran Kota Bukittinggi / <span class="italic text-slate-500">Fire Services of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const months = [
+                        { label: '01. Januari / <span class="italic font-normal text-slate-700">January</span>' },
+                        { label: '02. Februari / <span class="italic font-normal text-slate-700">February</span>' },
+                        { label: '03. Maret / <span class="italic font-normal text-slate-700">March</span>' },
+                        { label: '04. April / <span class="italic font-normal text-slate-700">April</span>' },
+                        { label: '05. Mei / <span class="italic font-normal text-slate-700">May</span>' },
+                        { label: '06. Juni / <span class="italic font-normal text-slate-700">June</span>' },
+                        { label: '07. Juli / <span class="italic font-normal text-slate-700">July</span>' },
+                        { label: '08. Agustus / <span class="italic font-normal text-slate-700">August</span>' },
+                        { label: '09. September / <span class="italic font-normal text-slate-700">September</span>' },
+                        { label: '10. Oktober / <span class="italic font-normal text-slate-700">October</span>' },
+                        { label: '11. November / <span class="italic font-normal text-slate-700">November</span>' },
+                        { label: '12. Desember / <span class="italic font-normal text-slate-700">December</span>' }
+                    ];
+                    const officialData = {
+                        2023: ['1', '3', '2', '5', '1', '4', '4', '1', '3', '8', '1', '–'],
+                        2024: ['3', '3', '5', '4', '1', '2', '3', '1', '5', '6', '1', '7'],
+                        2025: ['3', '2', '2', '4', '8', '6', '21', '11', '3', '8', '9', '2']
+                    };
+                    const d = officialData[yr] || Array(12).fill('-');
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+
+                    const rowsHtml = months.map((m, idx) => {
+                        const val = d[idx] || '-';
+                        return `
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${m.label}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${inp(val, 'damkar-val')}</td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    const totalDisplay = yr === 2023 ? '33' : (yr === 2024 ? '41' : (yr === 2025 ? '79' : '-'));
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Bulan</div><div class="italic font-normal text-[11px] sm:text-xs">Month</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Jumlah Kejadian</div><div class="italic font-normal text-[11px] sm:text-xs">Number of Incident</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                            <tr class="bg-[#fed7aa] font-bold">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">Jumlah / <span class="italic font-bold">Total</span></td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-extrabold" id="damkarTotal">${totalDisplay}</td>
+                            </tr>
+                        </tbody>
+                    `;
+                }
+            },
+            '4.3.6': {
+                titleId: 'Jumlah Kejadian Kebakaran di Kota Bukittinggi Menurut Tempat Kejadian',
+                titleEn: 'Number of Fire Incident in Bukittinggi Municipality by Incident Scene',
+                isMultiYear: false,
+                isExcludeSelectedYear: false,
+                source: 'Dinas Kebakaran Kota Bukittinggi / <span class="italic text-slate-500">Fire Services of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const scenes = [
+                        { label: '01. Rumah Tinggal / <span class="italic font-normal text-slate-700">Residential Home</span>' },
+                        { label: '02. Rumah Makan / Kedai / Warung / <span class="italic font-normal text-slate-700">Restaurants / Shops/ Stalls</span>' },
+                        { label: '03. Kandang / <span class="italic font-normal text-slate-700">Shed</span>' },
+                        { label: '04. Pabrik / <span class="italic font-normal text-slate-700">Factory</span>' },
+                        { label: '05. Lahan / <span class="italic font-normal text-slate-700">Land</span>' },
+                        { label: '06. Gedung / <span class="italic font-normal text-slate-700">Building</span>' },
+                        { label: '07. Kantor / <span class="italic font-normal text-slate-700">Office</span>' },
+                        { label: '08. Sampah / <span class="italic font-normal text-slate-700">Garbage</span>' },
+                        { label: '09. Konsleting Listrik / <span class="italic font-normal text-slate-700">Electrical Short</span>' },
+                        { label: '10. Genset / <span class="italic font-normal text-slate-700">Generator</span>' },
+                        { label: '11. Pasar / <span class="italic font-normal text-slate-700">Market</span>' },
+                        { label: '12. Gas Elpiji / <span class="italic font-normal text-slate-700">Liquefied Petroleum Gas</span>' },
+                        { label: '13. Mobil / <span class="italic font-normal text-slate-700">Car</span>' }
+                    ];
+                    const officialData = {
+                        2023: ['9', '5', '1', '2', '1', '2', '–', '3', '4', '1', '–', '3', '2'],
+                        2024: ['9', '4', '–', '1', '5', '1', '0', '3', '8', '1', '0', '4', '5'],
+                        2025: ['6', '3', '1', '3', '37', '1', '0', '1', '10', '0', '0', '9', '8']
+                    };
+                    const d = officialData[yr] || Array(13).fill('-');
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+
+                    const rowsHtml = scenes.map((s, idx) => {
+                        const val = d[idx] || '-';
+                        return `
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${s.label}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${inp(val, 'damkar-val')}</td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    const totalDisplay = yr === 2023 ? '33' : (yr === 2024 ? '41' : (yr === 2025 ? '79' : '-'));
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Tempat Kejadian</div><div class="italic font-normal text-[11px] sm:text-xs">Incident Scene</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Jumlah Kejadian</div><div class="italic font-normal text-[11px] sm:text-xs">Number of Incident</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                            <tr class="bg-[#fed7aa] font-bold">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">Jumlah / <span class="italic font-bold">Total</span></td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-extrabold" id="damkarTotal">${totalDisplay}</td>
+                            </tr>
+                        </tbody>
+                    `;
+                }
+            },
+            '4.3.7': {
+                titleId: 'Jumlah Kejadian Kebakaran di Kota Bukittinggi Menurut Penyebab Kebakaran',
+                titleEn: 'Number of Fire Incident in Bukittinggi Municipality by Fire Cause',
+                isMultiYear: false,
+                isExcludeSelectedYear: false,
+                source: 'Dinas Kebakaran Kota Bukittinggi / <span class="italic text-slate-500">Fire Services of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const causes = [
+                        { label: '01. Korsleting Listrik / <span class="italic font-normal text-slate-700">Electric Short Circuit</span>' },
+                        { label: '02. Kompor Gas / <span class="italic font-normal text-slate-700">Gas Stove</span>' },
+                        { label: '03. Kompor Minyak Tanah / <span class="italic font-normal text-slate-700">Kerosene Stove</span>' },
+                        { label: '04. Percikan Api / Las / <span class="italic font-normal text-slate-700">Sparks</span>' },
+                        { label: '05. Pembakaran Sampah / <span class="italic font-normal text-slate-700">Garbage Burning</span>' },
+                        { label: '06. Puntung Rokok / <span class="italic font-normal text-slate-700">Cigarette Butt</span>' },
+                        { label: '07. Lainnya / <span class="italic font-normal text-slate-700">Others</span>' }
+                    ];
+                    const officialData = {
+                        2023: ['4', '3', '–', '–', '3', '–', '23'],
+                        2024: ['7', '4', '–', '–', '–', '5', '25'],
+                        2025: ['10', '9', '0', '0', '1', '0', '59']
+                    };
+                    const d = officialData[yr] || Array(7).fill('-');
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+
+                    const rowsHtml = causes.map((c, idx) => {
+                        const val = d[idx] || '-';
+                        return `
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${c.label}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${inp(val, 'damkar-val')}</td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    const totalDisplay = yr === 2023 ? '33' : (yr === 2024 ? '41' : (yr === 2025 ? '79' : '-'));
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Penyebab Kebakaran</div><div class="italic font-normal text-[11px] sm:text-xs">Fire Cause</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Jumlah Kejadian</div><div class="italic font-normal text-[11px] sm:text-xs">Number of Incident</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                            <tr class="bg-[#fed7aa] font-bold">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">Jumlah / <span class="italic font-bold">Total</span></td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-extrabold" id="damkarTotal">${totalDisplay}</td>
+                            </tr>
+                        </tbody>
+                    `;
+                }
+            },
+            '4.3.8': {
+                titleId: 'Jumlah Kejadian Kebakaran di Kota Bukittinggi Menurut Nilai Kerugian Akibat Kebakaran',
+                titleEn: 'Number of Fire Incident in Bukittinggi Municipality by Value of Losses Due to Fire',
+                isMultiYear: false,
+                isExcludeSelectedYear: false,
+                source: 'Dinas Kebakaran Kota Bukittinggi / <span class="italic text-slate-500">Fire Services of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const losses = [
+                        { label: '01. Kerugian &gt; 5M / <span class="italic font-normal text-slate-700">Loss &gt; 5B</span>' },
+                        { label: '02. 1M &lt; Kerugian &lt; 5M / <span class="italic font-normal text-slate-700">1B &lt; Loss &lt; 5B</span>' },
+                        { label: '03. 500 Jt &lt; Kerugian &lt; 1M / <span class="italic font-normal text-slate-700">500M &lt; Loss &lt; 1B</span>' },
+                        { label: '04. 50 Jt &lt; Kerugian &lt; 500 Jt / <span class="italic font-normal text-slate-700">50M &lt; Loss &lt; 500M</span>' },
+                        { label: '05. Kerugian &lt; 50 Jt / <span class="italic font-normal text-slate-700">Loss &lt; 50M</span>' }
+                    ];
+                    const officialData = {
+                        2023: ['–', '–', '–', '6', '27'],
+                        2024: ['–', '–', '–', '7', '34'],
+                        2025: ['-', '2', '-', '1', '8']
+                    };
+                    const d = officialData[yr] || Array(5).fill('-');
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+
+                    const rowsHtml = losses.map((l, idx) => {
+                        const val = d[idx] || '-';
+                        return `
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${l.label}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${inp(val, 'damkar-val')}</td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    const totalDisplay = yr === 2023 ? '33' : (yr === 2024 ? '41' : (yr === 2025 ? '11' : '-'));
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Nilai Kerugian</div><div class="italic font-normal text-[11px] sm:text-xs">Value of Losses</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Jumlah Kejadian</div><div class="italic font-normal text-[11px] sm:text-xs">Number of Incident</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                            <tr class="bg-[#fed7aa] font-bold">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">Jumlah / <span class="italic font-bold">Total</span></td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-extrabold" id="damkarTotal">${totalDisplay}</td>
+                            </tr>
+                        </tbody>
+                    `;
+                }
+            },
+
             '4.3.4': {
                 titleId: 'Jumlah Kejadian Bencana Alam di Kota Bukittinggi Menurut Kecamatan',
                 titleEn: 'Number of Natural Disasters in Bukittinggi Municipality by District',
@@ -6812,7 +7780,7 @@
                         { key: 'aur_birugo_tigo_baleh', label: '03. AUR BIRUGO TIGO BALEH' }
                     ];
 
-                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
 
                     const rowsHtml = dists.map(d => `
                         <tr class="hover:bg-amber-100/60 transition-colors" data-key="${d.key}">
@@ -6923,7 +7891,7 @@
                         { key: 'aur_birugo_tigo_baleh', label: 'Aur Birugo Tigo Baleh' }
                     ];
 
-                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
+                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
 
                     const rowsHtml = dists.map(d => `
                         <tr class="hover:bg-amber-100/60 transition-colors" data-key="${d.key}">
@@ -7013,19 +7981,19 @@
                         <tr class="hover:bg-amber-100/60 transition-colors" data-year="${y}">
                             <td class="py-2.5 px-4 font-semibold border border-slate-700 text-left align-middle ${y === yr ? 'font-bold bg-amber-100/60' : ''}">${y}</td>
                             <td class="py-1 px-2 border border-slate-700 text-center align-middle ${y === yr ? 'bg-amber-100/60' : ''}">
-                                <input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm" data-key="koperasi" value="${getVal(y, 'koperasi')}">
+                                <input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm" data-key="koperasi" value="${getVal(y, 'koperasi')}">
                             </td>
                             <td class="py-1 px-2 border border-slate-700 text-center align-middle ${y === yr ? 'bg-amber-100/60' : ''}">
-                                <input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm" data-key="anggota" value="${getVal(y, 'anggota')}">
+                                <input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm" data-key="anggota" value="${getVal(y, 'anggota')}">
                             </td>
                             <td class="py-1 px-2 border border-slate-700 text-center align-middle ${y === yr ? 'bg-amber-100/60' : ''}">
-                                <input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm" data-key="simpanan" value="${getVal(y, 'simpanan')}">
+                                <input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm" data-key="simpanan" value="${getVal(y, 'simpanan')}">
                             </td>
                             <td class="py-1 px-2 border border-slate-700 text-center align-middle ${y === yr ? 'bg-amber-100/60' : ''}">
-                                <input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm" data-key="volume_usaha" value="${getVal(y, 'volume_usaha')}">
+                                <input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm" data-key="volume_usaha" value="${getVal(y, 'volume_usaha')}">
                             </td>
                             <td class="py-1 px-2 border border-slate-700 text-center align-middle ${y === yr ? 'bg-amber-100/60' : ''}">
-                                <input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm" data-key="permodalan" value="${getVal(y, 'permodalan')}">
+                                <input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm" data-key="permodalan" value="${getVal(y, 'permodalan')}">
                             </td>
                         </tr>
                     `).join('');
@@ -7197,7 +8165,7 @@
                                 ? [serverDbDataStore[yr][`${cat.key}_gp`], serverDbDataStore[yr][`${cat.key}_mks`], serverDbDataStore[yr][`${cat.key}_abtb`], serverDbDataStore[yr][`${cat.key}_total`]]
                                 : (dataForYear[cat.key] || ['-', '-', '-', '-']);
                             const subCls = cat.sub ? 'pl-8' : '';
-                            const inp = (v) => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm" value="${v}">`;
+                            const inp = (v) => `<input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm" value="${v}">`;
                             rowsHtml += `
                                 <tr class="hover:bg-amber-100/60 transition-colors" data-key="${cat.key}">
                                     <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top ${subCls}" colspan="2">${cat.label}</td>
@@ -7274,7 +8242,606 @@
                         </tbody>
                     `;
                 }
-            }
+            },
+            '5.1.15': {
+                titleId: 'Luas Areal Sawah Menurut Jenis Pengairan per Kecamatan di Kota Bukittinggi',
+                titleEn: 'Area of Wetland by Type of Irrigation per District in Bukittinggi Municipality',
+                isMultiYear: false,
+                source: 'Dinas Pertanian dan Pangan Kota Bukittinggi / <span class="italic text-slate-500">Agriculture and Food Services of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const dists = [
+                        '01. GUGUK PANJANG',
+                        '02. MANDIANGIN KOTO SELAYAN',
+                        '03. AUR BIRUGO TIGO BALEH'
+                    ];
+
+                    let rowsHtml = '';
+                    dists.forEach(label => {
+                        rowsHtml += `
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td colspan="2" class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${label}</td>
+                                ${Array(6).fill(0).map(() => `<td class="py-2.5 px-2 border border-slate-700 text-center"><input type="text" class="table-edit-input w-full text-center bg-white border border-slate-300 rounded px-2 py-1 text-xs" value="-"></td>`).join('')}
+                            </tr>
+                        `;
+                    });
+
+                    // 5 tahun berurutan dari atas: yr (2025) menurun ke yr - 4 (2021)
+                    const yearsDesc = [];
+                    for (let y = yr; y >= yr - 4; y--) {
+                        yearsDesc.push(y);
+                    }
+
+                    yearsDesc.forEach((y, idx) => {
+                        const isFirstYear = (idx === 0);
+                        const rowCls = isFirstYear ? 'bg-[#fed7aa] font-bold' : 'hover:bg-amber-100/60 transition-colors font-medium';
+                        const inputCls = isFirstYear ? 'bg-amber-50 font-bold' : 'bg-white';
+
+                        rowsHtml += `
+                            <tr class="${rowCls}">
+                                ${isFirstYear ? `<td rowspan="5" class="py-2.5 px-4 border border-slate-700 text-center font-extrabold align-middle bg-[#fed7aa]">Jumlah / Total</td>` : ''}
+                                <td class="py-2.5 px-3 border border-slate-700 text-center font-bold align-middle bg-[#fed7aa]">${y}</td>
+                                ${Array(6).fill(0).map(() => `<td class="py-2.5 px-2 border border-slate-700 text-center"><input type="text" class="table-edit-input w-full text-center ${inputCls} border border-slate-300 rounded px-2 py-1 text-xs" value="-"></td>`).join('')}
+                            </tr>
+                        `;
+                    });
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2" colspan="2">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="5">
+                                    <div>Jenis Pengairan</div><div class="italic font-normal text-[11px] sm:text-xs">Type of Irrigation</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs">
+                                <th class="py-2 px-3 border border-slate-700"><div>Teknis</div><div class="italic font-normal text-[10px]">Technical</div></th>
+                                <th class="py-2 px-3 border border-slate-700"><div>½ Teknis</div><div class="italic font-normal text-[10px]">Semi Technical</div></th>
+                                <th class="py-2 px-3 border border-slate-700"><div>Sederhana</div><div class="italic font-normal text-[10px]">Simple</div></th>
+                                <th class="py-2 px-3 border border-slate-700"><div>Irigasi Non PU</div><div class="italic font-normal text-[10px]">Non PU Irrigation</div></th>
+                                <th class="py-2 px-3 border border-slate-700"><div>Tadah Hujan</div><div class="italic font-normal text-[10px]">Non Irrigation</div></th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700" colspan="2">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700">(7)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+            '5.1.16': {
+                titleId: 'Target dan Realisasi Intensifikasi Palawija per Kecamatan di Kota Bukittinggi',
+                titleEn: 'Target and Realization of Secondary Food Crops per District in Bukittinggi Municipality',
+                isMultiYear: false,
+                source: 'Dinas Pertanian dan Pangan Kota Bukittinggi / <span class="italic text-slate-500">Agriculture and Food Services of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const dists = [
+                        '01. GUGUK PANJANG',
+                        '02. MANDIANGIN KOTO SELAYAN',
+                        '03. AUR BIRUGO TIGO BALEH'
+                    ];
+
+                    let rowsHtml = '';
+                    dists.forEach(label => {
+                        rowsHtml += `
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td colspan="2" class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${label}</td>
+                                ${Array(12).fill(0).map(() => `<td class="py-2 px-1 border border-slate-700 text-center"><input type="text" class="table-edit-input w-full text-center bg-white border border-slate-300 rounded px-1 py-1 text-xs" value="-"></td>`).join('')}
+                            </tr>
+                        `;
+                    });
+
+                    // 5 tahun berurutan dari atas: yr (2025) menurun ke yr - 4 (2021)
+                    const yearsDesc = [];
+                    for (let y = yr; y >= yr - 4; y--) {
+                        yearsDesc.push(y);
+                    }
+
+                    yearsDesc.forEach((y, idx) => {
+                        const isFirstYear = (idx === 0);
+                        const rowCls = isFirstYear ? 'bg-[#fed7aa] font-bold' : 'hover:bg-amber-100/60 transition-colors font-medium';
+                        const inputCls = isFirstYear ? 'bg-amber-50 font-bold' : 'bg-white';
+
+                        rowsHtml += `
+                            <tr class="${rowCls}">
+                                ${isFirstYear ? `<td rowspan="5" class="py-2.5 px-4 border border-slate-700 text-center font-extrabold align-middle bg-[#fed7aa]">Jumlah / Total</td>` : ''}
+                                <td class="py-2.5 px-3 border border-slate-700 text-center font-bold align-middle bg-[#fed7aa]">${y}</td>
+                                ${Array(12).fill(0).map(() => `<td class="py-2 px-1 border border-slate-700 text-center"><input type="text" class="table-edit-input w-full text-center ${inputCls} border border-slate-300 rounded px-1 py-1 text-xs" value="-"></td>`).join('')}
+                            </tr>
+                        `;
+                    });
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2" colspan="2">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="6">
+                                    <div>Target</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="6">
+                                    <div>Realisasi</div><div class="italic font-normal text-[11px] sm:text-xs">Realization</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs">
+                                <th class="py-2 px-1 border border-slate-700">Jagung</th>
+                                <th class="py-2 px-1 border border-slate-700">Kacang Tanah</th>
+                                <th class="py-2 px-1 border border-slate-700">Kedelai</th>
+                                <th class="py-2 px-1 border border-slate-700">Kacang Hijau</th>
+                                <th class="py-2 px-1 border border-slate-700">Ubi Kayu</th>
+                                <th class="py-2 px-1 border border-slate-700">Ubi Jalar</th>
+                                <th class="py-2 px-1 border border-slate-700">Jagung</th>
+                                <th class="py-2 px-1 border border-slate-700">Kacang Tanah</th>
+                                <th class="py-2 px-1 border border-slate-700">Kedelai</th>
+                                <th class="py-2 px-1 border border-slate-700">Kacang Hijau</th>
+                                <th class="py-2 px-1 border border-slate-700">Ubi Kayu</th>
+                                <th class="py-2 px-1 border border-slate-700">Ubi Jalar</th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700" colspan="2">(1)</th>
+                                ${Array(12).fill(0).map((_, i) => `<th class="py-1 px-1 border border-slate-700">(${i + 2})</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+            '5.1.17': {
+                titleId: 'Target dan Realisasi Intensifikasi Sayur–Sayuran per Kecamatan di Kota Bukittinggi',
+                titleEn: 'Target and Realization of Vegetables Intensification per District in Bukittinggi Municipality',
+                isMultiYear: false,
+                source: 'Dinas Pertanian dan Pangan Kota Bukittinggi / <span class="italic text-slate-500">Agriculture and Food Services of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const dists = [
+                        '01. GUGUK PANJANG',
+                        '02. MANDIANGIN KOTO SELAYAN',
+                        '03. AUR BIRUGO TIGO BALEH'
+                    ];
+
+                    let rowsHtml = '';
+                    dists.forEach(label => {
+                        rowsHtml += `
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td colspan="2" class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${label}</td>
+                                ${Array(12).fill(0).map(() => `<td class="py-2 px-1 border border-slate-700 text-center"><input type="text" class="table-edit-input w-full text-center bg-white border border-slate-300 rounded px-1 py-1 text-xs" value="-"></td>`).join('')}
+                            </tr>
+                        `;
+                    });
+
+                    // 5 tahun berurutan dari atas: yr (2025) menurun ke yr - 4 (2021)
+                    const yearsDesc = [];
+                    for (let y = yr; y >= yr - 4; y--) {
+                        yearsDesc.push(y);
+                    }
+
+                    yearsDesc.forEach((y, idx) => {
+                        const isFirstYear = (idx === 0);
+                        const rowCls = isFirstYear ? 'bg-[#fed7aa] font-bold' : 'hover:bg-amber-100/60 transition-colors font-medium';
+                        const inputCls = isFirstYear ? 'bg-amber-50 font-bold' : 'bg-white';
+
+                        rowsHtml += `
+                            <tr class="${rowCls}">
+                                ${isFirstYear ? `<td rowspan="5" class="py-2.5 px-4 border border-slate-700 text-center font-extrabold align-middle bg-[#fed7aa]">Jumlah / Total</td>` : ''}
+                                <td class="py-2.5 px-3 border border-slate-700 text-center font-bold align-middle bg-[#fed7aa]">${y}</td>
+                                ${Array(12).fill(0).map(() => `<td class="py-2 px-1 border border-slate-700 text-center"><input type="text" class="table-edit-input w-full text-center ${inputCls} border border-slate-300 rounded px-1 py-1 text-xs" value="-"></td>`).join('')}
+                            </tr>
+                        `;
+                    });
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2" colspan="2">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="6">
+                                    <div>Target</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="6">
+                                    <div>Realisasi</div><div class="italic font-normal text-[11px] sm:text-xs">Realization</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs">
+                                <th class="py-2 px-1 border border-slate-700">Kentang</th>
+                                <th class="py-2 px-1 border border-slate-700">Tomat</th>
+                                <th class="py-2 px-1 border border-slate-700">Lombok</th>
+                                <th class="py-2 px-1 border border-slate-700">Bawang Daun</th>
+                                <th class="py-2 px-1 border border-slate-700">Lainnya</th>
+                                <th class="py-2 px-1 border border-slate-700">Jumlah</th>
+                                <th class="py-2 px-1 border border-slate-700">Kentang</th>
+                                <th class="py-2 px-1 border border-slate-700">Tomat</th>
+                                <th class="py-2 px-1 border border-slate-700">Lombok</th>
+                                <th class="py-2 px-1 border border-slate-700">Bawang Daun</th>
+                                <th class="py-2 px-1 border border-slate-700">Lainnya</th>
+                                <th class="py-2 px-1 border border-slate-700">Jumlah</th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700" colspan="2">(1)</th>
+                                ${Array(12).fill(0).map((_, i) => `<th class="py-1 px-1 border border-slate-700">(${i + 2})</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+            '5.1.18': {
+                titleId: 'Realisasi Pupuk di Kota Bukittinggi',
+                titleEn: 'Realization of Fertilizer in Bukittinggi',
+                isMultiYear: false,
+                source: 'Dinas Pertanian dan Pangan Kota Bukittinggi / <span class="italic text-slate-500">Agriculture and Food Services of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const items = [
+                        { name: '01. UREA', unit: 'Ton', gp: '3,75', mks: '48', abtb: '47,75', jml: '99,5' },
+                        { name: '02. SP36', unit: '–', gp: '–', mks: '–', abtb: '–', jml: '–' },
+                        { name: '03. KCL', unit: '–', gp: '–', mks: '–', abtb: '–', jml: '–' },
+                        { name: '04. NPK', unit: 'Ton', gp: '3,57', mks: '45,12', abtb: '24,35', jml: '73,03' },
+                        { name: '05. Bay Polan', unit: '–', gp: '–', mks: '–', abtb: '–', jml: '–' },
+                        { name: '06. Roton F', unit: '–', gp: '–', mks: '–', abtb: '–', jml: '–' },
+                        { name: '07. Racun', unit: '–', gp: '–', mks: '–', abtb: '–', jml: '–' },
+                        { name: 'a. Insektisida', unit: '–', gp: '–', mks: '–', abtb: '–', jml: '–' },
+                        { name: 'b. Rodentisida', unit: '–', gp: '–', mks: '–', abtb: '–', jml: '–' },
+                        { name: 'c. Fungisida', unit: '–', gp: '–', mks: '–', abtb: '–', jml: '–' },
+                        { name: 'd. Jamaskus', unit: '–', gp: '–', mks: '–', abtb: '–', jml: '–' }
+                    ];
+
+                    let rowsHtml = '';
+                    items.forEach(it => {
+                        const gp = (yr <= 2025) ? it.gp : '–';
+                        const mks = (yr <= 2025) ? it.mks : '–';
+                        const abtb = (yr <= 2025) ? it.abtb : '–';
+                        const jml = (yr <= 2025) ? it.jml : '–';
+                        rowsHtml += `
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${it.name}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${it.unit}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-right align-top pr-4 font-medium">${gp}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-right align-top pr-4 font-medium">${mks}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-right align-top pr-4 font-medium">${abtb}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-right align-top pr-4 font-bold">${jml}</td>
+                            </tr>
+                        `;
+                    });
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+                                    <div>Jenis Pupuk</div><div class="italic font-normal text-[11px] sm:text-xs">Type of Fertilizer</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+                                    <div>Satuan</div><div class="italic font-normal text-[11px] sm:text-xs">Unit</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="3">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Guguk Panjang</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Mandiangin Koto Selayan</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Aur Birugo Tigo Baleh</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700">(6)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+            '5.1.19': {
+                titleId: 'Jumlah Pengadaan Peralatan Pemberantasan Hama Penyakit Tanaman Menurut Jenisnya per Kecamatan di Kota Bukittinggi',
+                titleEn: 'Number of Pest Control Machinery Procurement by District in Bukittinggi',
+                isMultiYear: false,
+                source: 'Dinas Pertanian dan Pangan Kota Bukittinggi / <span class="italic text-slate-500">Agriculture and Food Services of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const histData = {
+                        2016: ['-', '-', '-', '-', '-'],
+                        2017: ['-', '-', '-', '-', '-'],
+                        2018: ['-', '-', '-', '-', '-'],
+                        2019: ['-', '11', '-', '-', '11'],
+                        2020: ['-', '0', '-', '-', '0'],
+                        2021: ['-', '15', '-', '-', '15'],
+                        2022: ['-', '8', '-', '-', '8'],
+                        2023: ['-', '-', '-', '-', '-'],
+                        2024: ['-', '-', '-', '-', '-'],
+                        2025: ['-', '-', '-', '-', '-']
+                    };
+
+                    const dists = ['01. GUGUK PANJANG', '02. MANDIANGIN KOTO SELAYAN', '03. AUR BIRUGO TIGO BALEH'];
+                    let rowsHtml = '';
+
+                    dists.forEach(d => {
+                        rowsHtml += `
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${d}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-right align-top pr-4 font-medium">-</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-right align-top pr-4 font-medium">-</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-right align-top pr-4 font-medium">-</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-right align-top pr-4 font-medium">-</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-right align-top pr-4 font-bold">-</td>
+                            </tr>
+                        `;
+                    });
+
+                    for (let y = yr - 5; y <= yr - 1; y++) {
+                        const vals = histData[y] || ['-', '-', '-', '-', '-'];
+                        rowsHtml += `
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-center font-bold align-top">${y}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-right align-top pr-4 font-medium">${vals[0]}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-right align-top pr-4 font-medium">${vals[1]}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-right align-top pr-4 font-medium">${vals[2]}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-right align-top pr-4 font-medium">${vals[3]}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-right align-top pr-4 font-bold">${vals[4]}</td>
+                            </tr>
+                        `;
+                    }
+
+                    const curVals = histData[yr] || ['-', '-', '-', '-', '-'];
+                    rowsHtml += `
+                        <tr class="bg-[#fed7aa] font-bold">
+                            <td class="py-2.5 px-4 border border-slate-700 text-center font-extrabold align-top">Jumlah / Total ${yr}</td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-right align-top pr-4 font-bold">${curVals[0]}</td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-right align-top pr-4 font-bold">${curVals[1]}</td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-right align-top pr-4 font-bold">${curVals[2]}</td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-right align-top pr-4 font-bold">${curVals[3]}</td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-right align-top pr-4 font-extrabold">${curVals[4]}</td>
+                        </tr>
+                    `;
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Motor Sprayer</div><div class="italic font-normal text-[11px] sm:text-xs">Sprayer Motors</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Sprayer Tangan</div><div class="italic font-normal text-[11px] sm:text-xs">Hand Sprayer</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Solder</div><div class="italic font-normal text-[11px] sm:text-xs">Solder</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Emposan</div><div class="italic font-normal text-[11px] sm:text-xs">Breather</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700">(6)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+            '5.2.1': {
+                titleId: 'Luas Areal Tanaman Perkebunan Menurut Kecamatan dan Jenis Tanaman di Kota Bukittinggi (ha)',
+                titleEn: 'Planted Area of Estate Crops by District and Types of Crops in Bukittinggi Municipality (ha)',
+                isMultiYear: true,
+                source: 'Dinas Pertanian dan Pangan Kota Bukittinggi / <span class="italic text-slate-500">Agriculture and Food Services of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const y1 = yr - 1;
+                    const y2 = yr;
+                    const is2025 = (yr === 2025);
+                    const dists = [
+                        { name: '01. Guguk Panjang', data: is2025 ? ['-', '-', '0,86', '0,86', '-', '-', '69,36', '60,00', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'] : Array(20).fill('-') },
+                        { name: '02. Mandiangin Koto Selayan', data: is2025 ? ['-', '-', '2', '1,9', '-', '-', '52,48', '50,24', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'] : Array(20).fill('-') },
+                        { name: '03. Aur Birugo Tigo Baleh', data: is2025 ? ['-', '-', '0,9', '0,9', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'] : Array(20).fill('-') }
+                    ];
+                    const totalData = is2025 ? ['-', '-', '3,76', '3,66', '-', '-', '122,24', '110,24', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'] : Array(20).fill('-');
+
+                    const crops = [
+                        { id: 'Kelapa Sawit', en: 'Oil Palm' },
+                        { id: 'Kelapa', en: 'Coconut' },
+                        { id: 'Karet', en: 'Rubber' },
+                        { id: 'Kopi', en: 'Coffee' },
+                        { id: 'Kulit Manis', en: 'Cassiavera' },
+                        { id: 'Cengkeh', en: 'Clove' },
+                        { id: 'Pala', en: 'Nutmeg' },
+                        { id: 'Pinang', en: 'Areca Nut' },
+                        { id: 'Tebu', en: 'Sugar Cane' },
+                        { id: 'Kakao', en: 'Cocoa' }
+                    ];
+
+                    let thCropsHtml = '';
+                    let thYearsHtml = '';
+                    let thNumsHtml = '<th class="py-1 px-3 border border-slate-700 text-left">(1)</th>';
+                    let cNum = 2;
+
+                    crops.forEach(c => {
+                        thCropsHtml += `
+                            <th class="py-2 px-3 font-bold border border-slate-700 text-center" colspan="2">
+                                <div>${c.id}</div><div class="italic font-normal text-[11px] sm:text-xs">${c.en}</div>
+                            </th>
+                        `;
+                        thYearsHtml += `
+                            <th class="py-2 px-2 border border-slate-700">${y1}</th>
+                            <th class="py-2 px-2 border border-slate-700">${y2}</th>
+                        `;
+                        thNumsHtml += `
+                            <th class="py-1 px-2 border border-slate-700">(${cNum})</th>
+                            <th class="py-1 px-2 border border-slate-700">(${cNum + 1})</th>
+                        `;
+                        cNum += 2;
+                    });
+
+                    let rowsHtml = '';
+                    dists.forEach(d => {
+                        rowsHtml += `
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${d.name}</td>
+                                ${d.data.map(v => `<td class="py-2.5 px-3 border border-slate-700 text-right align-top pr-4 font-medium">${v}</td>`).join('')}
+                            </tr>
+                        `;
+                    });
+                    rowsHtml += `
+                        <tr class="bg-[#fed7aa] font-bold">
+                            <td class="py-2.5 px-4 border border-slate-700 text-left font-extrabold align-top">Bukittinggi</td>
+                            ${totalData.map(v => `<td class="py-2.5 px-3 border border-slate-700 text-right align-top pr-4 font-extrabold">${v}</td>`).join('')}
+                        </tr>
+                    `;
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700 align-middle" rowspan="2">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                ${thCropsHtml}
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs">
+                                ${thYearsHtml}
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                ${thNumsHtml}
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+            '5.2.2': {
+                titleId: 'Produksi Tanaman Perkebunan Menurut Kecamatan dan Jenis Tanaman di Kota Bukittinggi (ton)',
+                titleEn: 'Production of Estate Crops by District and Types of Crops in Bukittinggi Municipality (ton)',
+                isMultiYear: true,
+                source: 'Dinas Pertanian dan Pangan Kota Bukittinggi / <span class="italic text-slate-500">Agriculture and Food Services of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const y1 = yr - 1;
+                    const y2 = yr;
+                    const is2025 = (yr === 2025);
+                    const dists = [
+                        { name: '01. Guguk Panjang', data: is2025 ? ['-', '-', '0,0034', '0,0002', '-', '-', '0,0011', '0,0004', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'] : Array(20).fill('-') },
+                        { name: '02. Mandiangin Koto Selayan', data: is2025 ? ['-', '-', '0,0012', '0,0002', '-', '-', '0,0008', '0,0001', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'] : Array(20).fill('-') },
+                        { name: '03. Aur Birugo Tigo Baleh', data: is2025 ? ['-', '-', '0,001', '0,0002', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'] : Array(20).fill('-') }
+                    ];
+                    const totalData = is2025 ? ['-', '-', '0,0055', '0,0006', '-', '-', '0,0019', '0,00055', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'] : Array(20).fill('-');
+
+                    const crops = [
+                        { id: 'Kelapa Sawit', en: 'Oil Palm' },
+                        { id: 'Kelapa', en: 'Coconut' },
+                        { id: 'Karet', en: 'Rubber' },
+                        { id: 'Kopi', en: 'Coffee' },
+                        { id: 'Kulit Manis', en: 'Cassiavera' },
+                        { id: 'Cengkeh', en: 'Clove' },
+                        { id: 'Pala', en: 'Nutmeg' },
+                        { id: 'Pinang', en: 'Areca Nut' },
+                        { id: 'Tebu', en: 'Sugar Cane' },
+                        { id: 'Kakao', en: 'Cocoa' }
+                    ];
+
+                    let thCropsHtml = '';
+                    let thYearsHtml = '';
+                    let thNumsHtml = '<th class="py-1 px-3 border border-slate-700 text-left">(1)</th>';
+                    let cNum = 2;
+
+                    crops.forEach(c => {
+                        thCropsHtml += `
+                            <th class="py-2 px-3 font-bold border border-slate-700 text-center" colspan="2">
+                                <div>${c.id}</div><div class="italic font-normal text-[11px] sm:text-xs">${c.en}</div>
+                            </th>
+                        `;
+                        thYearsHtml += `
+                            <th class="py-2 px-2 border border-slate-700">${y1}</th>
+                            <th class="py-2 px-2 border border-slate-700">${y2}</th>
+                        `;
+                        thNumsHtml += `
+                            <th class="py-1 px-2 border border-slate-700">(${cNum})</th>
+                            <th class="py-1 px-2 border border-slate-700">(${cNum + 1})</th>
+                        `;
+                        cNum += 2;
+                    });
+
+                    let rowsHtml = '';
+                    dists.forEach(d => {
+                        rowsHtml += `
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${d.name}</td>
+                                ${d.data.map(v => `<td class="py-2.5 px-3 border border-slate-700 text-right align-top pr-4 font-medium">${v}</td>`).join('')}
+                            </tr>
+                        `;
+                    });
+                    rowsHtml += `
+                        <tr class="bg-[#fed7aa] font-bold">
+                            <td class="py-2.5 px-4 border border-slate-700 text-left font-extrabold align-top">Bukittinggi</td>
+                            ${totalData.map(v => `<td class="py-2.5 px-3 border border-slate-700 text-right align-top pr-4 font-extrabold">${v}</td>`).join('')}
+                        </tr>
+                    `;
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700 align-middle" rowspan="2">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                ${thCropsHtml}
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs">
+                                ${thYearsHtml}
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                ${thNumsHtml}
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
         };
 
         // Data dari Database MySQL SiMonDa Bukittinggi
@@ -7436,6 +9003,24 @@
                 localStorage.removeItem('simonda_table_html_1.1.6_2026');
                 localStorage.removeItem('simonda_table_html_8.1.2_2026');
                 localStorage.removeItem('simonda_table_html_8.1.2_2027');
+                for (let y = 2015; y <= 2035; y++) {
+                    ['5.1.15', '5.1.16', '5.1.17'].forEach(code => {
+                        const k = `simonda_table_html_${code}_${y}`;
+                        const val = localStorage.getItem(k);
+                        if (val && (val.includes('212,10') || val.includes('105,22'))) {
+                            localStorage.setItem(k, val.replace(/212,10/g, '8,84').replace(/105,22/g, '4,39'));
+                        }
+                    });
+                    ['5.2.1', '5.2.2'].forEach(code => {
+                        const k = `simonda_table_html_${code}_${y}`;
+                        const val = localStorage.getItem(k);
+                        if (val && (!val.includes('Kakao') || val.includes('Kopi Coffe') || (val.includes('Karet') && !val.includes('Cocoa')))) {
+                            localStorage.removeItem(k);
+                            localStorage.removeItem(`simonda_table_source_${code}_${y}`);
+                            localStorage.removeItem(`simonda_table_is_saved_${code}_${y}`);
+                        }
+                    });
+                }
                 for (let y = 2015; y <= 2030; y++) {
                     const k = `simonda_table_html_8.1.3_${y}`;
                     const val = localStorage.getItem(k);
@@ -7597,6 +9182,9 @@
         function getTablePeriod(year, tableCode) {
             if (tableCode === '4.1.20') {
                 return get4YearPeriod(year);
+            }
+            if (tableCode === '4.2.20' || tableCode === '4.3.15') {
+                return get7YearPeriod(year);
             }
             if (tableCode === '9.3') {
                 return get7YearPeriod(year);
@@ -8384,6 +9972,53 @@
                 }
             }
 
+            // Self-healing tabel 5.1.18: pastikan Kolom 6 selalu diganti dengan Aur Birugo Tigo Baleh
+            if (currentTableCode === '5.1.18' && savedHtml && savedHtml.includes('Kolom 6')) {
+                savedHtml = savedHtml.replace(/<th([^>]*)>\s*(?:<div>)?\s*Kolom 6\s*(?:<\/div>)?\s*<\/th>/gi, '<th class="py-3 px-4 font-bold border border-slate-700"><div>Aur Birugo Tigo Baleh</div></th>');
+                localStorage.setItem(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+            }
+
+            // Self-healing tabel 5.1.19: pastikan urutan tahun selalu urut naik (ascending) dan thead tidak memiliki colspan 2
+            if (currentTableCode === '5.1.19' && savedHtml) {
+                const yrInt = parseInt(currentYear) || 2025;
+                const expectedLastPastYear = (yrInt - 1).toString();
+                if ((savedHtml.includes('colspan="2"') && savedHtml.includes('Kecamatan')) || !savedHtml.includes(expectedLastPastYear)) {
+                    localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`simonda_table_source_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`);
+                    savedHtml = (serverDbMetadata && serverDbMetadata.table_html) ? serverDbMetadata.table_html : null;
+                }
+            }
+
+            // Self-healing tabel 5.2.1 & 5.2.2: pastikan 10 komoditi lengkap (21 kolom) dan header 2-tier tidak rusak
+            if ((currentTableCode === '5.2.1' || currentTableCode === '5.2.2') && savedHtml) {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = savedHtml;
+                const headerThs = tempDiv.querySelectorAll('thead tr:last-child th');
+                const hasKakao = savedHtml.includes('Kakao') || savedHtml.includes('Cocoa');
+                const hasCorruptSingleHeaders = savedHtml.includes('Kopi Coffe') || (savedHtml.includes('Karet') && !savedHtml.includes('Kakao'));
+                if (headerThs.length < 21 || !hasKakao || hasCorruptSingleHeaders) {
+                    localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`simonda_table_source_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`);
+                    if (serverDbMetadata) {
+                        serverDbMetadata.table_html = null;
+                    }
+                    savedHtml = (tableSchemas[currentTableCode]) ? tableSchemas[currentTableCode].render(currentYear) : null;
+                }
+            }
+
+            // Self-healing tabel 5.1.15, 5.1.16, 5.1.17: pulihkan nilai desimal dari serial-hour conversion
+            if (savedHtml && (currentTableCode === '5.1.15' || currentTableCode === '5.1.16' || currentTableCode === '5.1.17')) {
+                if (savedHtml.includes('212,10') || savedHtml.includes('105,22')) {
+                    savedHtml = savedHtml.replace(/212,10/g, '8,84').replace(/105,22/g, '4,39');
+                    localStorage.setItem(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                    if (serverDbMetadata) {
+                        serverDbMetadata.table_html = savedHtml;
+                    }
+                }
+            }
+
             // Validasi umum: jika baris data memiliki sel lebih sedikit daripada kolom header (tabel terpotong)
             if (savedHtml) {
                 const tempDiv = document.createElement('div');
@@ -8699,6 +10334,75 @@
             return (isNegative ? '-' : '') + formattedInt + decPart;
         }
 
+        // Format angka BPS: angka < 1.000 jangan pakai titik, angka >= 1.000 pakai titik ribuan, desimal selalu koma (bukan titik)
+        function formatBpsNumber(val) {
+            if (val === null || val === undefined) return val;
+            let str = val.toString().trim();
+            if (!str || str === '-' || str === '–' || str === '—') return str;
+            if (/[a-zA-Z]/.test(str)) return str;
+            if (/^\s*\(\s*\d+\s*\)\s*$/.test(str)) return str;
+            if (/^(19|20)\d{2}$/.test(str)) return str;
+            if (/^\d+\s*[-–\/]\s*\d+$/.test(str)) return str;
+
+            // Sudah berformat desimal koma standar Indonesia: misal "333,02" atau "1.234,56" atau "207,00"
+            if (str.includes(',')) {
+                const parts = str.split(',');
+                const intPart = parts[0].replace(/\./g, '');
+                const decPart = parts.slice(1).join(',');
+                const numInt = parseInt(intPart, 10);
+                if (isNaN(numInt)) return str;
+                let formattedInt = intPart;
+                if (Math.abs(numInt) >= 1000) {
+                    formattedInt = (intPart.startsWith('-') ? '-' : '') + Math.abs(numInt).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                } else {
+                    formattedInt = intPart.startsWith('-') ? '-' + Math.abs(numInt).toString() : Math.abs(numInt).toString();
+                }
+                return formattedInt + ',' + decPart;
+            }
+
+            // Memuat titik: bisa berupa desimal (8.84) atau pemisah ribuan (50.210)
+            if (str.includes('.')) {
+                const dotCount = (str.match(/\./g) || []).length;
+                if (dotCount > 1) {
+                    // Lebih dari satu titik: sudah merupakan pemisah ribuan standar BPS, misal 1.500.000
+                    return str;
+                }
+                const parts = str.split('.');
+                const left = parts[0];
+                const right = parts[1];
+
+                // Desimal jika: digit belakang titik bukan 3 angka ATAU digit depan adalah 0 / -0
+                // Contoh: 8.84 (2 digit), 87.4 (1 digit), 0.0034 (4 digit), 0.86 (2 digit)
+                if (right.length !== 3 || left === '0' || left === '-0') {
+                    const numLeft = parseInt(left.replace(/\./g, ''), 10);
+                    if (isNaN(numLeft)) return str;
+                    let formattedLeft = left;
+                    if (Math.abs(numLeft) >= 1000) {
+                        formattedLeft = (left.startsWith('-') ? '-' : '') + Math.abs(numLeft).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                    } else {
+                        formattedLeft = left.startsWith('-') ? '-' + Math.abs(numLeft).toString() : Math.abs(numLeft).toString();
+                    }
+                    return formattedLeft + ',' + right;
+                }
+
+                // 3 digit di belakang titik pada nilai ribuan BPS (misal 50.210 atau 1.596)
+                return str;
+            }
+
+            // Bilangan bulat murni tanpa koma dan tanpa titik
+            if (/^-?\d+$/.test(str)) {
+                const num = parseInt(str, 10);
+                if (isNaN(num)) return str;
+                if (Math.abs(num) >= 1000) {
+                    return (str.startsWith('-') ? '-' : '') + Math.abs(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                }
+                // Nilai di bawah 1.000: TIDAK PAKAI TITIK (misal 417, 100, 54, 0)
+                return str;
+            }
+
+            return str;
+        }
+
         function transformToEditableGrid(tableEl) {
             const rows = tableEl.querySelectorAll('tbody tr');
             const isFinancialTable = (currentOpdCode === '05' || currentTableCode.startsWith('2.4') || currentTableCode.startsWith('2.4.'));
@@ -8768,7 +10472,7 @@
                             let val = td.innerText.trim();
                             td.innerHTML = `
                                 <div class="flex items-center justify-center p-1">
-                                    <input type="text" class="table-edit-input" value="${val}" style="text-align: center; font-weight: ${isTotalRow ? '700' : '600'};" spellcheck="false" />
+                                    <input type="text" class="table-edit-input" value="${val}" style="text-align: right; font-weight: ${isTotalRow ? '700' : '600'}; padding-right: 0.5rem;" spellcheck="false" />
                                 </div>
                             `;
                             const inputEl = td.querySelector('.table-edit-input');
@@ -8857,8 +10561,17 @@
                     if (isNumericOrData) {
                         if (idx > 0 && isFinancialTable && val !== '-' && val !== '') {
                             val = formatRupiahNumber(val);
+                        } else if (idx > 0 && val !== '-' && val !== '') {
+                            val = formatBpsNumber(val);
                         }
-                        const alignStyle = (isFinancialTable && idx > 0) ? 'text-align: right; font-weight: 700;' : '';
+                        let isResultInput = (idx > 0);
+                        if (cells.length === 4 && (currentTableCode.startsWith('custom_') || (!currentTableCode.startsWith('2.') && !currentTableCode.startsWith('4.') && !currentTableCode.startsWith('5.') && !currentTableCode.startsWith('8.')))) {
+                            isResultInput = (idx === 2);
+                        }
+                        const isTotal = tr.classList.contains('font-bold') || tr.innerText.toLowerCase().includes('jumlah') || tr.innerText.toLowerCase().includes('total');
+                        const alignStyle = isResultInput 
+                            ? `text-align: right; font-weight: ${isTotal ? '700' : '600'}; padding-right: 0.5rem;` 
+                            : 'text-align: center; font-weight: 600;';
                         td.innerHTML = `
                             <div class="flex items-center justify-center p-1">
                                 <input type="text" class="table-edit-input" value="${val}" style="${alignStyle}" spellcheck="false" />
@@ -8866,19 +10579,17 @@
                         `;
                         const inputEl = td.querySelector('.table-edit-input');
                         if (inputEl) {
-                            if (isFinancialTable && idx > 0) {
-                                inputEl.addEventListener('blur', (e) => {
-                                    const formatted = formatRupiahNumber(e.target.value);
-                                    if (formatted !== e.target.value) {
-                                        e.target.value = formatted;
-                                    }
-                                    persistTableData(false);
-                                });
-                            }
-                            inputEl.addEventListener('change', () => {
-                                if (isFinancialTable && idx > 0) {
-                                    inputEl.value = formatRupiahNumber(inputEl.value);
+                            inputEl.addEventListener('blur', (e) => {
+                                const formatter = (isFinancialTable && idx > 0) ? formatRupiahNumber : formatBpsNumber;
+                                const formatted = formatter(e.target.value);
+                                if (formatted !== e.target.value) {
+                                    e.target.value = formatted;
                                 }
+                                persistTableData(false);
+                            });
+                            inputEl.addEventListener('change', () => {
+                                const formatter = (isFinancialTable && idx > 0) ? formatRupiahNumber : formatBpsNumber;
+                                inputEl.value = formatter(inputEl.value);
                                 persistTableData(false);
                             });
                         }
@@ -8931,7 +10642,7 @@
 
         function cleanGhostRows(table) {
             if (!table) return;
-            if (currentTableCode.startsWith('2.3.') || currentTableCode.startsWith('4.1') || currentOpdCode === '08') return;
+            if (currentTableCode.startsWith('1.1.') || currentTableCode.startsWith('2.3.') || currentTableCode.startsWith('4.1') || currentTableCode.startsWith('5.1.') || currentTableCode.startsWith('5.2.') || currentOpdCode === '08' || currentOpdCode === '04') return;
             const tbody = table.querySelector('tbody');
             if (!tbody) return;
             const rows = tbody.querySelectorAll('tr');
@@ -9515,6 +11226,182 @@
                                 rowsData[y][key] = inputs[yIdx].value.trim();
                             }
                         });
+                    });
+                } else if (currentTableCode === '4.2.17') {
+                    rowsData = {};
+                    rowsData[currentYear] = {};
+                    const bodyRows = tableEl.querySelectorAll('tbody tr');
+                    bodyRows.forEach(tr => {
+                        const text = tr.innerText.toLowerCase();
+                        const inputs = tr.querySelectorAll('.table-edit-input');
+                        if (inputs.length >= 8) {
+                            const keys = ['imp', 'pil', 'iud', 'kondom', 'suntik', 'mow', 'mop', 'jumlah'];
+                            let rowPrefix = '';
+                            if (text.includes('guguk')) rowPrefix = 'guguk_panjang';
+                            else if (text.includes('mandiangin')) rowPrefix = 'mandiangin_koto_selayan';
+                            else if (text.includes('aur birugo')) rowPrefix = 'aur_birugo_tigo_baleh';
+                            else {
+                                const m = text.match(/\b(20\d{2}|19\d{2})\b/);
+                                if (m) {
+                                    const y = parseInt(m[1], 10);
+                                    if (!rowsData[y]) rowsData[y] = {};
+                                    keys.forEach((k, kIdx) => {
+                                        rowsData[y][`total_${k}`] = inputs[kIdx].value.trim();
+                                    });
+                                }
+                            }
+                            if (rowPrefix) {
+                                keys.forEach((k, kIdx) => {
+                                    rowsData[currentYear][`${rowPrefix}_${k}`] = inputs[kIdx].value.trim();
+                                });
+                            }
+                        }
+                    });
+                } else if (currentTableCode === '4.2.18') {
+                    rowsData = {};
+                    rowsData[currentYear] = {};
+                    const bodyRows = tableEl.querySelectorAll('tbody tr');
+                    bodyRows.forEach(tr => {
+                        const text = tr.innerText.toLowerCase();
+                        const inputs = tr.querySelectorAll('.table-edit-input');
+                        if (inputs.length >= 8) {
+                            const keys = ['ppkbd', 'sub_ppkbd', 'uppks', 'plkb', 'cu', 'bkb', 'bkr', 'bkl'];
+                            let rowPrefix = '';
+                            if (text.includes('guguk')) rowPrefix = 'guguk_panjang';
+                            else if (text.includes('mandiangin')) rowPrefix = 'mandiangin_koto_selayan';
+                            else if (text.includes('aur birugo')) rowPrefix = 'aur_birugo_tigo_baleh';
+                            else {
+                                const m = text.match(/\b(20\d{2}|19\d{2})\b/);
+                                if (m) {
+                                    const y = parseInt(m[1], 10);
+                                    if (!rowsData[y]) rowsData[y] = {};
+                                    keys.forEach((k, kIdx) => {
+                                        rowsData[y][`total_${k}`] = inputs[kIdx].value.trim();
+                                    });
+                                }
+                            }
+                            if (rowPrefix) {
+                                keys.forEach((k, kIdx) => {
+                                    rowsData[currentYear][`${rowPrefix}_${k}`] = inputs[kIdx].value.trim();
+                                });
+                            }
+                        }
+                    });
+                } else if (currentTableCode === '4.2.19') {
+                    rowsData = {};
+                    rowsData[currentYear] = {};
+                    const bodyRows = tableEl.querySelectorAll('tbody tr');
+                    bodyRows.forEach(tr => {
+                        const text = tr.innerText.toLowerCase();
+                        const inputs = tr.querySelectorAll('.table-edit-input');
+                        if (inputs.length >= 4) {
+                            const keys = ['klinik', 'dokter', 'bidan', 'total'];
+                            let rowPrefix = '';
+                            if (text.includes('guguk')) rowPrefix = 'guguk_panjang';
+                            else if (text.includes('mandiangin')) rowPrefix = 'mandiangin_koto_selayan';
+                            else if (text.includes('aur birugo')) rowPrefix = 'aur_birugo_tigo_baleh';
+                            else {
+                                const m = text.match(/\b(20\d{2}|19\d{2})\b/);
+                                if (m) {
+                                    const y = parseInt(m[1], 10);
+                                    if (!rowsData[y]) rowsData[y] = {};
+                                    keys.forEach((k, kIdx) => {
+                                        rowsData[y][`total_${k}`] = inputs[kIdx].value.trim();
+                                    });
+                                }
+                            }
+                            if (rowPrefix) {
+                                keys.forEach((k, kIdx) => {
+                                    rowsData[currentYear][`${rowPrefix}_${k}`] = inputs[kIdx].value.trim();
+                                });
+                            }
+                        }
+                    });
+                } else if (currentTableCode === '4.3.5' || currentTableCode === '4.3.6' || currentTableCode === '4.3.7' || currentTableCode === '4.3.8') {
+                    rowsData = { [currentYear]: {} };
+                    const bodyRows = tableEl.querySelectorAll('tbody tr');
+                    bodyRows.forEach((tr, trIdx) => {
+                        const inputs = tr.querySelectorAll('.table-edit-input');
+                        if (inputs.length >= 1) {
+                            rowsData[currentYear][trIdx] = {
+                                jumlah: inputs[0].value.trim()
+                            };
+                        }
+                    });
+                } else if (currentTableCode === '4.3.13') {
+                    rowsData = { [currentYear]: {} };
+                    const bodyRows = tableEl.querySelectorAll('tbody tr');
+                    bodyRows.forEach((tr, trIdx) => {
+                        const inputs = tr.querySelectorAll('.table-edit-input');
+                        if (inputs.length >= 4) {
+                            rowsData[currentYear][trIdx] = {
+                                psm: inputs[0].value.trim(),
+                                karang_taruna: inputs[1].value.trim(),
+                                tks: inputs[2].value.trim(),
+                                org_sosial: inputs[3].value.trim()
+                            };
+                        }
+                    });
+                } else if (currentTableCode === '4.3.14') {
+                    rowsData = { [currentYear]: {} };
+                    const bodyRows = tableEl.querySelectorAll('tbody tr');
+                    bodyRows.forEach((tr, trIdx) => {
+                        const inputs = tr.querySelectorAll('.table-edit-input');
+                        if (inputs.length >= 3) {
+                            rowsData[currentYear][trIdx] = {
+                                disabilitas: inputs[0].value.trim(),
+                                anak_terlantar: inputs[1].value.trim(),
+                                lanjut_usia: inputs[2].value.trim()
+                            };
+                        }
+                    });
+                } else if (currentTableCode === '5.1.15' || currentTableCode === '5.1.16' || currentTableCode === '5.1.17' || currentTableCode === '5.1.18' || currentTableCode === '5.1.19') {
+                    rowsData = {};
+                    rowsData[currentYear] = {};
+                    const tableEl = document.getElementById('dataDisplayTable');
+                    if (tableEl) {
+                        const trs = tableEl.querySelectorAll('tbody tr');
+                        trs.forEach((tr, trIdx) => {
+                            const tds = tr.querySelectorAll('td');
+                            if (tds.length >= 2) {
+                                rowsData[currentYear][trIdx] = Array.from(tds).map(td => {
+                                    const inp = td.querySelector('.table-edit-input');
+                                    return inp ? inp.value.trim() : td.innerText.trim();
+                                });
+                            }
+                        });
+                    }
+                } else if (currentTableCode === '4.3.15') {
+                    rowsData = {};
+                    const bodyRows = tableEl.querySelectorAll('tbody tr');
+                    bodyRows.forEach(tr => {
+                        const text = tr.innerText.toLowerCase();
+                        const inputs = tr.querySelectorAll('.table-edit-input');
+                        const m = text.match(/\b(20\d{2}|19\d{2})\b/);
+                        if (m && inputs.length >= 5) {
+                            const y = parseInt(m[1], 10);
+                            if (!rowsData[y]) rowsData[y] = {};
+                            rowsData[y]['orang_terlantar'] = inputs[0].value.trim();
+                            rowsData[y]['bekas_napi'] = inputs[1].value.trim();
+                            rowsData[y]['disabilitas'] = inputs[2].value.trim();
+                            rowsData[y]['panti_asuhan'] = inputs[3].value.trim();
+                            rowsData[y]['jumlah'] = inputs[4].value.trim();
+                        }
+                    });
+                } else if (currentTableCode === '4.2.20') {
+                    rowsData = {};
+                    const bodyRows = tableEl.querySelectorAll('tbody tr');
+                    bodyRows.forEach(tr => {
+                        const text = tr.innerText.toLowerCase();
+                        const inputs = tr.querySelectorAll('.table-edit-input');
+                        const m = text.match(/\b(20\d{2}|19\d{2})\b/);
+                        if (m && inputs.length >= 3) {
+                            const y = parseInt(m[1], 10);
+                            if (!rowsData[y]) rowsData[y] = {};
+                            rowsData[y]['target'] = inputs[0].value.trim();
+                            rowsData[y]['realisasi'] = inputs[1].value.trim();
+                            rowsData[y]['persentase'] = inputs[2].value.trim();
+                        }
                     });
                 } else if (currentTableCode === '4.2.14') {
                     rowsData = { [currentYear]: {} };
@@ -12056,6 +13943,1075 @@
                         { wch: 15 },
                         { wch: 15 }
                     ];
+                } else if (currentTableCode === '4.2.17') {
+                    // TEMPLATE TABEL 4.2.17 - DINAS P3APPKB (AKSEPTOR KB)
+                    titleId = `Jumlah Akseptor Aktif Keluarga Berencana Menurut Alat Kontrasepsi di Kota Bukittinggi, ${yr}`;
+                    titleEn = `Number of Family Planning Acceptors by Contraception in Bukittinggi, ${yr}`;
+                    setCell(0, 1, titleId, { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } } });
+                    setCell(1, 1, titleEn, { font: { name: 'Calibri', sz: 10, italic: true, color: { rgb: '000000' } } });
+
+                    setCell(r, 0, 'Kecamatan / District', headerOrangeStyle);
+                    setCell(r, 1, 'Alat Kontrasepsi / Contraception Tools', headerOrangeStyle);
+                    for (let c = 2; c <= 7; c++) setCell(r, c, '', headerOrangeStyle);
+                    setCell(r, 8, 'Jumlah / Total', headerOrangeStyle);
+                    merges.push({ s: { r: r, c: 0 }, e: { r: r + 1, c: 0 } });
+                    merges.push({ s: { r: r, c: 1 }, e: { r: r, c: 7 } });
+                    merges.push({ s: { r: r, c: 8 }, e: { r: r + 1, c: 8 } });
+                    r++;
+
+                    const subHeaders4217 = ['IMP', 'PIL', 'IUD', 'Kondom', 'Suntik', 'MOW', 'MOP'];
+                    subHeaders4217.forEach((sh, idx) => {
+                        setCell(r, 1 + idx, sh, headerOrangeStyle);
+                    });
+                    r++;
+
+                    for (let c = 0; c < 9; c++) {
+                        setCell(r, c, `(${c + 1})`, headerPeachStyle);
+                    }
+                    r++;
+
+                    const dists4217 = {
+                        2025: {
+                            '01. Guguk Panjang': [254, 255, 672, 909, 600, 175, 11, 2876],
+                            '02. Mandiangin Koto Selayan': [204, 336, 1010, 960, 686, 156, 5, 3357],
+                            '03. Aur Birugo Tigo Baleh': [112, 488, 316, 674, 406, 125, 2, 2123]
+                        },
+                        2024: {
+                            '01. Guguk Panjang': [198, 355, 544, 1131, 753, 171, 10, 3162],
+                            '02. Mandiangin Koto Selayan': [172, 562, 935, 1412, 841, 146, 8, 4076],
+                            '03. Aur Birugo Tigo Baleh': [137, 168, 398, 772, 470, 170, 3, 2118]
+                        },
+                        2023: {
+                            '01. Guguk Panjang': [232, 372, 628, 684, 741, 188, 14, 2859],
+                            '02. Mandiangin Koto Selayan': [305, 418, 1118, 714, 1075, 184, 9, 3823],
+                            '03. Aur Birugo Tigo Baleh': [128, 222, 392, 550, 504, 145, 3, 1944]
+                        }
+                    };
+
+                    const totals4217 = {
+                        2019: [1088, 1154, 3551, 844, 4135, 500, 56, 11328],
+                        2020: [1146, 1168, 3529, 854, 3844, 481, 50, 11072],
+                        2021: [1109, 1073, 3544, 925, 3544, 521, 43, 10759],
+                        2022: [475, 656, 2065, 1285, 2170, 549, 37, 7237],
+                        2023: [665, 1012, 2138, 1948, 2320, 517, 26, 8626],
+                        2024: [507, 1085, 1877, 3315, 2064, 487, 21, 9356],
+                        2025: [570, 1079, 1998, 2543, 1692, 456, 18, 8356]
+                    };
+
+                    const distRows4217 = ['01. Guguk Panjang', '02. Mandiangin Koto Selayan', '03. Aur Birugo Tigo Baleh'];
+                    const dDataNow4217 = dists4217[yr] || {};
+
+                    distRows4217.forEach(dName => {
+                        setCell(r, 0, dName, dataCellStyle);
+                        const vals = dDataNow4217[dName] || ['-', '-', '-', '-', '-', '-', '-', '-'];
+                        vals.forEach((v, idx) => setCell(r, 1 + idx, v, dataCenterStyle));
+                        r++;
+                    });
+
+                    for (let pastY = yr - 5; pastY < yr; pastY++) {
+                        setCell(r, 0, pastY.toString(), dataCellStyle);
+                        const pVals = totals4217[pastY] || ['-', '-', '-', '-', '-', '-', '-', '-'];
+                        pVals.forEach((v, idx) => setCell(r, 1 + idx, v, dataCenterStyle));
+                        r++;
+                    }
+
+                    setCell(r, 0, `Jumlah / Total ${yr}`, headerPeachStyle);
+                    const currTotals4217 = totals4217[yr] || ['-', '-', '-', '-', '-', '-', '-', '-'];
+                    currTotals4217.forEach((v, idx) => setCell(r, 1 + idx, v, headerPeachStyle));
+                    r++;
+
+                    r++;
+                    setCell(r, 0, 'Sumber / Source:', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    setCell(r, 1, 'Dinas P3APPKB Kota Bukittinggi / Women Empowerment & Children Protection, Control of Population and Family Planning Services of Bukittinggi Municipality', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    footerWritten = true;
+
+                    maxCol = 9;
+                    ws['!cols'] = [
+                        { wch: 32 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 14 }
+                    ];
+                } else if (currentTableCode === '4.2.18') {
+                    // TEMPLATE TABEL 4.2.18 - DINAS P3APPKB (PPKBD, UPPKS, PLKB, CU)
+                    titleId = `Jumlah PPKBD, Kelompok UPPKS, PLKB dan CU Menurut Kecamatan di Kota Bukittinggi, ${yr}`;
+                    titleEn = `Number of PPKBD, UPPKS Society, PLKB and CU by District in Bukittinggi, ${yr}`;
+                    setCell(0, 1, titleId, { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } } });
+                    setCell(1, 1, titleEn, { font: { name: 'Calibri', sz: 10, italic: true, color: { rgb: '000000' } } });
+
+                    const headers4218 = [
+                        'Kecamatan / District', 'PPKBD', 'Sub PPKBD', 'UPPKS / UPPKA', 'PLKB / PKB', 'CU (%)', 'BKB', 'BKR', 'BKL'
+                    ];
+                    headers4218.forEach((h, idx) => {
+                        setCell(r, idx, h, headerOrangeStyle);
+                    });
+                    r++;
+
+                    for (let c = 0; c < 9; c++) {
+                        setCell(r, c, `(${c + 1})`, headerPeachStyle);
+                    }
+                    r++;
+
+                    const dists4218 = {
+                        2025: {
+                            '01. Guguk Panjang': [7, 33, 9, 5, 66.21, 23, 10, 12],
+                            '02. Mandiangin Koto Selayan': [9, 36, 16, 5, 57.98, 24, 9, 12],
+                            '03. Aur Birugo Tigo Baleh': [8, 35, 7, 4, 68.72, 18, 8, 9]
+                        },
+                        2024: {
+                            '01. Guguk Panjang': [7, 64, 9, 5, 70.89, 23, 10, 12],
+                            '02. Mandiangin Koto Selayan': [9, 55, 14, 5, 64.91, 22, 8, 12],
+                            '03. Aur Birugo Tigo Baleh': [8, 44, 7, 4, 61.75, 18, 8, 9]
+                        },
+                        2023: {
+                            '01. Guguk Panjang': [7, 64, 9, 3, 67.13, 21, 8, 10],
+                            '02. Mandiangin Koto Selayan': [9, 55, 10, 4, 63.62, 20, 7, 12],
+                            '03. Aur Birugo Tigo Baleh': [8, 44, 7, 3, 57.65, 18, 7, 8]
+                        }
+                    };
+
+                    const totals4218 = {
+                        2019: [24, 164, 30, 8, 68.16, 54, 19, 27],
+                        2020: [24, 165, 27, 9, 68.1, 51, 19, 27],
+                        2021: [24, 165, 26, 7, 67.72, 52, 20, 20],
+                        2022: [24, 165, 26, 11, 55.3, 55, 21, 27],
+                        2023: [24, 163, 26, 10, 62.8, 59, 22, 30],
+                        2024: [24, 163, 30, 14, 66.02, 63, 26, 33],
+                        2025: [24, 104, 32, 14, 64.3, 65, 27, 33]
+                    };
+
+                    const distRows4218 = ['01. Guguk Panjang', '02. Mandiangin Koto Selayan', '03. Aur Birugo Tigo Baleh'];
+                    const dDataNow4218 = dists4218[yr] || {};
+
+                    distRows4218.forEach(dName => {
+                        setCell(r, 0, dName, dataCellStyle);
+                        const vals = dDataNow4218[dName] || ['-', '-', '-', '-', '-', '-', '-', '-'];
+                        vals.forEach((v, idx) => setCell(r, 1 + idx, v, dataCenterStyle));
+                        r++;
+                    });
+
+                    for (let pastY = yr - 5; pastY < yr; pastY++) {
+                        setCell(r, 0, pastY.toString(), dataCellStyle);
+                        const pVals = totals4218[pastY] || ['-', '-', '-', '-', '-', '-', '-', '-'];
+                        pVals.forEach((v, idx) => setCell(r, 1 + idx, v, dataCenterStyle));
+                        r++;
+                    }
+
+                    setCell(r, 0, `Jumlah / Total ${yr}`, headerPeachStyle);
+                    const currTotals4218 = totals4218[yr] || ['-', '-', '-', '-', '-', '-', '-', '-'];
+                    currTotals4218.forEach((v, idx) => setCell(r, 1 + idx, v, headerPeachStyle));
+                    r++;
+
+                    r++;
+                    setCell(r, 0, 'Sumber / Source:', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    setCell(r, 1, 'Dinas P3APPKB Kota Bukittinggi / Women Empowerment & Children Protection, Control of Population and Family Planning Services of Bukittinggi Municipality', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    footerWritten = true;
+
+                    maxCol = 9;
+                    ws['!cols'] = [
+                        { wch: 32 }, { wch: 12 }, { wch: 12 }, { wch: 14 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }
+                    ];
+                } else if (currentTableCode === '4.2.19') {
+                    // TEMPLATE TABEL 4.2.19 - DINAS P3APPKB (KLINIK & TENAGA MEDIS KB)
+                    titleId = `Jumlah Klinik dan Tenaga Medis Keluarga Berencana di Kota Bukittinggi, ${yr}`;
+                    titleEn = `Number of Clinics and Medical Personal of Family Planning in Bukittinggi, ${yr}`;
+                    setCell(0, 1, titleId, { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } } });
+                    setCell(1, 1, titleEn, { font: { name: 'Calibri', sz: 10, italic: true, color: { rgb: '000000' } } });
+
+                    setCell(r, 0, 'Kecamatan / District', headerOrangeStyle);
+                    setCell(r, 1, 'Klinik KB / Clinic', headerOrangeStyle);
+                    setCell(r, 2, 'Tenaga Medis / Medical Personal', headerOrangeStyle);
+                    setCell(r, 3, '', headerOrangeStyle);
+                    setCell(r, 4, '', headerOrangeStyle);
+                    merges.push({ s: { r: r, c: 0 }, e: { r: r + 1, c: 0 } });
+                    merges.push({ s: { r: r, c: 1 }, e: { r: r + 1, c: 1 } });
+                    merges.push({ s: { r: r, c: 2 }, e: { r: r, c: 4 } });
+                    r++;
+
+                    setCell(r, 2, 'Dokter / Doctor', headerOrangeStyle);
+                    setCell(r, 3, 'Bidan / Midwive', headerOrangeStyle);
+                    setCell(r, 4, 'Jumlah / Total', headerOrangeStyle);
+                    r++;
+
+                    for (let c = 0; c < 5; c++) {
+                        setCell(r, c, `(${c + 1})`, headerPeachStyle);
+                    }
+                    r++;
+
+                    const dists4219 = {
+                        2025: {
+                            '01. Guguk Panjang': [6, 14, 46, 60],
+                            '02. Mandiangin Koto Selayan': [9, 1, 35, 36],
+                            '03. Aur Birugo Tigo Baleh': [8, 1, 18, 19]
+                        },
+                        2024: {
+                            '01. Guguk Panjang': [6, 22, 48, 70],
+                            '02. Mandiangin Koto Selayan': [10, 11, 39, 50],
+                            '03. Aur Birugo Tigo Baleh': [8, 2, 17, 19]
+                        },
+                        2023: {
+                            '01. Guguk Panjang': [7, 12, 48, 67],
+                            '02. Mandiangin Koto Selayan': [9, 2, 46, 57],
+                            '03. Aur Birugo Tigo Baleh': [7, 1, 18, 26]
+                        }
+                    };
+
+                    const totals4219 = {
+                        2019: [24, 28, 98, 126],
+                        2020: [24, 28, 98, 126],
+                        2021: [27, 18, 64, 82],
+                        2022: [24, 15, 85, 100],
+                        2023: [23, 15, 115, 130],
+                        2024: [24, 33, 104, 137],
+                        2025: [23, 16, 99, 115]
+                    };
+
+                    const distRows4219 = ['01. Guguk Panjang', '02. Mandiangin Koto Selayan', '03. Aur Birugo Tigo Baleh'];
+                    const dDataNow4219 = dists4219[yr] || {};
+
+                    distRows4219.forEach(dName => {
+                        setCell(r, 0, dName, dataCellStyle);
+                        const vals = dDataNow4219[dName] || ['-', '-', '-', '-'];
+                        vals.forEach((v, idx) => setCell(r, 1 + idx, v, dataCenterStyle));
+                        r++;
+                    });
+
+                    for (let pastY = yr - 5; pastY < yr; pastY++) {
+                        setCell(r, 0, pastY.toString(), dataCellStyle);
+                        const pVals = totals4219[pastY] || ['-', '-', '-', '-'];
+                        pVals.forEach((v, idx) => setCell(r, 1 + idx, v, dataCenterStyle));
+                        r++;
+                    }
+
+                    setCell(r, 0, `Jumlah / Total ${yr}`, headerPeachStyle);
+                    const currTotals4219 = totals4219[yr] || ['-', '-', '-', '-'];
+                    currTotals4219.forEach((v, idx) => setCell(r, 1 + idx, v, headerPeachStyle));
+                    r++;
+
+                    r++;
+                    setCell(r, 0, 'Sumber / Source:', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    setCell(r, 1, 'Dinas P3APPKB Kota Bukittinggi / Women Empowerment & Children Protection, Control of Population and Family Planning Services of Bukittinggi Municipality', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    footerWritten = true;
+
+                    maxCol = 5;
+                    ws['!cols'] = [
+                        { wch: 32 }, { wch: 18 }, { wch: 16 }, { wch: 16 }, { wch: 16 }
+                    ];
+                } else if (currentTableCode === '4.2.20') {
+                    // TEMPLATE TABEL 4.2.20 - DINAS P3APPKB (TARGET & REALISASI KB)
+                    const p4220 = get7YearPeriod(yr);
+                    titleId = `Target dan Realisasi Keluarga Berencana di Kota Bukittinggi, ${p4220.label}`;
+                    titleEn = `Target and Realization of Family Planning in Bukittinggi, ${p4220.label}`;
+                    setCell(0, 1, titleId, { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } } });
+                    setCell(1, 1, titleEn, { font: { name: 'Calibri', sz: 10, italic: true, color: { rgb: '000000' } } });
+
+                    setCell(r, 0, 'Tahun / Year', headerOrangeStyle);
+                    setCell(r, 1, 'Target', headerOrangeStyle);
+                    setCell(r, 2, 'Realisasi / Realization', headerOrangeStyle);
+                    setCell(r, 3, 'Persentase / Percentage (%)', headerOrangeStyle);
+                    r++;
+
+                    for (let c = 0; c < 4; c++) {
+                        setCell(r, c, `(${c + 1})`, headerPeachStyle);
+                    }
+                    r++;
+
+                    const officialData4220 = {
+                        2017: { target: 3659, realisasi: 3864, persentase: 105.60 },
+                        2018: { target: 3570, realisasi: 3581, persentase: 100.31 },
+                        2019: { target: 3514, realisasi: 3386, persentase: 96.36 },
+                        2020: { target: 2356, realisasi: 2558, persentase: 108.57 },
+                        2021: { target: 2162, realisasi: 2767, persentase: 127.98 },
+                        2022: { target: 3271, realisasi: 1687, persentase: 51.57 },
+                        2023: { target: 2920, realisasi: 2770, persentase: 94.86 },
+                        2024: { target: 3115, realisasi: 3707, persentase: 119.00 },
+                        2025: { target: 2841, realisasi: 1670, persentase: 58.78 }
+                    };
+
+                    p4220.yearsAsc.forEach(y => {
+                        const isCur = (y === yr);
+                        const styleYr = isCur ? headerPeachStyle : dataCellStyle;
+                        const styleNum = isCur ? headerPeachStyle : dataCenterStyle;
+                        const d = officialData4220[y] || { target: '-', realisasi: '-', persentase: '-' };
+
+                        setCell(r, 0, y.toString(), styleYr);
+                        setCell(r, 1, d.target, styleNum);
+                        setCell(r, 2, d.realisasi, styleNum);
+                        setCell(r, 3, d.persentase, styleNum);
+                        r++;
+                    });
+
+                    r++;
+                    setCell(r, 0, 'Sumber / Source:', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    setCell(r, 1, 'Dinas P3APPKB Kota Bukittinggi / Women Empowerment & Children Protection, Control of Population and Family Planning Services of Bukittinggi Municipality', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    footerWritten = true;
+
+                    maxCol = 4;
+                    ws['!cols'] = [
+                        { wch: 18 }, { wch: 18 }, { wch: 22 }, { wch: 25 }
+                    ];
+                } else if (currentTableCode === '4.3.5') {
+                    // TEMPLATE TABEL 4.3.5 - DINAS KEBAKARAN (KEJADIAN KEBAKARAN MENURUT BULAN)
+                    titleId = `Jumlah Kejadian Kebakaran di Kota Bukittinggi Menurut Bulan, ${yr}`;
+                    titleEn = `Number of Fire Incident in Bukittinggi Municipality by Month, ${yr}`;
+                    setCell(0, 1, titleId, { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } } });
+                    setCell(1, 1, titleEn, { font: { name: 'Calibri', sz: 10, italic: true, color: { rgb: '000000' } } });
+
+                    setCell(r, 0, 'Bulan / Month', headerOrangeStyle);
+                    setCell(r, 1, 'Jumlah Kejadian / Number of Incident', headerOrangeStyle);
+                    r++;
+
+                    setCell(r, 0, '(1)', headerPeachStyle);
+                    setCell(r, 1, '(2)', headerPeachStyle);
+                    r++;
+
+                    const months435 = [
+                        '01. Januari / January', '02. Februari / February', '03. Maret / March',
+                        '04. April / April', '05. Mei / May', '06. Juni / June',
+                        '07. Juli / July', '08. Agustus / August', '09. September / September',
+                        '10. Oktober / October', '11. November / November', '12. Desember / December'
+                    ];
+                    const official435 = {
+                        2023: [1, 3, 2, 5, 1, 4, 4, 1, 3, 8, 1, 0],
+                        2024: [3, 3, 5, 4, 1, 2, 3, 1, 5, 6, 1, 7],
+                        2025: [3, 2, 2, 4, 8, 6, 21, 11, 3, 8, 9, 2]
+                    };
+                    const defData435 = official435[yr] || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+                    let tot435 = 0;
+
+                    months435.forEach((mName, mIdx) => {
+                        const val = defData435[mIdx] !== undefined ? defData435[mIdx] : 0;
+                        tot435 += Number(val) || 0;
+                        setCell(r, 0, mName, dataCellStyle);
+                        setCell(r, 1, val, dataCenterStyle);
+                        r++;
+                    });
+
+                    setCell(r, 0, 'Jumlah / Total', headerPeachStyle);
+                    setCell(r, 1, (yr === 2023 ? 33 : (yr === 2024 ? 41 : (yr === 2025 ? 79 : tot435))), headerPeachStyle);
+                    r++;
+
+                    r++;
+                    setCell(r, 0, 'Sumber / Source:', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    setCell(r, 1, 'Dinas Kebakaran Kota Bukittinggi / Fire Services of Bukittinggi Municipality', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    footerWritten = true;
+
+                    maxCol = 2;
+                    ws['!cols'] = [{ wch: 32 }, { wch: 25 }];
+                } else if (currentTableCode === '4.3.6') {
+                    // TEMPLATE TABEL 4.3.6 - DINAS KEBAKARAN (KEJADIAN KEBAKARAN MENURUT TEMPAT)
+                    titleId = `Jumlah Kejadian Kebakaran di Kota Bukittinggi Menurut Tempat Kejadian, ${yr}`;
+                    titleEn = `Number of Fire Incident in Bukittinggi Municipality by Incident Scene, ${yr}`;
+                    setCell(0, 1, titleId, { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } } });
+                    setCell(1, 1, titleEn, { font: { name: 'Calibri', sz: 10, italic: true, color: { rgb: '000000' } } });
+
+                    setCell(r, 0, 'Tempat Kejadian / Incident Scene', headerOrangeStyle);
+                    setCell(r, 1, 'Jumlah Kejadian / Number of Incident', headerOrangeStyle);
+                    r++;
+
+                    setCell(r, 0, '(1)', headerPeachStyle);
+                    setCell(r, 1, '(2)', headerPeachStyle);
+                    r++;
+
+                    const scenes436 = [
+                        '01. Rumah Tinggal / Residential Home',
+                        '02. Rumah Makan / Kedai / Warung / Restaurants / Shops/ Stalls',
+                        '03. Kandang / Shed',
+                        '04. Pabrik / Factory',
+                        '05. Lahan / Land',
+                        '06. Gedung / Building',
+                        '07. Kantor / Office',
+                        '08. Sampah / Garbage',
+                        '09. Konsleting Listrik / Electrical Short',
+                        '10. Genset / Generator',
+                        '11. Pasar / Market',
+                        '12. Gas Elpiji / Liquefied Petroleum Gas',
+                        '13. Mobil / Car'
+                    ];
+                    const official436 = {
+                        2023: [9, 5, 1, 2, 1, 2, 0, 3, 4, 1, 0, 3, 2],
+                        2024: [9, 4, 0, 1, 5, 1, 0, 3, 8, 1, 0, 4, 5],
+                        2025: [6, 3, 1, 3, 37, 1, 0, 1, 10, 0, 0, 9, 8]
+                    };
+                    const defData436 = official436[yr] || Array(13).fill(0);
+                    let tot436 = 0;
+
+                    scenes436.forEach((sName, sIdx) => {
+                        const val = defData436[sIdx] !== undefined ? defData436[sIdx] : 0;
+                        tot436 += Number(val) || 0;
+                        setCell(r, 0, sName, dataCellStyle);
+                        setCell(r, 1, val, dataCenterStyle);
+                        r++;
+                    });
+
+                    setCell(r, 0, 'Jumlah / Total', headerPeachStyle);
+                    setCell(r, 1, (yr === 2023 ? 33 : (yr === 2024 ? 41 : (yr === 2025 ? 79 : tot436))), headerPeachStyle);
+                    r++;
+
+                    r++;
+                    setCell(r, 0, 'Sumber / Source:', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    setCell(r, 1, 'Dinas Kebakaran Kota Bukittinggi / Fire Services of Bukittinggi Municipality', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    footerWritten = true;
+
+                    maxCol = 2;
+                    ws['!cols'] = [{ wch: 45 }, { wch: 25 }];
+                } else if (currentTableCode === '4.3.7') {
+                    // TEMPLATE TABEL 4.3.7 - DINAS KEBAKARAN (KEJADIAN KEBAKARAN MENURUT PENYEBAB)
+                    titleId = `Jumlah Kejadian Kebakaran di Kota Bukittinggi Menurut Penyebab Kebakaran, ${yr}`;
+                    titleEn = `Number of Fire Incident in Bukittinggi Municipality by Fire Cause, ${yr}`;
+                    setCell(0, 1, titleId, { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } } });
+                    setCell(1, 1, titleEn, { font: { name: 'Calibri', sz: 10, italic: true, color: { rgb: '000000' } } });
+
+                    setCell(r, 0, 'Penyebab Kebakaran / Fire Cause', headerOrangeStyle);
+                    setCell(r, 1, 'Jumlah Kejadian / Number of Incident', headerOrangeStyle);
+                    r++;
+
+                    setCell(r, 0, '(1)', headerPeachStyle);
+                    setCell(r, 1, '(2)', headerPeachStyle);
+                    r++;
+
+                    const causes437 = [
+                        '01. Korsleting Listrik / Electric Short Circuit',
+                        '02. Kompor Gas / Gas Stove',
+                        '03. Kompor Minyak Tanah / Kerosene Stove',
+                        '04. Percikan Api / Las / Sparks',
+                        '05. Pembakaran Sampah / Garbage Burning',
+                        '06. Puntung Rokok / Cigarette Butt',
+                        '07. Lainnya / Others'
+                    ];
+                    const official437 = {
+                        2023: [4, 3, 0, 0, 3, 0, 23],
+                        2024: [7, 4, 0, 0, 0, 5, 25],
+                        2025: [10, 9, 0, 0, 1, 0, 59]
+                    };
+                    const defData437 = official437[yr] || Array(7).fill(0);
+                    let tot437 = 0;
+
+                    causes437.forEach((cName, cIdx) => {
+                        const val = defData437[cIdx] !== undefined ? defData437[cIdx] : 0;
+                        tot437 += Number(val) || 0;
+                        setCell(r, 0, cName, dataCellStyle);
+                        setCell(r, 1, val, dataCenterStyle);
+                        r++;
+                    });
+
+                    setCell(r, 0, 'Jumlah / Total', headerPeachStyle);
+                    setCell(r, 1, (yr === 2023 ? 33 : (yr === 2024 ? 41 : (yr === 2025 ? 79 : tot437))), headerPeachStyle);
+                    r++;
+
+                    r++;
+                    setCell(r, 0, 'Sumber / Source:', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    setCell(r, 1, 'Dinas Kebakaran Kota Bukittinggi / Fire Services of Bukittinggi Municipality', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    footerWritten = true;
+
+                    maxCol = 2;
+                    ws['!cols'] = [{ wch: 42 }, { wch: 25 }];
+                } else if (currentTableCode === '4.3.8') {
+                    // TEMPLATE TABEL 4.3.8 - DINAS KEBAKARAN (KEJADIAN KEBAKARAN MENURUT KERUGIAN)
+                    titleId = `Jumlah Kejadian Kebakaran di Kota Bukittinggi Menurut Nilai Kerugian Akibat Kebakaran, ${yr}`;
+                    titleEn = `Number of Fire Incident in Bukittinggi Municipality by Value of Losses Due to Fire, ${yr}`;
+                    setCell(0, 1, titleId, { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } } });
+                    setCell(1, 1, titleEn, { font: { name: 'Calibri', sz: 10, italic: true, color: { rgb: '000000' } } });
+
+                    setCell(r, 0, 'Nilai Kerugian / Value of Losses', headerOrangeStyle);
+                    setCell(r, 1, 'Jumlah Kejadian / Number of Incident', headerOrangeStyle);
+                    r++;
+
+                    setCell(r, 0, '(1)', headerPeachStyle);
+                    setCell(r, 1, '(2)', headerPeachStyle);
+                    r++;
+
+                    const losses438 = [
+                        '01. Kerugian > 5M / Loss > 5B',
+                        '02. 1M < Kerugian < 5M / 1B < Loss < 5B',
+                        '03. 500 Jt < Kerugian < 1M / 500M < Loss < 1B',
+                        '04. 50 Jt < Kerugian < 500 Jt / 50M < Loss < 500M',
+                        '05. Kerugian < 50 Jt / Loss < 50M'
+                    ];
+                    const official438 = {
+                        2023: ['-', '-', '-', 6, 27],
+                        2024: ['-', '-', '-', 7, 34],
+                        2025: ['-', 2, '-', 1, 8]
+                    };
+                    const defData438 = official438[yr] || ['-', '-', '-', 0, 0];
+                    let tot438 = 0;
+
+                    losses438.forEach((lName, lIdx) => {
+                        const val = defData438[lIdx] !== undefined ? defData438[lIdx] : '-';
+                        if (val !== '-') tot438 += Number(val) || 0;
+                        setCell(r, 0, lName, dataCellStyle);
+                        setCell(r, 1, val, dataCenterStyle);
+                        r++;
+                    });
+
+                    setCell(r, 0, 'Jumlah / Total', headerPeachStyle);
+                    setCell(r, 1, (yr === 2023 ? 33 : (yr === 2024 ? 41 : (yr === 2025 ? 11 : tot438))), headerPeachStyle);
+                    r++;
+
+                    r++;
+                    setCell(r, 0, 'Sumber / Source:', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    setCell(r, 1, 'Dinas Kebakaran Kota Bukittinggi / Fire Services of Bukittinggi Municipality', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    footerWritten = true;
+
+                    maxCol = 2;
+                    ws['!cols'] = [{ wch: 42 }, { wch: 25 }];
+                } else if (currentTableCode === '4.3.13') {
+                    // TEMPLATE TABEL 4.3.13 - DINAS SOSIAL (PEKERJA SOSIAL & ORGANISASI SOSIAL)
+                    titleId = `Jumlah Pekerja Sosial Masyarakat, Karang Taruna, Tenaga Kerja Sosial dan Organisasi Sosial di Kota Bukittinggi, ${yr}`;
+                    titleEn = `Number of Public Social Officers, Youth Club, Social Workers and Social Organization in Bukittinggi, ${yr}`;
+                    setCell(0, 1, titleId, { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } } });
+                    setCell(1, 1, titleEn, { font: { name: 'Calibri', sz: 10, italic: true, color: { rgb: '000000' } } });
+
+                    setCell(r, 0, 'Kecamatan / District', headerOrangeStyle);
+                    setCell(r, 1, 'Pekerja Sosial Masyarakat / Public Social Officers', headerOrangeStyle);
+                    setCell(r, 2, 'Karang Taruna / Youth Club', headerOrangeStyle);
+                    setCell(r, 3, 'Tenaga Kerja Sosial / Social Workers', headerOrangeStyle);
+                    setCell(r, 4, 'Organisasi Sosial / Social Organization', headerOrangeStyle);
+                    r++;
+
+                    for (let c = 0; c < 5; c++) {
+                        setCell(r, c, `(${c + 1})`, headerPeachStyle);
+                    }
+                    r++;
+
+                    const districts4313 = [
+                        { label: '01. GUGUK PANJANG', def: [47, 'Tidak Aktif', 1, 6] },
+                        { label: '02. MANDIANGIN KOTO SELAYAN', def: [60, 'Tidak Aktif', 1, 4] },
+                        { label: '03. AUR BIRUGO TIGO BALEH', def: [28, 'Tidak Aktif', 1, 4] }
+                    ];
+                    const totals4313 = {
+                        2018: ['-', '-', '-', '-'],
+                        2019: [123, 21, 3, 17],
+                        2020: [130, 121, 3, 17],
+                        2021: [130, 83, 3, 18],
+                        2022: [130, 24, 3, 18],
+                        2023: [300, 24, 3, 17],
+                        2024: [299, 24, 3, 17],
+                        2025: [135, 'Tidak Aktif', 3, 14]
+                    };
+
+                    districts4313.forEach(d => {
+                        setCell(r, 0, d.label, dataCellStyle);
+                        d.def.forEach((v, idx) => setCell(r, 1 + idx, v, dataCenterStyle));
+                        r++;
+                    });
+
+                    for (let py = yr - 5; py < yr; py++) {
+                        setCell(r, 0, py.toString(), dataCellStyle);
+                        const pVals = totals4313[py] || ['-', '-', '-', '-'];
+                        pVals.forEach((v, idx) => setCell(r, 1 + idx, v, dataCenterStyle));
+                        r++;
+                    }
+
+                    setCell(r, 0, `Jumlah / Total ${yr}`, headerPeachStyle);
+                    const currTot4313 = totals4313[yr] || [135, 'Tidak Aktif', 3, 14];
+                    currTot4313.forEach((v, idx) => setCell(r, 1 + idx, v, headerPeachStyle));
+                    r++;
+
+                    r++;
+                    setCell(r, 0, 'Sumber / Source:', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    setCell(r, 1, 'Dinas Sosial Kota Bukittinggi / Social Services of Bukittinggi Municipality', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    footerWritten = true;
+
+                    maxCol = 5;
+                    ws['!cols'] = [{ wch: 32 }, { wch: 25 }, { wch: 18 }, { wch: 22 }, { wch: 22 }];
+                } else if (currentTableCode === '4.3.14') {
+                    // TEMPLATE TABEL 4.3.14 - DINAS SOSIAL (DISABILITAS, ANAK TERLANTAR, LANSIA)
+                    titleId = `Jumlah Penyandang Disabilitas, Anak Terlantar dan Lanjut Usia Menurut Kecamatan di Kota Bukittinggi, ${yr}`;
+                    titleEn = `Number of Disable People, Homeless Child, and Old Age Person by District in Bukittinggi, ${yr}`;
+                    setCell(0, 1, titleId, { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } } });
+                    setCell(1, 1, titleEn, { font: { name: 'Calibri', sz: 10, italic: true, color: { rgb: '000000' } } });
+
+                    setCell(r, 0, 'Kecamatan / District', headerOrangeStyle);
+                    setCell(r, 1, 'Penyandang Disabilitas (DTSEN) / Disable People (KK)', headerOrangeStyle);
+                    setCell(r, 2, 'Anak Terlantar / Homeless Child (orang)', headerOrangeStyle);
+                    setCell(r, 3, 'Lanjut Usia (Penerima Bansos APBN & APBD) / Old Age (orang)', headerOrangeStyle);
+                    r++;
+
+                    for (let c = 0; c < 4; c++) {
+                        setCell(r, c, `(${c + 1})`, headerPeachStyle);
+                    }
+                    r++;
+
+                    const districts4314 = [
+                        { label: '01. GUGUK PANJANG', def: [175, 0, 760] },
+                        { label: '02. MANDIANGIN KOTO SELAYAN', def: [220, 1, 967] },
+                        { label: '03. AUR BIRUGO TIGO BALEH', def: [88, 0, 387] }
+                    ];
+                    const totals4314 = {
+                        2018: ['-', '-', '-'],
+                        2019: [580, 15, 565],
+                        2020: [566, 23, 745],
+                        2021: [563, 42, 456],
+                        2022: [533, 31, 450],
+                        2023: [533, 15, 3879],
+                        2024: [362, '-', 4402],
+                        2025: [483, 1, 2114]
+                    };
+
+                    districts4314.forEach(d => {
+                        setCell(r, 0, d.label, dataCellStyle);
+                        d.def.forEach((v, idx) => setCell(r, 1 + idx, v, dataCenterStyle));
+                        r++;
+                    });
+
+                    for (let py = yr - 5; py < yr; py++) {
+                        setCell(r, 0, py.toString(), dataCellStyle);
+                        const pVals = totals4314[py] || ['-', '-', '-'];
+                        pVals.forEach((v, idx) => setCell(r, 1 + idx, v, dataCenterStyle));
+                        r++;
+                    }
+
+                    setCell(r, 0, `Jumlah / Total ${yr}`, headerPeachStyle);
+                    const currTot4314 = totals4314[yr] || [483, 1, 2114];
+                    currTot4314.forEach((v, idx) => setCell(r, 1 + idx, v, headerPeachStyle));
+                    r++;
+
+                    r++;
+                    setCell(r, 0, 'Sumber / Source:', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    setCell(r, 1, 'Dinas Sosial Kota Bukittinggi / Social Services of Bukittinggi Municipality', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    footerWritten = true;
+
+                    maxCol = 4;
+                    ws['!cols'] = [{ wch: 32 }, { wch: 28 }, { wch: 22 }, { wch: 30 }];
+                            } else if (currentTableCode === '5.1.15') {
+                // TEMPLATE TABEL 5.1.15 - DINAS PERTANIAN DAN PANGAN (LUAS AREAL SAWAH MENURUT JENIS PENGAIRAN)
+                titleId = `Luas Areal Sawah Menurut Jenis Pengairan per Kecamatan di Kota Bukittinggi, ${yr}`;
+                titleEn = `Area of Wetland by Type of Irrigation per District in Bukittinggi Municipality, ${yr}`;
+                setCell(0, 0, `Tabel ${currentTableCode}`, { font: { name: 'Calibri', sz: 11, bold: true } });
+                setCell(0, 1, titleId, { font: { name: 'Calibri', sz: 10, bold: true } });
+                setCell(1, 0, 'Table', { font: { name: 'Calibri', sz: 11, italic: true } });
+                setCell(1, 1, titleEn, { font: { name: 'Calibri', sz: 10, italic: true } });
+
+                merges.push({ s: { r: 3, c: 0 }, e: { r: 4, c: 1 } });
+                setCell(3, 0, 'Kecamatan / District', headerOrangeStyle);
+                setCell(3, 1, '', headerOrangeStyle);
+                setCell(4, 0, '', headerOrangeStyle);
+                setCell(4, 1, '', headerOrangeStyle);
+
+                merges.push({ s: { r: 3, c: 2 }, e: { r: 3, c: 6 } });
+                setCell(3, 2, 'Jenis Pengairan / Type of Irrigation', headerOrangeStyle);
+                for (let c = 3; c <= 6; c++) setCell(3, c, '', headerOrangeStyle);
+
+                setCell(4, 2, 'Teknis / Technical', headerOrangeStyle);
+                setCell(4, 3, '½ Teknis / Semi Technical', headerOrangeStyle);
+                setCell(4, 4, 'Sederhana / Simple', headerOrangeStyle);
+                setCell(4, 5, 'Irigasi Non PU / Non PU Irrigation', headerOrangeStyle);
+                setCell(4, 6, 'Tadah Hujan / Non Irrigation', headerOrangeStyle);
+
+                merges.push({ s: { r: 3, c: 7 }, e: { r: 4, c: 7 } });
+                setCell(3, 7, 'Jumlah / Total', headerOrangeStyle);
+                setCell(4, 7, '', headerOrangeStyle);
+
+                merges.push({ s: { r: 5, c: 0 }, e: { r: 5, c: 1 } });
+                setCell(5, 0, '(1)', headerPeachStyle);
+                setCell(5, 1, '', headerPeachStyle);
+                for (let c = 2; c <= 7; c++) {
+                    setCell(5, c, `(${c})`, headerPeachStyle);
+                }
+
+                const tableEl = document.getElementById('dataDisplayTable');
+                const trs = tableEl ? tableEl.querySelectorAll('tbody tr') : [];
+
+                const dists = ['01. GUGUK PANJANG', '02. MANDIANGIN KOTO SELAYAN', '03. AUR BIRUGO TIGO BALEH'];
+                let rIdx = 6;
+                dists.forEach((d, distIdx) => {
+                    merges.push({ s: { r: rIdx, c: 0 }, e: { r: rIdx, c: 1 } });
+                    setCell(rIdx, 0, d, dataCellStyle);
+                    setCell(rIdx, 1, '', dataCellStyle);
+                    const inps = trs[distIdx] ? trs[distIdx].querySelectorAll('.table-edit-input') : [];
+                    for (let c = 0; c < 6; c++) {
+                        const val = inps[c] ? inps[c].value.trim() : '-';
+                        setCell(rIdx, 2 + c, val || '-', dataCenterStyle);
+                    }
+                    rIdx++;
+                });
+
+                const yearsDesc5115 = [];
+                for (let y = yr; y >= yr - 4; y--) {
+                    yearsDesc5115.push(y);
+                }
+
+                merges.push({ s: { r: rIdx, c: 0 }, e: { r: rIdx + 4, c: 0 } });
+                setCell(rIdx, 0, 'Jumlah / Total', headerPeachStyle);
+                for (let r = 1; r < 5; r++) setCell(rIdx + r, 0, '', headerPeachStyle);
+
+                yearsDesc5115.forEach((y, yIdx) => {
+                    setCell(rIdx, 1, y.toString(), headerPeachStyle);
+                    const inps = trs[3 + yIdx] ? trs[3 + yIdx].querySelectorAll('.table-edit-input') : [];
+                    for (let c = 0; c < 6; c++) {
+                        const val = inps[c] ? inps[c].value.trim() : '-';
+                        setCell(rIdx, 2 + c, val || '-', headerPeachStyle);
+                    }
+                    rIdx++;
+                });
+
+                rIdx++;
+                setCell(rIdx, 0, 'Sumber / Source:', { font: { name: 'Calibri', sz: 9, bold: true } });
+                setCell(rIdx, 1, 'Dinas Pertanian dan Pangan Kota Bukittinggi / Agriculture and Food Services of Bukittinggi Municipality', { font: { name: 'Calibri', sz: 9 } });
+
+                colWidths = [{ wch: 18 }, { wch: 14 }, { wch: 14 }, { wch: 15 }, { wch: 14 }, { wch: 18 }, { wch: 16 }, { wch: 14 }];
+            } else if (currentTableCode === '5.1.16' || currentTableCode === '5.1.17') {
+                const isPalawija = (currentTableCode === '5.1.16');
+                titleId = isPalawija
+                    ? `Target dan Realisasi Intensifikasi Palawija per Kecamatan di Kota Bukittinggi, ${yr}`
+                    : `Target dan Realisasi Intensifikasi Sayur–Sayuran per Kecamatan di Kota Bukittinggi, ${yr}`;
+                titleEn = isPalawija
+                    ? `Target and Realization of Secondary Food Crops per District in Bukittinggi Municipality, ${yr}`
+                    : `Target and Realization of Vegetables Intensification per District in Bukittinggi Municipality, ${yr}`;
+
+                setCell(0, 0, `Tabel ${currentTableCode}`, { font: { name: 'Calibri', sz: 11, bold: true } });
+                setCell(0, 1, titleId, { font: { name: 'Calibri', sz: 10, bold: true } });
+                setCell(1, 0, 'Table', { font: { name: 'Calibri', sz: 11, italic: true } });
+                setCell(1, 1, titleEn, { font: { name: 'Calibri', sz: 10, italic: true } });
+
+                merges.push({ s: { r: 3, c: 0 }, e: { r: 4, c: 1 } });
+                setCell(3, 0, 'Kecamatan / District', headerOrangeStyle);
+                setCell(3, 1, '', headerOrangeStyle);
+                setCell(4, 0, '', headerOrangeStyle);
+                setCell(4, 1, '', headerOrangeStyle);
+
+                merges.push({ s: { r: 3, c: 2 }, e: { r: 3, c: 7 } });
+                setCell(3, 2, 'Target', headerOrangeStyle);
+                for (let c = 3; c <= 7; c++) setCell(3, c, '', headerOrangeStyle);
+
+                merges.push({ s: { r: 3, c: 8 }, e: { r: 3, c: 13 } });
+                setCell(3, 8, 'Realisasi / Realization', headerOrangeStyle);
+                for (let c = 9; c <= 13; c++) setCell(3, c, '', headerOrangeStyle);
+
+                const subcols = isPalawija
+                    ? ['Jagung', 'Kacang Tanah', 'Kedelai', 'Kacang Hijau', 'Ubi Kayu', 'Ubi Jalar']
+                    : ['Kentang', 'Tomat', 'Lombok', 'Bawang Daun', 'Lainnya', 'Jumlah'];
+
+                subcols.forEach((sc, i) => {
+                    setCell(4, 2 + i, sc, headerOrangeStyle);
+                    setCell(4, 8 + i, sc, headerOrangeStyle);
+                });
+
+                merges.push({ s: { r: 5, c: 0 }, e: { r: 5, c: 1 } });
+                setCell(5, 0, '(1)', headerPeachStyle);
+                setCell(5, 1, '', headerPeachStyle);
+                for (let c = 0; c < 12; c++) {
+                    setCell(5, 2 + c, `(${c + 2})`, headerPeachStyle);
+                }
+
+                const dists = ['01. GUGUK PANJANG', '02. MANDIANGIN KOTO SELAYAN', '03. AUR BIRUGO TIGO BALEH'];
+                let rIdx = 6;
+                dists.forEach((d, distIdx) => {
+                    merges.push({ s: { r: rIdx, c: 0 }, e: { r: rIdx, c: 1 } });
+                    setCell(rIdx, 0, d, dataCellStyle);
+                    setCell(rIdx, 1, '', dataCellStyle);
+                    const inps = trs[distIdx] ? trs[distIdx].querySelectorAll('.table-edit-input') : [];
+                    for (let c = 0; c < 12; c++) {
+                        const val = inps[c] ? inps[c].value.trim() : '-';
+                        setCell(rIdx, 2 + c, val || '-', dataCenterStyle);
+                    }
+                    rIdx++;
+                });
+
+                const yearsDescPalawija = [];
+                for (let y = yr; y >= yr - 4; y--) {
+                    yearsDescPalawija.push(y);
+                }
+
+                merges.push({ s: { r: rIdx, c: 0 }, e: { r: rIdx + 4, c: 0 } });
+                setCell(rIdx, 0, 'Jumlah / Total', headerPeachStyle);
+                for (let r = 1; r < 5; r++) setCell(rIdx + r, 0, '', headerPeachStyle);
+
+                yearsDescPalawija.forEach((y, yIdx) => {
+                    setCell(rIdx, 1, y.toString(), headerPeachStyle);
+                    const inps = trs[3 + yIdx] ? trs[3 + yIdx].querySelectorAll('.table-edit-input') : [];
+                    for (let c = 0; c < 12; c++) {
+                        const val = inps[c] ? inps[c].value.trim() : '-';
+                        setCell(rIdx, 2 + c, val || '-', headerPeachStyle);
+                    }
+                    rIdx++;
+                });
+
+                rIdx++;
+                setCell(rIdx, 0, 'Sumber / Source:', { font: { name: 'Calibri', sz: 9, bold: true } });
+                setCell(rIdx, 1, 'Dinas Pertanian dan Pangan Kota Bukittinggi / Agriculture and Food Services of Bukittinggi Municipality', { font: { name: 'Calibri', sz: 9 } });
+
+                colWidths = [{ wch: 18 }, { wch: 12 }, { wch: 11 }, { wch: 12 }, { wch: 11 }, { wch: 12 }, { wch: 11 }, { wch: 11 }, { wch: 11 }, { wch: 12 }, { wch: 11 }, { wch: 12 }, { wch: 11 }, { wch: 11 }];
+            } else if (currentTableCode === '5.1.18') {
+                // TEMPLATE TABEL 5.1.18 - DINAS PERTANIAN DAN PANGAN (REALISASI PUPUK)
+                titleId = `Realisasi Pupuk di Kota Bukittinggi, ${yr}`;
+                titleEn = `Realization of Fertilizer in Bukittinggi, ${yr}`;
+                setCell(0, 0, `Tabel ${currentTableCode}`, { font: { name: 'Calibri', sz: 11, bold: true } });
+                setCell(0, 1, titleId, { font: { name: 'Calibri', sz: 10, bold: true } });
+                setCell(1, 0, 'Table', { font: { name: 'Calibri', sz: 11, italic: true } });
+                setCell(1, 1, titleEn, { font: { name: 'Calibri', sz: 10, italic: true } });
+
+                merges.push({ s: { r: 3, c: 0 }, e: { r: 4, c: 0 } });
+                setCell(3, 0, 'Jenis Pupuk / Type of Fertilizer', headerOrangeStyle);
+                setCell(4, 0, '', headerOrangeStyle);
+
+                merges.push({ s: { r: 3, c: 1 }, e: { r: 4, c: 1 } });
+                setCell(3, 1, 'Satuan / Unit', headerOrangeStyle);
+                setCell(4, 1, '', headerOrangeStyle);
+
+                merges.push({ s: { r: 3, c: 2 }, e: { r: 3, c: 4 } });
+                setCell(3, 2, 'Kecamatan / District', headerOrangeStyle);
+                setCell(3, 3, '', headerOrangeStyle);
+                setCell(3, 4, '', headerOrangeStyle);
+
+                setCell(4, 2, 'Guguk Panjang', headerOrangeStyle);
+                setCell(4, 3, 'Mandiangin Koto Selayan', headerOrangeStyle);
+                setCell(4, 4, 'Aur Birugo Tigo Baleh', headerOrangeStyle);
+
+                merges.push({ s: { r: 3, c: 5 }, e: { r: 4, c: 5 } });
+                setCell(3, 5, 'Jumlah / Total', headerOrangeStyle);
+                setCell(4, 5, '', headerOrangeStyle);
+
+                for (let c = 0; c < 6; c++) {
+                    setCell(5, c, `(${c + 1})`, headerPeachStyle);
+                }
+
+                const fertItems = [
+                    { name: '01. UREA', unit: 'Ton', gp: '3,75', mks: '48', abtb: '47,75', jml: '99,5' },
+                    { name: '02. SP36', unit: '–', gp: '–', mks: '–', abtb: '–', jml: '–' },
+                    { name: '03. KCL', unit: '–', gp: '–', mks: '–', abtb: '–', jml: '–' },
+                    { name: '04. NPK', unit: 'Ton', gp: '3,57', mks: '45,12', abtb: '24,35', jml: '73,03' },
+                    { name: '05. Bay Polan', unit: '–', gp: '–', mks: '–', abtb: '–', jml: '–' },
+                    { name: '06. Roton F', unit: '–', gp: '–', mks: '–', abtb: '–', jml: '–' },
+                    { name: '07. Racun', unit: '–', gp: '–', mks: '–', abtb: '–', jml: '–' },
+                    { name: 'a. Insektisida', unit: '–', gp: '–', mks: '–', abtb: '–', jml: '–' },
+                    { name: 'b. Rodentisida', unit: '–', gp: '–', mks: '–', abtb: '–', jml: '–' },
+                    { name: 'c. Fungisida', unit: '–', gp: '–', mks: '–', abtb: '–', jml: '–' },
+                    { name: 'd. Jamaskus', unit: '–', gp: '–', mks: '–', abtb: '–', jml: '–' }
+                ];
+
+                let rIdx = 6;
+                fertItems.forEach(it => {
+                    setCell(rIdx, 0, it.name, dataCellStyle);
+                    setCell(rIdx, 1, it.unit, dataCenterStyle);
+                    setCell(rIdx, 2, (yr <= 2025) ? it.gp : '–', dataCenterStyle);
+                    setCell(rIdx, 3, (yr <= 2025) ? it.mks : '–', dataCenterStyle);
+                    setCell(rIdx, 4, (yr <= 2025) ? it.abtb : '–', dataCenterStyle);
+                    setCell(rIdx, 5, (yr <= 2025) ? it.jml : '–', dataCenterStyle);
+                    rIdx++;
+                });
+
+                rIdx++;
+                setCell(rIdx, 0, 'Sumber / Source:', { font: { name: 'Calibri', sz: 9, bold: true } });
+                setCell(rIdx, 1, 'Dinas Pertanian dan Pangan Kota Bukittinggi / Agriculture and Food Services of Bukittinggi Municipality', { font: { name: 'Calibri', sz: 9 } });
+
+                colWidths = [{ wch: 25 }, { wch: 12 }, { wch: 20 }, { wch: 25 }, { wch: 25 }, { wch: 15 }];
+            } else if (currentTableCode === '5.1.19') {
+                // TEMPLATE TABEL 5.1.19 - DINAS PERTANIAN DAN PANGAN (PENGADAAN PERALATAN PEMBERANTASAN HAMA)
+                titleId = `Jumlah Pengadaan Peralatan Pemberantasan Hama Penyakit Tanaman Menurut Jenisnya per Kecamatan di Kota Bukittinggi, ${yr}`;
+                titleEn = `Number of Pest Control Machinery Procurement by District in Bukittinggi, ${yr}`;
+                setCell(0, 0, `Tabel ${currentTableCode}`, { font: { name: 'Calibri', sz: 11, bold: true } });
+                setCell(0, 1, titleId, { font: { name: 'Calibri', sz: 10, bold: true } });
+                setCell(1, 0, 'Table', { font: { name: 'Calibri', sz: 11, italic: true } });
+                setCell(1, 1, titleEn, { font: { name: 'Calibri', sz: 10, italic: true } });
+
+                setCell(3, 0, 'Kecamatan / District', headerOrangeStyle);
+                setCell(3, 1, 'Motor Sprayer / Sprayer Motors', headerOrangeStyle);
+                setCell(3, 2, 'Sprayer Tangan / Hand Sprayer', headerOrangeStyle);
+                setCell(3, 3, 'Solder / Solder', headerOrangeStyle);
+                setCell(3, 4, 'Emposan / Breather', headerOrangeStyle);
+                setCell(3, 5, 'Jumlah / Total', headerOrangeStyle);
+
+                for (let c = 0; c < 6; c++) {
+                    setCell(4, c, `(${c + 1})`, headerPeachStyle);
+                }
+
+                const dists5119 = ['01. GUGUK PANJANG', '02. MANDIANGIN KOTO SELAYAN', '03. AUR BIRUGO TIGO BALEH'];
+                let rIdx = 5;
+                dists5119.forEach(d => {
+                    setCell(rIdx, 0, d, dataCellStyle);
+                    for (let c = 1; c <= 4; c++) setCell(rIdx, c, '-', dataCenterStyle);
+                    setCell(rIdx, 5, '-', totalCenterStyle);
+                    rIdx++;
+                });
+
+                const hist5119 = {
+                    2016: ['-', '-', '-', '-', '-'],
+                    2017: ['-', '-', '-', '-', '-'],
+                    2018: ['-', '-', '-', '-', '-'],
+                    2019: ['-', 11, '-', '-', 11],
+                    2020: ['-', 0, '-', '-', 0],
+                    2021: ['-', 15, '-', '-', 15],
+                    2022: ['-', 8, '-', '-', 8],
+                    2023: ['-', '-', '-', '-', '-'],
+                    2024: ['-', '-', '-', '-', '-'],
+                    2025: ['-', '-', '-', '-', '-']
+                };
+
+                for (let y = yr - 5; y <= yr - 1; y++) {
+                    setCell(rIdx, 0, y.toString(), dataCellStyle);
+                    const hVals = hist5119[y] || ['-', '-', '-', '-', '-'];
+                    for (let c = 0; c < 4; c++) setCell(rIdx, 1 + c, hVals[c], dataCenterStyle);
+                    setCell(rIdx, 5, hVals[4], totalCenterStyle);
+                    rIdx++;
+                }
+
+                // Total row
+                setCell(rIdx, 0, `Jumlah / Total ${yr}`, headerPeachStyle);
+                const curVals = hist5119[yr] || ['-', '-', '-', '-', '-'];
+                for (let c = 0; c < 4; c++) setCell(rIdx, 1 + c, curVals[c], headerPeachStyle);
+                setCell(rIdx, 5, curVals[4], headerPeachStyle);
+                rIdx++;
+
+                rIdx++;
+                setCell(rIdx, 0, 'Sumber / Source:', { font: { name: 'Calibri', sz: 9, bold: true } });
+                setCell(rIdx, 1, 'Dinas Pertanian dan Pangan Kota Bukittinggi / Agriculture and Food Services of Bukittinggi Municipality', { font: { name: 'Calibri', sz: 9 } });
+
+                colWidths = [{ wch: 30 }, { wch: 22 }, { wch: 22 }, { wch: 18 }, { wch: 18 }, { wch: 16 }];
+            } else if (currentTableCode === '5.2.1' || currentTableCode === '5.2.2') {
+                // TEMPLATE TABEL 5.2.1 / 5.2.2 - DINAS PERTANIAN DAN PANGAN (TANAMAN PERKEBUNAN)
+                const is521 = (currentTableCode === '5.2.1');
+                titleId = is521
+                    ? `Luas Areal Tanaman Perkebunan Menurut Kecamatan dan Jenis Tanaman di Kota Bukittinggi (ha), ${yr}`
+                    : `Produksi Tanaman Perkebunan Menurut Kecamatan dan Jenis Tanaman di Kota Bukittinggi (ton), ${yr}`;
+                titleEn = is521
+                    ? `Planted Area of Estate Crops by District and Types of Crops in Bukittinggi Municipality (ha), ${yr}`
+                    : `Production of Estate Crops by District and Types of Crops in Bukittinggi Municipality (ton), ${yr}`;
+
+                setCell(0, 0, `Tabel ${currentTableCode}`, { font: { name: 'Calibri', sz: 11, bold: true } });
+                setCell(0, 1, titleId, { font: { name: 'Calibri', sz: 10, bold: true } });
+                setCell(1, 0, 'Table', { font: { name: 'Calibri', sz: 11, italic: true } });
+                setCell(1, 1, titleEn, { font: { name: 'Calibri', sz: 10, italic: true } });
+
+                // Row 3 & 4: Kecamatan / District (merge row 3 & 4)
+                merges.push({ s: { r: 3, c: 0 }, e: { r: 4, c: 0 } });
+                setCell(3, 0, 'Kecamatan / District', headerOrangeStyle);
+                setCell(4, 0, '', headerOrangeStyle);
+
+                const cropList = [
+                    'Kelapa Sawit / Oil Palm',
+                    'Kelapa / Coconut',
+                    'Karet / Rubber',
+                    'Kopi / Coffee',
+                    'Kulit Manis / Cassiavera',
+                    'Cengkeh / Clove',
+                    'Pala / Nutmeg',
+                    'Pinang / Areca Nut',
+                    'Tebu / Sugar Cane',
+                    'Kakao / Cocoa'
+                ];
+
+                cropList.forEach((cropName, cIdx) => {
+                    const colA = 1 + (cIdx * 2);
+                    const colB = colA + 1;
+                    merges.push({ s: { r: 3, c: colA }, e: { r: 3, c: colB } });
+                    setCell(3, colA, cropName, headerOrangeStyle);
+                    setCell(3, colB, '', headerOrangeStyle);
+
+                    setCell(4, colA, (yr - 1).toString(), headerOrangeStyle);
+                    setCell(4, colB, yr.toString(), headerOrangeStyle);
+                });
+
+                // Row 5: Penomoran (1) sampai (21)
+                for (let c = 0; c < 21; c++) {
+                    setCell(5, c, `(${c + 1})`, headerPeachStyle);
+                }
+
+                // Ambil data live dari tabel atau fallback nilai default
+                const tableEl = document.getElementById('dataDisplayTable');
+                let liveRows = [];
+                if (tableEl) {
+                    const trs = tableEl.querySelectorAll('tbody tr');
+                    trs.forEach(tr => {
+                        const inputs = tr.querySelectorAll('.table-edit-input');
+                        if (inputs.length > 0) {
+                            const firstTd = tr.querySelector('td');
+                            const rowName = firstTd ? firstTd.innerText.trim() : '';
+                            const rowVals = Array.from(inputs).map(inp => inp.value.trim());
+                            liveRows.push({ name: rowName, vals: rowVals });
+                        }
+                    });
+                }
+
+                if (liveRows.length < 4) {
+                    if (is521) {
+                        liveRows = [
+                            { name: '01. Guguk Panjang', vals: (yr === 2025) ? ['-', '-', '0,86', '0,86', '-', '-', '69,36', '60,00', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'] : Array(20).fill('-') },
+                            { name: '02. Mandiangin Koto Selayan', vals: (yr === 2025) ? ['-', '-', '2', '1,9', '-', '-', '52,48', '50,24', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'] : Array(20).fill('-') },
+                            { name: '03. Aur Birugo Tigo Baleh', vals: (yr === 2025) ? ['-', '-', '0,9', '0,9', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'] : Array(20).fill('-') },
+                            { name: 'Bukittinggi', vals: (yr === 2025) ? ['-', '-', '3,76', '3,66', '-', '-', '122,24', '110,24', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'] : Array(20).fill('-') }
+                        ];
+                    } else {
+                        liveRows = [
+                            { name: '01. Guguk Panjang', vals: (yr === 2025) ? ['-', '-', '0,0034', '0,0002', '-', '-', '0,0011', '0,0004', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'] : Array(20).fill('-') },
+                            { name: '02. Mandiangin Koto Selayan', vals: (yr === 2025) ? ['-', '-', '0,0012', '0,0002', '-', '-', '0,0008', '0,0001', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'] : Array(20).fill('-') },
+                            { name: '03. Aur Birugo Tigo Baleh', vals: (yr === 2025) ? ['-', '-', '0,001', '0,0002', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'] : Array(20).fill('-') },
+                            { name: 'Bukittinggi', vals: (yr === 2025) ? ['-', '-', '0,0055', '0,0006', '-', '-', '0,0019', '0,00055', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'] : Array(20).fill('-') }
+                        ];
+                    }
+                }
+
+                let rIdx = 6;
+                liveRows.forEach((rObj, rNum) => {
+                    const isTotalRow = (rNum === liveRows.length - 1 || rObj.name.toLowerCase().includes('bukittinggi'));
+                    const nameStyle = isTotalRow ? headerPeachStyle : dataCellStyle;
+                    const valStyle = isTotalRow ? totalRightStyle : dataRightStyle;
+                    setCell(rIdx, 0, rObj.name, nameStyle);
+                    for (let c = 0; c < 20; c++) {
+                        const cellVal = (rObj.vals && rObj.vals[c] !== undefined) ? rObj.vals[c] : '-';
+                        const isHyphen = (cellVal === '-' || cellVal === '–');
+                        setCell(rIdx, 1 + c, cellVal, isHyphen ? (isTotalRow ? headerPeachStyle : dataCenterStyle) : valStyle);
+                    }
+                    rIdx++;
+                });
+
+                rIdx++;
+                setCell(rIdx, 0, 'Sumber / Source:', { font: { name: 'Calibri', sz: 9, bold: true } });
+                setCell(rIdx, 1, 'Dinas Pertanian dan Pangan Kota Bukittinggi / Agriculture and Food Services of Bukittinggi Municipality', { font: { name: 'Calibri', sz: 9 } });
+
+                colWidths = [{ wch: 28 }];
+                for (let c = 0; c < 20; c++) colWidths.push({ wch: 10 });
+            } else if (currentTableCode === '4.3.15') {
+                    // TEMPLATE TABEL 4.3.15 - DINAS SOSIAL (BANTUAN SOSIAL / 7-YEAR ROLLING PERIOD)
+                    const p4315 = get7YearPeriod(yr);
+                    titleId = `Jumlah Orang Terlantar, Bekas Narapidana, Penyandang Disabilitas dan Penghuni Panti Asuhan yang Dibantu di Kota Bukittinggi, ${p4315.label}`;
+                    titleEn = `Number of Homeless People, Ex Prisoner, Disable People, Refective Person in Bukittinggi, ${p4315.label}`;
+                    setCell(0, 1, titleId, { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } } });
+                    setCell(1, 1, titleEn, { font: { name: 'Calibri', sz: 10, italic: true, color: { rgb: '000000' } } });
+
+                    setCell(r, 0, 'Tahun / Year', headerOrangeStyle);
+                    setCell(r, 1, 'Orang Terlantar / Homeless People', headerOrangeStyle);
+                    setCell(r, 2, 'Bekas Napi / Ex-prisoner', headerOrangeStyle);
+                    setCell(r, 3, 'Penyandang Disabilitas / Disable People', headerOrangeStyle);
+                    setCell(r, 4, 'Penghuni Panti Asuhan / Inhabitants of Social Institution', headerOrangeStyle);
+                    setCell(r, 5, 'Jumlah / Total', headerOrangeStyle);
+                    r++;
+
+                    for (let c = 0; c < 6; c++) {
+                        setCell(r, c, `(${c + 1})`, headerPeachStyle);
+                    }
+                    r++;
+
+                    const official4315 = {
+                        2015: ['-', '-', '-', '-', '-'],
+                        2016: ['-', '-', '-', '-', '-'],
+                        2017: [61, 15, 390, 94, 560],
+                        2018: [39, 0, 123, 94, 256],
+                        2019: [40, 2, 28, 96, 166],
+                        2020: [54, 0, 482, 96, 632],
+                        2021: [53, 78, 563, 107, 801],
+                        2022: [55, 0, 345, 79, 479],
+                        2023: [75, 12, 256, 72, 415],
+                        2024: [44, 0, 302, 77, 423],
+                        2025: [25, 0, 280, 75, 380]
+                    };
+
+                    p4315.yearsAsc.forEach(y => {
+                        const isCur = (y === yr);
+                        const styleYr = isCur ? headerPeachStyle : dataCellStyle;
+                        const styleNum = isCur ? headerPeachStyle : dataCenterStyle;
+                        const d = official4315[y] || ['-', '-', '-', '-', '-'];
+
+                        setCell(r, 0, y.toString(), styleYr);
+                        d.forEach((v, idx) => setCell(r, 1 + idx, v, styleNum));
+                        r++;
+                    });
+
+                    r++;
+                    setCell(r, 0, 'Sumber / Source:', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    setCell(r, 1, 'Dinas Sosial Kota Bukittinggi / Social Services of Bukittinggi Municipality', { font: { name: 'Calibri', sz: 9.5, italic: true } });
+                    footerWritten = true;
+
+                    maxCol = 6;
+                    ws['!cols'] = [{ wch: 18 }, { wch: 22 }, { wch: 18 }, { wch: 25 }, { wch: 30 }, { wch: 18 }];
                 } else if (currentTableCode === '4.2.14') {
                     // TEMPLATE TABEL 4.2.14 - DINAS LINGKUNGAN HIDUP (SUMBER TIMBUNAN SAMPAH)
                     titleId = `Rata–rata Timbunan Sampah yang Terangkut menurut Sumber Timbunan Sampah di Kota Bukittinggi, ${yr}`;
@@ -12159,7 +15115,7 @@
                     e: { r: r + 1, c: Math.max(maxCol - 1, 1) }
                 });
 
-                const isMultiYearTable = ['4.2.4', '4.2.5', '4.2.7', '4.2.9', '4.2.10', '4.2.13', '4.2.15', '4.2.16', '8.1.1', '8.1.2', '8.1.3'].includes(currentTableCode);
+                const isMultiYearTable = ['4.2.4', '4.2.5', '4.2.7', '4.2.9', '4.2.10', '4.2.13', '4.2.15', '4.2.16', '4.2.20', '4.3.15', '8.1.1', '8.1.2', '8.1.3'].includes(currentTableCode) || Boolean(tableSchemas[currentTableCode]?.isMultiYear);
                 const pFile = isMultiYearTable ? getTablePeriod(yr, currentTableCode).label.replace('–', '_') : currentYear;
                 const pLabel = isMultiYearTable ? getTablePeriod(yr, currentTableCode).label : currentYear;
                 XLSX.utils.book_append_sheet(wb, ws, `Template_${currentTableCode}`.substring(0, 31));
@@ -12171,6 +15127,79 @@
             }
         }
 
+        function findTargetWorksheet(workbook, currentCode) {
+            if (!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) return null;
+            const rawCode = (currentCode || '').toString().trim().replace(/\.+$/, '');
+            const cleanDigits = rawCode.replace(/[^\d]/g, '');
+            const codePattern = new RegExp('\\b' + rawCode.replace(/\./g, '[\\._\\s-]*') + '\\b', 'i');
+
+            // 1. Cek nama Sheet apakah cocok dengan kode tabel
+            for (const name of workbook.SheetNames) {
+                const trimmedName = name.trim();
+                if (codePattern.test(trimmedName) || trimmedName.toLowerCase().includes(rawCode.toLowerCase())) {
+                    return { sheetName: name, worksheet: workbook.Sheets[name] };
+                }
+                const nameDigits = trimmedName.replace(/[^\d]/g, '');
+                if (cleanDigits && nameDigits === cleanDigits) {
+                    return { sheetName: name, worksheet: workbook.Sheets[name] };
+                }
+            }
+
+            // 2. Cek isi sel di 12 baris pertama setiap Sheet apakah memuat kode tabel (misal "Tabel 4.2.14" di sel A1)
+            for (const name of workbook.SheetNames) {
+                const ws = workbook.Sheets[name];
+                if (!ws) continue;
+                const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+                const scanLimit = Math.min(rows.length, 12);
+                for (let r = 0; r < scanLimit; r++) {
+                    const rowStr = (rows[r] || []).map(c => (c || '').toString().trim()).join(' ');
+                    if (codePattern.test(rowStr) || (cleanDigits && rowStr.toLowerCase().includes(rawCode.toLowerCase()))) {
+                        return { sheetName: name, worksheet: ws };
+                    }
+                }
+            }
+
+            // 3. Jika hanya ada 1 sheet di berkas Excel, langsung gunakan
+            if (workbook.SheetNames.length === 1) {
+                const name = workbook.SheetNames[0];
+                return { sheetName: name, worksheet: workbook.Sheets[name] };
+            }
+
+            // 4. Cari sheet yang memuat struktur tabel resmi (hindari cover/penjelasan/daftar isi)
+            for (const name of workbook.SheetNames) {
+                const lowerName = name.toLowerCase();
+                if (lowerName.includes('cover') || lowerName.includes('daftar') || lowerName.includes('isi') || lowerName.includes('info') || lowerName.includes('penjelasan')) {
+                    continue;
+                }
+                const ws = workbook.Sheets[name];
+                if (!ws) continue;
+                const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+                if (rows && rows.length >= 4) {
+                    const hasTableData = rows.slice(1, 15).some(row => 
+                        (row || []).some(c => {
+                            const s = (c || '').toString().trim();
+                            return /^\s*\(\s*\d+\s*\)\s*$/.test(s) || /^\s*-\s*\d+\s*-?\s*$/.test(s) || (!isNaN(parseFloat(s)) && isFinite(s));
+                        })
+                    );
+                    if (hasTableData) {
+                        return { sheetName: name, worksheet: ws };
+                    }
+                }
+            }
+
+            // 5. Fallback sheet pertama yang memiliki baris data
+            for (const name of workbook.SheetNames) {
+                const ws = workbook.Sheets[name];
+                const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+                if (rows && rows.length > 0) {
+                    return { sheetName: name, worksheet: ws };
+                }
+            }
+
+            const defaultName = workbook.SheetNames[0];
+            return { sheetName: defaultName, worksheet: workbook.Sheets[defaultName] };
+        }
+
         function handleEditExcelImport(event) {
             const file = event.target.files ? event.target.files[0] : null;
             if (!file) return;
@@ -12180,8 +15209,9 @@
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
-                    const sheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[sheetName];
+                    const sheetTarget = findTargetWorksheet(workbook, currentTableCode);
+                    const sheetName = sheetTarget ? sheetTarget.sheetName : workbook.SheetNames[0];
+                    const worksheet = sheetTarget ? sheetTarget.worksheet : workbook.Sheets[sheetName];
                     const rawRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
 
                     const cleanRows = rawRows.filter(r => Array.isArray(r) && r.some(c => c !== null && c !== undefined && c.toString().trim() !== ''));
@@ -12195,7 +15225,7 @@
                         let s = rawVal.toString().trim();
                         if (s === '' || s === '-' || s === '–' || s === '—') return '-';
                         if (/^\d+\.\d+\.00$/.test(s)) {
-                            return s.replace(/\.00$/, '');
+                            s = s.replace(/\.00$/, '');
                         }
                         const dtMatch = s.match(/(\d+)\/(\d+)\/1900\s+(\d+)[\.:](\d+)/);
                         if (dtMatch) {
@@ -12203,17 +15233,9 @@
                             const hours = parseInt(dtMatch[3], 10);
                             const mins = parseInt(dtMatch[4], 10);
                             const totalHours = (days * 24) + hours;
-                            return `${totalHours}.${mins < 10 ? '0' + mins : mins}`;
+                            s = `${totalHours}.${mins < 10 ? '0' + mins : mins}`;
                         }
-                        if (typeof rawVal === 'number' && rawVal > 1 && rawVal < 10 && (rawVal % 1 !== 0)) {
-                            const rawHours = rawVal * 24;
-                            const totalHoursInt = Math.floor(rawHours);
-                            const mins = Math.round((rawHours - totalHoursInt) * 60);
-                            if (mins >= 0 && mins < 60) {
-                                return `${totalHoursInt}.${mins < 10 ? '0' + mins : mins}`;
-                            }
-                        }
-                        return s;
+                        return (typeof formatBpsNumber === 'function') ? formatBpsNumber(s) : s;
                     }
 
                     // Find header row
@@ -13037,6 +16059,100 @@
                                 profIdx++;
                             }
                         });
+                    } else if (currentTableCode === '5.2.1' || currentTableCode === '5.2.2') {
+                        // IMPORT KHUSUS TABEL 5.2.1 & 5.2.2 - TANAMAN PERKEBUNAN (10 KOMODITI X 2 TAHUN = 20 KOLOM DATA)
+                        const distDefs = [
+                            { match: 'guguk', idx: 0 },
+                            { match: 'mandiangin', idx: 1 },
+                            { match: 'aur', idx: 2 },
+                            { match: 'bukittinggi', idx: 3 }
+                        ];
+
+                        dataRows.forEach(row => {
+                            if (!Array.isArray(row)) return;
+                            const rowStr = row.map(c => (c !== null && c !== undefined ? c.toString().trim() : '')).join(' ').toLowerCase();
+                            if (!rowStr || rowStr.startsWith('sumber') || rowStr.startsWith('source') || rowStr.includes('(1)')) return;
+
+                            let targetIdx = -1;
+                            const firstCell = (row[0] || '').toString().toLowerCase();
+                            for (let dk of distDefs) {
+                                if (firstCell.includes(dk.match) || rowStr.includes(dk.match)) {
+                                    targetIdx = dk.idx;
+                                    break;
+                                }
+                            }
+
+                            if (targetIdx >= 0 && trs[targetIdx]) {
+                                const inps = trs[targetIdx].querySelectorAll('.table-edit-input');
+                                let colOffset = 1;
+                                if (row.length > 21) {
+                                    colOffset = row.length - 20;
+                                }
+                                for (let c = 0; c < 20; c++) {
+                                    if (inps[c]) {
+                                        const raw = row[colOffset + c];
+                                        const val = sanitizeExcelNumericCell(raw);
+                                        inps[c].value = (val !== '' && val !== undefined && val !== null) ? val : '-';
+                                        inps[c].classList.add('bg-amber-100');
+                                        filledCount++;
+                                    }
+                                }
+                            }
+                        });
+                    } else if (currentTableCode === '5.1.15' || currentTableCode === '5.1.16' || currentTableCode === '5.1.17') {
+                        // IMPORT KHUSUS TABEL 5.1.15, 5.1.16, 5.1.17 - DINAS PERTANIAN DAN PANGAN
+                        const yrInt = parseInt(currentYear) || 2025;
+                        const yearsDesc = [yrInt, yrInt - 1, yrInt - 2, yrInt - 3, yrInt - 4];
+
+                        dataRows.forEach(row => {
+                            if (!Array.isArray(row)) return;
+                            const rowStr = row.map(c => (c !== null && c !== undefined ? c.toString().trim() : '')).join(' ').toLowerCase();
+                            if (!rowStr || rowStr.startsWith('sumber') || rowStr.startsWith('source') || rowStr.includes('(1)')) return;
+
+                            let targetTrIdx = -1;
+                            const firstCell = (row[0] || '').toString().toLowerCase();
+
+                            // 1. Cek Baris Kecamatan
+                            if (firstCell.includes('guguk') || rowStr.includes('guguk')) {
+                                targetTrIdx = 0;
+                            } else if (firstCell.includes('mandiangin') || rowStr.includes('mandiangin')) {
+                                targetTrIdx = 1;
+                            } else if (firstCell.includes('aur') || firstCell.includes('tigo baleh') || rowStr.includes('aur birugo') || rowStr.includes('tigo baleh')) {
+                                targetTrIdx = 2;
+                            } else {
+                                // 2. Cek Baris Tahun di bawah Jumlah / Total
+                                for (let yIdx = 0; yIdx < yearsDesc.length; yIdx++) {
+                                    const y = yearsDesc[yIdx];
+                                    const yStr = y.toString();
+                                    const isYearRow = row.slice(0, 3).some(c => c && c.toString().trim() === yStr) ||
+                                                      (rowStr.includes(yStr) && !rowStr.includes('guguk') && !rowStr.includes('mandiangin') && !rowStr.includes('aur'));
+                                    if (isYearRow) {
+                                        targetTrIdx = 3 + yIdx;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (targetTrIdx >= 0 && trs[targetTrIdx]) {
+                                const inps = trs[targetTrIdx].querySelectorAll('.table-edit-input');
+                                const N = inps.length;
+                                if (N > 0) {
+                                    let colOffset = 2;
+                                    if (row.length < N + 2) {
+                                        colOffset = Math.max(0, row.length - N);
+                                    }
+                                    for (let c = 0; c < N; c++) {
+                                        if (inps[c]) {
+                                            const raw = row[colOffset + c];
+                                            const val = sanitizeExcelNumericCell(raw);
+                                            inps[c].value = (val !== '' && val !== undefined && val !== null) ? val : '-';
+                                            inps[c].classList.add('bg-amber-100');
+                                            filledCount++;
+                                        }
+                                    }
+                                }
+                            }
+                        });
                     } else {
                     trs.forEach((tr, rowIdx) => {
                         const excelRow = dataRows[rowIdx];
@@ -13428,6 +16544,90 @@
             } catch (err) {
                 console.error('Error deleting comment:', err);
                 alert('Gagal menghapus catatan.');
+            }
+        }
+        async function submitTableVerification() {
+            if (!confirm('Apakah Anda yakin ingin mengajukan data tabel ini ke Wali Data (Diskominfo) untuk diverifikasi?')) return;
+            try {
+                const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+                const res = await fetch('{{ route("tabel-opd.api.submit-verification") }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+                    body: JSON.stringify({
+                        table_code: currentTableCode,
+                        opd_code: currentOpdCode,
+                        year: currentYear,
+                        type: 'opd'
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(data.message);
+                    window.location.reload();
+                } else {
+                    alert('Gagal mengajukan verifikasi: ' + (data.message || ''));
+                }
+            } catch(e) {
+                console.error(e);
+                alert('Terjadi kesalahan jaringan.');
+            }
+        }
+
+        async function approveTableVerification() {
+            if (!confirm('Apakah Anda yakin ingin memverifikasi data tabel ini sebagai Wali Data (Diskominfo)?')) return;
+
+            try {
+                const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+                const res = await fetch('{{ route("tabel-opd.api.approve-verification") }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+                    body: JSON.stringify({
+                        table_code: currentTableCode,
+                        opd_code: currentOpdCode,
+                        year: currentYear,
+                        type: 'opd'
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(data.message);
+                    window.location.reload();
+                } else {
+                    alert('Gagal: ' + (data.message || ''));
+                }
+            } catch(e) {
+                console.error(e);
+                alert('Terjadi kesalahan jaringan.');
+            }
+        }
+
+        async function rejectTableVerification() {
+            const notes = prompt('Masukkan catatan perbaikan / revisi untuk dinas pengisi data:');
+            if (notes === null || notes.trim() === '') return;
+
+            try {
+                const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+                const res = await fetch('{{ route("tabel-opd.api.reject-verification") }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+                    body: JSON.stringify({
+                        table_code: currentTableCode,
+                        opd_code: currentOpdCode,
+                        year: currentYear,
+                        type: 'opd',
+                        notes: notes
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(data.message);
+                    window.location.reload();
+                } else {
+                    alert('Gagal mengirim revisi: ' + (data.message || ''));
+                }
+            } catch(e) {
+                console.error(e);
+                alert('Terjadi kesalahan jaringan.');
             }
         }
     </script>

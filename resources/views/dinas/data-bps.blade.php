@@ -66,7 +66,7 @@
         @include('partials.navbar')
 
         <!-- MAIN SECTION: LIST DATA BPS -->
-        <main class="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-1.5 sm:py-2 flex-1 flex flex-col justify-center w-full min-h-0">
+        <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-1.5 sm:py-2 flex-1 flex flex-col justify-center w-full min-h-0">
 
             @php
                 $userRole = session('user.role');
@@ -172,53 +172,47 @@
                 <!-- Card Header: Title & Search Filter -->
                 <div class="flex flex-row items-center justify-between gap-3 pb-2 sm:pb-3 border-b border-slate-100 shrink-0">
                     <div>
-                        <div class="flex items-center space-x-2">
-                            <h1 class="text-base sm:text-lg md:text-xl font-black text-slate-900 tracking-tight leading-tight">Data Internal BPS</h1>
-                            <span class="hidden sm:inline-flex items-center text-[10px] font-extrabold text-[#f95a00] bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full">
-                                10 Dataset Utama
-                            </span>
-                        </div>
-                        <p class="text-[11px] sm:text-xs text-slate-500 font-medium">Katalog survei, sensus, dan tabel data statistik BPS Kota Bukittinggi</p>
+                        <h1 class="text-base sm:text-lg md:text-xl font-black text-slate-900 tracking-tight leading-tight">Pilih Data BPS</h1>
+                        <p class="text-[11px] sm:text-xs text-slate-500 font-medium">Silakan pilih dataset statistik BPS untuk melihat data</p>
                     </div>
 
-                    <!-- Search Input Box (Pill shape) -->
-                    <div class="relative w-48 sm:w-64 flex items-center">
-                        <input type="text"
-                               id="bpsSearchInput"
-                               oninput="handleSearchBps(this.value)"
-                               placeholder="Cari data BPS..."
-                               class="w-full bg-[#f8fafc] hover:bg-[#eef2f5] focus:bg-white border border-slate-200/90 focus:border-[#f95a00] rounded-full pl-4 pr-9 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/15 transition-all">
-                        <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400" style="top: 0; bottom: 0; right: 0;">
-                            <i class="fa-solid fa-magnifying-glass text-xs leading-none"></i>
+                    <div class="flex items-center space-x-2">
+                        <!-- Search Input Box -->
+                        <div class="relative w-44 sm:w-60 flex items-center">
+                            <input type="text"
+                                   id="bpsSearchInput"
+                                   oninput="handleSearchBps(this.value)"
+                                   placeholder="Cari data BPS..."
+                                   class="w-full bg-[#f8fafc] hover:bg-[#f1f5f9] focus:bg-white border border-slate-200/90 focus:border-[#f95a00] rounded-full pl-4 pr-9 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/15 transition-all">
+                            <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400" style="top: 0; bottom: 0; right: 0;">
+                                <i class="fa-solid fa-magnifying-glass text-xs leading-none"></i>
+                            </div>
+                            <button type="button" 
+                                    id="bpsClearSearch" 
+                                    onclick="clearBpsSearch()" 
+                                    class="hidden absolute right-8 inset-y-0 my-auto w-4 h-4 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 flex items-center justify-center text-[9px] transition-colors cursor-pointer"
+                                    style="top: 0; bottom: 0; margin-top: auto; margin-bottom: auto;"
+                                    title="Hapus pencarian">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
                         </div>
-                        <button type="button" 
-                                id="bpsClearSearch" 
-                                onclick="clearBpsSearch()" 
-                                class="hidden absolute right-8 inset-y-0 my-auto w-4 h-4 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 flex items-center justify-center text-[9px] transition-colors cursor-pointer"
-                                style="top: 0; bottom: 0; margin-top: auto; margin-bottom: auto;"
-                                title="Hapus pencarian">
-                            <i class="fa-solid fa-xmark"></i>
-                        </button>
                     </div>
                 </div>
 
-                <!-- 2-Column Responsive Grid (10 Data Items matching OPD Style) -->
-                <div id="bpsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 mt-2.5 sm:mt-3">
+                <!-- 4-Column Responsive Grid (10 Data Items matching OPD & Instansi Style) -->
+                <div id="bpsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 mt-2.5 sm:mt-3">
                     @foreach($bpsDatasets as $ds)
                         <button type="button"
                                 onclick="openBpsModal('{{ $ds['code'] }}', '{{ addslashes($ds['short']) }}', '{{ addslashes($ds['full']) }}', '{{ $ds['link'] }}')"
                                 data-search="{{ $ds['code'] }} {{ strtolower($ds['short']) }} {{ strtolower($ds['full']) }} {{ $ds['search'] }}"
                                 class="bps-item group w-full bg-white hover:bg-orange-50/40 border border-slate-100 hover:border-orange-300 rounded-2xl p-2.5 sm:p-3 flex items-center justify-between shadow-2xs hover:shadow-xs transition-all duration-150 text-left cursor-pointer">
-                            <div class="flex items-center space-x-2.5 sm:space-x-3.5 min-w-0">
+                            <div class="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
                                 <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#fff4eb] text-[#f95a00] flex items-center justify-center text-sm sm:text-base shrink-0 group-hover:scale-105 transition-transform">
                                     <i class="fa-solid {{ $ds['icon'] }}"></i>
                                 </div>
                                 <div class="flex flex-col min-w-0">
-                                    <div class="flex items-center space-x-1.5">
-                                        <span class="text-[10px] sm:text-[11px] font-bold text-slate-400 leading-tight">{{ $ds['code'] }}</span>
-                                        <span class="text-xs sm:text-[13px] font-bold text-slate-900 group-hover:text-[#f95a00] transition-colors leading-tight">{{ $ds['short'] }}</span>
-                                    </div>
-                                    <span class="text-[11px] text-slate-500 font-medium leading-tight line-clamp-1 mt-0.5">{{ $ds['full'] }}</span>
+                                    <span class="text-[10px] sm:text-[11px] font-bold text-slate-400 leading-tight">{{ $ds['code'] }}</span>
+                                    <span class="text-xs sm:text-[12px] font-bold text-slate-900 group-hover:text-[#f95a00] transition-colors leading-tight line-clamp-2" title="{{ $ds['full'] }}">{{ $ds['short'] }}</span>
                                 </div>
                             </div>
                             <div class="w-6 h-6 rounded-full bg-orange-100/70 group-hover:bg-[#f95a00] text-orange-500 group-hover:text-white flex items-center justify-center text-[9px] shrink-0 ml-1.5 transition-all group-hover:translate-x-0.5">
@@ -240,8 +234,18 @@
                     </button>
                 </div>
 
-                <!-- Card Footer Actions: Home (Matching OPD style) -->
-                <div class="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 mt-3 pt-2.5 border-t border-slate-100 shrink-0">
+                <!-- Card Footer Actions: Google Drive BPS & Home (Matching OPD style) -->
+                <div class="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 mt-2 sm:mt-2.5 pt-2 border-t border-slate-100 shrink-0">
+                    <a href="https://drive.google.com/drive/folders/165ZffQ57NgwBxsEuaSBO97y0A_oEJ1B-"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-orange-50 hover:bg-orange-100 text-[#f95a00] hover:text-orange-700 font-bold text-xs border border-orange-200/80 transition-all shadow-2xs hover:shadow-xs"
+                       title="Buka Folder Google Drive Data BPS">
+                        <i class="fa-brands fa-google-drive text-xs"></i>
+                        <span>GOOGLE DRIVE BPS</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                    </a>
+
                     <a href="{{ url('/') }}"
                        class="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 font-bold text-xs border border-slate-200/80 transition-all shadow-2xs hover:shadow-xs">
                         <i class="fa-solid fa-house text-xs"></i>

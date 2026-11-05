@@ -45,6 +45,10 @@ class CheckSimondaAuth
         }
 
         // 3. Check page permissions for non-admin users
+        if ($role === 'walidata') {
+            return $next($request);
+        }
+
         $managedPages = array_keys(config('simonda.pages', []));
         if ($role !== 'admin' && in_array($routeName, $managedPages, true)) {
             // General table data view and edit are essential workflows for all authenticated OPD/Instansi

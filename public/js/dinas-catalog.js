@@ -185,9 +185,10 @@
 
         // Catalog load
         const catalog = getCatalog();
-        currentTablesList = catalog[code] || [
+        const isBps = getConfig().type === 'bps';
+        currentTablesList = catalog[code] || (isBps ? [] : [
             { code: '1.1.1', title: `Tabel Statistik Utama - ${shortTitle}`, titleEn: `Main Statistics Table - ${shortTitle}` }
-        ];
+        ]);
         filteredTablesList = [...currentTablesList];
 
         // Reset search input
@@ -270,7 +271,9 @@
                 <tr>
                     <td colspan="3" class="py-10 text-center text-slate-400 text-xs">
                         <i class="fa-solid fa-folder-open text-3xl text-slate-300 block mb-2"></i>
-                        Tidak ada tabel yang sesuai dengan kata kunci pencarian.
+                        ${getConfig().type === 'bps' 
+                            ? 'Belum ada tabel untuk dataset ini. Silakan klik tombol <strong>"+ Tambah Tabel Baru"</strong> di atas untuk menambahkan tabel secara manual.' 
+                            : 'Tidak ada tabel yang sesuai dengan kata kunci pencarian.'}
                     </td>
                 </tr>
             `;

@@ -72,7 +72,7 @@
                 $loggedOpdCode = session('user.opd_code');
                 $loggedDinasName = session('user.dinas_name');
                 $userRole = session('user.role');
-                $isAdmin = $userRole === 'admin';
+                $isAdmin = in_array($userRole, ['admin', 'walidata']);
 
                 $allOpds = [
                     ['code' => '01', 'short' => 'Dinas PUPR', 'full' => 'Dinas Pekerjaan Umum dan Penataan Ruang', 'search' => '01 dinas pupr pekerjaan umum dan penataan ruang', 'icon' => 'fa-city'],

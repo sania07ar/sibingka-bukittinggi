@@ -22,6 +22,7 @@
                 <option value="">Semua Kategori</option>
                 <option value="opd" {{ ($filterType ?? '') === 'opd' ? 'selected' : '' }}>Dinas / OPD Kota (20)</option>
                 <option value="instansi" {{ ($filterType ?? '') === 'instansi' ? 'selected' : '' }}>Instansi Vertikal & Lainnya (37)</option>
+                <option value="walidata" {{ ($filterType ?? '') === 'walidata' ? 'selected' : '' }}>Wali Data (Diskominfo)</option>
             </select>
 
             <!-- Filter Status -->
@@ -105,8 +106,9 @@
                             $userPages = is_array($dUser->allowed_pages) 
                                 ? $dUser->allowed_pages 
                                 : json_decode($dUser->allowed_pages ?? '[]', true);
+                            $isWali = ($dUser->role === 'walidata');
                             $isInstansi = ($dUser->role === 'instansi');
-                            $dinasIcon = $isInstansi ? 'fa-landmark' : ($opdIcons[$dUser->opd_code] ?? 'fa-building');
+                            $dinasIcon = $isWali ? 'fa-check-double' : ($isInstansi ? 'fa-landmark' : ($opdIcons[$dUser->opd_code] ?? 'fa-building'));
                         @endphp
                         <tr class="hover:bg-slate-50/80 transition-colors">
                             
@@ -118,7 +120,11 @@
                             <!-- Nama Dinas & Kode & Kategori Badge -->
                             <td class="py-3.5 px-4">
                                 <div class="flex items-center space-x-2.5">
-                                    @if($isInstansi)
+                                    @if($isWali)
+                                        <span class="w-8 h-8 rounded-lg bg-teal-100 text-teal-700 font-black text-xs flex items-center justify-center shrink-0 border border-teal-200/80" title="Wali Data Statistik Sektoral">
+                                            <i class="fa-solid {{ $dinasIcon }} text-sm"></i>
+                                        </span>
+                                    @elseif($isInstansi)
                                         <span class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 font-black text-xs flex items-center justify-center shrink-0 border border-indigo-200/80" title="{{ $dUser->opd_code ? 'Kode: ' . $dUser->opd_code : 'Instansi Vertikal' }}">
                                             <i class="fa-solid {{ $dinasIcon }} text-sm"></i>
                                         </span>
@@ -132,7 +138,11 @@
                                             <p class="font-extrabold text-slate-900 leading-tight">
                                                 {{ $dUser->dinas_name ?? $dUser->name }}
                                             </p>
-                                            @if($isInstansi)
+                                            @if($isWali)
+                                                <span class="text-[9.5px] font-black bg-teal-100 text-teal-800 border border-teal-200 px-1.5 py-0.2 rounded-md">
+                                                    WALI DATA (KOMINFO)
+                                                </span>
+                                            @elseif($isInstansi)
                                                 <span class="text-[9.5px] font-black bg-indigo-100 text-indigo-800 border border-indigo-200 px-1.5 py-0.2 rounded-md">
                                                     INSTANSI VERTIKAL
                                                 </span>

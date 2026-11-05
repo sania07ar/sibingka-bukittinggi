@@ -3345,7 +3345,7 @@ class TabelOpdController extends Controller
             $meta->save();
         }
 
-        // Sinkronisasi otomatis ke Tahap 3 (Verifikasi BPS) di Monitoring
+        // Sinkronisasi otomatis ke Tahap 2 (Verifikasi oleh Wali Data Kominfo) di Monitoring
         if (in_array($type, ['opd', 'instansi'])) {
             \App\Models\MonitoringStage::updateOrCreate(
                 [
@@ -3354,27 +3354,28 @@ class TabelOpdController extends Controller
                     'year' => $year,
                 ],
                 [
-                    'stage' => 3,
+                    'stage' => 2,
                     'status_text' => 'Verifikasi',
-                    'notes' => 'Tabel ' . $tableCode . ' diajukan oleh dinas untuk diverifikasi BPS.',
+                    'notes' => 'Tabel ' . $tableCode . ' diajukan oleh dinas untuk diverifikasi oleh Wali Data Kominfo.',
                 ]
             );
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'Data tabel berhasil diajukan! Status kini "Menunggu Verifikasi BPS".',
+            'message' => 'Data tabel berhasil diajukan! Status kini "Menunggu Verifikasi Wali Data (Diskominfo)".',
             'status' => 'submitted',
         ]);
     }
 
     /**
-     * Workflow Verifikasi: Admin BPS Menyetujui (ACC) Data Tabel
+     * Workflow Verifikasi: Wali Data (Kominfo) atau Admin BPS Menyetujui (ACC / Verifikasi / Validasi) Data Tabel
      */
     public function apiApproveVerification(Request $request)
     {
-        if (session('user.role') !== 'admin') {
-            return response()->json(['success' => false, 'message' => 'Hanya Admin BPS yang berhak menyetujui (ACC) data tabel.'], 403);
+        $userRole = session('user.role');
+        if (!in_array($userRole, ['admin', 'walidata'])) {
+            return response()->json(['success' => false, 'message' => 'Hanya Wali Data (Diskominfo) atau Admin BPS yang berhak melakukan verifikasi / validasi data tabel.'], 403);
         }
 
         $tableCode = $request->input('table_code');
@@ -3392,17 +3393,26 @@ class TabelOpdController extends Controller
             $meta = $this->getOrCreateMetadata($tableCode, $opdCode, $year);
         }
 
-        $adminName = session('user.displayName', 'Admin BPS Bukittinggi');
+        $isWali = ($userRole === 'walidata');
+        $actorTitle = $isWali ? 'Wali Data Kominfo' : 'Admin BPS';
+        $userName = session('user.displayName', $actorTitle);
+        $verifiedSignature = $userName . ' (' . $actorTitle . ')';
+
         if ($meta) {
             $meta->verification_status = 'verified';
             $meta->is_locked = true;
             $meta->verified_at = now();
-            $meta->verified_by = $adminName;
+            $meta->verified_by = $verifiedSignature;
             $meta->rejection_notes = null;
             $meta->save();
         }
 
-        // Sinkronisasi otomatis ke Tahap 4 (Validasi BPS Selesai / Siap Integrasi) di Monitoring
+        // Sinkronisasi otomatis ke Monitoring:
+        // Jika Wali Data yang verifikasi -> Tahap 2 (Verifikasi Selesai)
+        // Jika Admin BPS yang validasi -> Tahap 3 (Validasi BPS Selesai)
+        $targetStage = $isWali ? 2 : 3;
+        $targetStatusText = $isWali ? 'Terverifikasi Wali Data' : 'Validasi BPS';
+
         if (in_array($type, ['opd', 'instansi'])) {
             \App\Models\MonitoringStage::updateOrCreate(
                 [
@@ -3411,29 +3421,30 @@ class TabelOpdController extends Controller
                     'year' => $year,
                 ],
                 [
-                    'stage' => 4,
-                    'status_text' => 'Validasi BPS',
-                    'notes' => 'Tabel ' . $tableCode . ' telah disetujui (ACC) oleh ' . $adminName . '.',
+                    'stage' => $targetStage,
+                    'status_text' => $targetStatusText,
+                    'notes' => 'Tabel ' . $tableCode . ' telah ' . ($isWali ? 'diverifikasi oleh ' : 'divalidasi oleh ') . $verifiedSignature . '.',
                 ]
             );
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'Data tabel berhasil di-ACC dan dikunci!',
+            'message' => $isWali ? 'Data tabel berhasil diverifikasi oleh Wali Data (Diskominfo)!' : 'Data tabel berhasil divalidasi oleh Admin BPS!',
             'status' => 'verified',
-            'verified_by' => $adminName,
+            'verified_by' => $verifiedSignature,
             'verified_at' => now()->translatedFormat('d F Y H:i'),
         ]);
     }
 
     /**
-     * Workflow Verifikasi: Admin BPS Meminta Revisi / Catatan Perbaikan
+     * Workflow Verifikasi: Wali Data (Kominfo) atau Admin BPS Meminta Revisi
      */
     public function apiRejectVerification(Request $request)
     {
-        if (session('user.role') !== 'admin') {
-            return response()->json(['success' => false, 'message' => 'Hanya Admin BPS yang berhak meminta revisi data tabel.'], 403);
+        $userRole = session('user.role');
+        if (!in_array($userRole, ['admin', 'walidata'])) {
+            return response()->json(['success' => false, 'message' => 'Hanya Wali Data (Diskominfo) atau Admin BPS yang berhak meminta revisi data tabel.'], 403);
         }
 
         $tableCode = $request->input('table_code');
@@ -3459,7 +3470,7 @@ class TabelOpdController extends Controller
             $meta->save();
         }
 
-        // Sinkronisasi otomatis ke Tahap 2 (Input Data / Perlu Revisi) di Monitoring
+        // Sinkronisasi otomatis ke Tahap 1 (Input Data / Perlu Revisi) di Monitoring
         if (in_array($type, ['opd', 'instansi'])) {
             \App\Models\MonitoringStage::updateOrCreate(
                 [
@@ -3468,7 +3479,7 @@ class TabelOpdController extends Controller
                     'year' => $year,
                 ],
                 [
-                    'stage' => 2,
+                    'stage' => 1,
                     'status_text' => 'Perlu Revisi',
                     'notes' => $notes,
                 ]
@@ -3477,17 +3488,21 @@ class TabelOpdController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Catatan revisi berhasil dikirim ke dinas!',
+            'message' => 'Catatan revisi berhasil dikirim ke dinas pengisi data!',
             'status' => 'revision',
             'rejection_notes' => $notes,
         ]);
     }
 
     /**
-     * Workflow Verifikasi: Admin BPS Membuka Kunci (Unlock) Tabel
+     * Workflow Verifikasi: Buka Kunci (Unlock) Tabel
      */
     public function apiUnlockTable(Request $request)
     {
+        $userRole = session('user.role');
+        if (!in_array($userRole, ['admin', 'walidata'])) {
+            return response()->json(['success' => false, 'message' => 'Hanya Wali Data atau Admin BPS yang berhak membuka kunci tabel.'], 403);
+        }
         if (session('user.role') !== 'admin') {
             return response()->json(['success' => false, 'message' => 'Hanya Admin BPS yang berhak membuka kunci tabel.'], 403);
         }
