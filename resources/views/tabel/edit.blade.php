@@ -75,6 +75,42 @@
             box-shadow: 0 0 0 3px rgba(249, 90, 0, 0.2);
         }
 
+        /* Header Editable Inputs */
+        .table-edit-header-input {
+            text-align: center !important;
+            padding-right: 6px !important;
+            transition: all 0.15s ease-in-out;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+        }
+        .table-edit-header-input:focus {
+            background-color: #ffffff !important;
+            border-color: #ea580c !important;
+            box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.25) !important;
+        }
+        .table-edit-header-num {
+            min-width: 34px !important;
+            max-width: 80px !important;
+            height: 28px !important;
+            font-size: 11.5px !important;
+            font-weight: 800 !important;
+            background-color: #fffaf0 !important;
+            border-color: #f59e0b !important;
+            color: #78350f !important;
+        }
+        .table-edit-header-title {
+            min-width: 55px !important;
+            font-size: 12.5px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+        }
+        .table-edit-header-sub {
+            min-width: 55px !important;
+            height: 26px !important;
+            font-size: 11px !important;
+            font-style: italic !important;
+            color: #475569 !important;
+        }
+
         /* BPS Official Table Border Rules: Hilangkan garis hitam di ujung tepi luar */
         .table-custom-border {
             border-left: none !important;
@@ -363,7 +399,7 @@
                         </div>
                         <div>
                             <span class="font-bold text-slate-900">Petunjuk Pengeditan:</span>
-                            <p class="text-slate-600 text-[11px] mt-0.5">Ubah angka atau teks pada kotak oranye di bawah ini. Setelah selesai, klik tombol <strong>"Simpan Perubahan"</strong> di atas atau di bawah tabel.</p>
+                            <p class="text-slate-600 text-[11px] mt-0.5">Ubah angka atau teks pada kotak oranye di bawah ini (termasuk judul kolom & nomor kolom pada kepala tabel). Setelah selesai, klik tombol <strong>"Simpan Perubahan"</strong> di atas atau di bawah tabel.</p>
                         </div>
                     </div>
                 </div>
@@ -9919,7 +9955,7 @@
                 const minCols = (currentTableCode === '4.1.20') ? 5 : 6;
                 const isMissingCells = firstRowTds.length > 0 && firstRowTds.length < minCols;
 
-                if ((!hasStartYearInHeader || !hasEndYearInHeader || isMissingCells) && currentTableCode !== '8.1.4' && currentTableCode !== '8.1.5' && currentTableCode !== '1.1.10') {
+                if (!isLocallySaved && (!hasStartYearInHeader || !hasEndYearInHeader || isMissingCells) && currentTableCode !== '8.1.4' && currentTableCode !== '8.1.5' && currentTableCode !== '1.1.10') {
                     localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
                     localStorage.removeItem(`simonda_table_source_${currentTableCode}_${currentYear}`);
                     localStorage.removeItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`);
@@ -10480,7 +10516,107 @@
             return str;
         }
 
+        function safeEscapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return str.toString()
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+
+        function transformHeaderToEditable(tableEl) {
+            if (!tableEl) return;
+            const thead = tableEl.querySelector('thead');
+            if (!thead) return;
+
+            const theadRows = thead.querySelectorAll('tr');
+            if (theadRows.length === 0) return;
+
+            theadRows.forEach((tr) => {
+                const ths = tr.querySelectorAll('th');
+                // Cek apakah baris ini adalah baris nomor kolom, misal (1), (2), (3) atau dengan background peach
+                const isNumberingRow = tr.classList.contains('bg-[#fed7aa]') || 
+                                       tr.classList.contains('subtable-header-numbering') ||
+                                       (Array.from(ths).filter(th => !th.classList.contains('col-edit-action')).every(th => {
+                                           const txt = th.innerText.trim();
+                                           return /^\s*\(\s*\d+\s*\)\s*$/.test(txt) || /^\s*-\s*\d+\s*-?\s*$/.test(txt) || txt.toLowerCase() === 'no' || /^\s*\d+\s*$/.test(txt);
+                                       }) && Array.from(ths).some(th => /^\s*\(\s*\d+\s*\)\s*$/.test(th.innerText.trim())));
+
+                ths.forEach((th, cIdx) => {
+                    if (th.classList.contains('col-edit-action')) return;
+                    if (th.querySelector('.table-edit-header-input')) return;
+
+                    if (isNumberingRow) {
+                        let val = th.innerText.trim();
+                        if (!val) {
+                            val = `(${cIdx + 1})`;
+                        }
+                        th.innerHTML = `
+                            <div class="flex items-center justify-center p-0.5 w-full">
+                                <input type="text" 
+                                       class="table-edit-input table-edit-header-input table-edit-header-num" 
+                                       value="${safeEscapeHtml(val)}" 
+                                       title="Ubah nomor kolom (contoh: (1), (2), dst)" 
+                                       spellcheck="false" />
+                            </div>
+                        `;
+                    } else {
+                        // Header Judul Kolom
+                        const childDivs = Array.from(th.children).filter(el => el.tagName === 'DIV');
+                        const hasSub = childDivs.length >= 2 && (childDivs[1].classList.contains('italic') || childDivs[1].innerText.trim().length > 0);
+                        
+                        if (hasSub) {
+                            const titleVal = childDivs[0].innerText.trim();
+                            const subVal = childDivs[1].innerText.trim();
+                            th.innerHTML = `
+                                <div class="flex flex-col gap-1 items-center justify-center p-1 w-full">
+                                    <input type="text" 
+                                           class="table-edit-input table-edit-header-input table-edit-header-title" 
+                                           value="${safeEscapeHtml(titleVal)}" 
+                                           placeholder="Judul Kolom" 
+                                           title="Ubah judul utama kolom"
+                                           spellcheck="false" />
+                                    <input type="text" 
+                                           class="table-edit-input table-edit-header-input table-edit-header-sub italic" 
+                                           value="${safeEscapeHtml(subVal)}" 
+                                           placeholder="Subtitle / Bahasa Inggris" 
+                                           title="Ubah teks terjemahan / subtitle"
+                                           spellcheck="false" />
+                                </div>
+                            `;
+                        } else {
+                            let titleVal = childDivs.length === 1 ? childDivs[0].innerText.trim() : th.innerText.trim();
+                            th.innerHTML = `
+                                <div class="flex items-center justify-center p-1 w-full">
+                                    <input type="text" 
+                                           class="table-edit-input table-edit-header-input table-edit-header-title" 
+                                           value="${safeEscapeHtml(titleVal)}" 
+                                           placeholder="Judul Kolom" 
+                                           title="Ubah judul kolom"
+                                           spellcheck="false" />
+                                </div>
+                            `;
+                        }
+                    }
+
+                    th.querySelectorAll('.table-edit-header-input').forEach(inp => {
+                        inp.addEventListener('input', () => {
+                            inp.setAttribute('value', inp.value);
+                        });
+                        inp.addEventListener('change', () => persistTableData(false));
+                        inp.addEventListener('blur', () => persistTableData(false));
+                    });
+                });
+            });
+        }
+
         function transformToEditableGrid(tableEl) {
+            if (!tableEl) return;
+            // 1. Transformasi seluruh kepala kolom tabel (thead) menjadi input yang bisa diedit
+            transformHeaderToEditable(tableEl);
+
             const rows = tableEl.querySelectorAll('tbody tr');
             const isFinancialTable = (currentOpdCode === '05' || currentTableCode.startsWith('2.4') || currentTableCode.startsWith('2.4.'));
 
@@ -10910,31 +11046,66 @@
             const clone = tableEl.cloneNode(true);
             clone.querySelectorAll('.col-edit-action').forEach(el => el.remove());
 
-            const origInputs = Array.from(tableEl.querySelectorAll('.table-edit-input'));
-            const cloneInputs = Array.from(clone.querySelectorAll('.table-edit-input'));
+            // 3. Konversi kembali elemen input di header (thead th) ke format HTML standar BPS
+            clone.querySelectorAll('thead th').forEach(th => {
+                if (th.classList.contains('col-edit-action')) return;
+
+                const titleInp = th.querySelector('.table-edit-header-title');
+                const subInp = th.querySelector('.table-edit-header-sub');
+                const numInp = th.querySelector('.table-edit-header-num');
+
+                if (titleInp && subInp) {
+                    const title = (titleInp.value !== undefined ? titleInp.value : titleInp.getAttribute('value') || '').trim();
+                    const sub = (subInp.value !== undefined ? subInp.value : subInp.getAttribute('value') || '').trim();
+                    if (sub) {
+                        th.innerHTML = `<div>${title}</div><div class="italic font-normal text-[11px] sm:text-xs">${sub}</div>`;
+                    } else {
+                        th.innerHTML = `<div>${title}</div>`;
+                    }
+                } else if (titleInp) {
+                    const title = (titleInp.value !== undefined ? titleInp.value : titleInp.getAttribute('value') || '').trim();
+                    th.innerHTML = `<div>${title}</div>`;
+                } else if (numInp) {
+                    let numVal = (numInp.value !== undefined ? numInp.value : numInp.getAttribute('value') || '').trim();
+                    if (numVal && !numVal.startsWith('(') && /^\d+$/.test(numVal)) {
+                        numVal = `(${numVal})`;
+                    }
+                    th.innerHTML = numVal;
+                } else {
+                    const singleInp = th.querySelector('.table-edit-input');
+                    if (singleInp) {
+                        const val = (singleInp.value !== undefined ? singleInp.value : singleInp.getAttribute('value') || '').trim();
+                        th.innerHTML = val;
+                    }
+                }
+            });
+
+            // 4. Konversi kembali elemen input di baris data (tbody td / th)
+            const origInputs = Array.from(tableEl.querySelectorAll('tbody .table-edit-input'));
+            const cloneInputs = Array.from(clone.querySelectorAll('tbody .table-edit-input'));
             const isFinancialTable = (currentOpdCode === '05' || currentTableCode.startsWith('2.4') || currentTableCode.startsWith('2.4.'));
 
             cloneInputs.forEach((input, idx) => {
-                const td = input.closest('td');
-                if (td) {
+                const cell = input.closest('td, th');
+                if (cell) {
                     const origInput = origInputs[idx];
                     let finalVal = (origInput && origInput.value !== undefined) ? origInput.value.trim() : (input.value || input.getAttribute('value') || '').trim();
                     if (isFinancialTable) {
                         finalVal = formatRupiahNumber(finalVal);
                     }
-                    td.innerHTML = finalVal;
+                    cell.innerHTML = finalVal;
                     if (isFinancialTable && finalVal !== '-' && finalVal !== '0') {
-                        td.classList.remove('text-left', 'text-center');
-                        td.classList.add('text-right', 'font-semibold');
-                        td.style.textAlign = 'right';
+                        cell.classList.remove('text-left', 'text-center');
+                        cell.classList.add('text-right', 'font-semibold');
+                        cell.style.textAlign = 'right';
                     } else if (finalVal !== '-' && finalVal !== '–' && finalVal !== '—' && !isNaN(finalVal.replace(/\./g, '').replace(',', '.'))) {
-                        td.classList.remove('text-left', 'text-center');
-                        td.classList.add('text-right', 'font-semibold');
-                        td.style.textAlign = 'right';
+                        cell.classList.remove('text-left', 'text-center');
+                        cell.classList.add('text-right', 'font-semibold');
+                        cell.style.textAlign = 'right';
                     } else if (finalVal === '-' || finalVal === '–' || finalVal === '—') {
-                        td.classList.remove('text-left', 'text-right');
-                        td.classList.add('text-center');
-                        td.style.textAlign = 'center';
+                        cell.classList.remove('text-left', 'text-right');
+                        cell.classList.add('text-center');
+                        cell.style.textAlign = 'center';
                     }
                 }
             });

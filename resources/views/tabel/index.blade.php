@@ -8613,7 +8613,7 @@
             const isMultiYearTable = Boolean(schema && (schema.isMultiYear || schema.isExcludeSelectedYear)) || 
                                      ['8.1.1', '8.1.2', '8.1.3', '8.1.4', '8.1.5', '2.2.5', '1.1.10'].includes(currentTableCode);
 
-            if (isMultiYearTable && savedHtml && !['8.1.4', '8.1.5', '1.1.10', '4.2.4', '4.2.5', '4.2.7', '4.2.9', '4.2.10', '4.2.13', '4.2.15', '4.2.16'].includes(currentTableCode)) {
+            if (!isLocallySaved && isMultiYearTable && savedHtml && !['8.1.4', '8.1.5', '1.1.10', '4.2.4', '4.2.5', '4.2.7', '4.2.9', '4.2.10', '4.2.13', '4.2.15', '4.2.16'].includes(currentTableCode)) {
                 const tempDiv = document.createElement('table');
                 tempDiv.innerHTML = savedHtml;
                 const allThs = Array.from(tempDiv.querySelectorAll('thead th'));
