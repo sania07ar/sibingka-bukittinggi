@@ -8765,6 +8765,16 @@
                 }
             }
 
+            // Self-healing tabel 9.4, 5.1.18 & tabel kecamatan: pastikan Kolom 6 selalu diganti dengan Aur Birugo Tigo Baleh
+            if (savedHtml && (savedHtml.includes('Kolom 6') || savedHtml.includes('kolom 6'))) {
+                if (['9.4', '5.1.18'].includes(currentTableCode) || savedHtml.includes('Mandiangin') || savedHtml.includes('Guguk Panjang')) {
+                    savedHtml = savedHtml.replace(/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/gi, '<th class="py-3 px-4 font-bold border border-slate-700"><div>Aur Birugo Tigo Baleh</div></th>')
+                                         .replace(/<th([^>]*)>\s*Kolom\s*6\s*<\/th>/gi, '<th$1>Aur Birugo Tigo Baleh</th>')
+                                         .replace(/>\s*Kolom\s*6\s*</gi, '>Aur Birugo Tigo Baleh<');
+                    localStorage.setItem(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                }
+            }
+
             // Self-healing tabel 9.1: baris ke-4 adalah Bukittinggi (bukan Jumlah / Total)
             if (currentTableCode === '9.1' && savedHtml && (savedHtml.includes('Jumlah') || savedHtml.includes('Total'))) {
                 savedHtml = savedHtml.replace(/Jumlah\s*\/\s*<span[^>]*>Total<\/span>/gi, 'Bukittinggi')
@@ -15572,9 +15582,22 @@
                             }
                         }
 
-                        const val = row[c] || '';
+                        let val = row[c] || '';
                         const rSpanAttr = rowspan > 1 ? ` rowspan="${rowspan}"` : '';
                         const cSpanAttr = colspan > 1 ? ` colspan="${colspan}"` : '';
+
+                        // Deteksi otomatis jika kolom kecamatan ke-3 kosong atau jatuh ke fallback Kolom 6
+                        if (!val || /^kolom\s*\d+$/i.test(val.toString().trim())) {
+                            const prevVals = [];
+                            for (let pc = 0; pc < c; pc++) {
+                                prevVals.push(((row[pc] || '') + '').toLowerCase());
+                            }
+                            const hasGuguk = prevVals.some(v => v.includes('guguk'));
+                            const hasMandiangin = prevVals.some(v => v.includes('mandiangin'));
+                            if (hasGuguk && hasMandiangin) {
+                                val = 'Aur Birugo Tigo Baleh';
+                            }
+                        }
 
                         theadHtml += `
                             <th class="py-3 px-4 font-bold border border-slate-700"${rSpanAttr}${cSpanAttr}>
@@ -15755,6 +15778,15 @@
                     }
                 });
                 window.uploadedExcelDataByYear = excelDataByYear;
+            }
+
+            // Pastikan tidak ada Kolom 6 pada tabel kecamatan yang tersimpan ke localStorage dan database
+            if (completeTableHtml && (completeTableHtml.includes('Kolom 6') || completeTableHtml.includes('kolom 6'))) {
+                if (['9.4', '5.1.18'].includes(currentTableCode) || completeTableHtml.includes('Mandiangin') || completeTableHtml.includes('Guguk Panjang')) {
+                    completeTableHtml = completeTableHtml.replace(/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/gi, '<th class="py-3 px-4 font-bold border border-slate-700"><div>Aur Birugo Tigo Baleh</div></th>')
+                                                         .replace(/<th([^>]*)>\s*Kolom\s*6\s*<\/th>/gi, '<th$1>Aur Birugo Tigo Baleh</th>')
+                                                         .replace(/>\s*Kolom\s*6\s*</gi, '>Aur Birugo Tigo Baleh<');
+                }
             }
 
             // 8. Save to localStorage

@@ -10234,10 +10234,14 @@
                 }
             }
 
-            // Self-healing tabel 5.1.18: pastikan Kolom 6 selalu diganti dengan Aur Birugo Tigo Baleh
-            if (currentTableCode === '5.1.18' && savedHtml && savedHtml.includes('Kolom 6')) {
-                savedHtml = savedHtml.replace(/<th([^>]*)>\s*(?:<div>)?\s*Kolom 6\s*(?:<\/div>)?\s*<\/th>/gi, '<th class="py-3 px-4 font-bold border border-slate-700"><div>Aur Birugo Tigo Baleh</div></th>');
-                localStorage.setItem(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+            // Self-healing tabel 9.4, 5.1.18 & tabel kecamatan: pastikan Kolom 6 selalu diganti dengan Aur Birugo Tigo Baleh
+            if (savedHtml && (savedHtml.includes('Kolom 6') || savedHtml.includes('kolom 6'))) {
+                if (['9.4', '5.1.18'].includes(currentTableCode) || savedHtml.includes('Mandiangin') || savedHtml.includes('Guguk Panjang')) {
+                    savedHtml = savedHtml.replace(/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/gi, '<th class="py-3 px-4 font-bold border border-slate-700"><div>Aur Birugo Tigo Baleh</div></th>')
+                                         .replace(/<th([^>]*)>\s*Kolom\s*6\s*<\/th>/gi, '<th$1>Aur Birugo Tigo Baleh</th>')
+                                         .replace(/>\s*Kolom\s*6\s*</gi, '>Aur Birugo Tigo Baleh<');
+                    localStorage.setItem(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                }
             }
 
             // Self-healing tabel 5.1.19: pastikan urutan tahun selalu urut naik (ascending) dan thead tidak memiliki colspan 2
