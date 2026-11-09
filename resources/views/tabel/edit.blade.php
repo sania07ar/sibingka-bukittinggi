@@ -3946,6 +3946,77 @@
                     `;
                 }
             },
+            '2.4.5': {
+                titleId: 'Realisasi Pembiayaan Pemerintah Daerah Kota Bukittinggi Tahun Anggaran (jutaan rupiah)',
+                titleEn: 'Realization of Bukittinggi Local Government Cost Budgeting Year (million rupiah)',
+                source: 'Badan Keuangan Daerah Kota Bukittinggi / <span class="italic text-slate-500">Financial Office of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const rows = [
+                        { label: 'PBB / <span class="italic font-normal text-slate-700">Earth and Building Tax</span>', target: '5.226.842.474', realisasi: '6.071.791.061', persen: '116,17' },
+                        { label: '– Pedesaan / <span class="italic font-normal text-slate-700">Rural</span>', target: '-', realisasi: '-', persen: '-' },
+                        { label: '– Perkotaan / <span class="italic font-normal text-slate-700">Urban</span>', target: '5.226.842.474', realisasi: '6.071.791.061', persen: '116,17' },
+                        { label: '– Perhutanan / <span class="italic font-normal text-slate-700">Foresty</span>', target: '-', realisasi: '-', persen: '-' },
+                        { label: '– Perkebunan / <span class="italic font-normal text-slate-700">Estates Crops</span>', target: '-', realisasi: '-', persen: '-' },
+                        { label: '– Pertambangan / <span class="italic font-normal text-slate-700">Mining</span>', target: '-', realisasi: '-', persen: '-' },
+                        { label: '– Migas / <span class="italic font-normal text-slate-700">Oil and Gas</span>', target: '-', realisasi: '-', persen: '-' },
+                        { label: '– Non Migas / <span class="italic font-normal text-slate-700">Non Oil and Gas</span>', target: '-', realisasi: '-', persen: '-' },
+                        { label: 'BPHTB', target: '13.551.289.266', realisasi: '16.422.454.085', persen: '121,19' }
+                    ];
+                    const is2025 = yr === 2025;
+                    let tbodyHtml = '';
+                    rows.forEach(r => {
+                        const tVal = is2025 ? r.target : '-';
+                        const rVal = is2025 ? r.realisasi : '-';
+                        const pVal = is2025 ? r.persen : '-';
+                        tbodyHtml += `<tr class="hover:bg-amber-100/60 transition-colors">
+                            <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${r.label}</td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-right font-semibold align-top">${tVal}</td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-right font-semibold align-top">${rVal}</td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-right font-semibold align-top">${pVal}</td>
+                        </tr>`;
+                    });
+                    const totT = is2025 ? '18.778.131.740' : '-';
+                    const totR = is2025 ? '22.494.245.146' : '-';
+                    const totP = is2025 ? '119,79' : '-';
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Sektor</div><div class="italic font-normal text-[11px] sm:text-xs">Sector</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Target</div><div class="italic font-normal text-[11px] sm:text-xs">Target</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Realisasi</div><div class="italic font-normal text-[11px] sm:text-xs">Realization</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Persentase</div><div class="italic font-normal text-[11px] sm:text-xs">Percentage (%)</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${tbodyHtml}
+                            <tr class="bg-[#fed7aa] font-bold">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">
+                                    Jumlah / <span class="italic font-bold">Total</span>
+                                </td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-right font-semibold align-top font-extrabold">${totT}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-right font-semibold align-top font-extrabold">${totR}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-right font-semibold align-top font-extrabold">${totP}</td>
+                            </tr>
+                        </tbody>
+                    `;
+                }
+            },
             '2.3.1': {
                 titleId: 'Jumlah Aparatur Sipil Negara (ASN) Pemerintah Kota Bukittinggi Menurut Jabatan, Jenis ASN, dan Jenis Kelamin (orang)',
                 titleEn: 'Number of State Civil Apparatus (ASN) of Bukittinggi Municipal Government by Occupation, Type of ASN, and Sex (people)',
@@ -9887,15 +9958,23 @@
                 let t = (title && title.trim()) ? title.trim() : (defaultTitle || '');
                 if (!t) return '';
 
-                // Jika title masih memuat baris ganda / newline, ambil hanya baris pertama
+                // Jika title masih memuat baris ganda / newline, gabungkan dengan spasi agar judul tidak terpotong
                 if (t.includes('\n')) {
                     const lines = t.split('\n').map(l => l.trim()).filter(Boolean);
-                    t = lines[0] || '';
+                    t = lines.join(' ');
                 }
 
                 if (t.includes(yLabel)) return t;
 
-                // 1. Cek jika ada nama bulan sebelum tahun (misal: "Desember 2021" atau "December 2021")
+                // 1. Cek pola "Tahun Anggaran" atau "Year" tanpa tahun
+                if (/\bTahun\s+Anggaran\b(?!\s+(?:19|20)\d{2})/i.test(t)) {
+                    return t.replace(/\b(Tahun\s+Anggaran)\b/i, `$1 ${yLabel}`);
+                }
+                if (/\bYear\b(?!\s+(?:19|20)\d{2})/i.test(t)) {
+                    return t.replace(/\b(Year)\b/i, `$1 ${yLabel}`);
+                }
+
+                // 2. Cek jika ada nama bulan sebelum tahun (misal: "Desember 2021" atau "December 2021")
                 const monthYearPattern = /\b(Januari|Februari|Maret|April|Mei|Juni|Juli|Agustus|September|Oktober|November|Desember|January|February|March|May|June|July|August|October|December)\s+(19|20)\d{2}\b/i;
                 if (monthYearPattern.test(t)) {
                     return t.replace(monthYearPattern, (m, month) => `${month} ${yLabel}`);
