@@ -1224,18 +1224,46 @@ class TabelOpdController extends Controller
         $tableCode = $request->input('table_code', '8.1.1');
         $opdCode = $request->input('opd_code', '01');
         $year = (int) $request->input('year', 2025);
+        $defaultHtml = $request->input('default_html');
+
+        $cleanOpd = str_pad($opdCode, 2, '0', STR_PAD_LEFT);
+        $opdCodes = array_values(array_unique([$opdCode, $cleanOpd, ltrim($opdCode, '0')]));
 
         // Hapus file-based snapshot jika ada
         @unlink(storage_path("app/tables/table_{$tableCode}_{$year}.json"));
 
-        // Hapus snapshot custom HTML pada metadata
-        TabelMetadata::where('table_code', $tableCode)
-            ->where('opd_code', $opdCode)
+        // Hapus custom data baris jika ada
+        TabelData::where('table_code', $tableCode)
+            ->whereIn('opd_code', $opdCodes)
             ->where('year', $year)
-            ->update([
-                'table_html' => null,
-                'source_type' => 'database',
-            ]);
+            ->delete();
+
+        // Update TabelMetadata ke nilai default resmi
+        if (!empty($defaultHtml)) {
+            TabelMetadata::where('table_code', $tableCode)
+                ->whereIn('opd_code', $opdCodes)
+                ->where('year', $year)
+                ->update([
+                    'table_html' => $defaultHtml,
+                    'source_type' => 'template',
+                    'is_saved' => false,
+                ]);
+        } else {
+            // Jika tidak ada schema bawaan di frontend, bersihkan nilai data tbody ke '-' tanpa merusak struktur header/kolom
+            $meta = TabelMetadata::where('table_code', $tableCode)
+                ->whereIn('opd_code', $opdCodes)
+                ->where('year', $year)
+                ->first();
+
+            if ($meta && !empty($meta->table_html)) {
+                $cleanHtml = $this->buildEmptyTemplateFromHtml($meta->table_html);
+                $meta->update([
+                    'table_html' => $cleanHtml,
+                    'source_type' => 'template',
+                    'is_saved' => false,
+                ]);
+            }
+        }
 
         // Jika Tabel 8.1.1 direset/dihapus, kembalikan data ke nilai resmi BPS asli
         if ($tableCode === '8.1.1') {

@@ -308,7 +308,7 @@
                             <span>+ Tambah Baris</span>
                         </button>
 
-                        <button onclick="resetTableOriginal()" 
+                        <button onmousedown="window._isResetting = true;" onclick="resetTableOriginal()" 
                                 class="px-3 py-1.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 font-bold text-xs flex items-center space-x-1.5 shadow-2xs transition-all cursor-pointer"
                                 title="Kembalikan nilai ke data awal">
                             <i class="fa-solid fa-rotate-left text-[11px]"></i>
@@ -453,7 +453,7 @@
                     </button>
 
                     <div class="flex items-center flex-wrap gap-2">
-                        <button onclick="resetTableOriginal()" 
+                        <button onmousedown="window._isResetting = true;" onclick="resetTableOriginal()" 
                                 class="px-4 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer shadow-2xs">
                             <i class="fa-solid fa-rotate-left text-xs"></i>
                             <span>Reset Nilai Asli</span>
@@ -11151,34 +11151,59 @@
         }
 
         async function resetTableOriginal() {
-            if (confirm(`Apakah Anda yakin ingin mereset seluruh nilai data Tabel ${currentTableCode} kembali ke data asli resmi BPS?`)) {
-                localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
-                localStorage.removeItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`);
-                localStorage.removeItem(`simonda_table_source_${currentTableCode}_${currentYear}`);
-
-                try {
-                    await fetch('{{ route("tabel-opd.api.delete") }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': csrfToken
-                        },
-                        body: JSON.stringify({
-                            table_code: currentTableCode,
-                            opd_code: currentOpdCode,
-                            year: currentYear
-                        })
-                    });
-                } catch(e) {}
-
-                showToast('🔄 Nilai tabel berhasil dikembalikan ke data awal resmi BPS!');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 400);
+            window._isResetting = true;
+            if (!confirm(`Apakah Anda yakin ingin mereset seluruh nilai data Tabel ${currentTableCode} kembali ke data asli resmi BPS?`)) {
+                window._isResetting = false;
+                return;
             }
+
+            // 1. Bersihkan seluruh cache localStorage untuk tabel ini pada tahun ini
+            try {
+                for (let i = localStorage.length - 1; i >= 0; i--) {
+                    const k = localStorage.key(i);
+                    if (k && k.includes(`${currentTableCode}_${currentYear}`)) {
+                        localStorage.removeItem(k);
+                    }
+                }
+            } catch(e) {}
+
+            // 2. Ambil HTML template resmi BPS jika ada skema
+            let defaultHtml = null;
+            if (tableSchemas[currentTableCode] && typeof tableSchemas[currentTableCode].render === 'function') {
+                try {
+                    defaultHtml = tableSchemas[currentTableCode].render(currentYear);
+                } catch(err) {
+                    console.error('Error rendering default schema:', err);
+                }
+            }
+
+            // 3. Panggil API delete/reset ke server
+            try {
+                await fetch('{{ route("tabel-opd.api.delete") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({
+                        table_code: currentTableCode,
+                        opd_code: currentOpdCode,
+                        year: currentYear,
+                        default_html: defaultHtml
+                    })
+                });
+            } catch(e) {
+                console.error('Reset API error:', e);
+            }
+
+            showToast('🔄 Nilai tabel berhasil dikembalikan ke data awal resmi BPS!');
+            setTimeout(() => {
+                window.location.reload();
+            }, 300);
         }
 
         async function persistTableData(redirectAfter = false) {
+            if (window._isResetting) return;
             const tableEl = document.getElementById('dataDisplayTable');
             if (!tableEl) return;
             
