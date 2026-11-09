@@ -573,20 +573,6 @@
                                         </div>
                                     </button>
 
-                                    <!-- Option 3: Unduh Template Excel (Siap Isi) -->
-                                    <button onclick="downloadExcelTemplate(); closeAllExportDropdowns();" 
-                                            class="w-full text-left flex items-start space-x-3 p-2.5 rounded-xl hover:bg-amber-50/90 transition-all group cursor-pointer border border-transparent hover:border-amber-200/60">
-                                        <div class="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 group-hover:bg-amber-600 group-hover:text-white flex items-center justify-center shrink-0 transition-colors shadow-2xs">
-                                            <i class="fa-solid fa-file-arrow-down text-sm"></i>
-                                        </div>
-                                        <div class="flex-1 min-w-0">
-                                            <div class="flex items-center justify-between">
-                                                <span class="text-xs font-bold text-slate-800 group-hover:text-amber-950">Unduh Template Excel</span>
-                                                <span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-mono">TEMPLATE</span>
-                                            </div>
-                                            <p class="text-[10.5px] text-slate-500 leading-tight mt-0.5">Format kolom & nama isian indikator siap input</p>
-                                        </div>
-                                    </button>
 
                                 </div>
 
@@ -737,13 +723,6 @@
                         </div>
 
                         <div class="flex items-center space-x-2">
-                            <!-- Template Download Button -->
-                            <button onclick="downloadExcelTemplate()" 
-                                    class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-300 font-bold text-xs transition-all shadow-2xs cursor-pointer shrink-0"
-                                    title="Unduh format template Excel untuk diisi">
-                                <i class="fa-solid fa-download text-emerald-600 text-[11px]"></i>
-                                <span>Unduh Template Excel</span>
-                            </button>
                             <!-- Close Form Button -->
                             <button onclick="toggleExcelUploadForm(false)" 
                                     class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-colors cursor-pointer"
@@ -18175,15 +18154,6 @@
                         <i class="fa-solid fa-download text-xs"></i>
                         <span class="hidden sm:inline">Unduh XLSX</span>
                     </button>
-
-                    <!-- Tombol Buka Google Spreadsheet Online -->
-                    <a href="https://docs.google.com/spreadsheets/d/1LPukf54Rx7Z30Osw2lCR4ardM240I62c/edit?gid=1978844678#gid=1978844678" 
-                       target="_blank" 
-                       class="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 text-xs font-bold shadow-2xs transition-all flex items-center space-x-1.5 no-underline cursor-pointer"
-                       title="Buka Google Spreadsheet Publikasi BPS di Tab Baru">
-                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-                        <span class="hidden sm:inline">Buka Spreadsheet</span>
-                    </a>
 
                     <!-- Tombol Tutup -->
                     <button onclick="closeSpreadsheetModal()" 

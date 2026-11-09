@@ -254,13 +254,6 @@
                             </select>
                         </div>
 
-                        <!-- Unduh Template Button -->
-                        <button onclick="downloadEditExcelTemplate()" 
-                                class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 font-bold text-xs flex items-center space-x-1.5 shadow-2xs transition-all cursor-pointer"
-                                title="Unduh format template Excel untuk diisi">
-                            <i class="fa-solid fa-file-arrow-down text-amber-600 text-[11px]"></i>
-                            <span>Unduh Template</span>
-                        </button>
 
                         <!-- Import Excel Button -->
                         <button onclick="document.getElementById('editExcelInput').click()" 
