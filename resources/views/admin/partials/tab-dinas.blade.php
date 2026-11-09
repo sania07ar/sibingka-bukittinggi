@@ -23,6 +23,7 @@
                 <option value="opd" {{ ($filterType ?? '') === 'opd' ? 'selected' : '' }}>Dinas / OPD Kota (20)</option>
                 <option value="instansi" {{ ($filterType ?? '') === 'instansi' ? 'selected' : '' }}>Instansi Vertikal & Lainnya (37)</option>
                 <option value="walidata" {{ ($filterType ?? '') === 'walidata' ? 'selected' : '' }}>Wali Data (Diskominfo)</option>
+                <option value="bps" {{ ($filterType ?? '') === 'bps' ? 'selected' : '' }}>Pengisi Data BPS (1)</option>
             </select>
 
             <!-- Filter Status -->
@@ -107,8 +108,9 @@
                                 ? $dUser->allowed_pages 
                                 : json_decode($dUser->allowed_pages ?? '[]', true);
                             $isWali = ($dUser->role === 'walidata');
+                            $isBps = ($dUser->role === 'bps');
                             $isInstansi = ($dUser->role === 'instansi');
-                            $dinasIcon = $isWali ? 'fa-check-double' : ($isInstansi ? 'fa-landmark' : ($opdIcons[$dUser->opd_code] ?? 'fa-building'));
+                            $dinasIcon = $isWali ? 'fa-check-double' : ($isBps ? 'fa-database' : ($isInstansi ? 'fa-landmark' : ($opdIcons[$dUser->opd_code] ?? 'fa-building')));
                         @endphp
                         <tr class="hover:bg-slate-50/80 transition-colors">
                             
@@ -122,6 +124,10 @@
                                 <div class="flex items-center space-x-2.5">
                                     @if($isWali)
                                         <span class="w-8 h-8 rounded-lg bg-teal-100 text-teal-700 font-black text-xs flex items-center justify-center shrink-0 border border-teal-200/80" title="Wali Data Statistik Sektoral">
+                                            <i class="fa-solid {{ $dinasIcon }} text-sm"></i>
+                                        </span>
+                                    @elseif($isBps)
+                                        <span class="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 font-black text-xs flex items-center justify-center shrink-0 border border-blue-200/80" title="Pengisi Data BPS Kota Bukittinggi">
                                             <i class="fa-solid {{ $dinasIcon }} text-sm"></i>
                                         </span>
                                     @elseif($isInstansi)
@@ -141,6 +147,10 @@
                                             @if($isWali)
                                                 <span class="text-[9.5px] font-black bg-teal-100 text-teal-800 border border-teal-200 px-1.5 py-0.2 rounded-md">
                                                     WALI DATA (KOMINFO)
+                                                </span>
+                                            @elseif($isBps)
+                                                <span class="text-[9.5px] font-black bg-blue-100 text-blue-800 border border-blue-200 px-1.5 py-0.2 rounded-md">
+                                                    DATA BPS
                                                 </span>
                                             @elseif($isInstansi)
                                                 <span class="text-[9.5px] font-black bg-indigo-100 text-indigo-800 border border-indigo-200 px-1.5 py-0.2 rounded-md">

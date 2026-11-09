@@ -144,11 +144,22 @@ function openAgencyDetailModal(type, code, short, full, pct, status, stepLabel, 
     const linkText = document.getElementById('modalAgencyGoLinkText');
     const selectedYear = window.monitoringSelectedYear || 2025;
     if (link) {
-        const routeName = (type === 'instansi') ? 'isi-data-instansi' : 'isi-data-opd';
+        let routeName = 'isi-data-opd';
+        if (type === 'instansi') {
+            routeName = 'isi-data-instansi';
+        } else if (type === 'bps') {
+            routeName = 'data-bps';
+        }
         link.href = `/${routeName}?${type}=${code}&year=${selectedYear}`;
     }
     if (linkText) {
-        linkText.innerText = (type === 'instansi') ? 'Buka Halaman Input Data Instansi' : 'Buka Halaman Input Data OPD';
+        let btnText = 'Buka Halaman Input Data OPD';
+        if (type === 'instansi') {
+            btnText = 'Buka Halaman Input Data Instansi';
+        } else if (type === 'bps') {
+            btnText = 'Buka Halaman Data BPS';
+        }
+        linkText.innerText = btnText;
     }
 
     highlightModalStageButtons(step);

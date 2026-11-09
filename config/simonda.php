@@ -12,6 +12,15 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Konfigurasi Akun Pengisi Data Internal BPS Kota Bukittinggi
+    |--------------------------------------------------------------------------
+    */
+    'bps_operator_username' => env('BPS_OPERATOR_USERNAME', 'operator_bps'),
+    'bps_operator_password' => env('BPS_OPERATOR_PASSWORD', 'bpsbukittinggi'),
+    'bps_operator_name'     => env('BPS_OPERATOR_NAME', 'Operator Data BPS Kota Bukittinggi'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Daftar Halaman & Modul SiMonDa yang Dapat Diberikan Hak Aksesnya
     |--------------------------------------------------------------------------
     */

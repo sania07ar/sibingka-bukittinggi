@@ -279,17 +279,6 @@
                             <span>+ Tambah Baris</span>
                         </button>
 
-                        <!-- Button: Catatan / Komentar Rincian Data -->
-                        <button onclick="openTableCommentOverview()" 
-                                id="btnHeaderComments"
-                                class="px-3 py-1.5 rounded-lg bg-orange-50 hover:bg-orange-100 text-[#f95a00] border border-orange-300 font-bold text-xs flex items-center space-x-1.5 shadow-2xs transition-all cursor-pointer"
-                                title="Buka Catatan & Komentar Rincian Data">
-                            <i class="fa-solid fa-comments text-xs"></i>
-                            <span>Catatan (<span id="headerTotalCommentsCount">0</span>)</span>
-                        </button>
-
-
-
                         <button onclick="resetTableOriginal()" 
                                 class="px-3 py-1.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 font-bold text-xs flex items-center space-x-1.5 shadow-2xs transition-all cursor-pointer"
                                 title="Kembalikan nilai ke data awal">
@@ -625,6 +614,85 @@
 
         // Table Schemas & Structured Data
         const tableSchemas = {
+            '1.1.6': {
+                titleId: 'Nama Sungai/Batang, Lebar dan Kecamatan yang Dilalui di Kota Bukittinggi',
+                titleEn: 'Name, Width of The River and District Its Pass in Bukittinggi',
+                source: 'Dinas Pekerjaan Umum dan Penataan Ruang Kota Bukittinggi / <span class="italic text-slate-500">Public Work and Spatial Planning Service of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yrKey = year ? year.toString() : '2025';
+                    const tambuoWidth = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[yrKey] && serverDbDataStore[yrKey]['batang_tambuo']) 
+                        ? serverDbDataStore[yrKey]['batang_tambuo'] 
+                        : '-';
+                    const sianokWidth = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[yrKey] && serverDbDataStore[yrKey]['batang_sianok']) 
+                        ? serverDbDataStore[yrKey]['batang_sianok'] 
+                        : '-';
+                    const tambuoClass = tambuoWidth !== '-' ? 'font-semibold' : 'text-slate-400 font-normal';
+                    const sianokClass = sianokWidth !== '-' ? 'font-semibold' : 'text-slate-400 font-normal';
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Nama Sungai (Batang)</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Name of The River</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Lebar (M)</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Width (M)</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="2">
+                                    <div>Kecamatan yang Dilalui</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">District Its Pass</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-2 border border-slate-700 w-12">No</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            <tr>
+                                <td class="py-2.5 px-4 font-semibold border border-slate-700 align-middle" rowspan="2">
+                                    01. Batang Tambuo
+                                </td>
+                                <td class="py-2.5 px-4 text-center border border-slate-700 align-middle ${tambuoClass}" rowspan="2">
+                                    ${tambuoWidth}
+                                </td>
+                                <td class="py-2.5 px-3 text-center border border-slate-700 align-middle font-medium text-slate-800">1</td>
+                                <td class="py-2 px-4 border border-slate-700 font-medium">
+                                    Aur Birugo Tigo Baleh
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="py-2.5 px-3 text-center border border-slate-700 align-middle font-medium text-slate-800">2</td>
+                                <td class="py-2 px-4 border border-slate-700 font-medium">
+                                    Mandiangin Koto Selayan
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="py-2.5 px-4 font-semibold border border-slate-700 align-middle" rowspan="2">
+                                    02. Batang Sianok
+                                </td>
+                                <td class="py-2.5 px-4 text-center border border-slate-700 align-middle ${sianokClass}" rowspan="2">
+                                    ${sianokWidth}
+                                </td>
+                                <td class="py-2.5 px-3 text-center border border-slate-700 align-middle font-medium text-slate-800">1</td>
+                                <td class="py-2 px-4 border border-slate-700 font-medium">
+                                    Aur Birugo Tigo Baleh
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="py-2.5 px-3 text-center border border-slate-700 align-middle font-medium text-slate-800">2</td>
+                                <td class="py-2 px-4 border border-slate-700 font-medium">
+                                    Guguk Panjang
+                                </td>
+                            </tr>
+                        </tbody>
+                    `;
+                }
+            },
             '1.1.8': {
                 titleId: 'Jumlah Pembuatan Sertifikat Menurut Jenis Kepemilikan di Kota Bukittinggi',
                 titleEn: 'Number of Certificate Issuances by Type of Ownership in Bukittinggi Municipality',
@@ -9791,7 +9859,13 @@
             }
 
             // Check if user previously saved custom data (prioritas database, kemudian localStorage)
-            let savedHtml = (serverDbMetadata && serverDbMetadata.table_html) ? serverDbMetadata.table_html : localStorage.getItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
+                        // Check if table data was edited in dedicated edit page or generated from Excel
+            // Prioritaskan localStorage jika ada status tersimpan lokal (simonda_table_is_saved)
+            const localSavedHtml = localStorage.getItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
+            const isLocallySaved = (localStorage.getItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`) === '1');
+            let savedHtml = (isLocallySaved && localSavedHtml && localSavedHtml.includes('<tr'))
+                ? localSavedHtml
+                : ((serverDbMetadata && serverDbMetadata.table_html && serverDbMetadata.table_html.includes('<tr')) ? serverDbMetadata.table_html : localSavedHtml);
             if (savedHtml) savedHtml = cleanHtmlYearRanges(savedHtml);
 
             // Sanity check: jika savedHtml dari localStorage rusak atau tidak mengandung struktur <tr> dan <th>, bersihkan
@@ -9839,7 +9913,7 @@
             }
 
             if (isMultiYearTable && savedHtml && currentTableCode !== '9.3') {
-                const tempDiv = document.createElement('div');
+                const tempDiv = document.createElement('table');
                 tempDiv.innerHTML = savedHtml;
                 const allThs = Array.from(tempDiv.querySelectorAll('thead th'));
                 const yrInt = parseInt(currentYear) || 2025;
@@ -9863,15 +9937,21 @@
                 }
             }
 
-            // Reset cache lama jika tabel 1.1.6 pernah tersimpan rusak saat awal migrasi
-            if (currentTableCode === '1.1.6' && savedHtml && localStorage.getItem(`simonda_table_source_${currentTableCode}_${currentYear}`) !== 'excel') {
-                const tempDiv = document.createElement('div');
+            // Reset cache jika tabel 1.1.6 rusak / plain text / format terpotong
+            if (currentTableCode === '1.1.6' && savedHtml) {
+                const tempDiv = document.createElement('table');
                 tempDiv.innerHTML = savedHtml;
-                const thCount = tempDiv.querySelectorAll('thead tr:last-child th').length;
-                const tdCount = tempDiv.querySelector('tbody tr') ? tempDiv.querySelector('tbody tr').querySelectorAll('td').length : 0;
-                if (thCount >= 4 && tdCount <= 1) {
+                const thCount = tempDiv.querySelectorAll('thead th').length;
+                const bodyRows = tempDiv.querySelectorAll('tbody tr');
+                const hasTambuo = savedHtml.includes('Batang Tambuo') || savedHtml.includes('Tambuo');
+                if (thCount < 4 || bodyRows.length < 2 || !hasTambuo || !savedHtml.includes('<tbody')) {
                     localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
-                    savedHtml = null;
+                    localStorage.removeItem(`simonda_table_source_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`);
+                    if (serverDbMetadata) {
+                        serverDbMetadata.table_html = null;
+                    }
+                    savedHtml = tableSchemas['1.1.6'].render(currentYear);
                 }
             }
 
@@ -9900,7 +9980,7 @@
 
             // Self-healing tabel 2.3.1 & 2.3.2: bersihkan cache jika format tabel tidak memiliki header standar BPS (10 kolom)
             if ((currentTableCode === '2.3.1' || currentTableCode === '2.3.2') && savedHtml) {
-                const tempDiv = document.createElement('div');
+                const tempDiv = document.createElement('table');
                 tempDiv.innerHTML = savedHtml;
                 const thCount = tempDiv.querySelectorAll('thead th').length;
                 const isProper = thCount >= 9 && savedHtml.includes('Pegawai Negeri Sipil');
@@ -9916,7 +9996,7 @@
 
             // Self-healing tabel 2.3.3: bersihkan cache jika format tabel tidak memiliki header standar BPS atau mengandung data import lama yang tertukar
             if (currentTableCode === '2.3.3' && savedHtml) {
-                const tempDiv = document.createElement('div');
+                const tempDiv = document.createElement('table');
                 tempDiv.innerHTML = savedHtml;
                 const thCount = tempDiv.querySelectorAll('thead th').length;
                 const firstRowTds = tempDiv.querySelectorAll('tbody tr:first-child td');
@@ -9936,7 +10016,7 @@
             // Self-healing tabel 11.2, 3.1.8, & 3.2.8 (NIB Sektor, Penduduk Wajib KTP, Pencari Kerja)
             if ((currentTableCode === '11.2' || currentTableCode === '3.1.8' || currentTableCode === '3.2.8') && savedHtml) {
                 const yrStr = currentYear.toString();
-                const tempDiv = document.createElement('div');
+                const tempDiv = document.createElement('table');
                 tempDiv.innerHTML = savedHtml;
                 const jumlahCell = Array.from(tempDiv.querySelectorAll('td')).find(td => td.innerText.trim().startsWith('Jumlah'));
                 let isCorruptMulti = false;
@@ -9992,7 +10072,7 @@
 
             // Self-healing tabel 5.2.1 & 5.2.2: pastikan 10 komoditi lengkap (21 kolom) dan header 2-tier tidak rusak
             if ((currentTableCode === '5.2.1' || currentTableCode === '5.2.2') && savedHtml) {
-                const tempDiv = document.createElement('div');
+                const tempDiv = document.createElement('table');
                 tempDiv.innerHTML = savedHtml;
                 const headerThs = tempDiv.querySelectorAll('thead tr:last-child th');
                 const hasKakao = savedHtml.includes('Kakao') || savedHtml.includes('Cocoa');
@@ -10020,19 +10100,23 @@
             }
 
             // Validasi umum: jika baris data memiliki sel lebih sedikit daripada kolom header (tabel terpotong)
-            if (savedHtml) {
-                const tempDiv = document.createElement('div');
+            if (savedHtml && !['5.1.15', '5.1.16', '5.1.17', '1.1.6'].includes(currentTableCode)) {
+                const tempDiv = document.createElement('table');
                 tempDiv.innerHTML = savedHtml;
-                const headerCols = tempDiv.querySelectorAll('thead tr:last-child th').length;
-                const firstRowTds = tempDiv.querySelector('tbody tr') ? tempDiv.querySelector('tbody tr').querySelectorAll('td').length : 0;
-                if (headerCols > 0 && firstRowTds > 0 && firstRowTds < headerCols) {
+                let headerColSpan = 0;
+                tempDiv.querySelectorAll('thead tr:last-child th').forEach(th => headerColSpan += (th.colSpan || 1));
+                let firstRowColSpan = 0;
+                if (tempDiv.querySelector('tbody tr')) {
+                    tempDiv.querySelector('tbody tr').querySelectorAll('td').forEach(td => firstRowColSpan += (td.colSpan || 1));
+                }
+                if (headerColSpan > 0 && firstRowColSpan > 0 && firstRowColSpan < headerColSpan) {
                     savedHtml = null;
                 }
             }
 
             // Sanity check untuk Tabel 8.1.1 & tabel sejenis: Jika sel data numerik berisi teks label baris
             if (savedHtml) {
-                const tempDiv = document.createElement('div');
+                const tempDiv = document.createElement('table');
                 tempDiv.innerHTML = savedHtml;
                 const rows = tempDiv.querySelectorAll('tbody tr');
                 let isCorrupt = false;
@@ -10820,18 +10904,28 @@
             const tableEl = document.getElementById('dataDisplayTable');
             if (!tableEl) return;
             
-            // Convert to clean table markup for storage
+            // 1. Commit input yang sedang fokus saat tombol simpan ditekan
+            if (document.activeElement && document.activeElement.blur) {
+                try { document.activeElement.blur(); } catch(e) {}
+            }
+
+            // 2. Pastikan nilai yang diketik disinkronkan ke atribut DOM sebelum cloning
+            tableEl.querySelectorAll('.table-edit-input').forEach(inp => {
+                inp.setAttribute('value', inp.value);
+            });
+
             const clone = tableEl.cloneNode(true);
             clone.querySelectorAll('.col-edit-action').forEach(el => el.remove());
-            cleanGhostRows(clone);
 
-            const cloneInputs = clone.querySelectorAll('.table-edit-input');
+            const origInputs = Array.from(tableEl.querySelectorAll('.table-edit-input'));
+            const cloneInputs = Array.from(clone.querySelectorAll('.table-edit-input'));
             const isFinancialTable = (currentOpdCode === '05' || currentTableCode.startsWith('2.4') || currentTableCode.startsWith('2.4.'));
 
-            cloneInputs.forEach(input => {
+            cloneInputs.forEach((input, idx) => {
                 const td = input.closest('td');
                 if (td) {
-                    let finalVal = input.value.trim();
+                    const origInput = origInputs[idx];
+                    let finalVal = (origInput && origInput.value !== undefined) ? origInput.value.trim() : (input.value || input.getAttribute('value') || '').trim();
                     if (isFinancialTable) {
                         finalVal = formatRupiahNumber(finalVal);
                     }
@@ -10840,9 +10934,19 @@
                         td.classList.remove('text-left', 'text-center');
                         td.classList.add('text-right', 'font-semibold');
                         td.style.textAlign = 'right';
+                    } else if (finalVal !== '-' && finalVal !== '–' && finalVal !== '—' && !isNaN(finalVal.replace(/\./g, '').replace(',', '.'))) {
+                        td.classList.remove('text-left', 'text-center');
+                        td.classList.add('text-right', 'font-semibold');
+                        td.style.textAlign = 'right';
+                    } else if (finalVal === '-' || finalVal === '–' || finalVal === '—') {
+                        td.classList.remove('text-left', 'text-right');
+                        td.classList.add('text-center');
+                        td.style.textAlign = 'center';
                     }
                 }
             });
+
+            cleanGhostRows(clone);
 
             // Save to localStorage
             localStorage.setItem(`simonda_table_html_${currentTableCode}_${currentYear}`, clone.innerHTML);
@@ -11415,72 +11519,7 @@
                             };
                         }
                     });
-                } else if (currentTableCode === '4.2.12') {
-                        let mIdx = 0;
-                        dataRows.forEach(r => {
-                            const first = (r[0] ?? '').toString().trim();
-                            if (first !== '' && !first.toLowerCase().includes('bulan') && !first.includes('(1)')) {
-                                if (trs[mIdx]) {
-                                    const inps = trs[mIdx].querySelectorAll('.table-edit-input');
-                                    const v1 = sanitizeExcelNumericCell(r[1]);
-                                    const v2 = sanitizeExcelNumericCell(r[2]);
-                                    if (inps[0] && v1 !== '' && v1 !== '-') {
-                                        inps[0].value = v1;
-                                        inps[0].classList.add('bg-amber-100');
-                                        filledCount++;
-                                    }
-                                    if (inps[1] && v2 !== '' && v2 !== '-') {
-                                        inps[1].value = v2;
-                                        inps[1].classList.add('bg-amber-100');
-                                        filledCount++;
-                                    }
-                                }
-                                mIdx++;
-                            }
-                        });
-                    } else if (currentTableCode === '4.2.13') {
-                        let catIdx = 0;
-                        dataRows.forEach(r => {
-                            const first = (r[0] ?? '').toString().trim();
-                            if (first !== '' && !first.toLowerCase().includes('jenis') && !first.includes('(1)')) {
-                                if (trs[catIdx]) {
-                                    const inps = trs[catIdx].querySelectorAll('.table-edit-input');
-                                    inps.forEach((inp, colI) => {
-                                        const v = sanitizeExcelNumericCell(r[colI + 1]);
-                                        if (v !== '' && v !== '-') {
-                                            inp.value = v;
-                                            inp.classList.add('bg-amber-100');
-                                            filledCount++;
-                                        }
-                                    });
-                                }
-                                catIdx++;
-                            }
-                        });
-                    } else if (currentTableCode === '4.2.14') {
-                        let srcIdx = 0;
-                        dataRows.forEach(r => {
-                            const first = (r[0] ?? '').toString().trim();
-                            if (first !== '' && !first.toLowerCase().includes('sumber') && !first.includes('(1)')) {
-                                if (trs[srcIdx]) {
-                                    const inps = trs[srcIdx].querySelectorAll('.table-edit-input');
-                                    const v1 = sanitizeExcelNumericCell(r[1]);
-                                    const v2 = sanitizeExcelNumericCell(r[2]);
-                                    if (inps[0] && v1 !== '' && v1 !== '-') {
-                                        inps[0].value = v1;
-                                        inps[0].classList.add('bg-amber-100');
-                                        filledCount++;
-                                    }
-                                    if (inps[1] && v2 !== '' && v2 !== '-') {
-                                        inps[1].value = v2;
-                                        inps[1].classList.add('bg-amber-100');
-                                        filledCount++;
-                                    }
-                                }
-                                srcIdx++;
-                            }
-                        });
-                    } else if (currentTableCode === '4.2.9') {
+                } else if (currentTableCode === '4.2.9') {
                     rowsData = {};
                     const p = get5YearPeriod(currentYear);
                     p.yearsAsc.forEach(y => { rowsData[y] = {}; });
@@ -13386,72 +13425,7 @@
                         { wch: 25 },
                         { wch: 32 }
                     ];
-                } else if (currentTableCode === '4.2.12') {
-                        let mIdx = 0;
-                        dataRows.forEach(r => {
-                            const first = (r[0] ?? '').toString().trim();
-                            if (first !== '' && !first.toLowerCase().includes('bulan') && !first.includes('(1)')) {
-                                if (trs[mIdx]) {
-                                    const inps = trs[mIdx].querySelectorAll('.table-edit-input');
-                                    const v1 = sanitizeExcelNumericCell(r[1]);
-                                    const v2 = sanitizeExcelNumericCell(r[2]);
-                                    if (inps[0] && v1 !== '' && v1 !== '-') {
-                                        inps[0].value = v1;
-                                        inps[0].classList.add('bg-amber-100');
-                                        filledCount++;
-                                    }
-                                    if (inps[1] && v2 !== '' && v2 !== '-') {
-                                        inps[1].value = v2;
-                                        inps[1].classList.add('bg-amber-100');
-                                        filledCount++;
-                                    }
-                                }
-                                mIdx++;
-                            }
-                        });
-                    } else if (currentTableCode === '4.2.13') {
-                        let catIdx = 0;
-                        dataRows.forEach(r => {
-                            const first = (r[0] ?? '').toString().trim();
-                            if (first !== '' && !first.toLowerCase().includes('jenis') && !first.includes('(1)')) {
-                                if (trs[catIdx]) {
-                                    const inps = trs[catIdx].querySelectorAll('.table-edit-input');
-                                    inps.forEach((inp, colI) => {
-                                        const v = sanitizeExcelNumericCell(r[colI + 1]);
-                                        if (v !== '' && v !== '-') {
-                                            inp.value = v;
-                                            inp.classList.add('bg-amber-100');
-                                            filledCount++;
-                                        }
-                                    });
-                                }
-                                catIdx++;
-                            }
-                        });
-                    } else if (currentTableCode === '4.2.14') {
-                        let srcIdx = 0;
-                        dataRows.forEach(r => {
-                            const first = (r[0] ?? '').toString().trim();
-                            if (first !== '' && !first.toLowerCase().includes('sumber') && !first.includes('(1)')) {
-                                if (trs[srcIdx]) {
-                                    const inps = trs[srcIdx].querySelectorAll('.table-edit-input');
-                                    const v1 = sanitizeExcelNumericCell(r[1]);
-                                    const v2 = sanitizeExcelNumericCell(r[2]);
-                                    if (inps[0] && v1 !== '' && v1 !== '-') {
-                                        inps[0].value = v1;
-                                        inps[0].classList.add('bg-amber-100');
-                                        filledCount++;
-                                    }
-                                    if (inps[1] && v2 !== '' && v2 !== '-') {
-                                        inps[1].value = v2;
-                                        inps[1].classList.add('bg-amber-100');
-                                        filledCount++;
-                                    }
-                                }
-                                srcIdx++;
-                            }
-                        });
-                    } else if (currentTableCode === '4.2.9') {
+                } else if (currentTableCode === '4.2.9') {
                     // TEMPLATE TABEL 4.2.9 - DINAS KESEHATAN (DOKTER PRAKTEK MENURUT KEAHLIAN)
                     const p429 = get5YearPeriod(yr);
                     setCell(0, 1, `Jumlah Dokter Praktek Menurut Keahlian di Kota Bukittinggi, ${p429.label}`, { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } } });

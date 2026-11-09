@@ -269,7 +269,7 @@
         'headingText' => '1. Tabel Statistik BPS',
         'closeFn' => 'closeBpsModal()',
         'isAdmin' => $isAdmin,
-        'showDriveLink' => true,
+        'showDriveLink' => false,
         'badgeText' => 'Data Internal BPS',
         'searchPlaceholder' => 'Cari tabel statistik BPS...'
     ])
@@ -296,6 +296,7 @@
             tabelOpdUrl: "{{ url('/tabel-opd') }}",
             csrfToken: "{{ csrf_token() }}"
         };
+        window.serverDbCustomTables = @json($customTables ?? []);
     </script>
     <script src="{{ asset('js/dinas-catalog.js') }}"></script>
 </body>

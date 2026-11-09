@@ -52,7 +52,10 @@ Route::middleware(['simonda.auth'])->group(function () {
     })->name('isi-data-opd');
 
     Route::get('/isi-data-instansi', function () {
-        $customTables = \App\Models\TabelMetadata::where('source_type', 'custom_instansi')
+        $customTables = \App\Models\TabelMetadata::where(function($q) {
+                $q->whereIn('source_type', ['custom_instansi', 'instansi'])
+                  ->orWhere('source_type', 'like', '%instansi%');
+            })
             ->select('table_code as code', 'opd_code', 'title_id as title', 'title_en as titleEn')
             ->distinct()
             ->get();
@@ -60,7 +63,10 @@ Route::middleware(['simonda.auth'])->group(function () {
     })->name('isi-data-instansi');
 
     Route::get('/data-bps', function () {
-        $customTables = \App\Models\TabelMetadata::whereIn('source_type', ['custom_bps', 'bps'])
+        $customTables = \App\Models\TabelMetadata::where(function($q) {
+                $q->whereIn('source_type', ['custom_bps', 'bps'])
+                  ->orWhere('source_type', 'like', '%bps%');
+            })
             ->select('table_code as code', 'opd_code', 'title_id as title', 'title_en as titleEn')
             ->distinct()
             ->get();
@@ -75,6 +81,10 @@ Route::middleware(['simonda.auth'])->group(function () {
         return view('monitoring.instansi');
     })->name('monitoring-instansi');
 
+    Route::get('/monitoring-bps', function () {
+        return view('monitoring.bps');
+    })->name('monitoring-bps');
+
     Route::post('/monitoring/update-stage', function (\Illuminate\Http\Request $request) {
         // Khusus Admin BPS yang berhak mengubah / menyetujui Validasi BPS
         if (session('user.role') !== 'admin') {
@@ -85,7 +95,7 @@ Route::middleware(['simonda.auth'])->group(function () {
         }
 
         $validated = $request->validate([
-            'agency_type' => 'required|in:opd,instansi',
+            'agency_type' => 'required|in:opd,instansi,bps',
             'agency_code' => 'required|string',
             'year' => 'required|integer',
             'stage' => 'required|integer|between:1,3',
@@ -119,6 +129,7 @@ Route::middleware(['simonda.auth'])->group(function () {
     })->name('monitoring.update-stage');
 
     Route::get('/tabel-opd', [TabelOpdController::class, 'index'])->name('tabel-opd');
+    Route::get('/tabel', [TabelOpdController::class, 'index'])->name('tabel');
     Route::get('/edit-tabel-opd', [TabelOpdController::class, 'edit'])->name('edit-tabel-opd');
     Route::get('/api/tabel-opd/data', [TabelOpdController::class, 'apiGetData'])->name('tabel-opd.api.data');
     Route::post('/api/tabel-opd/save', [TabelOpdController::class, 'apiSaveData'])->name('tabel-opd.api.save');

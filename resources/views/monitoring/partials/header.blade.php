@@ -9,7 +9,7 @@
             MONITORING PROGRESS PENGUMPULAN DATA
         </h1>
         <p class="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">
-            Dashboard pemantauan real-time progres pengumpulan data sektoral {{ $currentTab === 'instansi' ? 'Instansi Vertikal & Lainnya' : 'OPD' }} Kota Bukittinggi Tahun <span class="text-[#f95a00] font-bold">{{ $selectedYear }}</span>
+            Dashboard pemantauan real-time progres pengumpulan data sektoral {{ $currentTab === 'instansi' ? 'Instansi Vertikal & Lainnya' : ($currentTab === 'bps' ? 'Data BPS' : 'OPD') }} Kota Bukittinggi Tahun <span class="text-[#f95a00] font-bold">{{ $selectedYear }}</span>
         </p>
     </div>
 
@@ -89,8 +89,8 @@
     }
 </script>
 
-<!-- TAB SWITCHER: OPD vs INSTANSI VERTIKAL -->
-<div class="no-print flex items-center space-x-2 mb-4 bg-slate-200/60 p-1 rounded-2xl max-w-fit">
+<!-- TAB SWITCHER: OPD vs INSTANSI VERTIKAL vs DATA BPS -->
+<div class="no-print flex items-center space-x-2 mb-4 bg-slate-200/60 p-1 rounded-2xl max-w-fit flex-wrap gap-y-1">
     <a href="{{ route('monitoring-opd', ['year' => $selectedYear]) }}"
        class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all no-underline {{ $currentTab === 'opd' ? 'bg-white text-[#f95a00] shadow-sm' : 'text-slate-600 hover:text-slate-900' }}">
         <i class="fa-solid fa-building mr-1.5 text-xs"></i>
@@ -100,6 +100,11 @@
        class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all no-underline {{ $currentTab === 'instansi' ? 'bg-white text-[#f95a00] shadow-sm' : 'text-slate-600 hover:text-slate-900' }}">
         <i class="fa-solid fa-landmark mr-1.5 text-xs"></i>
         <span>Instansi Vertikal & Lainnya (37)</span>
+    </a>
+    <a href="{{ route('monitoring-bps', ['year' => $selectedYear]) }}"
+       class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all no-underline {{ $currentTab === 'bps' ? 'bg-white text-[#f95a00] shadow-sm' : 'text-slate-600 hover:text-slate-900' }}">
+        <i class="fa-solid fa-chart-pie mr-1.5 text-xs"></i>
+        <span>Data BPS (10)</span>
     </a>
 </div>
 

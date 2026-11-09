@@ -86,19 +86,28 @@
         const opdGroup = document.getElementById(`${mode}_opd_group`);
         const instGroup = document.getElementById(`${mode}_instansi_group`);
         const waliGroup = document.getElementById(`${mode}_walidata_group`);
+        const bpsGroup = document.getElementById(`${mode}_bps_group`);
         if (opdGroup && instGroup) {
             if (type === 'opd') {
                 opdGroup.style.display = '';
                 instGroup.style.display = 'none';
                 if (waliGroup) waliGroup.style.display = 'none';
+                if (bpsGroup) bpsGroup.style.display = 'none';
             } else if (type === 'instansi') {
                 opdGroup.style.display = 'none';
                 instGroup.style.display = '';
                 if (waliGroup) waliGroup.style.display = 'none';
+                if (bpsGroup) bpsGroup.style.display = 'none';
             } else if (type === 'walidata') {
                 opdGroup.style.display = 'none';
                 instGroup.style.display = 'none';
                 if (waliGroup) waliGroup.style.display = '';
+                if (bpsGroup) bpsGroup.style.display = 'none';
+            } else if (type === 'bps') {
+                opdGroup.style.display = 'none';
+                instGroup.style.display = 'none';
+                if (waliGroup) waliGroup.style.display = 'none';
+                if (bpsGroup) bpsGroup.style.display = '';
             }
         }
     }
@@ -135,14 +144,17 @@
         document.getElementById('formEditDinas').action = `/kelola-akun/dinas/${userData.id}/update`;
 
         const isWali = (userData.role === 'walidata');
+        const isBps = (userData.role === 'bps');
         const isInst = (userData.role === 'instansi');
         const opdRadio = document.getElementById('edit_role_opd');
         const instansiRadio = document.getElementById('edit_role_instansi');
         const waliRadio = document.getElementById('edit_role_walidata');
-        if (opdRadio) opdRadio.checked = (!isInst && !isWali);
+        const bpsRadio = document.getElementById('edit_role_bps');
+        if (opdRadio) opdRadio.checked = (!isInst && !isWali && !isBps);
         if (instansiRadio) instansiRadio.checked = isInst;
         if (waliRadio) waliRadio.checked = isWali;
-        toggleCategoryFilter('edit', isWali ? 'walidata' : (isInst ? 'instansi' : 'opd'));
+        if (bpsRadio) bpsRadio.checked = isBps;
+        toggleCategoryFilter('edit', isWali ? 'walidata' : (isBps ? 'bps' : (isInst ? 'instansi' : 'opd')));
 
         const opdCodeInput = document.getElementById('edit_opd_code');
         if (opdCodeInput) opdCodeInput.value = userData.opd_code || '';

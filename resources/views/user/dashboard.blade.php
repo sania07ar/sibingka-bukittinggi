@@ -86,6 +86,7 @@
         $role = $currentUser['role'] ?? 'opd';
         $isInstansiUser = $role === 'instansi';
         $isWaliData = $role === 'walidata';
+        $isBpsUser = $role === 'bps';
         $allowedPages = $currentUser['allowed_pages'] ?? [];
         $dinasName = $currentUser['dinas_name'] ?? ($currentUser['displayName'] ?? 'Dinas');
         $username = $currentUser['username'] ?? 'User';
@@ -94,6 +95,9 @@
         if ($isWaliData) {
             $targetRoute = route('monitoring-opd');
             $btnLabel = 'Mulai Monitoring & Verifikasi Data';
+        } elseif ($isBpsUser) {
+            $targetRoute = route('data-bps');
+            $btnLabel = 'Mulai Isi Data BPS';
         } elseif ($isInstansiUser) {
             $targetRoute = route('isi-data-instansi');
             $btnLabel = 'Mulai Isi Data Instansi';
@@ -184,14 +188,16 @@
                 <!-- User Account Profile & Logout -->
                 <div class="flex items-center gap-2">
                     <div class="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200/80 text-slate-800 text-xs shadow-2xs">
-                        <div class="w-5 h-5 rounded-full bg-[#f95a00] text-white flex items-center justify-center font-bold text-[9px] shadow-sm shrink-0">
-                            <i class="fa-solid {{ ($opdCode === '01' || stripos($dinasName, 'PUPR') !== false) ? 'fa-city' : 'fa-building' }} text-[9px]"></i>
+                        <div class="w-5 h-5 rounded-full {{ $isBpsUser ? 'bg-blue-600' : 'bg-[#f95a00]' }} text-white flex items-center justify-center font-bold text-[9px] shadow-sm shrink-0">
+                            <i class="fa-solid {{ $isBpsUser ? 'fa-database' : (($opdCode === '01' || stripos($dinasName, 'PUPR') !== false) ? 'fa-city' : 'fa-building') }} text-[9px]"></i>
                         </div>
                         <div class="flex flex-col text-left">
                             <span class="font-bold text-slate-900 leading-tight truncate max-w-[120px] sm:max-w-xs text-[11px] sm:text-xs">{{ $dinasName }}</span>
                             <span class="text-[9px] font-semibold text-slate-500">
                                 @if($isWaliData)
                                     Wali Data (Diskominfo)
+                                @elseif($isBpsUser)
+                                    Operator Data BPS
                                 @elseif($isInstansiUser)
                                     Instansi Vertikal
                                 @else
@@ -278,6 +284,24 @@
                            class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm px-5 py-3 rounded-xl shadow-md transition-all transform hover:-translate-y-0.5 no-underline">
                             <i class="fa-solid fa-landmark text-sm"></i>
                             <span>Monitoring Instansi</span>
+                        </a>
+                        <a href="{{ route('monitoring-bps') }}" 
+                           class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm px-5 py-3 rounded-xl shadow-md transition-all transform hover:-translate-y-0.5 no-underline">
+                            <i class="fa-solid fa-chart-pie text-sm"></i>
+                            <span>Monitoring BPS</span>
+                        </a>
+                    @elseif($isBpsUser)
+                        <a href="{{ route('data-bps') }}" 
+                           class="btn-orange-glow inline-flex items-center gap-2.5 bg-[#f95a00] hover:bg-[#ea580c] text-white font-bold text-sm px-6 py-3.5 rounded-xl shadow-lg shadow-orange-500/30 transition-all transform hover:-translate-y-0.5 no-underline">
+                            <i class="fa-solid fa-database text-sm"></i>
+                            <span>Mulai Isi Data BPS</span>
+                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </a>
+                        <a href="{{ route('monitoring-bps') }}" 
+                           class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm px-5 py-3.5 rounded-xl shadow-md transition-all transform hover:-translate-y-0.5 no-underline">
+                            <i class="fa-solid fa-chart-pie text-sm"></i>
+                            <span>Monitoring BPS</span>
+                            <i class="fa-solid fa-arrow-right text-xs"></i>
                         </a>
                     @else
                         <a href="{{ $targetRoute }}" 

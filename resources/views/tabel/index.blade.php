@@ -8599,12 +8599,18 @@
             }
 
             // Check if table data was edited in dedicated edit page or generated from Excel
-            let savedHtml = (serverDbMetadata && serverDbMetadata.table_html) ? serverDbMetadata.table_html : localStorage.getItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
+            // Prioritaskan localStorage jika ada status tersimpan lokal (simonda_table_is_saved)
+            const localSavedHtml = localStorage.getItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
+            const isLocallySaved = (localStorage.getItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`) === '1');
+            let savedHtml = (isLocallySaved && localSavedHtml && localSavedHtml.includes('<tr'))
+                ? localSavedHtml
+                : ((serverDbMetadata && serverDbMetadata.table_html && serverDbMetadata.table_html.includes('<tr')) ? serverDbMetadata.table_html : localSavedHtml);
             if (savedHtml) savedHtml = cleanHtmlYearRanges(savedHtml);
 
             // Sanity check: jika savedHtml dari localStorage rusak atau tidak mengandung struktur <tr> dan <th>, bersihkan
             if (savedHtml && (!savedHtml.includes('<tr') || !savedHtml.includes('<th'))) {
                 localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
+                localStorage.removeItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`);
                 savedHtml = (serverDbMetadata && serverDbMetadata.table_html) ? serverDbMetadata.table_html : null;
             }
 
@@ -8629,7 +8635,7 @@
                                      ['8.1.1', '8.1.2', '8.1.3', '8.1.4', '8.1.5', '2.2.5', '1.1.10'].includes(currentTableCode);
 
             if (isMultiYearTable && savedHtml && !['8.1.4', '8.1.5', '1.1.10', '4.2.4', '4.2.5', '4.2.7', '4.2.9', '4.2.10', '4.2.13', '4.2.15', '4.2.16'].includes(currentTableCode)) {
-                const tempDiv = document.createElement('div');
+                const tempDiv = document.createElement('table');
                 tempDiv.innerHTML = savedHtml;
                 const allThs = Array.from(tempDiv.querySelectorAll('thead th'));
                 const yrInt = parseInt(currentYear) || 2025;
@@ -8653,15 +8659,21 @@
                 }
             }
 
-            // Reset cache lama jika tabel 1.1.6 pernah tersimpan rusak saat awal migrasi
-            if (currentTableCode === '1.1.6' && savedHtml && localStorage.getItem(`simonda_table_source_${currentTableCode}_${currentYear}`) !== 'excel') {
-                const tempDiv = document.createElement('div');
+            // Reset cache jika tabel 1.1.6 rusak / plain text / format terpotong
+            if (currentTableCode === '1.1.6' && savedHtml) {
+                const tempDiv = document.createElement('table');
                 tempDiv.innerHTML = savedHtml;
-                const thCount = tempDiv.querySelectorAll('thead tr:last-child th').length;
-                const tdCount = tempDiv.querySelector('tbody tr') ? tempDiv.querySelector('tbody tr').querySelectorAll('td') : 0;
-                if (thCount >= 4 && tdCount <= 1) {
+                const thCount = tempDiv.querySelectorAll('thead th').length;
+                const bodyRows = tempDiv.querySelectorAll('tbody tr');
+                const hasTambuo = savedHtml.includes('Batang Tambuo') || savedHtml.includes('Tambuo');
+                if (thCount < 4 || bodyRows.length < 2 || !hasTambuo || !savedHtml.includes('<tbody')) {
                     localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
-                    savedHtml = null;
+                    localStorage.removeItem(`simonda_table_source_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`);
+                    if (serverDbMetadata) {
+                        serverDbMetadata.table_html = null;
+                    }
+                    savedHtml = (tableSchemas['1.1.6']) ? tableSchemas['1.1.6'].render(currentYear) : null;
                 }
             }
 
@@ -8691,7 +8703,7 @@
 
             // Self-healing tabel 2.3.1 & 2.3.2: bersihkan cache jika format tabel tidak memiliki header standar BPS (10 kolom)
             if ((currentTableCode === '2.3.1' || currentTableCode === '2.3.2') && savedHtml) {
-                const tempDiv = document.createElement('div');
+                const tempDiv = document.createElement('table');
                 tempDiv.innerHTML = savedHtml;
                 const thCount = tempDiv.querySelectorAll('thead th').length;
                 const isProper = thCount >= 9 && savedHtml.includes('Pegawai Negeri Sipil');
@@ -8708,7 +8720,7 @@
 
             // Self-healing tabel 2.3.3: bersihkan cache jika format tabel tidak memiliki header standar BPS atau mengandung data import lama yang tertukar
             if (currentTableCode === '2.3.3' && savedHtml) {
-                const tempDiv = document.createElement('div');
+                const tempDiv = document.createElement('table');
                 tempDiv.innerHTML = savedHtml;
                 const thCount = tempDiv.querySelectorAll('thead th').length;
                 const firstRowTds = tempDiv.querySelectorAll('tbody tr:first-child td');
@@ -8762,7 +8774,7 @@
             // Self-healing tabel 11.2 (Dinas PMPTSP - NIB menurut Sektor)
             if (currentTableCode === '11.2' && savedHtml) {
                 const yrStr = currentYear.toString();
-                const tempDiv = document.createElement('div');
+                const tempDiv = document.createElement('table');
                 tempDiv.innerHTML = savedHtml;
                 const jumlahCell = Array.from(tempDiv.querySelectorAll('td')).find(td => td.innerText.trim() === 'Jumlah');
                 let isCorrupt112 = false;
@@ -8818,12 +8830,16 @@
             }
 
             // Validasi umum: jika baris data memiliki sel lebih sedikit daripada kolom header (tabel terpotong)
-            if (savedHtml) {
-                const tempDiv = document.createElement('div');
+            if (savedHtml && !['5.1.15', '5.1.16', '5.1.17', '1.1.6'].includes(currentTableCode)) {
+                const tempDiv = document.createElement('table');
                 tempDiv.innerHTML = savedHtml;
-                const headerCols = tempDiv.querySelectorAll('thead tr:last-child th').length;
-                const firstRowTds = tempDiv.querySelector('tbody tr') ? tempDiv.querySelector('tbody tr').querySelectorAll('td').length : 0;
-                if (headerCols > 0 && firstRowTds > 0 && firstRowTds < headerCols) {
+                let headerColSpan = 0;
+                tempDiv.querySelectorAll('thead tr:last-child th').forEach(th => headerColSpan += (th.colSpan || 1));
+                let firstRowColSpan = 0;
+                if (tempDiv.querySelector('tbody tr')) {
+                    tempDiv.querySelector('tbody tr').querySelectorAll('td').forEach(td => firstRowColSpan += (td.colSpan || 1));
+                }
+                if (headerColSpan > 0 && firstRowColSpan > 0 && firstRowColSpan < headerColSpan) {
                     localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
                     localStorage.removeItem(`simonda_table_source_${currentTableCode}_${currentYear}`);
                     localStorage.removeItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`);
@@ -8834,7 +8850,7 @@
             // Sanity check untuk Tabel 8.1.1: Jika sel data (selain kolom 0) berisi nama baris/kategori
             // (seperti "1. Negara" atau "2. Provinsi" atau "3. Kota"), berarti HTML korup akibat salah geser kolom
             if (savedHtml) {
-                const tempDiv = document.createElement('div');
+                const tempDiv = document.createElement('table');
                 tempDiv.innerHTML = savedHtml;
                 const rows = tempDiv.querySelectorAll('tbody tr');
                 let isCorrupt = false;
@@ -13666,6 +13682,179 @@
 
                 titleId = `Nama Sungai/Batang, Lebar dan Kecamatan yang Dilalui di Kota Bukittinggi, ${currentYear}`;
                 titleEn = `Name, Width of The River and District Its Pass in Bukittinggi, ${currentYear}`;
+            } else if (currentTableCode === '5.1.16' || currentTableCode === '5.1.17') {
+                const isPalawija = (currentTableCode === '5.1.16');
+                titleId = isPalawija
+                    ? `Target dan Realisasi Intensifikasi Palawija per Kecamatan di Kota Bukittinggi, ${currentYear}`
+                    : `Target dan Realisasi Intensifikasi Sayur–Sayuran per Kecamatan di Kota Bukittinggi, ${currentYear}`;
+                titleEn = isPalawija
+                    ? `Target and Realization of Secondary Food Crops per District in Bukittinggi Municipality, ${currentYear}`
+                    : `Target and Realization of Vegetables Intensification per District in Bukittinggi Municipality, ${currentYear}`;
+
+                const subHeaders = isPalawija
+                    ? ['Jagung', 'Kacang Tanah', 'Kedelai', 'Kacang Hijau', 'Ubi Kayu', 'Ubi Jalar', 'Jagung', 'Kacang Tanah', 'Kedelai', 'Kacang Hijau', 'Ubi Kayu', 'Ubi Jalar']
+                    : ['Kentang', 'Tomat', 'Lombok', 'Bawang Daun', 'Lainnya', 'Jumlah', 'Kentang', 'Tomat', 'Lombok', 'Bawang Daun', 'Lainnya', 'Jumlah'];
+
+                theadHtml = `<thead>
+                    <tr class="bg-[#f95a00] text-white text-center font-bold">
+                        <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2" colspan="2">
+                            <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                        </th>
+                        <th class="py-3 px-4 font-bold border border-slate-700" colspan="6">
+                            <div>Target</div>
+                        </th>
+                        <th class="py-3 px-4 font-bold border border-slate-700" colspan="6">
+                            <div>Realisasi</div><div class="italic font-normal text-[11px] sm:text-xs">Realization</div>
+                        </th>
+                    </tr>
+                    <tr class="bg-[#f95a00] text-white text-center font-bold text-xs">
+                        ${subHeaders.map(h => `<th class="py-2 px-1 border border-slate-700">${h}</th>`).join('')}
+                    </tr>
+                    <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                        <th class="py-1 px-3 border border-slate-700" colspan="2">(1)</th>
+                        ${Array(12).fill(0).map((_, i) => `<th class="py-1 px-1 border border-slate-700">(${i + 2})</th>`).join('')}
+                    </tr>
+                </thead>`;
+
+                const yrInt = parseInt(currentYear) || 2025;
+                const yearsDesc = [yrInt, yrInt - 1, yrInt - 2, yrInt - 3, yrInt - 4];
+                const extractedRows = {
+                    0: Array(12).fill('-'),
+                    1: Array(12).fill('-'),
+                    2: Array(12).fill('-'),
+                    3: Array(12).fill('-'),
+                    4: Array(12).fill('-'),
+                    5: Array(12).fill('-'),
+                    6: Array(12).fill('-'),
+                    7: Array(12).fill('-')
+                };
+
+                // Deteksi kolom awal data
+                let headerDataCol = -1;
+                for (let r = 0; r < Math.min(rawRows.length, 10); r++) {
+                    const rCells = rawRows[r] || [];
+                    for (let c = 0; c < rCells.length; c++) {
+                        const val = (rCells[c] || '').toString().toLowerCase().trim();
+                        if (isPalawija && val === 'jagung') {
+                            headerDataCol = c;
+                            break;
+                        } else if (!isPalawija && (val === 'kentang' || val === 'tomat')) {
+                            headerDataCol = c;
+                            break;
+                        } else if (val === '(2)' || val === '-2-') {
+                            headerDataCol = c;
+                            break;
+                        }
+                    }
+                    if (headerDataCol >= 0) break;
+                }
+
+                rawRows.forEach(row => {
+                    if (!Array.isArray(row)) return;
+                    const firstCell = (row[0] || '').toString().toLowerCase().trim();
+                    const rowStr = row.map(c => (c !== null && c !== undefined ? c.toString().trim() : '')).join(' ').toLowerCase();
+                    if (!rowStr || rowStr.startsWith('sumber') || rowStr.startsWith('source') || rowStr.startsWith('catatan') || rowStr.includes('(1)')) return;
+
+                    const isTitleOrHeader = /^(?:tabel|table)\b/i.test(firstCell) ||
+                                            /^(?:tabel|table)\b/i.test(rowStr) ||
+                                            (rowStr.includes('kecamatan') && (rowStr.includes('target') || rowStr.includes('district') || rowStr.includes('realisasi')));
+                    if (isTitleOrHeader) return;
+
+                    let targetIdx = -1;
+                    let labelIdx = -1;
+
+                    if (firstCell.includes('guguk') || rowStr.includes('guguk')) {
+                        targetIdx = 0;
+                        labelIdx = row.findIndex(c => (c || '').toString().toLowerCase().includes('guguk'));
+                    } else if (firstCell.includes('mandiangin') || rowStr.includes('mandiangin')) {
+                        targetIdx = 1;
+                        labelIdx = row.findIndex(c => (c || '').toString().toLowerCase().includes('mandiangin'));
+                    } else if (firstCell.includes('aur') || firstCell.includes('tigo baleh') || firstCell.includes('birugo') ||
+                               rowStr.includes('aur') || rowStr.includes('tigo baleh') || rowStr.includes('birugo')) {
+                        targetIdx = 2;
+                        labelIdx = row.findIndex(c => {
+                            const s = (c || '').toString().toLowerCase();
+                            return s.includes('aur') || s.includes('birugo') || s.includes('tigo baleh');
+                        });
+                    } else {
+                        let foundYear = null;
+                        let foundYearIdx = -1;
+                        for (let c = 0; c < Math.min(row.length, 4); c++) {
+                            const val = (row[c] || '').toString().trim();
+                            const m = val.match(/\b(20\d{2}|19\d{2})\b/);
+                            if (m) {
+                                foundYear = parseInt(m[1], 10);
+                                foundYearIdx = c;
+                                break;
+                            }
+                        }
+
+                        if (foundYear) {
+                            const yIdx = yearsDesc.indexOf(foundYear);
+                            if (yIdx !== -1) {
+                                targetIdx = 3 + yIdx;
+                                labelIdx = foundYearIdx;
+                            }
+                        } else if (rowStr.includes('jumlah') || rowStr.includes('total')) {
+                            targetIdx = 3;
+                            labelIdx = row.findIndex(c => {
+                                const s = (c || '').toString().toLowerCase();
+                                return s.includes('jumlah') || s.includes('total');
+                            });
+                        }
+                    }
+
+                    if (targetIdx >= 0) {
+                        let colOffset = headerDataCol;
+                        if (colOffset < 0) {
+                            if (labelIdx >= 0) {
+                                if ((row[labelIdx + 1] === '' || row[labelIdx + 1] === null || row[labelIdx + 1] === undefined) && row.length > labelIdx + 2) {
+                                    colOffset = labelIdx + 2;
+                                } else {
+                                    colOffset = labelIdx + 1;
+                                }
+                            } else {
+                                colOffset = Math.max(0, row.length - 12);
+                            }
+                        }
+
+                        for (let c = 0; c < 12; c++) {
+                            const raw = row[colOffset + c];
+                            const val = (typeof sanitizeExcelNumericCell === 'function') ? sanitizeExcelNumericCell(raw) : (raw ?? '-');
+                            extractedRows[targetIdx][c] = (val !== '' && val !== undefined && val !== null) ? val : '-';
+                        }
+                    }
+                });
+
+                tbodyHtml = '<tbody class="bg-[#fef9c3] text-slate-900 font-medium">';
+                const distNames = ['01. GUGUK PANJANG', '02. MANDIANGIN KOTO SELAYAN', '03. AUR BIRUGO TIGO BALEH'];
+                distNames.forEach((dName, dIdx) => {
+                    tbodyHtml += `<tr class="hover:bg-amber-100/60 transition-colors">
+                        <td colspan="2" class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${dName}</td>`;
+                    for (let c = 0; c < 12; c++) {
+                        const v = extractedRows[dIdx][c];
+                        const align = (v !== '-' && v !== '') ? 'text-right' : 'text-center';
+                        tbodyHtml += `<td class="py-2 px-1 border border-slate-700 ${align}">${escapeHtml(v)}</td>`;
+                    }
+                    tbodyHtml += `</tr>`;
+                });
+
+                yearsDesc.forEach((y, yIdx) => {
+                    const isFirstYear = (yIdx === 0);
+                    const rowCls = isFirstYear ? 'bg-[#fed7aa] font-bold' : 'hover:bg-amber-100/60 transition-colors font-medium';
+                    tbodyHtml += `<tr class="${rowCls}">`;
+                    if (isFirstYear) {
+                        tbodyHtml += `<td rowspan="5" class="py-2.5 px-4 border border-slate-700 text-center font-extrabold align-middle bg-[#fed7aa]">Jumlah / Total</td>`;
+                    }
+                    tbodyHtml += `<td class="py-2.5 px-3 border border-slate-700 text-center font-bold align-middle bg-[#fed7aa]">${y}</td>`;
+                    for (let c = 0; c < 12; c++) {
+                        const v = extractedRows[3 + yIdx][c];
+                        const align = (v !== '-' && v !== '') ? 'text-right' : 'text-center';
+                        tbodyHtml += `<td class="py-2 px-1 border border-slate-700 ${align}">${escapeHtml(v)}</td>`;
+                    }
+                    tbodyHtml += `</tr>`;
+                });
+                tbodyHtml += '</tbody>';
             } else if (currentTableCode === '8.1.4') {
                 theadHtml = `<thead>
                     <tr class="bg-[#f95a00] text-white text-center font-bold">
@@ -15562,6 +15751,19 @@
                                     rowsData[y][rowKey] = td.innerText.trim();
                                 }
                             });
+                        });
+                    }
+                } else if (currentTableCode === '5.1.15' || currentTableCode === '5.1.16' || currentTableCode === '5.1.17' || currentTableCode === '5.1.18' || currentTableCode === '5.1.19') {
+                    rowsData = {};
+                    rowsData[currentYear] = {};
+                    const tableEl = document.getElementById('dataDisplayTable');
+                    if (tableEl) {
+                        const trs = tableEl.querySelectorAll('tbody tr');
+                        trs.forEach((tr, trIdx) => {
+                            const tds = tr.querySelectorAll('td');
+                            if (tds.length >= 2) {
+                                rowsData[currentYear][trIdx] = Array.from(tds).map(td => td.innerText.trim());
+                            }
                         });
                     }
                 } else if (currentTableCode === '8.1.4') {

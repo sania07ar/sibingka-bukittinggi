@@ -332,6 +332,7 @@
             tabelOpdUrl: "{{ url('/tabel-opd') }}",
             csrfToken: "{{ csrf_token() }}"
         };
+        window.serverDbCustomTables = @json($customTables ?? []);
     </script>
     <script src="{{ asset('js/dinas-catalog.js') }}"></script>
 </body>

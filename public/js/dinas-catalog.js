@@ -105,7 +105,26 @@
     function loadCustomTablesForAgency(code) {
         const cfg = getConfig();
         const catalog = getCatalog();
+        const cleanCode = code ? code.toString().padStart(2, '0') : '';
         const storageKey = `simonda_custom_${cfg.type}_tables_${code}`;
+
+        // 1. Gabungkan langsung dari window.serverDbCustomTables jika di-inject oleh backend
+        if (typeof window !== 'undefined' && Array.isArray(window.serverDbCustomTables)) {
+            if (!catalog[code]) catalog[code] = [];
+            window.serverDbCustomTables.forEach(st => {
+                const stOpd = st.opd_code ? st.opd_code.toString().padStart(2, '0') : '';
+                if (!stOpd || stOpd === cleanCode || stOpd === code) {
+                    if (!catalog[code].some(t => t.code.trim() === st.code.trim())) {
+                        catalog[code].push({
+                            code: st.code,
+                            title: st.title,
+                            titleEn: st.titleEn || st.title,
+                            isCustom: true
+                        });
+                    }
+                }
+            });
+        }
 
         try {
             const stored = JSON.parse(localStorage.getItem(storageKey) || '[]');
@@ -170,17 +189,11 @@
             tagEl.innerText = `${code}. ${shortTitle}`;
         }
 
-        // Google Drive link (BPS)
+        // Google Drive link
         const driveBtn = document.getElementById('bpsDriveLinkHeader');
         if (driveBtn) {
-            if (driveLink && driveLink.trim() !== '') {
-                driveBtn.href = driveLink;
-                driveBtn.classList.remove('hidden');
-                driveBtn.classList.add('inline-flex');
-            } else {
-                driveBtn.classList.add('hidden');
-                driveBtn.classList.remove('inline-flex');
-            }
+            driveBtn.classList.add('hidden');
+            driveBtn.classList.remove('inline-flex');
         }
 
         // Catalog load
@@ -303,7 +316,6 @@
                         <div>
                             <span class="font-semibold text-slate-800">${tbl.title}</span>
                             ${tbl.titleEn ? `<span class="text-slate-400 mx-1">/</span><span class="italic text-slate-500 font-normal">${tbl.titleEn}</span>` : ''}
-                            ${tbl.isCustom ? `<span class="inline-flex items-center text-[10px] font-bold text-amber-700 bg-amber-100 border border-amber-300 px-1.5 py-0.2 rounded-md ml-2 shadow-2xs"><i class="fa-solid fa-circle-plus text-[8px] mr-1"></i>Tabel Baru</span>` : ''}
                         </div>
                         <i class="fa-solid fa-chevron-right text-[10px] text-slate-300 group-hover:text-[#f98825] transition-transform group-hover:translate-x-1 shrink-0"></i>
                     </div>

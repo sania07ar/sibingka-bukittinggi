@@ -29,7 +29,7 @@
                 <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                     Kategori Mitra / Akun <span class="text-red-500">*</span>
                 </label>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
                     <label class="flex items-center space-x-2 p-2.5 rounded-xl border border-slate-200 hover:border-orange-400 cursor-pointer transition-all bg-orange-50/30">
                         <input type="radio" name="role" id="create_role_opd" value="opd" checked onchange="toggleCategoryFilter('create', 'opd')" class="w-4 h-4 text-orange-600 focus:ring-orange-500">
                         <div class="leading-tight">
@@ -49,6 +49,13 @@
                         <div class="leading-tight">
                             <span class="font-bold text-xs text-slate-900 block">Wali Data (Diskominfo)</span>
                             <span class="text-[10px] text-slate-500">Bagian Sistem Informasi</span>
+                        </div>
+                    </label>
+                    <label class="flex items-center space-x-2 p-2.5 rounded-xl border border-slate-200 hover:border-blue-400 cursor-pointer transition-all bg-blue-50/30">
+                        <input type="radio" name="role" id="create_role_bps" value="bps" onchange="toggleCategoryFilter('create', 'bps')" class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                        <div class="leading-tight">
+                            <span class="font-bold text-xs text-slate-900 block">Operator Data BPS</span>
+                            <span class="text-[10px] text-slate-500">Pengisi Data BPS</span>
                         </div>
                     </label>
                 </div>
@@ -86,6 +93,11 @@
                     <optgroup label="Wali Data Statistik Sektoral" id="create_walidata_group">
                         <option value="Dinas Komunikasi dan Informatika (Wali Data)" data-code="00" data-role="walidata" data-short="DISKOMINFO" data-username="walidata_kominfo">
                             00. DISKOMINFO - Bagian Sistem Informasi (Wali Data Kota)
+                        </option>
+                    </optgroup>
+                    <optgroup label="Badan Pusat Statistik Kota Bukittinggi" id="create_bps_group">
+                        <option value="Badan Pusat Statistik Kota Bukittinggi" data-code="bps" data-role="bps" data-short="BPS" data-username="operator_bps">
+                            BPS. BPS - Badan Pusat Statistik Kota Bukittinggi (Pengisi Data BPS)
                         </option>
                     </optgroup>
                 </select>

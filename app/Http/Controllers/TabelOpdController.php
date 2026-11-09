@@ -17,6 +17,33 @@ class TabelOpdController extends Controller
      */
     protected function normalizeOpdCode(string $tableCode, string $opdCode): string
     {
+        if (str_starts_with($tableCode, '5.')) {
+            return '17'; // Dinas Pertanian dan Pangan Kota Bukittinggi
+        }
+        if (in_array($tableCode, ['8.1.6', '8.1.7', '8.1.8', '8.1.9'])) {
+            return '20'; // Dinas Perhubungan
+        }
+        if (str_starts_with($tableCode, '8.1.') || str_starts_with($tableCode, '8.2.')) {
+            return '01'; // Dinas PUPR
+        }
+        if (str_starts_with($tableCode, '2.2.')) {
+            return '03'; // Sekretariat DPRD
+        }
+        if (str_starts_with($tableCode, '2.3.')) {
+            return '04'; // BKPSDM
+        }
+        if (str_starts_with($tableCode, '2.4.')) {
+            return '05'; // Badan Keuangan Daerah
+        }
+        if (str_starts_with($tableCode, '9.')) {
+            return '07'; // Dinas Koperasi, UKM dan Tenaga Kerja
+        }
+        if ($tableCode === '11.1') {
+            return '18'; // Dinas Perdagangan
+        }
+        if ($tableCode === '11.2') {
+            return '02'; // DPM-PTSP
+        }
         return match ($tableCode) {
             '4.1.24' => '11', // Dinas Perpustakaan dan Kearsipan
             '4.1.20' => '10', // Dinas Pemuda dan Olahraga
@@ -30,13 +57,29 @@ class TabelOpdController extends Controller
     {
         $tableCode = $request->query('code', $request->query('table', '8.1.1'));
         $opdCode = $request->query('opd', '01');
-        $opdCode = $this->normalizeOpdCode($tableCode, $opdCode);
         $year = (int) $request->query('year', 2025);
         $type = $request->query('type', 'opd');
+
+        if ($type !== 'bps' && $type !== 'instansi') {
+            $opdCode = $this->normalizeOpdCode($tableCode, $opdCode);
+        }
 
         $cleanOpd = str_pad($opdCode, 2, '0', STR_PAD_LEFT);
         $dbDataStore = $this->loadDbDataStore($tableCode, $opdCode);
         $dbMetadata = $this->getOrCreateMetadata($tableCode, $opdCode, $year);
+
+        $dbFallbackMetadata = null;
+        if (!$dbMetadata || empty($dbMetadata->table_html)) {
+            $dbFallbackMetadata = TabelMetadata::where('table_code', $tableCode)
+                ->whereNotNull('table_html')
+                ->where('table_html', '!=', '')
+                ->orderByRaw("CASE WHEN source_type NOT IN ('template') THEN 0 ELSE 1 END ASC, ABS(year - {$year}) ASC")
+                ->first();
+            if ($dbFallbackMetadata) {
+                $dbFallbackMetadata->opd_code = $opdCode;
+            }
+        }
+
         $sourceTypes = match($type) {
             'instansi' => ['custom_instansi'],
             'bps' => ['custom_bps', 'bps'],
@@ -55,7 +98,7 @@ class TabelOpdController extends Controller
             'currentType' => $type,
             'dbDataStore' => $dbDataStore,
             'dbMetadata' => $dbMetadata,
-            'dbFallbackMetadata' => null,
+            'dbFallbackMetadata' => $dbFallbackMetadata,
             'dbCustomTables' => $dbCustomTables,
         ]);
     }
@@ -67,13 +110,29 @@ class TabelOpdController extends Controller
     {
         $tableCode = $request->query('code', $request->query('table', '8.1.1'));
         $opdCode = $request->query('opd', '01');
-        $opdCode = $this->normalizeOpdCode($tableCode, $opdCode);
         $year = (int) $request->query('year', 2025);
         $type = $request->query('type', 'opd');
+
+        if ($type !== 'bps' && $type !== 'instansi') {
+            $opdCode = $this->normalizeOpdCode($tableCode, $opdCode);
+        }
 
         $cleanOpd = str_pad($opdCode, 2, '0', STR_PAD_LEFT);
         $dbDataStore = $this->loadDbDataStore($tableCode, $opdCode);
         $dbMetadata = $this->getOrCreateMetadata($tableCode, $opdCode, $year);
+
+        $dbFallbackMetadata = null;
+        if (!$dbMetadata || empty($dbMetadata->table_html)) {
+            $dbFallbackMetadata = TabelMetadata::where('table_code', $tableCode)
+                ->whereNotNull('table_html')
+                ->where('table_html', '!=', '')
+                ->orderByRaw("CASE WHEN source_type NOT IN ('template') THEN 0 ELSE 1 END ASC, ABS(year - {$year}) ASC")
+                ->first();
+            if ($dbFallbackMetadata) {
+                $dbFallbackMetadata->opd_code = $opdCode;
+            }
+        }
+
         $sourceTypes = match($type) {
             'instansi' => ['custom_instansi'],
             'bps' => ['custom_bps', 'bps'],
@@ -92,7 +151,7 @@ class TabelOpdController extends Controller
             'currentType' => $type,
             'dbDataStore' => $dbDataStore,
             'dbMetadata' => $dbMetadata,
-            'dbFallbackMetadata' => null,
+            'dbFallbackMetadata' => $dbFallbackMetadata,
             'dbCustomTables' => $dbCustomTables,
         ]);
     }
@@ -104,11 +163,27 @@ class TabelOpdController extends Controller
     {
         $tableCode = $request->query('code', $request->query('table', '8.1.1'));
         $opdCode = $request->query('opd', '01');
-        $opdCode = $this->normalizeOpdCode($tableCode, $opdCode);
+        $type = $request->query('type', 'opd');
+        if ($type !== 'bps' && $type !== 'instansi') {
+            $opdCode = $this->normalizeOpdCode($tableCode, $opdCode);
+        }
         $year = (int) $request->query('year', 2025);
 
         $dbDataStore = $this->loadDbDataStore($tableCode, $opdCode);
         $dbMetadata = $this->getOrCreateMetadata($tableCode, $opdCode, $year);
+
+        $cleanOpd = str_pad($opdCode, 2, '0', STR_PAD_LEFT);
+        $dbFallbackMetadata = null;
+        if (!$dbMetadata || empty($dbMetadata->table_html)) {
+            $dbFallbackMetadata = TabelMetadata::where('table_code', $tableCode)
+                ->whereNotNull('table_html')
+                ->where('table_html', '!=', '')
+                ->orderByRaw("CASE WHEN source_type NOT IN ('template') THEN 0 ELSE 1 END ASC, ABS(year - {$year}) ASC")
+                ->first();
+            if ($dbFallbackMetadata) {
+                $dbFallbackMetadata->opd_code = $opdCode;
+            }
+        }
 
         // Hitung status pengisian angka data riil
         $tabelDataCount = TabelData::where('table_code', $tableCode)
@@ -132,7 +207,7 @@ class TabelOpdController extends Controller
             'dataStore' => $dbDataStore,
             'metadata' => $dbMetadata,
             'numeric_status' => $numericStatus,
-            'fallbackMetadata' => null,
+            'fallbackMetadata' => $dbFallbackMetadata,
         ]);
     }
 
@@ -141,10 +216,63 @@ class TabelOpdController extends Controller
      */
     private function getOrCreateMetadata(string $tableCode, string $opdCode, int $year): ?TabelMetadata
     {
+        $opdCode = $this->normalizeOpdCode($tableCode, $opdCode);
         $dbMetadata = TabelMetadata::where('table_code', $tableCode)
             ->where('opd_code', $opdCode)
             ->where('year', $year)
             ->first();
+
+        $definitiveOpd = $this->normalizeOpdCode($tableCode, '');
+        if (!$dbMetadata) {
+            if (!empty($definitiveOpd)) {
+                $dbMetadata = TabelMetadata::where('table_code', $tableCode)
+                    ->where('year', $year)
+                    ->first();
+                if ($dbMetadata) {
+                    $dbMetadata->opd_code = $definitiveOpd;
+                }
+            } else {
+                $existingOpd = TabelMetadata::where('table_code', $tableCode)
+                    ->whereNotNull('table_html')
+                    ->value('opd_code');
+                if ($existingOpd && $existingOpd !== $opdCode) {
+                    $opdCode = $existingOpd;
+                    $dbMetadata = TabelMetadata::where('table_code', $tableCode)
+                        ->where('opd_code', $opdCode)
+                        ->where('year', $year)
+                        ->first();
+                }
+            }
+        }
+
+        if ($dbMetadata && !empty($definitiveOpd)) {
+            $dbMetadata->opd_code = $definitiveOpd;
+        }
+
+        // Cek file-based snapshot storage (resilient backup saat MySQL InnoDB dalam mode read-only / recovery)
+        $cacheFile = storage_path("app/tables/table_{$tableCode}_{$year}.json");
+        if (file_exists($cacheFile)) {
+            $cachedData = json_decode(@file_get_contents($cacheFile), true);
+            if (is_array($cachedData) && !empty($cachedData['table_html'])) {
+                if (!$dbMetadata) {
+                    $dbMetadata = new TabelMetadata();
+                    $dbMetadata->table_code = $tableCode;
+                    $dbMetadata->opd_code = $cachedData['opd_code'] ?? $opdCode;
+                    $dbMetadata->year = $year;
+                }
+                $fileTime = @filemtime($cacheFile);
+                $dbTime = $dbMetadata->updated_at ? strtotime((string)$dbMetadata->updated_at) : 0;
+                if ($fileTime >= $dbTime || empty($dbMetadata->table_html)) {
+                    $dbMetadata->table_html = $cachedData['table_html'];
+                    if (!empty($cachedData['title_id'])) $dbMetadata->title_id = $cachedData['title_id'];
+                    if (!empty($cachedData['title_en'])) $dbMetadata->title_en = $cachedData['title_en'];
+                    if (!empty($cachedData['source'])) $dbMetadata->source = $cachedData['source'];
+                    if (isset($cachedData['note'])) $dbMetadata->note = $cachedData['note'];
+                    if (!empty($cachedData['source_type'])) $dbMetadata->source_type = $cachedData['source_type'];
+                    $dbMetadata->is_saved = true;
+                }
+            }
+        }
 
         // Khusus tabel-tabel sekolah (Dinas Pendidikan - 4.1.1 s.d. 4.1.17):
         // Di SiAngka, tahun ajaran terkininya adalah Tahun + 1 (misal tahun 2025 memuat 2023/2024, 2024/2025, 2025/2026 dengan judul berakhiran 2025/2026)
@@ -735,8 +863,14 @@ class TabelOpdController extends Controller
                 if (!str_contains($dbMetadata->table_html, $startYr) || !str_contains($dbMetadata->table_html, $endYr)) {
                     return null;
                 }
+            } elseif (str_starts_with($tableCode, '5.') && $dbMetadata->source_type === 'template') {
+                if (!str_contains($dbMetadata->table_html, (string)$year) || ($tableCode === '5.3.1' && !str_contains(strtolower($dbMetadata->table_html), 'jumlah'))) {
+                    $dbMetadata = null;
+                }
             }
-            return $dbMetadata;
+            if ($dbMetadata) {
+                return $dbMetadata;
+            }
         }
 
         // Tabel multi-tahun (8.1.1, 8.1.2, 8.1.3, 8.1.4, 8.1.5, 2.2.5, 1.1.10, 9.1, 9.3) membangun rentang secara dinamis.
@@ -750,7 +884,7 @@ class TabelOpdController extends Controller
             ->where('opd_code', $opdCode)
             ->whereNotNull('table_html')
             ->where('table_html', '!=', '')
-            ->orderByRaw("ABS(year - {$year}) ASC")
+            ->orderByRaw("CASE WHEN source_type != 'template' THEN 0 ELSE 1 END ASC, ABS(year - {$year}) ASC")
             ->first();
 
         if (!$sourceMeta) {
@@ -813,7 +947,10 @@ class TabelOpdController extends Controller
     {
         $tableCode = $request->input('table_code', '8.1.1');
         $opdCode = $request->input('opd_code', '01');
-        $opdCode = $this->normalizeOpdCode($tableCode, $opdCode);
+        $type = $request->input('type', 'opd');
+        if ($type !== 'bps' && $type !== 'instansi') {
+            $opdCode = $this->normalizeOpdCode($tableCode, $opdCode);
+        }
         $year = (int) $request->input('year', 2025);
         $tableHtml = $request->input('table_html');
         $titleId = $request->input('title_id');
@@ -856,7 +993,21 @@ class TabelOpdController extends Controller
         }
 
         if ($tableHtml) {
+            $tableHtml = $this->cleanExcelDateSerials($tableHtml);
             $tableHtml = $this->formatFinancialHtml($tableHtml, $opdCode, $tableCode);
+        }
+
+        if (is_array($rowsData)) {
+            foreach ($rowsData as $yr => &$rowMap) {
+                if (is_array($rowMap)) {
+                    foreach ($rowMap as $k => &$v) {
+                        if (is_string($v)) {
+                            $v = $this->cleanExcelDateSerials($v);
+                        }
+                    }
+                }
+            }
+            unset($rowMap, $v);
         }
 
         $existingMeta = TabelMetadata::where('table_code', $tableCode)
@@ -864,14 +1015,25 @@ class TabelOpdController extends Controller
             ->where('year', $year)
             ->first();
 
-        // 1. Simpan metadata snapshot tabel untuk tahun aktif
-        TabelMetadata::updateOrCreate(
-            [
+        if ($existingMeta && in_array($existingMeta->source_type, ['custom_bps', 'custom_instansi', 'custom', 'custom_opd'])) {
+            $sourceType = $existingMeta->source_type;
+        } elseif ($type === 'bps') {
+            $sourceType = 'custom_bps';
+        } elseif ($type === 'instansi') {
+            $sourceType = 'custom_instansi';
+        }
+
+        // File-based snapshot storage (resilient backup saat MySQL InnoDB dalam mode read-only / recovery)
+        try {
+            $cacheDir = storage_path('app/tables');
+            if (!is_dir($cacheDir)) {
+                @mkdir($cacheDir, 0777, true);
+            }
+            $cacheFile = "{$cacheDir}/table_{$tableCode}_{$year}.json";
+            @file_put_contents($cacheFile, json_encode([
                 'table_code' => $tableCode,
                 'opd_code' => $opdCode,
                 'year' => $year,
-            ],
-            array_filter([
                 'title_id' => $titleId ?: ($existingMeta?->title_id),
                 'title_en' => $titleEn ?: ($existingMeta?->title_en),
                 'source' => $source ?: ($existingMeta?->source),
@@ -879,150 +1041,172 @@ class TabelOpdController extends Controller
                 'table_html' => $tableHtml ?: ($existingMeta?->table_html),
                 'source_type' => $sourceType,
                 'is_saved' => true,
-            ], fn($v) => $v !== null)
-        );
+                'updated_at' => date('Y-m-d H:i:s'),
+            ]));
+        } catch (\Throwable $ex) {}
 
-        // Otomatis sinkronkan template struktur ke tahun-tahun lain (2021-2036) di database jika belum memiliki data
-        if ($tableHtml && !str_starts_with($tableCode, '8.1.') && !in_array($tableCode, ['1.1.10', '2.2.5', '9.1', '9.3', '9.4'])) {
-            $this->syncTemplateToOtherYears($tableCode, $opdCode, $year, $tableHtml, $titleId, $titleEn, $source, $note);
-        }
+        // Simpan metadata dan data nilai sel ke Database MySQL
+        try {
+            // 1. Simpan metadata snapshot tabel untuk tahun aktif
+            TabelMetadata::updateOrCreate(
+                [
+                    'table_code' => $tableCode,
+                    'opd_code' => $opdCode,
+                    'year' => $year,
+                ],
+                array_filter([
+                    'title_id' => $titleId ?: ($existingMeta?->title_id),
+                    'title_en' => $titleEn ?: ($existingMeta?->title_en),
+                    'source' => $source ?: ($existingMeta?->source),
+                    'note' => $note !== null ? $note : ($existingMeta?->note),
+                    'table_html' => $tableHtml ?: ($existingMeta?->table_html),
+                    'source_type' => $sourceType,
+                    'is_saved' => true,
+                ], fn($v) => $v !== null)
+            );
 
-        // Jika multi-tahun, tandai juga tahun-tahun lain yang ada datanya dengan range tahun yang sesuai
-        if (is_array($rowsData) && (str_starts_with($tableCode, '8.1.') || in_array($tableCode, ['2.2.5', '1.1.10', '9.1', '9.3']))) {
-            foreach (array_keys($rowsData) as $otherYear) {
-                $oYear = (int) $otherYear;
-                if ($oYear > 0 && $oYear !== $year) {
-                    $oTitleId = $titleId;
-                    $oTitleEn = $titleEn;
-                    if ((str_starts_with($tableCode, '8.1.') || in_array($tableCode, ['2.2.5', '1.1.10', '9.1'])) && $oTitleId) {
-                        $oRange = ($oYear - 4) . '–' . $oYear;
-                        $oTitleId = preg_replace('/(,\s*|\s+)(19|20)\d{2}(\s*[–\-]\s*(19|20)\d{2})?/', "$1{$oRange}", $titleId);
-                        if ($oTitleEn) {
-                            $oTitleEn = preg_replace('/(,\s*|\s+)(19|20)\d{2}(\s*[–\-]\s*(19|20)\d{2})?/', "$1{$oRange}", $titleEn);
+            // Template otomatis ke tahun lain ditiadakan agar database tidak terisi template kosong
+            // Struktur tabel untuk tahun lain akan diambil secara dinamis via fallback metadata
+
+            // Jika multi-tahun, tandai juga tahun-tahun lain yang ada datanya dengan range tahun yang sesuai
+            if (is_array($rowsData) && (str_starts_with($tableCode, '8.1.') || in_array($tableCode, ['2.2.5', '1.1.10', '9.1', '9.3']))) {
+                foreach (array_keys($rowsData) as $otherYear) {
+                    $oYear = (int) $otherYear;
+                    if ($oYear > 0 && $oYear !== $year) {
+                        $oTitleId = $titleId;
+                        $oTitleEn = $titleEn;
+                        if ((str_starts_with($tableCode, '8.1.') || in_array($tableCode, ['2.2.5', '1.1.10', '9.1'])) && $oTitleId) {
+                            $oRange = ($oYear - 4) . '–' . $oYear;
+                            $oTitleId = preg_replace('/(,\s*|\s+)(19|20)\d{2}(\s*[–\-]\s*(19|20)\d{2})?/', "$1{$oRange}", $titleId);
+                            if ($oTitleEn) {
+                                $oTitleEn = preg_replace('/(,\s*|\s+)(19|20)\d{2}(\s*[–\-]\s*(19|20)\d{2})?/', "$1{$oRange}", $titleEn);
+                            }
                         }
+                        TabelMetadata::updateOrCreate(
+                            [
+                                'table_code' => $tableCode,
+                                'opd_code' => $opdCode,
+                                'year' => $oYear,
+                            ],
+                            [
+                                'title_id' => $oTitleId,
+                                'title_en' => $oTitleEn,
+                                'source' => $source,
+                                'note' => $note,
+                                'source_type' => $sourceType,
+                                'is_saved' => true,
+                            ]
+                        );
                     }
-                    TabelMetadata::updateOrCreate(
-                        [
-                            'table_code' => $tableCode,
-                            'opd_code' => $opdCode,
-                            'year' => $oYear,
-                        ],
-                        [
-                            'title_id' => $oTitleId,
-                            'title_en' => $oTitleEn,
-                            'source' => $source,
-                            'note' => $note,
-                            'source_type' => $sourceType,
-                            'is_saved' => true,
-                        ]
-                    );
                 }
             }
-        }
 
-        // 2. Simpan nilai sel data ke tabel_opd_data jika dikirimkan
-        if (is_array($rowsData)) {
-            foreach ($rowsData as $y => $cells) {
-                if (!is_array($cells)) continue;
-                $yNum = (int) $y;
-                foreach ($cells as $rKey => $val) {
-                    $rowLabel = match ($rKey) {
-                        'negara' => '1. Negara / State',
-                        'provinsi' => '2. Provinsi / Province',
-                        'kota' => '3. Kota / Municipality',
-                        'aspal' => '1. Aspal / Paved',
-                        'kerikil' => '2. Kerikil / Gravel',
-                        'tanah' => '3. Tanah / Soil',
-                        'lainnya' => '4. Lainnya / Others',
-                        'baik' => '1. Baik / Good',
-                        'sedang' => '2. Sedang / Moderate',
-                        'rusak' => '3. Rusak / Damage',
-                        'rusak_ringan' => '3. Rusak / Damage',
-                        'rusak_berat' => '4. Rusak Berat / Severely Damage',
-                        'total' => 'Jumlah / Total',
-                        'batang_tambuo' => '01. Batang Tambuo',
-                        'batang_sianok' => '02. Batang Sianok',
-                        'guguk_panjang_unit' => '01. Guguk Panjang (Banyaknya)',
-                        'guguk_panjang_panjang' => '01. Guguk Panjang (Panjang)',
-                        'mandiangin_koto_selayan_unit' => '02. Mandiangin Koto Selayan (Banyaknya)',
-                        'mandiangin_koto_selayan_panjang' => '02. Mandiangin Koto Selayan (Panjang)',
-                        'aur_birugo_tigo_baleh_unit' => '03. Aur Birugo Tigo Baleh (Banyaknya)',
-                        'aur_birugo_tigo_baleh_panjang' => '03. Aur Birugo Tigo Baleh (Panjang)',
-                        'total_unit' => 'Jumlah / Total (Banyaknya)',
-                        'total_panjang' => 'Jumlah / Total (Panjang)',
-                        'guguk_panjang' => '01. Guguk Panjang',
-                        'mandiangin_koto_selayan' => '02. Mandiangin Koto Selayan',
-                        'aur_birugo_tigo_baleh' => '03. Aur Birugo Tigo Baleh',
-                        'peraturan_daerah' => '01. Peraturan daerah',
-                        'keputusan_dprd' => '02. Keputusan DPRD',
-                        'keputusan_pimpinan' => '03. Keputusan Pimpinan',
-                        'pernyataan' => '04. Pernyataan',
-                        'pernyataan_pendapat' => '05. Pernyataan Pendapat',
-                        'resolusi' => '06. Resolusi',
-                        'dengar_pendapat' => '07. Dengar Pendapat dengan Pemerintah',
-                        'paripurna_terbuka' => '08. Rapat Paripurna Terbuka',
-                        'paripurna_istimewa' => '09. Rapat Paripurna Istimewa',
-                        'panitia_musyawarah' => '10. Rapat Panitia Musyawarah',
-                        'badan_kehormatan' => '11. Rapat Badan Kehormatan',
-                        'badan_anggaran' => '12. Rapat Panitia / Badan Anggaran',
-                        'panitia_khusus' => '13. Rapat Panitia Khusus',
-                        'gabungan_komisi' => '14. Rapat Gabungan Komisi',
-                        'rapat_komisi' => '15. Rapat Komisi',
-                        'turun_lapangan' => '16. Turun ke Lapangan ke Kelurahan',
-                        'keluar_daerah' => '17. Keluar Daerah',
-                        'rapat_kerja' => '18. Rapat Kerja',
-                        'penyampaian_aspirasi' => '19. Penyampaian Aspirasi',
-                        'study_banding' => '20. Study Banding',
-                        'reses' => '21. Reses',
-                        'kunker_komisi' => '22. Kunker Komisi',
-                        default => ucwords(str_replace('_', ' ', $rKey)),
-                    };
+            // 2. Simpan nilai sel data ke tabel_opd_data jika dikirimkan
+            if (is_array($rowsData)) {
+                foreach ($rowsData as $y => $cells) {
+                    if (!is_array($cells)) continue;
+                    $yNum = (int) $y;
+                    foreach ($cells as $rKey => $val) {
+                        $rowLabel = match ($rKey) {
+                            'negara' => '1. Negara / State',
+                            'provinsi' => '2. Provinsi / Province',
+                            'kota' => '3. Kota / Municipality',
+                            'aspal' => '1. Aspal / Paved',
+                            'kerikil' => '2. Kerikil / Gravel',
+                            'tanah' => '3. Tanah / Soil',
+                            'lainnya' => '4. Lainnya / Others',
+                            'baik' => '1. Baik / Good',
+                            'sedang' => '2. Sedang / Moderate',
+                            'rusak' => '3. Rusak / Damage',
+                            'rusak_ringan' => '3. Rusak / Damage',
+                            'rusak_berat' => '4. Rusak Berat / Severely Damage',
+                            'total' => 'Jumlah / Total',
+                            'batang_tambuo' => '01. Batang Tambuo',
+                            'batang_sianok' => '02. Batang Sianok',
+                            'guguk_panjang_unit' => '01. Guguk Panjang (Banyaknya)',
+                            'guguk_panjang_panjang' => '01. Guguk Panjang (Panjang)',
+                            'mandiangin_koto_selayan_unit' => '02. Mandiangin Koto Selayan (Banyaknya)',
+                            'mandiangin_koto_selayan_panjang' => '02. Mandiangin Koto Selayan (Panjang)',
+                            'aur_birugo_tigo_baleh_unit' => '03. Aur Birugo Tigo Baleh (Banyaknya)',
+                            'aur_birugo_tigo_baleh_panjang' => '03. Aur Birugo Tigo Baleh (Panjang)',
+                            'total_unit' => 'Jumlah / Total (Banyaknya)',
+                            'total_panjang' => 'Jumlah / Total (Panjang)',
+                            'guguk_panjang' => '01. Guguk Panjang',
+                            'mandiangin_koto_selayan' => '02. Mandiangin Koto Selayan',
+                            'aur_birugo_tigo_baleh' => '03. Aur Birugo Tigo Baleh',
+                            'peraturan_daerah' => '01. Peraturan daerah',
+                            'keputusan_dprd' => '02. Keputusan DPRD',
+                            'keputusan_pimpinan' => '03. Keputusan Pimpinan',
+                            'pernyataan' => '04. Pernyataan',
+                            'pernyataan_pendapat' => '05. Pernyataan Pendapat',
+                            'resolusi' => '06. Resolusi',
+                            'dengar_pendapat' => '07. Dengar Pendapat dengan Pemerintah',
+                            'paripurna_terbuka' => '08. Rapat Paripurna Terbuka',
+                            'paripurna_istimewa' => '09. Rapat Paripurna Istimewa',
+                            'panitia_musyawarah' => '10. Rapat Panitia Musyawarah',
+                            'badan_kehormatan' => '11. Rapat Badan Kehormatan',
+                            'badan_anggaran' => '12. Rapat Panitia / Badan Anggaran',
+                            'panitia_khusus' => '13. Rapat Panitia Khusus',
+                            'gabungan_komisi' => '14. Rapat Gabungan Komisi',
+                            'rapat_komisi' => '15. Rapat Komisi',
+                            'turun_lapangan' => '16. Turun ke Lapangan ke Kelurahan',
+                            'keluar_daerah' => '17. Keluar Daerah',
+                            'rapat_kerja' => '18. Rapat Kerja',
+                            'penyampaian_aspirasi' => '19. Penyampaian Aspirasi',
+                            'study_banding' => '20. Study Banding',
+                            'reses' => '21. Reses',
+                            'kunker_komisi' => '22. Kunker Komisi',
+                            default => ucwords(str_replace('_', ' ', $rKey)),
+                        };
 
-                    $satuan = match($tableCode) {
-                        '1.1.6' => 'm',
-                        '8.1.4' => (str_ends_with($rKey, '_unit') ? 'unit' : 'm'),
-                        '8.1.5' => 'm',
-                        '2.2.5' => 'kegiatan',
-                        '2.3.1', '2.3.2', '2.3.3' => 'orang',
-                        '4.3.4' => 'kejadian',
-                        '9.1' => 'koperasi',
-                        '9.2' => 'koperasi',
-                        '9.4' => 'unit',
-                        '9.3' => match($rKey) {
-                            'koperasi' => 'unit',
-                            'anggota' => 'orang',
-                            default => '000 Rp',
-                        },
-                        default => 'km',
-                    };
+                        $satuan = match($tableCode) {
+                            '1.1.6' => 'm',
+                            '8.1.4' => (str_ends_with($rKey, '_unit') ? 'unit' : 'm'),
+                            '8.1.5' => 'm',
+                            '2.2.5' => 'kegiatan',
+                            '2.3.1', '2.3.2', '2.3.3' => 'orang',
+                            '4.3.4' => 'kejadian',
+                            '9.1' => 'koperasi',
+                            '9.2' => 'koperasi',
+                            '9.4' => 'unit',
+                            '9.3' => match($rKey) {
+                                'koperasi' => 'unit',
+                                'anggota' => 'orang',
+                                default => '000 Rp',
+                            },
+                            default => 'km',
+                        };
 
-                    $valStr = trim((string) $val);
+                        $valStr = trim((string) $val);
 
-                    // Validasi pengaman: Jika nilai yang dikirim sama dengan label baris atau berisi teks kategori
-                    // (misal akibat salah geser kolom saat edit), jangan simpan ke database agar tidak merusak data numerik
-                    if ($valStr === $rowLabel || 
-                        str_contains($valStr, 'Negara / State') || 
-                        str_contains($valStr, 'Provinsi / Province') || 
-                        str_contains($valStr, 'Kota / Municipality') ||
-                        str_contains($valStr, 'Kewenangan')) {
-                        continue;
+                        // Validasi pengaman: Jika nilai yang dikirim sama dengan label baris atau berisi teks kategori
+                        // (misal akibat salah geser kolom saat edit), jangan simpan ke database agar tidak merusak data numerik
+                        if ($valStr === $rowLabel || 
+                            str_contains($valStr, 'Negara / State') || 
+                            str_contains($valStr, 'Provinsi / Province') || 
+                            str_contains($valStr, 'Kota / Municipality') ||
+                            str_contains($valStr, 'Kewenangan')) {
+                            continue;
+                        }
+
+                        TabelData::updateOrCreate(
+                            [
+                                'table_code' => $tableCode,
+                                'opd_code' => $opdCode,
+                                'year' => $yNum,
+                                'row_key' => $rKey,
+                            ],
+                            [
+                                'row_label' => $rowLabel,
+                                'value' => $valStr,
+                                'satuan' => $satuan,
+                            ]
+                        );
                     }
-
-                    TabelData::updateOrCreate(
-                        [
-                            'table_code' => $tableCode,
-                            'opd_code' => $opdCode,
-                            'year' => $yNum,
-                            'row_key' => $rKey,
-                        ],
-                        [
-                            'row_label' => $rowLabel,
-                            'value' => $valStr,
-                            'satuan' => $satuan,
-                        ]
-                    );
                 }
             }
+        } catch (\Throwable $e) {
+            \Log::warning("Peringatan apiSaveData tabel {$tableCode} (database read-only atau error): " . $e->getMessage());
         }
 
         return response()->json([
@@ -1039,6 +1223,9 @@ class TabelOpdController extends Controller
         $tableCode = $request->input('table_code', '8.1.1');
         $opdCode = $request->input('opd_code', '01');
         $year = (int) $request->input('year', 2025);
+
+        // Hapus file-based snapshot jika ada
+        @unlink(storage_path("app/tables/table_{$tableCode}_{$year}.json"));
 
         // Hapus snapshot custom HTML pada metadata
         TabelMetadata::where('table_code', $tableCode)
@@ -1107,6 +1294,42 @@ class TabelOpdController extends Controller
     }
 
     /**
+     * Bersihkan / pulihkan angka desimal dari Time / Date Serial Excel & Google Sheets (tahun 1899/1900)
+     */
+    protected function cleanExcelDateSerials(?string $text): ?string
+    {
+        if (!$text) return $text;
+
+        $pattern = '/(?:(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](1900|1899)|(1900|1899)[\/\-\.](\d{1,2})[\/\-\.](\d{1,2}))(?:\s+|T)(\d{1,2})[:\.](\d{2})(?:[:\.](\d{2}))?(?:\s*(AM|PM))?/i';
+        $text = preg_replace_callback($pattern, function ($m) {
+            $year = !empty($m[3]) ? (int)$m[3] : (int)$m[4];
+            $day = !empty($m[3]) ? (int)$m[1] : (int)$m[6];
+            $hours = (int)$m[7];
+            $mins = (int)$m[8];
+            $secs = !empty($m[9]) ? (int)$m[9] : 0;
+            $ampm = !empty($m[10]) ? strtoupper($m[10]) : null;
+
+            if ($ampm === 'PM' && $hours < 12) $hours += 12;
+            if ($ampm === 'AM' && $hours === 12) $hours = 0;
+
+            $dayCount = ($year === 1900) ? $day : 0;
+            $fraction = ($hours * 3600 + $mins * 60 + $secs) / 86400;
+            $total = $dayCount + $fraction;
+            $formatted = rtrim(rtrim(number_format($total, 4, '.', ''), '0'), '.');
+            if (preg_match('/^\d+\.\d$/', $formatted)) {
+                $formatted .= '0';
+            }
+            return str_replace('.', ',', $formatted);
+        }, $text);
+
+        // Serial tanggal 1900 saja (misal "01/01/1900" -> 1, "02/01/1900" -> 2)
+        $text = preg_replace('/\b0?([1-9]|[12]\d|3[01])[\/\-\.]0?1[\/\-\.]1900\b/', '$1', $text);
+        $text = preg_replace('/\b1900[\/\-\.]0?1[\/\-\.]0?([1-9]|[12]\d|3[01])\b/', '$1', $text);
+
+        return $text;
+    }
+
+    /**
      * Format nilai angka ribuan dengan titik pemisah untuk tabel keuangan
      */
     private function formatFinancialHtml(?string $html, string $opdCode, string $tableCode): ?string
@@ -1169,7 +1392,7 @@ class TabelOpdController extends Controller
     /**
      * Otomatis membuat template kosong pada tahun-tahun lain di database jika belum ada data tersimpan
      */
-    private function syncTemplateToOtherYears(string $tableCode, string $opdCode, int $sourceYear, string $html, ?string $titleId, ?string $titleEn, ?string $source, ?string $note): void
+    private function syncTemplateToOtherYears(string $tableCode, string $opdCode, int $sourceYear, string $html, ?string $titleId, ?string $titleEn, ?string $source, ?string $note, string $sourceType = 'template'): void
     {
         if ($source) {
             $source = preg_replace('/^\s*(?:sumber\s*[\/:]\s*source|sumber\s*[\/:]|source\s*[\/:]|sumber|source)\s*:\s*/i', '', $source);
@@ -1177,6 +1400,7 @@ class TabelOpdController extends Controller
         }
         $years = range(2021, 2036);
         $cleanHtml = $this->buildEmptyTemplateFromHtml($html);
+        $targetSourceType = in_array($sourceType, ['custom_bps', 'custom_instansi', 'custom', 'custom_opd']) ? $sourceType : 'template';
 
         foreach ($years as $targetYear) {
             if ($targetYear === $sourceYear) continue;
@@ -1205,7 +1429,7 @@ class TabelOpdController extends Controller
                         'source' => $source,
                         'note' => $yNote,
                         'table_html' => $yHtml,
-                        'source_type' => 'template',
+                        'source_type' => $targetSourceType,
                         'is_saved' => true,
                     ]
                 );
@@ -1230,8 +1454,8 @@ class TabelOpdController extends Controller
                 $rawText = trim($td->textContent);
                 if ($colspan >= 2 && preg_match('/[a-zA-Z]{3,}/', $rawText)) continue;
                 if ($td->hasAttribute('rowspan') && preg_match('/[a-zA-Z]{3,}/', $rawText)) continue;
-                // Lindungi label tahun khusus (misal: 2022(SIUP)) agar tidak diubah menjadi '-'
-                if (preg_match('/^(19|20)\d{2}\s*\(SIUP\)$/', $rawText)) continue;
+                // Lindungi label tahun (misal: 2024, 2025, 2022(SIUP)) agar tidak diubah menjadi '-'
+                if (preg_match('/^(19|20)\d{2}(\s*\(SIUP\))?$/', $rawText)) continue;
                 $isPureNumberOrDash = preg_match('/^[\d.,\s\-%–—()]+$/', $rawText) || $rawText === '';
                 if ($isPureNumberOrDash) {
                     while ($td->hasChildNodes()) {
@@ -1435,7 +1659,7 @@ class TabelOpdController extends Controller
     {
         $delta = $targetYear - $sourceYear;
 
-        return preg_replace_callback('/<th([^>]*)>(.*?)<\/th>/is', function ($matches) use ($sourceYear, $targetYear, $delta) {
+        $adjustedHtml = preg_replace_callback('/<th([^>]*)>(.*?)<\/th>/is', function ($matches) use ($sourceYear, $targetYear, $delta) {
             $attr = $matches[1];
             $inner = $matches[2];
 
@@ -1470,6 +1694,125 @@ class TabelOpdController extends Controller
 
             return "<th{$attr}>{$inner}</th>";
         }, $html);
+
+        // 2. tbody multi-year Jumlah / Total block updates
+        try {
+            $dom = new \DOMDocument();
+            libxml_use_internal_errors(true);
+            $dom->loadHTML('<?xml encoding="utf-8" ?><div>' . $adjustedHtml . '</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+            libxml_clear_errors();
+            $xpath = new \DOMXPath($dom);
+
+            $hasJumlahMultiYear = false;
+            $tds = $xpath->query('//tbody//td');
+            foreach ($tds as $td) {
+                $text = strtolower(trim($td->textContent));
+                if (str_starts_with($text, 'jumlah') || str_starts_with($text, 'total') || str_contains($text, 'jumlah / total') || str_contains($text, 'jumlah/total')) {
+                    $rowspan = (int) $td->getAttribute('rowspan');
+                    if ($rowspan > 1) {
+                        $hasJumlahMultiYear = true;
+                        $tr = $td->parentNode;
+                        for ($i = 0; $i < $rowspan && $tr; $i++) {
+                            $rowTds = $xpath->query('td', $tr);
+                            $yearTd = null;
+                            foreach ($rowTds as $rTd) {
+                                if ($rTd !== $td && preg_match('/^(19|20)\d{2}(\s*\(SIUP\))?$/', trim($rTd->textContent))) {
+                                    $yearTd = $rTd;
+                                    break;
+                                }
+                            }
+                            if (!$yearTd) {
+                                $yearTd = ($i === 0) ? $rowTds->item(1) : $rowTds->item(0);
+                            }
+                            if ($yearTd) {
+                                $curTxt = trim($yearTd->textContent);
+                                if (preg_match('/^(19|20)\d{2}(\s*\(SIUP\))?$/', $curTxt) || $curTxt === '-' || $curTxt === '') {
+                                    $y = $targetYear - $i;
+                                    $yearTd->textContent = (string)$y;
+                                }
+                            }
+                            $tr = $tr->nextSibling;
+                            while ($tr && $tr->nodeType !== XML_ELEMENT_NODE) {
+                                $tr = $tr->nextSibling;
+                            }
+                        }
+                    } else {
+                        // Tidak ada rowspan > 1. Periksa apakah memuat tahun (misal: "Jumlah / Total 2025" pada 5.1.16 & 5.1.17)
+                        if (preg_match('/\b(19|20)\d{2}\b/', $td->textContent)) {
+                            foreach ($td->childNodes as $node) {
+                                if ($node->nodeType === XML_TEXT_NODE) {
+                                    $node->nodeValue = preg_replace('/\b(19|20)\d{2}\b/', (string)$targetYear, $node->nodeValue);
+                                } elseif ($node->nodeType === XML_ELEMENT_NODE) {
+                                    $node->textContent = preg_replace('/\b(19|20)\d{2}\b/', (string)$targetYear, $node->textContent);
+                                }
+                            }
+                            // Cari baris-baris tahun di atas baris Jumlah ini
+                            $tr = $td->parentNode;
+                            $prevTr = $tr->previousSibling;
+                            $aboveYearTds = [];
+                            while ($prevTr) {
+                                if ($prevTr->nodeType === XML_ELEMENT_NODE) {
+                                    $pTds = $xpath->query('td', $prevTr);
+                                    if ($pTds->length > 0 && preg_match('/^(19|20)\d{2}$/', trim($pTds->item(0)->textContent))) {
+                                        array_unshift($aboveYearTds, $pTds->item(0));
+                                    } else {
+                                        break;
+                                    }
+                                }
+                                $prevTr = $prevTr->previousSibling;
+                            }
+                            if (count($aboveYearTds) > 0) {
+                                $hasJumlahMultiYear = true;
+                                $cnt = count($aboveYearTds);
+                                foreach ($aboveYearTds as $idx => $aTd) {
+                                    $aTd->textContent = (string)($targetYear - ($cnt - $idx));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 3. tbody baris-baris tahun historis tanpa rowspan Jumlah (misal Tabel 5.3.2, 5.3.3, 5.3.4)
+            if (!$hasJumlahMultiYear) {
+                $tbodyTrs = $xpath->query('//tbody//tr');
+                $trList = iterator_to_array($tbodyTrs);
+                $bottomYearTds = [];
+                for ($r = count($trList) - 1; $r >= 0; $r--) {
+                    $rowTds = $xpath->query('td', $trList[$r]);
+                    if ($rowTds->length > 0) {
+                        $firstTd = $rowTds->item(0);
+                        $txt = trim($firstTd->textContent);
+                        if (preg_match('/^(19|20)\d{2}(\s*\(SIUP\))?$/', $txt)) {
+                            array_unshift($bottomYearTds, $firstTd);
+                        } else {
+                            break;
+                        }
+                    }
+                }
+                if (count($bottomYearTds) >= 2) {
+                    $firstY = (int) trim($bottomYearTds[0]->textContent);
+                    $lastY = (int) trim($bottomYearTds[count($bottomYearTds) - 1]->textContent);
+                    $isDesc = $firstY > $lastY;
+                    $count = count($bottomYearTds);
+                    foreach ($bottomYearTds as $idx => $td) {
+                        $targetY = $isDesc ? ($targetYear - $idx) : ($targetYear - ($count - 1 - $idx));
+                        $td->textContent = (string)$targetY;
+                    }
+                }
+            }
+
+            $div = $xpath->query('/div')->item(0);
+            if ($div) {
+                $clean = '';
+                foreach ($div->childNodes as $child) {
+                    $clean .= $dom->saveHTML($child);
+                }
+                return $clean ?: $adjustedHtml;
+            }
+        } catch (\Exception $e) {}
+
+        return $adjustedHtml;
     }
 
     private function adjustYearInNote(?string $note, int $sourceYear, int $targetYear): ?string
@@ -1695,12 +2038,32 @@ class TabelOpdController extends Controller
             'comment' => 'required|string|max:2000',
         ]);
 
-        $userName = session('user.displayName') 
-            ?? session('user.name') 
-            ?? session('user.roleLabel') 
-            ?? 'Pengguna';
-            
         $userRole = session('user.role', 'opd');
+        $displayName = session('user.displayName') ?? session('user.name') ?? null;
+        $dinasName = session('user.dinas_name') ?? null;
+
+        // Tentukan identitas pengirim secara jelas dan informatif
+        if ($userRole === 'admin') {
+            $userName = $displayName ?: 'Administrator BPS Bukittinggi';
+        } elseif ($userRole === 'walidata') {
+            $userName = $displayName ?: 'Wali Data (Diskominfo Bukittinggi)';
+        } elseif ($userRole === 'instansi') {
+            if ($displayName && $dinasName && $displayName !== $dinasName) {
+                $userName = "{$displayName} ({$dinasName})";
+            } else {
+                $userName = $dinasName ?: $displayName ?: 'Instansi Vertikal';
+            }
+        } else {
+            // OPD / Dinas
+            if ($displayName && $dinasName && $displayName !== $dinasName) {
+                $userName = "{$displayName} ({$dinasName})";
+            } else {
+                $userName = $dinasName ?: $displayName ?: 'Dinas OPD';
+            }
+        }
+
+        // Batasi panjang untuk keamanan kolom DB (maksimal 95 karakter)
+        $userName = mb_substr($userName, 0, 95);
 
         $comment = TabelComment::create([
             'table_code' => $request->table_code,
@@ -1729,6 +2092,15 @@ class TabelOpdController extends Controller
         $comment = TabelComment::find($id);
         if (!$comment) {
             return response()->json(['status' => 'error', 'message' => 'Catatan tidak ditemukan.'], 404);
+        }
+
+        $userRole = session('user.role', 'opd');
+        $displayName = session('user.displayName') ?? session('user.name') ?? '';
+
+        // Admin & Wali Data dapat menghapus semua catatan, pengguna lain hanya bisa menghapus catatan miliknya
+        $canDelete = ($userRole === 'admin' || $userRole === 'walidata' || ($displayName && str_contains($comment->user_name, $displayName)));
+        if (!$canDelete) {
+            return response()->json(['status' => 'error', 'message' => 'Anda tidak memiliki hak untuk menghapus catatan ini.'], 403);
         }
 
         $comment->delete();

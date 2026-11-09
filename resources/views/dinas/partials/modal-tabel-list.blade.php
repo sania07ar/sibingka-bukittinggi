@@ -44,21 +44,8 @@
                 </div>
             </div>
 
-            <!-- Right: Drive Link (If BPS) & Close Button -->
+            <!-- Right: Close Button -->
             <div class="flex items-center space-x-2 shrink-0">
-                @if($showDriveLink)
-                    <a id="bpsDriveLinkHeader" 
-                       href="#" 
-                       target="_blank" 
-                       rel="noopener noreferrer" 
-                       title="Buka Folder Google Drive Dataset"
-                       class="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-200/80 transition-colors">
-                        <i class="fa-brands fa-google-drive text-amber-600"></i>
-                        <span>Google Drive</span>
-                        <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
-                    </a>
-                @endif
-
                 <button onclick="{{ $closeFn }}" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-colors cursor-pointer" title="Tutup">
                     <i class="fa-solid fa-xmark text-sm"></i>
                 </button>

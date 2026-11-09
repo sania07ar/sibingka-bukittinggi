@@ -92,10 +92,91 @@
         $totalOpd = 20;
         $totalInstansi = 37;
 
+        $selectedYear = (int) request('year', date('Y'));
+        $endYear = max(2036, ((int) date('Y')) + 10);
+        $availableYears = range($endYear, 2020);
+
         try {
-            $savedTableCount = \App\Models\TabelMetadata::where('is_saved', 1)->distinct()->pluck('table_code')->count();
-            $realDataCount = \App\Models\TabelData::where('value', '!=', '-')->where('value', '!=', '')->count();
+            $opdList = config('simonda.opd_list', []);
+            $instansiList = config('simonda.instansi_list', []);
+
+            // 1. Ambil metadata tabel yang tersimpan dan bukan sekadar template kosong untuk tahun terpilih
+            $savedMetas = \App\Models\TabelMetadata::where('year', $selectedYear)
+                ->where('is_saved', 1)
+                ->where('source_type', '!=', 'template')
+                ->get();
+
+            // 2. Ambil baris data bernilai riil dari TabelData
+            $tdRows = \App\Models\TabelData::where('year', $selectedYear)
+                ->whereNotNull('value')
+                ->whereNotIn('value', ['', '-', '–', '—', 'null', '...'])
+                ->select('opd_code', 'table_code')
+                ->distinct()
+                ->get();
+
+            $filledOpds = [];
+            $filledInstansi = [];
+            $filledBps = [];
+            $tablesWithData = [];
+            $metaNumericCount = 0;
+
+            foreach ($savedMetas as $m) {
+                $eval = $m->getNumericStatus();
+                if ($eval['numeric_cells'] > 0 || $eval['status'] !== 'belum') {
+                    $cOpd = (string) $m->opd_code;
+                    $tablesWithData[$cOpd . '_' . $m->table_code] = true;
+                    $metaNumericCount += $eval['numeric_cells'];
+
+                    if (str_contains($m->source_type, 'bps') || str_starts_with($cOpd, 'bps')) {
+                        $filledBps[$cOpd] = true;
+                    } elseif (str_contains($m->source_type, 'instansi') || (is_numeric($cOpd) && (int)$cOpd > 20)) {
+                        $filledInstansi[$cOpd] = true;
+                    } else {
+                        $c = str_pad($cOpd, 2, '0', STR_PAD_LEFT);
+                        if (isset($opdList[$c])) {
+                            $filledOpds[$c] = true;
+                        } else {
+                            $filledInstansi[$cOpd] = true;
+                        }
+                    }
+                }
+            }
+
+            foreach ($tdRows as $td) {
+                $cOpd = (string) $td->opd_code;
+                $tablesWithData[$cOpd . '_' . $td->table_code] = true;
+
+                if (str_contains($td->opd_code, 'bps')) {
+                    $filledBps[$cOpd] = true;
+                } elseif (is_numeric($cOpd) && (int)$cOpd > 20) {
+                    $filledInstansi[$cOpd] = true;
+                } else {
+                    $c = str_pad($cOpd, 2, '0', STR_PAD_LEFT);
+                    if (isset($opdList[$c])) {
+                        $filledOpds[$c] = true;
+                    } else {
+                        $filledInstansi[$cOpd] = true;
+                    }
+                }
+            }
+
+            $filledOpdCount = count($filledOpds);
+            $filledInstansiCount = count($filledInstansi);
+            $filledBpsCount = count($filledBps);
+            $totalEntitiesFilled = $filledOpdCount + $filledInstansiCount + $filledBpsCount;
+            $savedTableCount = count($tablesWithData);
+
+            $tdCellCount = \App\Models\TabelData::where('year', $selectedYear)
+                ->whereNotNull('value')
+                ->whereNotIn('value', ['', '-', '–', '—', 'null', '...'])
+                ->count();
+
+            $realDataCount = max($metaNumericCount, $tdCellCount);
         } catch (\Throwable $e) {
+            $filledOpdCount = 0;
+            $filledInstansiCount = 0;
+            $filledBpsCount = 0;
+            $totalEntitiesFilled = 0;
             $savedTableCount = 0;
             $realDataCount = 0;
         }
@@ -292,10 +373,32 @@
                     <div class="w-12 h-12 rounded-full bg-orange-100/70 text-[#f95a00] flex items-center justify-center shrink-0 text-xl">
                         <i class="fa-solid fa-database"></i>
                     </div>
-                    <div>
-                        <div class="text-2xl sm:text-3xl font-black text-slate-900 leading-none">{{ $realDataCount }}</div>
-                        <div class="text-[11px] font-bold text-slate-600 uppercase tracking-wide mt-1">DATA INDIKATOR</div>
-                        <div class="text-[9.5px] font-semibold text-emerald-600">({{ $savedTableCount }} Tabel Terisi)</div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between gap-1.5">
+                            <div class="text-2xl sm:text-3xl font-black text-slate-900 leading-none">
+                                {{ $totalEntitiesFilled }}
+                            </div>
+                            <div class="relative shrink-0">
+                                <select onchange="window.location.href='?year=' + this.value" 
+                                        class="text-[11px] font-extrabold text-[#f95a00] bg-orange-50 hover:bg-orange-100 border border-orange-200/90 rounded-lg px-2 py-0.5 focus:outline-none focus:ring-1 focus:ring-orange-400 cursor-pointer transition-colors shadow-2xs"
+                                        title="Pilih tahun data">
+                                    @foreach($availableYears as $yr)
+                                        <option value="{{ $yr }}" {{ $yr == $selectedYear ? 'selected' : '' }}>Tahun {{ $yr }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="text-[11px] font-bold text-slate-600 uppercase tracking-wide mt-1">
+                            TOTAL DATA TERISI
+                        </div>
+                        <div class="text-[10px] font-bold text-emerald-600 truncate mt-0.5" title="{{ $savedTableCount }} Tabel Terisi ({{ $realDataCount }} Data Indikator)">
+                            <i class="fa-solid fa-circle-check text-[9px] mr-0.5"></i>{{ $savedTableCount }} Tabel Terisi <span class="text-slate-400 font-normal">({{ $realDataCount }} Indikator)</span>
+                        </div>
+                        <div class="text-[9.5px] font-medium text-slate-500 mt-0.5 truncate" title="{{ $filledOpdCount }} OPD • {{ $filledInstansiCount }} Instansi • {{ $filledBpsCount }} Data BPS">
+                            <span class="text-orange-600 font-bold">{{ $filledOpdCount }}</span> OPD &bull; 
+                            <span class="text-sky-600 font-bold">{{ $filledInstansiCount }}</span> Instansi &bull; 
+                            <span class="text-emerald-600 font-bold">{{ $filledBpsCount }}</span> BPS
+                        </div>
                     </div>
                 </div>
             </div>
@@ -437,8 +540,9 @@
                         </div>
                     </a>
 
-                    <a href="{{ route('data-bps') }}" 
-                       class="flex-1 group bg-gradient-to-br from-emerald-50/60 to-teal-50/30 border border-emerald-200/70 rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between hover:border-emerald-300 hover:shadow-md transition-all no-underline">
+                    <a href="{{ route('monitoring-bps') }}" 
+                       class="flex-1 group bg-gradient-to-br from-emerald-50/60 to-teal-50/30 border border-emerald-200/70 rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between hover:border-emerald-300 hover:shadow-md transition-all no-underline"
+                       id="btn-mon-bps">
                         <div>
                             <div class="w-7 h-7 rounded-lg text-emerald-600 flex items-center text-lg mb-2">
                                 <i class="fa-solid fa-chart-column"></i>

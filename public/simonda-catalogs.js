@@ -476,12 +476,56 @@ function getAgencyInfoForTable(tableCode, defaultOpd = '01', defaultType = 'opd'
     if (!tableCode) return { opdCode: defaultOpd, type: defaultType };
     const cleanCode = tableCode.toString().trim().replace(/\.+$/, '');
     
-    // Pemetaan khusus tabel yang memiliki instansi definitif
+    // JIKA dipanggil dari Data BPS, TETAP DI BPS (JANGAN PERNAH dialihkan ke OPD atau Instansi)
+    if (defaultType === 'bps') {
+        if (typeof bpsTablesCatalog !== 'undefined') {
+            const cleanDefaultOpd = defaultOpd ? defaultOpd.toString().padStart(2, '0') : null;
+            if (cleanDefaultOpd && bpsTablesCatalog[cleanDefaultOpd]) {
+                if (bpsTablesCatalog[cleanDefaultOpd].some(t => t.code.toString().trim().replace(/\.+$/, '') === cleanCode)) {
+                    return { opdCode: cleanDefaultOpd, type: 'bps' };
+                }
+            }
+            for (const b in bpsTablesCatalog) {
+                if (bpsTablesCatalog[b].some(t => t.code.toString().trim().replace(/\.+$/, '') === cleanCode)) {
+                    return { opdCode: b, type: 'bps' };
+                }
+            }
+        }
+        return { opdCode: defaultOpd, type: 'bps' };
+    }
+
+    // JIKA dipanggil dari Instansi Vertikal, TETAP DI INSTANSI (JANGAN PERNAH dialihkan ke OPD)
+    if (defaultType === 'instansi') {
+        if (typeof instansiTablesCatalog !== 'undefined') {
+            const cleanDefaultOpd = defaultOpd ? defaultOpd.toString().padStart(2, '0') : null;
+            if (cleanDefaultOpd && instansiTablesCatalog[cleanDefaultOpd]) {
+                if (instansiTablesCatalog[cleanDefaultOpd].some(t => t.code.toString().trim().replace(/\.+$/, '') === cleanCode)) {
+                    return { opdCode: cleanDefaultOpd, type: 'instansi' };
+                }
+            }
+            for (const inst in instansiTablesCatalog) {
+                if (instansiTablesCatalog[inst].some(t => t.code.toString().trim().replace(/\.+$/, '') === cleanCode)) {
+                    return { opdCode: inst, type: 'instansi' };
+                }
+            }
+        }
+        return { opdCode: defaultOpd, type: 'instansi' };
+    }
+
+    // Pemetaan khusus tabel yang memiliki instansi definitif (Hanya untuk OPD)
+    if (cleanCode.startsWith('5.')) return { opdCode: '17', type: 'opd' }; // 17. Dinas Pertanian dan Pangan
+    if (cleanCode.startsWith('2.2.')) return { opdCode: '03', type: 'opd' }; // 03. Sekretariat DPRD
+    if (cleanCode.startsWith('2.3.')) return { opdCode: '04', type: 'opd' }; // 04. BKPSDM
+    if (cleanCode.startsWith('2.4.')) return { opdCode: '05', type: 'opd' }; // 05. Badan Keuangan Daerah
+    if (cleanCode.startsWith('9.')) return { opdCode: '07', type: 'opd' }; // 07. Diskop & Tenaga Kerja
+    if (cleanCode === '11.1') return { opdCode: '18', type: 'opd' }; // 18. Dinas Perdagangan
+    if (cleanCode === '11.2') return { opdCode: '02', type: 'opd' }; // 02. DPM-PTSP
     if (cleanCode === '4.1.24') return { opdCode: '11', type: 'opd' }; // 11. Dinas Perpustakaan dan Kearsipan
     if (cleanCode === '4.1.20') return { opdCode: '10', type: 'opd' }; // 10. Dinas Pemuda dan Olahraga
     if (cleanCode === '4.3.4')  return { opdCode: '09', type: 'opd' }; // 09. BPBD
     if (cleanCode === '4.3.5' || cleanCode === '4.3.6' || cleanCode === '4.3.7' || cleanCode === '4.3.8') return { opdCode: '15', type: 'opd' }; // 15. Dinas Pemadam Kebakaran dan Penyelamatan
-    if (cleanCode === '1.1.6' || cleanCode.startsWith('8.1.')) return { opdCode: '01', type: 'opd' }; // 01. PUPR
+    if (cleanCode === '8.1.6' || cleanCode === '8.1.7' || cleanCode === '8.1.8' || cleanCode === '8.1.9') return { opdCode: '20', type: 'opd' }; // 20. Dinas Perhubungan
+    if (cleanCode === '1.1.6' || ['8.1.1', '8.1.2', '8.1.3', '8.1.4', '8.1.5'].includes(cleanCode) || cleanCode.startsWith('8.2.')) return { opdCode: '01', type: 'opd' }; // 01. PUPR
 
     // 1. Cari di katalog OPD terlebih dahulu
     if (typeof opdTablesCatalog !== 'undefined') {
@@ -501,12 +545,6 @@ function getAgencyInfoForTable(tableCode, defaultOpd = '01', defaultType = 'opd'
 
     // 2. Cari di katalog Instansi Vertikal
     if (typeof instansiTablesCatalog !== 'undefined') {
-        const cleanDefaultOpd = defaultOpd ? defaultOpd.toString().padStart(2, '0') : null;
-        if (cleanDefaultOpd && instansiTablesCatalog[cleanDefaultOpd]) {
-            if (instansiTablesCatalog[cleanDefaultOpd].some(t => t.code.toString().trim().replace(/\.+$/, '') === cleanCode)) {
-                return { opdCode: cleanDefaultOpd, type: 'instansi' };
-            }
-        }
         for (const inst in instansiTablesCatalog) {
             if (instansiTablesCatalog[inst].some(t => t.code.toString().trim().replace(/\.+$/, '') === cleanCode)) {
                 return { opdCode: inst, type: 'instansi' };

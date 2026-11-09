@@ -403,10 +403,10 @@
         const btnView = document.getElementById('monBtnViewTable');
         const btnEdit = document.getElementById('monBtnEditTable');
         if (btnView && tableCode) {
-            btnView.href = `/tabel?code=${encodeURIComponent(tableCode)}&opd=${encodeURIComponent(agencyCode)}&year=${encodeURIComponent(year)}&type=${encodeURIComponent(window.monTabType)}`;
+            btnView.href = `/tabel-opd?code=${encodeURIComponent(tableCode)}&opd=${encodeURIComponent(agencyCode)}&year=${encodeURIComponent(year)}&type=${encodeURIComponent(window.monTabType)}`;
         }
         if (btnEdit && tableCode) {
-            btnEdit.href = `/tabel-opd?code=${encodeURIComponent(tableCode)}&opd=${encodeURIComponent(agencyCode)}&year=${encodeURIComponent(year)}&type=${encodeURIComponent(window.monTabType)}`;
+            btnEdit.href = `/edit-tabel-opd?code=${encodeURIComponent(tableCode)}&opd=${encodeURIComponent(agencyCode)}&year=${encodeURIComponent(year)}&type=${encodeURIComponent(window.monTabType)}`;
         }
 
         // 6. Fetch live real-time status dari Database per tahun

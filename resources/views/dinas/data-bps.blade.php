@@ -66,11 +66,12 @@
         @include('partials.navbar')
 
         <!-- MAIN SECTION: LIST DATA BPS -->
-        <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-1.5 sm:py-2 flex-1 flex flex-col justify-center w-full min-h-0">
+        <main class="max-w-4xl lg:max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-1.5 sm:py-2 flex-1 flex flex-col justify-center w-full min-h-0">
 
             @php
                 $userRole = session('user.role');
-                $isAdmin = $userRole === 'admin';
+                $isAdmin = ($userRole === 'admin');
+                $canManageBps = ($isAdmin || $userRole === 'bps');
 
                 $bpsDatasets = [
                     [
@@ -199,20 +200,23 @@
                     </div>
                 </div>
 
-                <!-- 4-Column Responsive Grid (10 Data Items matching OPD & Instansi Style) -->
-                <div id="bpsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 mt-2.5 sm:mt-3">
+                <!-- 2-Column Responsive Grid (2 kesamping, 5 kebawah) -->
+                <div id="bpsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5 mt-2 sm:mt-2.5">
                     @foreach($bpsDatasets as $ds)
                         <button type="button"
                                 onclick="openBpsModal('{{ $ds['code'] }}', '{{ addslashes($ds['short']) }}', '{{ addslashes($ds['full']) }}', '{{ $ds['link'] }}')"
                                 data-search="{{ $ds['code'] }} {{ strtolower($ds['short']) }} {{ strtolower($ds['full']) }} {{ $ds['search'] }}"
                                 class="bps-item group w-full bg-white hover:bg-orange-50/40 border border-slate-100 hover:border-orange-300 rounded-2xl p-2.5 sm:p-3 flex items-center justify-between shadow-2xs hover:shadow-xs transition-all duration-150 text-left cursor-pointer">
-                            <div class="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
+                            <div class="flex items-center space-x-2.5 sm:space-x-3.5 min-w-0">
                                 <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#fff4eb] text-[#f95a00] flex items-center justify-center text-sm sm:text-base shrink-0 group-hover:scale-105 transition-transform">
                                     <i class="fa-solid {{ $ds['icon'] }}"></i>
                                 </div>
                                 <div class="flex flex-col min-w-0">
-                                    <span class="text-[10px] sm:text-[11px] font-bold text-slate-400 leading-tight">{{ $ds['code'] }}</span>
-                                    <span class="text-xs sm:text-[12px] font-bold text-slate-900 group-hover:text-[#f95a00] transition-colors leading-tight line-clamp-2" title="{{ $ds['full'] }}">{{ $ds['short'] }}</span>
+                                    <div class="flex items-center space-x-1.5">
+                                        <span class="text-[10px] sm:text-[11px] font-bold text-slate-400 leading-tight">{{ $ds['code'] }}</span>
+                                        <span class="text-xs sm:text-[13px] font-bold text-slate-900 group-hover:text-[#f95a00] transition-colors leading-tight">{{ $ds['short'] }}</span>
+                                    </div>
+                                    <span class="text-[11px] text-slate-500 font-medium leading-tight line-clamp-1 mt-0.5">{{ $ds['full'] }}</span>
                                 </div>
                             </div>
                             <div class="w-6 h-6 rounded-full bg-orange-100/70 group-hover:bg-[#f95a00] text-orange-500 group-hover:text-white flex items-center justify-center text-[9px] shrink-0 ml-1.5 transition-all group-hover:translate-x-0.5">
@@ -234,18 +238,8 @@
                     </button>
                 </div>
 
-                <!-- Card Footer Actions: Google Drive BPS & Home (Matching OPD style) -->
+                <!-- Card Footer Actions: Home -->
                 <div class="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 mt-2 sm:mt-2.5 pt-2 border-t border-slate-100 shrink-0">
-                    <a href="https://drive.google.com/drive/folders/165ZffQ57NgwBxsEuaSBO97y0A_oEJ1B-"
-                       target="_blank"
-                       rel="noopener noreferrer"
-                       class="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-orange-50 hover:bg-orange-100 text-[#f95a00] hover:text-orange-700 font-bold text-xs border border-orange-200/80 transition-all shadow-2xs hover:shadow-xs"
-                       title="Buka Folder Google Drive Data BPS">
-                        <i class="fa-brands fa-google-drive text-xs"></i>
-                        <span>GOOGLE DRIVE BPS</span>
-                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-                    </a>
-
                     <a href="{{ url('/') }}"
                        class="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 font-bold text-xs border border-slate-200/80 transition-all shadow-2xs hover:shadow-xs">
                         <i class="fa-solid fa-house text-xs"></i>
@@ -272,8 +266,8 @@
         'headingId' => 'tabelBpsHeading',
         'headingText' => '1. Tabel Statistik BPS',
         'closeFn' => 'closeBpsModal()',
-        'isAdmin' => $isAdmin,
-        'showDriveLink' => true,
+        'isAdmin' => $canManageBps,
+        'showDriveLink' => false,
         'badgeText' => 'Data Internal BPS',
         'searchPlaceholder' => 'Cari tabel statistik BPS...'
     ])
@@ -281,8 +275,8 @@
     <!-- MODAL PILIH TAHUN -->
     @include('dinas.partials.modal-pilih-tahun')
 
-    <!-- MODAL TAMBAH TABEL BARU (HANYA ADMINISTRATOR BPS) -->
-    @if($isAdmin)
+    <!-- MODAL TAMBAH TABEL BARU (ADMINISTRATOR & OPERATOR BPS) -->
+    @if($canManageBps)
         @include('dinas.partials.modal-tambah-tabel', [
             'agencyList' => $bpsDatasets,
             'agencyTypeLabel' => 'Dataset / Modul BPS'
@@ -293,13 +287,14 @@
     <script>
         window.DinasCatalogConfig = {
             type: 'bps',
-            isAdmin: {{ $isAdmin ? 'true' : 'false' }},
+            isAdmin: {{ $canManageBps ? 'true' : 'false' }},
             saveUrl: "{{ route('tabel-opd.api.save-custom-catalog') }}",
             deleteUrl: "{{ route('tabel-opd.api.delete-custom-catalog') }}",
             customCatalogUrl: "{{ url('/api/tabel-opd/custom-catalog') }}",
             tabelOpdUrl: "{{ url('/tabel-opd') }}",
             csrfToken: "{{ csrf_token() }}"
         };
+        window.serverDbCustomTables = @json($customTables ?? []);
     </script>
     <script src="{{ asset('js/dinas-catalog.js') }}"></script>
 </body>

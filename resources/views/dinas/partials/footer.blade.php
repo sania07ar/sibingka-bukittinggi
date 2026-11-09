@@ -42,7 +42,7 @@
             <span class="hidden sm:inline text-slate-300">•</span>
             <span class="hover:text-orange-600 transition-colors">
                 <i class="fa-solid fa-location-dot text-[#f95a00] mr-1"></i>
-                Jl. Perwira No.58, Belakang Balok, Bukittinggi
+                Jl. Perwira No.50, Belakang Balok, Bukittinggi
             </span>
         </div>
 
