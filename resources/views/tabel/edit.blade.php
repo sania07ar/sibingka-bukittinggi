@@ -5659,19 +5659,23 @@
                     const years = p.yearsAsc;
 
                     const dataStore = {
-                        2020: { guguk_panjang: '-', mandiangin_koto_selayan: '-', aur_birugo_tigo_baleh: '-', total: '-' },
-                        2021: { guguk_panjang: '61', mandiangin_koto_selayan: '58', aur_birugo_tigo_baleh: '41', total: '160' },
-                        2022: { guguk_panjang: '46', mandiangin_koto_selayan: '48', aur_birugo_tigo_baleh: '38', total: '132' },
-                        2023: { guguk_panjang: '48', mandiangin_koto_selayan: '50', aur_birugo_tigo_baleh: '39', total: '137' },
-                        2024: { guguk_panjang: '52', mandiangin_koto_selayan: '52', aur_birugo_tigo_baleh: '40', total: '144' },
-                        2025: { guguk_panjang: '52', mandiangin_koto_selayan: '52', aur_birugo_tigo_baleh: '40', total: '144' }
+                        2020: { guguk_panjang: '54', mandiangin_koto_selayan: '17', aur_birugo_tigo_baleh: '23', bukittinggi: '94' },
+                        2021: { guguk_panjang: '54', mandiangin_koto_selayan: '17', aur_birugo_tigo_baleh: '24', bukittinggi: '95' },
+                        2022: { guguk_panjang: '53', mandiangin_koto_selayan: '17', aur_birugo_tigo_baleh: '24', bukittinggi: '94' },
+                        2023: { guguk_panjang: '52', mandiangin_koto_selayan: '15', aur_birugo_tigo_baleh: '27', bukittinggi: '94' },
+                        2024: { guguk_panjang: '57', mandiangin_koto_selayan: '25', aur_birugo_tigo_baleh: '31', bukittinggi: '113' },
+                        2025: { guguk_panjang: '62', mandiangin_koto_selayan: '30', aur_birugo_tigo_baleh: '36', bukittinggi: '128' }
                     };
 
                     const getVal = (y, key) => {
-                        if (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[y] && serverDbDataStore[y][key] !== undefined) {
-                            return serverDbDataStore[y][key];
+                        if (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[y]) {
+                            if (serverDbDataStore[y][key] !== undefined) return serverDbDataStore[y][key];
+                            if (key === 'bukittinggi' && serverDbDataStore[y]['total'] !== undefined) return serverDbDataStore[y]['total'];
                         }
-                        if (dataStore[y] && dataStore[y][key] !== undefined) return dataStore[y][key];
+                        if (dataStore[y]) {
+                            if (dataStore[y][key] !== undefined) return dataStore[y][key];
+                            if (key === 'bukittinggi' && dataStore[y]['total'] !== undefined) return dataStore[y]['total'];
+                        }
                         return '-';
                     };
 
@@ -5705,8 +5709,8 @@
                         <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
                             ${rowsHtml}
                             <tr class="bg-[#fed7aa] font-bold">
-                                <td class="py-2.5 px-4 border border-slate-700 text-left font-extrabold">Jumlah / <span class="italic font-bold">Total</span></td>
-                                ${years.map(y => `<td class="py-2.5 px-3 text-center border border-slate-700 font-extrabold ${y === yr ? 'bg-amber-200/80 ring-1 ring-amber-400' : ''}">${getVal(y, 'total')}</td>`).join('')}
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-extrabold">Bukittinggi</td>
+                                ${years.map(y => `<td class="py-2.5 px-3 text-center border border-slate-700 font-extrabold ${y === yr ? 'bg-amber-200/80 ring-1 ring-amber-400' : ''}">${getVal(y, 'bukittinggi')}</td>`).join('')}
                             </tr>
                         </tbody>
                     `;
@@ -10246,6 +10250,14 @@
                     localStorage.removeItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`);
                     savedHtml = (serverDbMetadata && serverDbMetadata.table_html) ? serverDbMetadata.table_html : null;
                 }
+            }
+
+            // Self-healing tabel 9.1: baris ke-4 adalah Bukittinggi (bukan Jumlah / Total)
+            if (currentTableCode === '9.1' && savedHtml && (savedHtml.includes('Jumlah') || savedHtml.includes('Total'))) {
+                savedHtml = savedHtml.replace(/Jumlah\s*\/\s*<span[^>]*>Total<\/span>/gi, 'Bukittinggi')
+                                     .replace(/Jumlah\s*\/\s*Total/gi, 'Bukittinggi')
+                                     .replace(/<td([^>]*)>\s*Jumlah\s*<\/td>/gi, '<td$1>Bukittinggi</td>');
+                localStorage.setItem(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
             }
 
             // Self-healing tabel 5.2.1 & 5.2.2: pastikan 10 komoditi lengkap (21 kolom) dan header 2-tier tidak rusak
