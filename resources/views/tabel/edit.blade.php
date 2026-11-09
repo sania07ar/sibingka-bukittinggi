@@ -3875,6 +3875,77 @@
                     `;
                 }
             },
+            '2.4.3': {
+                titleId: 'Realisasi Pembiayaan Pemerintah Daerah Kota Bukittinggi (Rupiah)',
+                titleEn: 'Realization of Bukittinggi Local Government Cost Budgeting (Rupiah)',
+                source: 'Badan Keuangan Daerah Kota Bukittinggi / <span class="italic text-slate-500">Financial Office of Bukittinggi Municipality</span>',
+                isMultiYear: true,
+                isExcludeSelectedYear: false,
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const p = get5YearPeriod(yr);
+                    const years = p.yearsAsc;
+
+                    const dataStore243 = {
+                        2020: ['206,824', '107,774', '99,050', '-', '-', '-', '99,386', '206,824'],
+                        2021: ['94,404', '94,377', '27', '-', '-', '-', '132,988', '99,404'],
+                        2022: ['132,979', '132,979', '-', '10,000', '-', '10,000', '77,322', '122,979'],
+                        2023: ['77,322', '77,322', '-', '-', '-', '-', '33,058', '77,322'],
+                        2024: ['77,323', '33,058', '-', '-', '-', '-', '33,058', '35,348'],
+                        2025: ['35.363.273.389,89', '35.363.273.389,89', '-', '-', '-', '-', '35.363.273.389,89', '35.363.273.389,89']
+                    };
+
+                    const rowLabels = [
+                        'PENERIMAAN PEMBIAYAAN DAERAH / <span class="italic font-normal text-slate-700">REGIONAL COST EXPENDITURE</span>',
+                        'Sisa Lebih Perhitungan Anggaran Tahun Sebelumnya / <span class="italic font-normal text-slate-700">Remaining of Budgeting Last Year</span>',
+                        'Pencairan Dana Cadangan / <span class="italic font-normal text-slate-700">Disbursement of Reserve Funds</span>',
+                        'PENGELUARAN PEMBIAYAAN DAERAH / <span class="italic font-normal text-slate-700">REGIONAL DEFRAYAL EXPENDITURE</span>',
+                        'Pembentukan Dana Cadangan / <span class="italic font-normal text-slate-700">Remind of Reserve Fund</span>',
+                        'Investasi Pemerintah Daerah / <span class="italic font-normal text-slate-700">Government Invesment</span>',
+                        'SISA LEBIH PEMBIAYAAN ANGGARAN TAHUN BERKENAAN / <span class="italic font-normal text-slate-700">REMAINING</span>',
+                        'PEMBIAYAAN DAERAH (1–2)'
+                    ];
+
+                    let theadYearsHtml = '';
+                    let theadNumHtml = '';
+                    years.forEach((y, idx) => {
+                        theadYearsHtml += `<th class="py-3 px-4 font-bold border border-slate-700 ${y === yr ? 'bg-amber-600 font-extrabold ring-1 ring-white/30' : ''}"><div>${y}</div></th>`;
+                        theadNumHtml += `<th class="py-1 px-3 border border-slate-700 text-center">(${idx + 2})</th>`;
+                    });
+
+                    let tbodyHtml = '';
+                    rowLabels.forEach((label, rIdx) => {
+                        let rowTds = '';
+                        years.forEach(y => {
+                            let val = (dataStore243[y] && dataStore243[y][rIdx] !== undefined) ? dataStore243[y][rIdx] : '-';
+                            rowTds += `<td class="py-2.5 px-4 border border-slate-700 text-right font-semibold align-top">${val}</td>`;
+                        });
+                        tbodyHtml += `<tr class="hover:bg-amber-100/60 transition-colors">
+                            <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${label}</td>
+                            ${rowTds}
+                        </tr>`;
+                    });
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700 text-left align-middle">
+                                    <div>Jenis Pembiayaan</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Kind of Cost</div>
+                                </th>
+                                ${theadYearsHtml}
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700 text-center">(1)</th>
+                                ${theadNumHtml}
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${tbodyHtml}
+                        </tbody>
+                    `;
+                }
+            },
             '2.3.1': {
                 titleId: 'Jumlah Aparatur Sipil Negara (ASN) Pemerintah Kota Bukittinggi Menurut Jabatan, Jenis ASN, dan Jenis Kelamin (orang)',
                 titleEn: 'Number of State Civil Apparatus (ASN) of Bukittinggi Municipal Government by Occupation, Type of ASN, and Sex (people)',
@@ -8976,11 +9047,10 @@
                         th.innerHTML = th.innerHTML.replace(/\b((?:19|20)\d{2})\s*[–\-]\s*((?:19|20)\d{2})\b/g, (m, y1, y2) => {
                             return `${parseInt(y1) + delta}–${parseInt(y2) + delta}`;
                         });
-                    } else {
-                        const regexYr = new RegExp(`\\b${sourceYear}\\b`, 'g');
-                        if (regexYr.test(th.innerText)) {
-                            th.innerHTML = th.innerHTML.replace(regexYr, targetYear);
-                        }
+                    } else if (/\b(19\d{2}|20\d{2})\b/.test(th.innerText)) {
+                        th.innerHTML = th.innerHTML.replace(/\b(19\d{2}|20\d{2})\b/g, (m) => {
+                            return (parseInt(m, 10) + delta).toString();
+                        });
                     }
                 });
             }
@@ -9277,7 +9347,7 @@
         }
 
         function getTablePeriod(year, tableCode) {
-            if (tableCode === '4.1.20') {
+            if (tableCode === '4.1.20' || tableCode === '2.4.1' || tableCode === '2.4.2') {
                 return get4YearPeriod(year);
             }
             if (tableCode === '4.2.20' || tableCode === '4.3.15') {
@@ -9910,7 +9980,7 @@
 
             // Validasi savedHtml untuk tabel multi-tahun (8.1.1, 8.1.2, 8.1.3, 8.1.4, 8.1.5, 2.2.5, 1.1.10, 9.1, 9.3 atau schema.isMultiYear)
             const isMultiYearTable = Boolean(schema && (schema.isMultiYear || schema.isExcludeSelectedYear)) || 
-                                     ['8.1.1', '8.1.2', '8.1.3', '8.1.4', '8.1.5', '2.2.5', '1.1.10', '9.1', '9.3'].includes(currentTableCode);
+                                     ['8.1.1', '8.1.2', '8.1.3', '8.1.4', '8.1.5', '2.2.5', '1.1.10', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2'].includes(currentTableCode);
 
             if (currentTableCode === '9.3' && savedHtml) {
                 const yrInt = parseInt(currentYear) || 2025;
