@@ -9804,7 +9804,7 @@
 
             const yr = parseInt(currentYear) || 2025;
             const p = getTablePeriod(yr, currentTableCode);
-            const isRangeTable = (schema.isMultiYear || schema.isExcludeSelectedYear) && currentTableCode !== '9.3' && currentTableCode !== '9.4';
+            const isRangeTable = (schema.isMultiYear || schema.isExcludeSelectedYear || currentTableCode === '8.2.2') && currentTableCode !== '9.3' && currentTableCode !== '9.4';
             const yearLabel = schema.isExcludeSelectedYear ? `${yr - 5}–${yr - 1}` : (isRangeTable ? p.label : `${yr}`);
             document.getElementById('pageMainHeading').innerText = isRangeTable ? `Edit Data Tabel ${currentTableCode} (${yearLabel})` : `Edit Data Tabel ${currentTableCode} Tahun ${currentYear}`;
 
@@ -9886,15 +9886,15 @@
             schema.titleId = cleanSchemaTitles.id;
             schema.titleEn = cleanSchemaTitles.en;
 
-            // For Table 8.1.1, 8.1.2, 8.1.3, and 9.1, ensure title always reflects the exact 5-year range [yr-4, yr]
-            if (currentTableCode === '8.1.1' || currentTableCode === '8.1.2' || currentTableCode === '8.1.3' || currentTableCode === '9.1' || currentTableCode === '4.2.4' || currentTableCode === '4.2.5' || currentTableCode === '4.2.7' || currentTableCode === '4.2.9' || currentTableCode === '4.2.10' || currentTableCode === '4.2.13' || currentTableCode === '4.2.15' || currentTableCode === '4.2.16') {
+            // For Table 8.1.1, 8.1.2, 8.1.3, 8.2.2, and 9.1, ensure title always reflects the exact 5-year range [yr-4, yr]
+            if (currentTableCode === '8.1.1' || currentTableCode === '8.1.2' || currentTableCode === '8.1.3' || currentTableCode === '8.2.2' || currentTableCode === '9.1' || currentTableCode === '4.2.4' || currentTableCode === '4.2.5' || currentTableCode === '4.2.7' || currentTableCode === '4.2.9' || currentTableCode === '4.2.10' || currentTableCode === '4.2.13' || currentTableCode === '4.2.15' || currentTableCode === '4.2.16') {
                 const yrInt = parseInt(currentYear) || 2025;
                 const expectedRange = `${yrInt - 4}–${yrInt}`;
                 if (customTitleId && !customTitleId.includes(expectedRange)) {
                     localStorage.removeItem(`simonda_table_title_id_${currentTableCode}_${currentYear}`);
                     customTitleId = null;
                 }
-                if (customTitleEn && !customTitleEn.includes(expectedRange)) {
+                if (customTitleEn && (!customTitleEn.includes(expectedRange) || customTitleEn.includes('XXX'))) {
                     localStorage.removeItem(`simonda_table_title_en_${currentTableCode}_${currentYear}`);
                     customTitleEn = null;
                 }
@@ -10030,7 +10030,7 @@
                 }
             }
 
-            updateYearSwitcher(Boolean(schema.isMultiYear), Boolean(schema.isExcludeSelectedYear));
+            updateYearSwitcher(Boolean(schema.isMultiYear || currentTableCode === '8.2.2'), Boolean(schema.isExcludeSelectedYear));
             updateTableSwitcher();
 
             const tableEl = document.getElementById('dataDisplayTable');
@@ -10061,9 +10061,9 @@
                 savedHtml = savedHtml.replace(/Kind of Revenues/gi, 'Kind of Expenditures');
             }
 
-            // Validasi savedHtml untuk tabel multi-tahun (8.1.1, 8.1.2, 8.1.3, 8.1.4, 8.1.5, 2.2.5, 1.1.10, 9.1, 9.3 atau schema.isMultiYear)
+            // Validasi savedHtml untuk tabel multi-tahun (8.1.1, 8.1.2, 8.1.3, 8.1.4, 8.1.5, 8.2.2, 2.2.5, 1.1.10, 9.1, 9.3 atau schema.isMultiYear)
             const isMultiYearTable = Boolean(schema && (schema.isMultiYear || schema.isExcludeSelectedYear)) || 
-                                     ['8.1.1', '8.1.2', '8.1.3', '8.1.4', '8.1.5', '2.2.5', '1.1.10', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2'].includes(currentTableCode);
+                                     ['8.1.1', '8.1.2', '8.1.3', '8.1.4', '8.1.5', '8.2.2', '2.2.5', '1.1.10', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2'].includes(currentTableCode);
 
             if (currentTableCode === '9.3' && savedHtml) {
                 const yrInt = parseInt(currentYear) || 2025;
@@ -15459,7 +15459,7 @@
                     e: { r: r + 1, c: Math.max(maxCol - 1, 1) }
                 });
 
-                const isMultiYearTable = ['4.2.4', '4.2.5', '4.2.7', '4.2.9', '4.2.10', '4.2.13', '4.2.15', '4.2.16', '4.2.20', '4.3.15', '8.1.1', '8.1.2', '8.1.3'].includes(currentTableCode) || Boolean(tableSchemas[currentTableCode]?.isMultiYear);
+                const isMultiYearTable = ['4.2.4', '4.2.5', '4.2.7', '4.2.9', '4.2.10', '4.2.13', '4.2.15', '4.2.16', '4.2.20', '4.3.15', '8.1.1', '8.1.2', '8.1.3', '8.2.2'].includes(currentTableCode) || Boolean(tableSchemas[currentTableCode]?.isMultiYear);
                 const pFile = isMultiYearTable ? getTablePeriod(yr, currentTableCode).label.replace('–', '_') : currentYear;
                 const pLabel = isMultiYearTable ? getTablePeriod(yr, currentTableCode).label : currentYear;
                 XLSX.utils.book_append_sheet(wb, ws, `Template_${currentTableCode}`.substring(0, 31));

@@ -8500,9 +8500,10 @@
             }
 
             const yr = parseInt(currentYear) || 2025;
+            const is822 = (currentTableCode === '8.2.2');
             const p = getTablePeriod(yr, currentTableCode);
-            const yearLabel = schema.isExcludeSelectedYear ? `${yr - 5}–${yr - 1}` : (schema.isMultiYear ? p.label : `${yr}`);
-            document.getElementById('pageMainHeading').innerText = (schema.isMultiYear || schema.isExcludeSelectedYear) ? `Tabel ${currentTableCode} Tahun ${yearLabel}` : `Tabel ${currentTableCode} Tahun ${currentYear}`;
+            const yearLabel = schema.isExcludeSelectedYear ? `${yr - 5}–${yr - 1}` : ((schema.isMultiYear || is822) ? p.label : `${yr}`);
+            document.getElementById('pageMainHeading').innerText = (schema.isMultiYear || schema.isExcludeSelectedYear || is822) ? `Tabel ${currentTableCode} Tahun ${yearLabel}` : `Tabel ${currentTableCode} Tahun ${currentYear}`;
             
             // Check for custom titles/source saved from Database, Fallback Structure, or Excel
             let customTitleId = (serverDbMetadata && serverDbMetadata.title_id) ? serverDbMetadata.title_id : (localStorage.getItem(`simonda_table_title_id_${currentTableCode}_${currentYear}`) || (serverDbFallbackMetadata && serverDbFallbackMetadata.title_id ? serverDbFallbackMetadata.title_id : null));
@@ -8611,14 +8612,14 @@
                 }
             }
 
-            if (currentTableCode === '8.1.1' || currentTableCode === '8.1.2' || currentTableCode === '8.1.3' || currentTableCode === '4.2.4' || currentTableCode === '4.2.5' || currentTableCode === '4.2.7' || currentTableCode === '4.2.9' || currentTableCode === '4.2.10' || currentTableCode === '4.2.13' || currentTableCode === '4.2.15' || currentTableCode === '4.2.16') {
+            if (currentTableCode === '8.1.1' || currentTableCode === '8.1.2' || currentTableCode === '8.1.3' || currentTableCode === '8.2.2' || currentTableCode === '4.2.4' || currentTableCode === '4.2.5' || currentTableCode === '4.2.7' || currentTableCode === '4.2.9' || currentTableCode === '4.2.10' || currentTableCode === '4.2.13' || currentTableCode === '4.2.15' || currentTableCode === '4.2.16') {
                 const yrInt = parseInt(currentYear) || 2025;
                 const expectedRange = `${yrInt - 4}–${yrInt}`;
                 if (customTitleId && !customTitleId.includes(expectedRange)) {
                     localStorage.removeItem(`simonda_table_title_id_${currentTableCode}_${currentYear}`);
                     customTitleId = null;
                 }
-                if (customTitleEn && !customTitleEn.includes(expectedRange)) {
+                if (customTitleEn && (!customTitleEn.includes(expectedRange) || customTitleEn.includes('XXX'))) {
                     localStorage.removeItem(`simonda_table_title_en_${currentTableCode}_${currentYear}`);
                     customTitleEn = null;
                 }
@@ -8739,7 +8740,7 @@
                 }
             }
 
-            updateYearSwitcher(Boolean(schema.isMultiYear), Boolean(schema.isExcludeSelectedYear));
+            updateYearSwitcher(Boolean(schema.isMultiYear || currentTableCode === '8.2.2'), Boolean(schema.isExcludeSelectedYear));
             updateTableSwitcher();
 
             const tableEl = document.getElementById('dataDisplayTable');
@@ -8806,9 +8807,9 @@
                 localStorage.setItem(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
             }
 
-            // Validasi savedHtml untuk tabel multi-tahun (8.1.1, 8.1.2, 8.1.3, 8.1.4, 8.1.5, 2.2.5, 1.1.10 atau schema.isMultiYear)
+            // Validasi savedHtml untuk tabel multi-tahun (8.1.1, 8.1.2, 8.1.3, 8.1.4, 8.1.5, 8.2.2, 2.2.5, 1.1.10 atau schema.isMultiYear)
             const isMultiYearTable = Boolean(schema && (schema.isMultiYear || schema.isExcludeSelectedYear)) || 
-                                     ['8.1.1', '8.1.2', '8.1.3', '8.1.4', '8.1.5', '2.2.5', '1.1.10', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2'].includes(currentTableCode);
+                                     ['8.1.1', '8.1.2', '8.1.3', '8.1.4', '8.1.5', '8.2.2', '2.2.5', '1.1.10', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2'].includes(currentTableCode);
 
             if (!isLocallySaved && isMultiYearTable && savedHtml && !['8.1.4', '8.1.5', '1.1.10', '4.2.4', '4.2.5', '4.2.7', '4.2.9', '4.2.10', '4.2.13', '4.2.15', '4.2.16'].includes(currentTableCode)) {
                 const tempDiv = document.createElement('table');

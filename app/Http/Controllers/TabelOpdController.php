@@ -931,8 +931,8 @@ class TabelOpdController extends Controller
         }
 
         if ($dbMetadata && !empty($dbMetadata->table_html) && !$isStarterDummy) {
-            // Untuk tabel multi-tahun (8.1.x, 2.2.5, 1.1.10, 9.1, 9.3, 2.4.3, 2.4.1, 2.4.2), pastikan table_html memuat tahun awal dan tahun akhir rentang
-            $isMultiYear = str_starts_with($tableCode, '8.1.') || in_array($tableCode, ['2.2.5', '1.1.10', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2']);
+            // Untuk tabel multi-tahun (8.1.x, 8.2.2, 2.2.5, 1.1.10, 9.1, 9.3, 2.4.3, 2.4.1, 2.4.2), pastikan table_html memuat tahun awal dan tahun akhir rentang
+            $isMultiYear = str_starts_with($tableCode, '8.1.') || in_array($tableCode, ['8.2.2', '2.2.5', '1.1.10', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2']);
             if ($isMultiYear) {
                 $span = ($tableCode === '9.3') ? 6 : (($tableCode === '2.4.1' || $tableCode === '2.4.2') ? 3 : 4);
                 $startYr = (string)($year - $span);
@@ -950,9 +950,9 @@ class TabelOpdController extends Controller
             }
         }
 
-        // Tabel multi-tahun (8.1.1, 8.1.2, 8.1.3, 8.1.4, 8.1.5, 2.2.5, 1.1.10, 9.1, 9.3, 2.4.3, 2.4.1, 2.4.2) membangun rentang secara dinamis.
+        // Tabel multi-tahun (8.1.1, 8.1.2, 8.1.3, 8.1.4, 8.1.5, 8.2.2, 2.2.5, 1.1.10, 9.1, 9.3, 2.4.3, 2.4.1, 2.4.2) membangun rentang secara dinamis.
         // Jangan pernah meminjam metadata/HTML dari tahun lain karena kolom tahunnya akan keliru.
-        if (str_starts_with($tableCode, '8.1.') || in_array($tableCode, ['2.2.5', '1.1.10', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2'])) {
+        if (str_starts_with($tableCode, '8.1.') || in_array($tableCode, ['8.2.2', '2.2.5', '1.1.10', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2'])) {
             return $dbMetadata;
         }
 
@@ -1194,13 +1194,13 @@ class TabelOpdController extends Controller
             }
 
             // Jika multi-tahun, tandai juga tahun-tahun lain yang ada datanya dengan range tahun yang sesuai
-            if (is_array($rowsData) && (str_starts_with($tableCode, '8.1.') || in_array($tableCode, ['2.2.5', '1.1.10', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2']))) {
+            if (is_array($rowsData) && (str_starts_with($tableCode, '8.1.') || in_array($tableCode, ['8.2.2', '2.2.5', '1.1.10', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2']))) {
                 foreach (array_keys($rowsData) as $otherYear) {
                     $oYear = (int) $otherYear;
                     if ($oYear > 0 && $oYear !== $year) {
                         $oTitleId = $titleId;
                         $oTitleEn = $titleEn;
-                        if ((str_starts_with($tableCode, '8.1.') || in_array($tableCode, ['2.2.5', '1.1.10', '9.1', '2.4.3', '2.4.1', '2.4.2'])) && $oTitleId) {
+                        if ((str_starts_with($tableCode, '8.1.') || in_array($tableCode, ['8.2.2', '2.2.5', '1.1.10', '9.1', '2.4.3', '2.4.1', '2.4.2'])) && $oTitleId) {
                             $span = ($tableCode === '9.3') ? 6 : (($tableCode === '2.4.1' || $tableCode === '2.4.2') ? 3 : 4);
                             $oRange = ($oYear - $span) . '–' . $oYear;
                             $oTitleId = preg_replace('/(,\s*|\s+)(19|20)\d{2}(\s*[–\-]\s*(19|20)\d{2})?/', "$1{$oRange}", $titleId);
