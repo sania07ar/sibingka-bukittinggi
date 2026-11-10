@@ -11342,8 +11342,8 @@
             cleanGhostRows(clone);
 
             // Save to localStorage
-            localStorage.setItem(`simonda_table_html_${currentTableCode}_${currentYear}`, clone.innerHTML);
-            localStorage.setItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`, '1');
+            safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, clone.innerHTML);
+            safeSetLocalStorage(`simonda_table_is_saved_${currentTableCode}_${currentYear}`, '1');
 
             // Simpan perubahan ke Database MySQL
             try {

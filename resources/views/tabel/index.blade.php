@@ -8013,7 +8013,57 @@
         let currentType = '{{ $currentType ?? "opd" }}';
         let isEditMode = false;
 
+        function cleanupLocalStorageQuota(force = false) {
+            try {
+                let totalChars = 0;
+                const htmlKeys = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const k = localStorage.key(i);
+                    if (!k) continue;
+                    const val = localStorage.getItem(k) || '';
+                    totalChars += k.length + val.length;
+                    if (k.startsWith('simonda_table_html_')) {
+                        htmlKeys.push({ key: k, len: val.length });
+                    }
+                }
+
+                // Kuota browser umumnya 5MB. Jika pemakaian > 1.5MB atau ada lebih dari 5 cache tabel HTML, atau force=true
+                if (force || totalChars > 1500000 || htmlKeys.length > 5) {
+                    const currentHtmlKey = `simonda_table_html_${currentTableCode}_${currentYear}`;
+                    htmlKeys.forEach(item => {
+                        if (item.key !== currentHtmlKey) {
+                            localStorage.removeItem(item.key);
+                        }
+                    });
+                    console.log(`[LocalStorage Cleaner] Dibersihkan cache HTML lama agar kuota browser tetap aman.`);
+                }
+            } catch (e) {
+                console.warn('[LocalStorage Cleaner] Error:', e);
+            }
+        }
+
+        function safeSetLocalStorage(key, val) {
+            try {
+                localStorage.setItem(key, val);
+            } catch (e) {
+                if (e && (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED' || e.code === 22 || e.code === 1014 || (e.message && e.message.includes('quota')))) {
+                    console.warn('[LocalStorage] Kuota penuh saat menyimpan ' + key + '. Membersihkan cache HTML lama...', e);
+                    cleanupLocalStorageQuota(true);
+                    try {
+                        localStorage.setItem(key, val);
+                    } catch (retryErr) {
+                        console.warn('[LocalStorage] Tidak dapat menyimpan ke cache lokal setelah pembersihan; database server tetap aman.', retryErr);
+                    }
+                } else {
+                    console.warn('[LocalStorage] Error saving ' + key, e);
+                }
+            }
+        }
+
         function initPage() {
+            // Bersihkan kelebihan kuota localStorage browser secara otomatis
+            cleanupLocalStorageQuota(false);
+
             // One-time cleanup: remove accidental saves
             try {
                 localStorage.removeItem('simonda_table_html_1.1.6_2026');
@@ -15853,52 +15903,24 @@
                 ? 'custom_bps' 
                 : ((typeof currentType !== 'undefined' && currentType === 'instansi') ? 'custom_instansi' : 'excel');
 
-            localStorage.setItem(`simonda_table_html_${currentTableCode}_${currentYear}`, completeTableHtml);
-            localStorage.setItem(`simonda_table_source_${currentTableCode}_${currentYear}`, savedSourceType);
+            safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, completeTableHtml);
+            safeSetLocalStorage(`simonda_table_source_${currentTableCode}_${currentYear}`, savedSourceType);
 
             if (titleId) {
-                localStorage.setItem(`simonda_table_title_id_${currentTableCode}_${currentYear}`, titleId);
+                safeSetLocalStorage(`simonda_table_title_id_${currentTableCode}_${currentYear}`, titleId);
             }
             if (titleEn) {
-                localStorage.setItem(`simonda_table_title_en_${currentTableCode}_${currentYear}`, titleEn);
+                safeSetLocalStorage(`simonda_table_title_en_${currentTableCode}_${currentYear}`, titleEn);
             }
             if (extractedSource) {
-                localStorage.setItem(`simonda_table_source_text_${currentTableCode}_${currentYear}`, extractedSource);
+                safeSetLocalStorage(`simonda_table_source_text_${currentTableCode}_${currentYear}`, extractedSource);
             }
             if (extractedNote) {
-                localStorage.setItem(`simonda_table_note_${currentTableCode}_${currentYear}`, extractedNote);
+                safeSetLocalStorage(`simonda_table_note_${currentTableCode}_${currentYear}`, extractedNote);
             }
 
-            // Sinkronkan empty template ke tahun-tahun lain di localStorage jika belum ada data tersimpan
-            const syncYears = [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036];
-            const srcYrNum = parseInt(currentYear) || 2024;
-            syncYears.forEach(targetY => {
-                if (targetY === srcYrNum) return;
-                const existingLocal = localStorage.getItem(`simonda_table_html_${currentTableCode}_${targetY}`);
-                const isSaved = localStorage.getItem(`simonda_table_is_saved_${currentTableCode}_${targetY}`) === '1';
-                if (!existingLocal || !isSaved || existingLocal.includes('Belum ada data untuk tabel ini')) {
-                    const emptyTpl = buildEmptyTemplateFromSource(completeTableHtml, targetY, srcYrNum);
-                    if (emptyTpl) {
-                        localStorage.setItem(`simonda_table_html_${currentTableCode}_${targetY}`, emptyTpl);
-                        localStorage.setItem(`simonda_table_source_${currentTableCode}_${targetY}`, 'template');
-                        if (titleId) {
-                            localStorage.setItem(`simonda_table_title_id_${currentTableCode}_${targetY}`, titleId);
-                        }
-                        if (titleEn) {
-                            localStorage.setItem(`simonda_table_title_en_${currentTableCode}_${targetY}`, titleEn);
-                        }
-                        if (extractedSource) {
-                            localStorage.setItem(`simonda_table_source_text_${currentTableCode}_${targetY}`, extractedSource);
-                        }
-                        if (extractedNote) {
-                            localStorage.setItem(`simonda_table_note_${currentTableCode}_${targetY}`, extractedNote);
-                        }
-                    }
-                }
-            });
-
             // Langsung tandai tersimpan dan simpan ke database MySQL!
-            localStorage.setItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`, '1');
+            safeSetLocalStorage(`simonda_table_is_saved_${currentTableCode}_${currentYear}`, '1');
 
             // 9. Re-render UI dan simpan langsung ke database
             renderTablePage();
@@ -15911,7 +15933,7 @@
         }
 
         async function saveGeneratedExcel(isAuto = false, fileName = '') {
-            localStorage.setItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`, '1');
+            safeSetLocalStorage(`simonda_table_is_saved_${currentTableCode}_${currentYear}`, '1');
 
             const tableHtml = localStorage.getItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
             const titleId = localStorage.getItem(`simonda_table_title_id_${currentTableCode}_${currentYear}`) || (document.getElementById('metaTableTitleId') ? document.getElementById('metaTableTitleId').innerText : '');
