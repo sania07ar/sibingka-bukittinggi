@@ -8061,8 +8061,8 @@
         }
 
         function initPage() {
-            // Bersihkan kelebihan kuota localStorage browser secara otomatis
-            cleanupLocalStorageQuota(false);
+            // Bersihkan kelebihan kuota localStorage browser secara otomatis (force purge non-active table HTML)
+            cleanupLocalStorageQuota(true);
 
             // One-time cleanup: remove accidental saves
             try {
@@ -8074,7 +8074,7 @@
                         const k = `simonda_table_html_${code}_${y}`;
                         const val = localStorage.getItem(k);
                         if (val && (val.includes('212,10') || val.includes('105,22'))) {
-                            localStorage.setItem(k, val.replace(/212,10/g, '8,84').replace(/105,22/g, '4,39'));
+                            safeSetLocalStorage(k, val.replace(/212,10/g, '8,84').replace(/105,22/g, '4,39'));
                         }
                     });
                     const k = `simonda_table_html_8.1.3_${y}`;
@@ -8137,7 +8137,7 @@
                     if (k.startsWith('simonda_table_html_')) {
                         const val = localStorage.getItem(k);
                         if (val && val.includes('sm:text-xs">20')) {
-                            localStorage.setItem(k, cleanHtmlYearRanges(val));
+                            safeSetLocalStorage(k, cleanHtmlYearRanges(val));
                         }
                     }
                     if (k.startsWith('simonda_table_title_en_')) {
@@ -8566,7 +8566,7 @@
                 const officialNote433 = '<div class="space-y-1"><div><sup>1</sup> Desa pada tabel ini termasuk Unit Permukiman Transmigrasi (UPT) yang masih dibina oleh kementerian terkait dan nagari di Provinsi Sumatera Barat / <span class="italic text-slate-500">Villages in this table are included in Transmigration Settlement Unit which is still fostered by the relevant ministries and the nagari in the Province of Sumatera Barat</span></div><div><sup>2</sup> Kejadian dalam setahun sebelum tahun pencacahan / <span class="italic text-slate-500">Occurred during the last one year before the enumeration years</span></div><div><sup>3</sup> Periode tahun 2024 adalah Januari - April / <span class="italic text-slate-500">2024 Period is January-April</span></div></div>';
                 if (!customNote || customNote.length < 50 || !customNote.includes('Transmigrasi')) {
                     customNote = officialNote433;
-                    localStorage.setItem(`simonda_table_note_${currentTableCode}_${currentYear}`, officialNote433);
+                    safeSetLocalStorage(`simonda_table_note_${currentTableCode}_${currentYear}`, officialNote433);
                 }
             }
 
@@ -8841,7 +8841,7 @@
             if (savedHtml && (currentTableCode === '5.1.15' || currentTableCode === '5.1.16' || currentTableCode === '5.1.17')) {
                 if (savedHtml.includes('212,10') || savedHtml.includes('105,22')) {
                     savedHtml = savedHtml.replace(/212,10/g, '8,84').replace(/105,22/g, '4,39');
-                    localStorage.setItem(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                    safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
                     if (serverDbMetadata) {
                         serverDbMetadata.table_html = savedHtml;
                     }
@@ -8854,7 +8854,7 @@
                     savedHtml = savedHtml.replace(/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/gi, '<th class="py-3 px-4 font-bold border border-slate-700"><div>Aur Birugo Tigo Baleh</div></th>')
                                          .replace(/<th([^>]*)>\s*Kolom\s*6\s*<\/th>/gi, '<th$1>Aur Birugo Tigo Baleh</th>')
                                          .replace(/>\s*Kolom\s*6\s*</gi, '>Aur Birugo Tigo Baleh<');
-                    localStorage.setItem(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                    safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
                 }
             }
 
@@ -8863,7 +8863,7 @@
                 savedHtml = savedHtml.replace(/Jumlah\s*\/\s*<span[^>]*>Total<\/span>/gi, 'Bukittinggi')
                                      .replace(/Jumlah\s*\/\s*Total/gi, 'Bukittinggi')
                                      .replace(/<td([^>]*)>\s*Jumlah\s*<\/td>/gi, '<td$1>Bukittinggi</td>');
-                localStorage.setItem(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
             }
 
             // Self-healing tabel 4.3.3: hilangkan baris Catatan dari tbody dan rapikan nama kecamatan
@@ -8881,7 +8881,7 @@
                     rowsToRemove.forEach(tr => tr.remove());
                     savedHtml = tempTable.innerHTML;
                     savedHtml = savedHtml.replace(/Aur Birugo Tigo baleh/g, 'Aur Birugo Tigo Baleh');
-                    localStorage.setItem(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                    safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
                 }
             }
 
@@ -9079,7 +9079,7 @@
                             if (col === 1) return expectedY2;
                             return expectedY3;
                         });
-                        localStorage.setItem(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                        safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
                     }
                 }
             }
@@ -9161,8 +9161,8 @@
                     savedHtml = buildEmptyTemplateFromSource(sourceHtml, currentYear, sourceYr);
                     isInheritedTemplate = true;
                     try {
-                        localStorage.setItem(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
-                        localStorage.setItem(`simonda_table_source_${currentTableCode}_${currentYear}`, 'template');
+                        safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                        safeSetLocalStorage(`simonda_table_source_${currentTableCode}_${currentYear}`, 'template');
                     } catch(e) {}
                 }
             }
@@ -9510,7 +9510,7 @@
                 // Update storage if this was saved html
                 const savedKey = `simonda_table_html_${currentTableCode}_${currentYear}`;
                 if (localStorage.getItem(savedKey)) {
-                    localStorage.setItem(savedKey, table.innerHTML);
+                    safeSetLocalStorage(savedKey, table.innerHTML);
                 }
             }
         }
@@ -9538,7 +9538,7 @@
             if (removedAny) {
                 const savedKey = `simonda_table_html_${currentTableCode}_${currentYear}`;
                 if (localStorage.getItem(savedKey)) {
-                    localStorage.setItem(savedKey, table.innerHTML);
+                    safeSetLocalStorage(savedKey, table.innerHTML);
                 }
             }
         }
@@ -9560,8 +9560,8 @@
             const lastRow = rows[rows.length - 1];
             deleteRowElementView(lastRow);
 
-            localStorage.setItem(`simonda_table_html_${currentTableCode}_${currentYear}`, tableEl.innerHTML);
-            localStorage.setItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`, '1');
+            safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, tableEl.innerHTML);
+            safeSetLocalStorage(`simonda_table_is_saved_${currentTableCode}_${currentYear}`, '1');
             await saveGeneratedExcel(true, '');
             showToast('🗑️ Baris paling bawah berhasil dihapus!');
         }
@@ -13445,6 +13445,9 @@
         }
 
         async function generateTableFromExcel(worksheet, rawRows, fileName) {
+            // Bersihkan sisa cache tabel HTML lama sebelum generate berkas Excel baru
+            cleanupLocalStorageQuota(true);
+
             const catInfo = (typeof getCatalogTableInfo === 'function') 
                 ? getCatalogTableInfo(currentTableCode, currentOpdCode, currentType) 
                 : null;

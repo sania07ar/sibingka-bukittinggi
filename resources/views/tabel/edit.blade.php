@@ -9238,8 +9238,58 @@
             return html.replace(/<div>\s*((?:19|20)\d{2})\s*<\/div>\s*<div class="italic[^>]*>\s*((?:19|20)\d{2})\s*<\/div>/gi, '<div>$1/$2</div>');
         }
 
+        function cleanupLocalStorageQuota(force = false) {
+            try {
+                let totalChars = 0;
+                const htmlKeys = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const k = localStorage.key(i);
+                    if (!k) continue;
+                    const val = localStorage.getItem(k) || '';
+                    totalChars += k.length + val.length;
+                    if (k.startsWith('simonda_table_html_')) {
+                        htmlKeys.push({ key: k, len: val.length });
+                    }
+                }
+
+                // Kuota browser umumnya 5MB. Jika pemakaian > 1.5MB atau ada lebih dari 5 cache tabel HTML, atau force=true
+                if (force || totalChars > 1500000 || htmlKeys.length > 5) {
+                    const currentHtmlKey = `simonda_table_html_${currentTableCode}_${currentYear}`;
+                    htmlKeys.forEach(item => {
+                        if (item.key !== currentHtmlKey) {
+                            localStorage.removeItem(item.key);
+                        }
+                    });
+                    console.log(`[LocalStorage Cleaner] Dibersihkan cache HTML lama agar kuota browser tetap aman.`);
+                }
+            } catch (e) {
+                console.warn('[LocalStorage Cleaner] Error:', e);
+            }
+        }
+
+        function safeSetLocalStorage(key, val) {
+            try {
+                localStorage.setItem(key, val);
+            } catch (e) {
+                if (e && (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED' || e.code === 22 || e.code === 1014 || (e.message && e.message.includes('quota')))) {
+                    console.warn('[LocalStorage] Kuota penuh saat menyimpan ' + key + '. Membersihkan cache HTML lama...', e);
+                    cleanupLocalStorageQuota(true);
+                    try {
+                        localStorage.setItem(key, val);
+                    } catch (retryErr) {
+                        console.warn('[LocalStorage] Tidak dapat menyimpan ke cache lokal setelah pembersihan; database server tetap aman.', retryErr);
+                    }
+                } else {
+                    console.warn('[LocalStorage] Error saving ' + key, e);
+                }
+            }
+        }
+
         // Initialize Page
         document.addEventListener('DOMContentLoaded', () => {
+            // Bersihkan kelebihan kuota localStorage browser secara otomatis (force purge non-active table HTML)
+            cleanupLocalStorageQuota(true);
+
             // Clean up accidental saves
             try {
                 localStorage.removeItem('simonda_table_html_1.1.6_2026');
@@ -9250,7 +9300,7 @@
                         const k = `simonda_table_html_${code}_${y}`;
                         const val = localStorage.getItem(k);
                         if (val && (val.includes('212,10') || val.includes('105,22'))) {
-                            localStorage.setItem(k, val.replace(/212,10/g, '8,84').replace(/105,22/g, '4,39'));
+                            safeSetLocalStorage(k, val.replace(/212,10/g, '8,84').replace(/105,22/g, '4,39'));
                         }
                     });
                     ['5.2.1', '5.2.2'].forEach(code => {
@@ -9324,7 +9374,7 @@
                     if (k.startsWith('simonda_table_html_')) {
                         const val = localStorage.getItem(k);
                         if (val && val.includes('sm:text-xs">20')) {
-                            localStorage.setItem(k, cleanHtmlYearRanges(val));
+                            safeSetLocalStorage(k, cleanHtmlYearRanges(val));
                         }
                     }
                     if (k.startsWith('simonda_table_title_en_')) {
@@ -9819,7 +9869,7 @@
                 const officialNote433 = '<div class="space-y-1"><div><sup>1</sup> Desa pada tabel ini termasuk Unit Permukiman Transmigrasi (UPT) yang masih dibina oleh kementerian terkait dan nagari di Provinsi Sumatera Barat / <span class="italic text-slate-500">Villages in this table are included in Transmigration Settlement Unit which is still fostered by the relevant ministries and the nagari in the Province of Sumatera Barat</span></div><div><sup>2</sup> Kejadian dalam setahun sebelum tahun pencacahan / <span class="italic text-slate-500">Occurred during the last one year before the enumeration years</span></div><div><sup>3</sup> Periode tahun 2024 adalah Januari - April / <span class="italic text-slate-500">2024 Period is January-April</span></div></div>';
                 if (!customNote || customNote.length < 50 || !customNote.includes('Transmigrasi')) {
                     customNote = officialNote433;
-                    localStorage.setItem(`simonda_table_note_${currentTableCode}_${currentYear}`, officialNote433);
+                    safeSetLocalStorage(`simonda_table_note_${currentTableCode}_${currentYear}`, officialNote433);
                 }
             }
 
@@ -10085,7 +10135,7 @@
                     rowsToRemove.forEach(tr => tr.remove());
                     savedHtml = tempTable.innerHTML;
                     savedHtml = savedHtml.replace(/Aur Birugo Tigo baleh/g, 'Aur Birugo Tigo Baleh');
-                    localStorage.setItem(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                    safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
                 }
             }
 
@@ -10268,7 +10318,7 @@
                     savedHtml = savedHtml.replace(/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/gi, '<th class="py-3 px-4 font-bold border border-slate-700"><div>Aur Birugo Tigo Baleh</div></th>')
                                          .replace(/<th([^>]*)>\s*Kolom\s*6\s*<\/th>/gi, '<th$1>Aur Birugo Tigo Baleh</th>')
                                          .replace(/>\s*Kolom\s*6\s*</gi, '>Aur Birugo Tigo Baleh<');
-                    localStorage.setItem(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                    safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
                 }
             }
 
@@ -10289,7 +10339,7 @@
                 savedHtml = savedHtml.replace(/Jumlah\s*\/\s*<span[^>]*>Total<\/span>/gi, 'Bukittinggi')
                                      .replace(/Jumlah\s*\/\s*Total/gi, 'Bukittinggi')
                                      .replace(/<td([^>]*)>\s*Jumlah\s*<\/td>/gi, '<td$1>Bukittinggi</td>');
-                localStorage.setItem(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
             }
 
             // Self-healing tabel 5.2.1 & 5.2.2: pastikan 10 komoditi lengkap (21 kolom) dan header 2-tier tidak rusak
@@ -10314,7 +10364,7 @@
             if (savedHtml && (currentTableCode === '5.1.15' || currentTableCode === '5.1.16' || currentTableCode === '5.1.17')) {
                 if (savedHtml.includes('212,10') || savedHtml.includes('105,22')) {
                     savedHtml = savedHtml.replace(/212,10/g, '8,84').replace(/105,22/g, '4,39');
-                    localStorage.setItem(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                    safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
                     if (serverDbMetadata) {
                         serverDbMetadata.table_html = savedHtml;
                     }
@@ -10393,8 +10443,8 @@
                 if (sourceHtml && !sourceHtml.includes('Belum ada data untuk tabel ini')) {
                     savedHtml = buildEmptyTemplateFromSource(sourceHtml, currentYear, sourceYr);
                     try {
-                        localStorage.setItem(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
-                        localStorage.setItem(`simonda_table_source_${currentTableCode}_${currentYear}`, 'template');
+                        safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                        safeSetLocalStorage(`simonda_table_source_${currentTableCode}_${currentYear}`, 'template');
                     } catch(e) {}
                 }
             }
@@ -10600,7 +10650,7 @@
 
                 const savedKey = `simonda_table_html_${currentTableCode}_${currentYear}`;
                 if (localStorage.getItem(savedKey)) {
-                    localStorage.setItem(savedKey, table.innerHTML);
+                    safeSetLocalStorage(savedKey, table.innerHTML);
                 }
             }
         }
@@ -11081,7 +11131,7 @@
             if (removedAny) {
                 const savedKey = `simonda_table_html_${currentTableCode}_${currentYear}`;
                 if (localStorage.getItem(savedKey)) {
-                    localStorage.setItem(savedKey, table.innerHTML);
+                    safeSetLocalStorage(savedKey, table.innerHTML);
                 }
             }
         }
