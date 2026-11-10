@@ -1105,6 +1105,17 @@ class TabelOpdController extends Controller
                     $tableHtml = preg_replace('/>\s*Kolom\s*6\s*</i', '>Aur Birugo Tigo Baleh<', $tableHtml);
                 }
             }
+
+            // Koreksi otomatis jika Tabel 4.3.3 memuat baris Catatan di tbody
+            if ($tableCode === '4.3.3') {
+                if (str_contains($tableHtml, 'Transmigrasi') || str_contains($tableHtml, 'pencacahan') || str_contains($tableHtml, 'Catatan')) {
+                    $tableHtml = preg_replace('/<tr[^>]*>\s*<td[^>]*>\s*(?:Catatan|&nbsp;|\-)?[\s\S]*?(?:Transmigrasi|pencacahan|Periode tahun)[\s\S]*?<\/tr>/i', '', $tableHtml);
+                }
+                $tableHtml = str_replace('Aur Birugo Tigo baleh', 'Aur Birugo Tigo Baleh', $tableHtml);
+                if (empty($note) || strlen($note) < 50 || !str_contains($note, 'Transmigrasi')) {
+                    $note = '<div class="space-y-1"><div><sup>1</sup> Desa pada tabel ini termasuk Unit Permukiman Transmigrasi (UPT) yang masih dibina oleh kementerian terkait dan nagari di Provinsi Sumatera Barat / <span class="italic text-slate-500">Villages in this table are included in Transmigration Settlement Unit which is still fostered by the relevant ministries and the nagari in the Province of Sumatera Barat</span></div><div><sup>2</sup> Kejadian dalam setahun sebelum tahun pencacahan / <span class="italic text-slate-500">Occurred during the last one year before the enumeration years</span></div><div><sup>3</sup> Periode tahun 2024 adalah Januari - April / <span class="italic text-slate-500">2024 Period is January-April</span></div></div>';
+                }
+            }
             $tableHtml = $this->cleanExcelDateSerials($tableHtml);
             $tableHtml = $this->formatFinancialHtml($tableHtml, $opdCode, $tableCode);
         }

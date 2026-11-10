@@ -8511,6 +8511,15 @@
             let customSource = (serverDbMetadata && serverDbMetadata.source) ? serverDbMetadata.source : (localStorage.getItem(`simonda_table_source_text_${currentTableCode}_${currentYear}`) || (serverDbFallbackMetadata && serverDbFallbackMetadata.source ? serverDbFallbackMetadata.source : null));
             let customNote = (serverDbMetadata && serverDbMetadata.note !== undefined && serverDbMetadata.note !== null) ? serverDbMetadata.note : (localStorage.getItem(`simonda_table_note_${currentTableCode}_${currentYear}`) || (serverDbFallbackMetadata && serverDbFallbackMetadata.note !== undefined ? serverDbFallbackMetadata.note : null));
 
+            // Catatan resmi untuk Tabel 4.3.3 (PODES Bencana Alam)
+            if (currentTableCode === '4.3.3') {
+                const officialNote433 = '<div class="space-y-1"><div><sup>1</sup> Desa pada tabel ini termasuk Unit Permukiman Transmigrasi (UPT) yang masih dibina oleh kementerian terkait dan nagari di Provinsi Sumatera Barat / <span class="italic text-slate-500">Villages in this table are included in Transmigration Settlement Unit which is still fostered by the relevant ministries and the nagari in the Province of Sumatera Barat</span></div><div><sup>2</sup> Kejadian dalam setahun sebelum tahun pencacahan / <span class="italic text-slate-500">Occurred during the last one year before the enumeration years</span></div><div><sup>3</sup> Periode tahun 2024 adalah Januari - April / <span class="italic text-slate-500">2024 Period is January-April</span></div></div>';
+                if (!customNote || customNote.length < 50 || !customNote.includes('Transmigrasi')) {
+                    customNote = officialNote433;
+                    localStorage.setItem(`simonda_table_note_${currentTableCode}_${currentYear}`, officialNote433);
+                }
+            }
+
             // Jika custom title belum ada untuk tahun ini, cari dari tahun lain di localStorage
             if (!customTitleId) {
                 const searchYears = [2025, 2024, 2023, 2022, 2021, 2026, 2027, 2028, 2029, 2030, 2020, 2019, 2018];
@@ -8805,6 +8814,25 @@
                                      .replace(/Jumlah\s*\/\s*Total/gi, 'Bukittinggi')
                                      .replace(/<td([^>]*)>\s*Jumlah\s*<\/td>/gi, '<td$1>Bukittinggi</td>');
                 localStorage.setItem(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+            }
+
+            // Self-healing tabel 4.3.3: hilangkan baris Catatan dari tbody dan rapikan nama kecamatan
+            if (currentTableCode === '4.3.3' && savedHtml) {
+                if (savedHtml.includes('Transmigrasi') || savedHtml.includes('pencacahan') || savedHtml.includes('Catatan')) {
+                    const tempTable = document.createElement('table');
+                    tempTable.innerHTML = savedHtml;
+                    const rowsToRemove = [];
+                    tempTable.querySelectorAll('tbody tr').forEach(tr => {
+                        const txt = tr.textContent;
+                        if (txt.includes('Catatan') || txt.includes('Transmigrasi') || txt.includes('pencacahan') || txt.includes('Periode tahun')) {
+                            rowsToRemove.push(tr);
+                        }
+                    });
+                    rowsToRemove.forEach(tr => tr.remove());
+                    savedHtml = tempTable.innerHTML;
+                    savedHtml = savedHtml.replace(/Aur Birugo Tigo baleh/g, 'Aur Birugo Tigo Baleh');
+                    localStorage.setItem(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                }
             }
 
             // Validasi savedHtml untuk tabel multi-tahun (8.1.1, 8.1.2, 8.1.3, 8.1.4, 8.1.5, 8.2.2, 2.2.5, 1.1.10 atau schema.isMultiYear)
@@ -15682,6 +15710,9 @@
                     const row = rawRows[rIdx] || [];
                     const meaningfulRow = row.filter(c => c !== null && c !== undefined && c.toString().trim() !== '' && c.toString().trim() !== '-' && c.toString().trim() !== '–' && c.toString().trim() !== '—');
                     if (meaningfulRow.length === 0) return;
+
+                    const rowText = row.map(c => (c || '').toString().trim()).join(' ').toLowerCase();
+                    if (rowText.includes('catatan') || rowText.includes('note:') || rowText.includes('sumber:') || rowText.includes('source:') || rowText.includes('transmigrasi') || rowText.includes('pencacahan')) return;
 
                     const firstCellText = (row[0] || '').toString().toLowerCase();
                     const isTotalRow = firstCellText.includes('jumlah') || firstCellText.includes('total');

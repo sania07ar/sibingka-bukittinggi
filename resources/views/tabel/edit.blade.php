@@ -9814,6 +9814,15 @@
             let customSource = (serverDbMetadata && serverDbMetadata.source) ? serverDbMetadata.source : (localStorage.getItem(`simonda_table_source_text_${currentTableCode}_${currentYear}`) || (serverDbFallbackMetadata && serverDbFallbackMetadata.source ? serverDbFallbackMetadata.source : null));
             let customNote = (serverDbMetadata && serverDbMetadata.note !== undefined && serverDbMetadata.note !== null) ? serverDbMetadata.note : (localStorage.getItem(`simonda_table_note_${currentTableCode}_${currentYear}`) || (serverDbFallbackMetadata && serverDbFallbackMetadata.note !== undefined ? serverDbFallbackMetadata.note : null));
 
+            // Catatan resmi untuk Tabel 4.3.3 (PODES Bencana Alam)
+            if (currentTableCode === '4.3.3') {
+                const officialNote433 = '<div class="space-y-1"><div><sup>1</sup> Desa pada tabel ini termasuk Unit Permukiman Transmigrasi (UPT) yang masih dibina oleh kementerian terkait dan nagari di Provinsi Sumatera Barat / <span class="italic text-slate-500">Villages in this table are included in Transmigration Settlement Unit which is still fostered by the relevant ministries and the nagari in the Province of Sumatera Barat</span></div><div><sup>2</sup> Kejadian dalam setahun sebelum tahun pencacahan / <span class="italic text-slate-500">Occurred during the last one year before the enumeration years</span></div><div><sup>3</sup> Periode tahun 2024 adalah Januari - April / <span class="italic text-slate-500">2024 Period is January-April</span></div></div>';
+                if (!customNote || customNote.length < 50 || !customNote.includes('Transmigrasi')) {
+                    customNote = officialNote433;
+                    localStorage.setItem(`simonda_table_note_${currentTableCode}_${currentYear}`, officialNote433);
+                }
+            }
+
             // Bersihkan jika title hanya berisi kata 'Table' atau 'Tabel'
             if (customTitleEn && (customTitleEn.trim().toLowerCase() === 'table' || customTitleEn.trim().toLowerCase() === 'tabel')) {
                 localStorage.removeItem(`simonda_table_title_en_${currentTableCode}_${currentYear}`);
@@ -10059,6 +10068,25 @@
             if (savedHtml && currentTableCode === '2.4.2') {
                 savedHtml = savedHtml.replace(/Jenis Pendapatan/gi, 'Jenis Belanja');
                 savedHtml = savedHtml.replace(/Kind of Revenues/gi, 'Kind of Expenditures');
+            }
+
+            // Self-healing tabel 4.3.3: hilangkan baris Catatan dari tbody dan rapikan nama kecamatan
+            if (currentTableCode === '4.3.3' && savedHtml) {
+                if (savedHtml.includes('Transmigrasi') || savedHtml.includes('pencacahan') || savedHtml.includes('Catatan')) {
+                    const tempTable = document.createElement('table');
+                    tempTable.innerHTML = savedHtml;
+                    const rowsToRemove = [];
+                    tempTable.querySelectorAll('tbody tr').forEach(tr => {
+                        const txt = tr.textContent;
+                        if (txt.includes('Catatan') || txt.includes('Transmigrasi') || txt.includes('pencacahan') || txt.includes('Periode tahun')) {
+                            rowsToRemove.push(tr);
+                        }
+                    });
+                    rowsToRemove.forEach(tr => tr.remove());
+                    savedHtml = tempTable.innerHTML;
+                    savedHtml = savedHtml.replace(/Aur Birugo Tigo baleh/g, 'Aur Birugo Tigo Baleh');
+                    localStorage.setItem(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                }
             }
 
             // Validasi savedHtml untuk tabel multi-tahun (8.1.1, 8.1.2, 8.1.3, 8.1.4, 8.1.5, 8.2.2, 2.2.5, 1.1.10, 9.1, 9.3 atau schema.isMultiYear)
