@@ -9471,7 +9471,23 @@
             };
         }
 
+        function get2YearPeriod(year) {
+            const yr = parseInt(year) || 2025;
+            const start = yr - 1;
+            const end = yr;
+            return {
+                start: start,
+                end: end,
+                yearsAsc: [start, end],
+                yearsDesc: [end, start],
+                label: `${start}–${end}`
+            };
+        }
+
         function getTablePeriod(year, tableCode) {
+            if (tableCode === '5.2.1' || tableCode === '5.2.2') {
+                return get2YearPeriod(year);
+            }
             if (tableCode === '4.1.20' || tableCode === '2.4.1' || tableCode === '2.4.2') {
                 return get4YearPeriod(year);
             }

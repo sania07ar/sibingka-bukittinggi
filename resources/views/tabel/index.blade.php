@@ -7880,6 +7880,184 @@
                         </tbody>
                     `;
                 }
+            },
+            '5.2.1': {
+                titleId: 'Luas Areal Tanaman Perkebunan Menurut Kecamatan dan Jenis Tanaman di Kota Bukittinggi (ha)',
+                titleEn: 'Planted Area of Estate Crops by District and Types of Crops in Bukittinggi Municipality (ha)',
+                isMultiYear: true,
+                source: 'Dinas Pertanian dan Pangan Kota Bukittinggi / <span class="italic text-slate-500">Agriculture and Food Services of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const y1 = yr - 1;
+                    const y2 = yr;
+                    const is2025 = (yr === 2025);
+                    const dists = [
+                        { name: '01. Guguk Panjang', data: is2025 ? ['-', '-', '0,86', '0,86', '-', '-', '69,36', '60,00', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'] : Array(20).fill('-') },
+                        { name: '02. Mandiangin Koto Selayan', data: is2025 ? ['-', '-', '2', '1,9', '-', '-', '52,48', '50,24', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'] : Array(20).fill('-') },
+                        { name: '03. Aur Birugo Tigo Baleh', data: is2025 ? ['-', '-', '0,9', '0,9', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'] : Array(20).fill('-') }
+                    ];
+                    const totalData = is2025 ? ['-', '-', '3,76', '3,66', '-', '-', '122,24', '110,24', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'] : Array(20).fill('-');
+
+                    const crops = [
+                        { id: 'Kelapa Sawit', en: 'Oil Palm' },
+                        { id: 'Kelapa', en: 'Coconut' },
+                        { id: 'Karet', en: 'Rubber' },
+                        { id: 'Kopi', en: 'Coffee' },
+                        { id: 'Kulit Manis', en: 'Cassiavera' },
+                        { id: 'Cengkeh', en: 'Clove' },
+                        { id: 'Pala', en: 'Nutmeg' },
+                        { id: 'Pinang', en: 'Areca Nut' },
+                        { id: 'Tebu', en: 'Sugar Cane' },
+                        { id: 'Kakao', en: 'Cocoa' }
+                    ];
+
+                    let thCropsHtml = '';
+                    let thYearsHtml = '';
+                    let thNumsHtml = '<th class="py-1 px-3 border border-slate-700 text-left">(1)</th>';
+                    let cNum = 2;
+
+                    crops.forEach(c => {
+                        thCropsHtml += `
+                            <th class="py-2 px-3 font-bold border border-slate-700 text-center" colspan="2">
+                                <div>${c.id}</div><div class="italic font-normal text-[11px] sm:text-xs">${c.en}</div>
+                            </th>
+                        `;
+                        thYearsHtml += `
+                            <th class="py-2 px-2 border border-slate-700">${y1}</th>
+                            <th class="py-2 px-2 border border-slate-700">${y2}</th>
+                        `;
+                        thNumsHtml += `
+                            <th class="py-1 px-2 border border-slate-700">(${cNum})</th>
+                            <th class="py-1 px-2 border border-slate-700">(${cNum + 1})</th>
+                        `;
+                        cNum += 2;
+                    });
+
+                    let rowsHtml = '';
+                    dists.forEach(d => {
+                        rowsHtml += `
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${d.name}</td>
+                                ${d.data.map(v => `<td class="py-2.5 px-3 border border-slate-700 text-right align-top pr-4 font-medium">${v}</td>`).join('')}
+                            </tr>
+                        `;
+                    });
+                    rowsHtml += `
+                        <tr class="bg-[#fed7aa] font-bold">
+                            <td class="py-2.5 px-4 border border-slate-700 text-left font-extrabold align-top">Bukittinggi</td>
+                            ${totalData.map(v => `<td class="py-2.5 px-3 border border-slate-700 text-right align-top pr-4 font-extrabold">${v}</td>`).join('')}
+                        </tr>
+                    `;
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700 align-middle" rowspan="2">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                ${thCropsHtml}
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs">
+                                ${thYearsHtml}
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                ${thNumsHtml}
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+            '5.2.2': {
+                titleId: 'Produksi Tanaman Perkebunan Menurut Kecamatan dan Jenis Tanaman di Kota Bukittinggi (ton)',
+                titleEn: 'Production of Estate Crops by District and Types of Crops in Bukittinggi Municipality (ton)',
+                isMultiYear: true,
+                source: 'Dinas Pertanian dan Pangan Kota Bukittinggi / <span class="italic text-slate-500">Agriculture and Food Services of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const y1 = yr - 1;
+                    const y2 = yr;
+                    const is2025 = (yr === 2025);
+                    const dists = [
+                        { name: '01. Guguk Panjang', data: is2025 ? ['-', '-', '0,0034', '0,0002', '-', '-', '0,0011', '0,0004', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'] : Array(20).fill('-') },
+                        { name: '02. Mandiangin Koto Selayan', data: is2025 ? ['-', '-', '0,0012', '0,0002', '-', '-', '0,0008', '0,0001', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'] : Array(20).fill('-') },
+                        { name: '03. Aur Birugo Tigo Baleh', data: is2025 ? ['-', '-', '0,001', '0,0002', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'] : Array(20).fill('-') }
+                    ];
+                    const totalData = is2025 ? ['-', '-', '0,0055', '0,0006', '-', '-', '0,0019', '0,00055', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'] : Array(20).fill('-');
+
+                    const crops = [
+                        { id: 'Kelapa Sawit', en: 'Oil Palm' },
+                        { id: 'Kelapa', en: 'Coconut' },
+                        { id: 'Karet', en: 'Rubber' },
+                        { id: 'Kopi', en: 'Coffee' },
+                        { id: 'Kulit Manis', en: 'Cassiavera' },
+                        { id: 'Cengkeh', en: 'Clove' },
+                        { id: 'Pala', en: 'Nutmeg' },
+                        { id: 'Pinang', en: 'Areca Nut' },
+                        { id: 'Tebu', en: 'Sugar Cane' },
+                        { id: 'Kakao', en: 'Cocoa' }
+                    ];
+
+                    let thCropsHtml = '';
+                    let thYearsHtml = '';
+                    let thNumsHtml = '<th class="py-1 px-3 border border-slate-700 text-left">(1)</th>';
+                    let cNum = 2;
+
+                    crops.forEach(c => {
+                        thCropsHtml += `
+                            <th class="py-2 px-3 font-bold border border-slate-700 text-center" colspan="2">
+                                <div>${c.id}</div><div class="italic font-normal text-[11px] sm:text-xs">${c.en}</div>
+                            </th>
+                        `;
+                        thYearsHtml += `
+                            <th class="py-2 px-2 border border-slate-700">${y1}</th>
+                            <th class="py-2 px-2 border border-slate-700">${y2}</th>
+                        `;
+                        thNumsHtml += `
+                            <th class="py-1 px-2 border border-slate-700">(${cNum})</th>
+                            <th class="py-1 px-2 border border-slate-700">(${cNum + 1})</th>
+                        `;
+                        cNum += 2;
+                    });
+
+                    let rowsHtml = '';
+                    dists.forEach(d => {
+                        rowsHtml += `
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${d.name}</td>
+                                ${d.data.map(v => `<td class="py-2.5 px-3 border border-slate-700 text-right align-top pr-4 font-medium">${v}</td>`).join('')}
+                            </tr>
+                        `;
+                    });
+                    rowsHtml += `
+                        <tr class="bg-[#fed7aa] font-bold">
+                            <td class="py-2.5 px-4 border border-slate-700 text-left font-extrabold align-top">Bukittinggi</td>
+                            ${totalData.map(v => `<td class="py-2.5 px-3 border border-slate-700 text-right align-top pr-4 font-extrabold">${v}</td>`).join('')}
+                        </tr>
+                    `;
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700 align-middle" rowspan="2">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                ${thCropsHtml}
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs">
+                                ${thYearsHtml}
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                ${thNumsHtml}
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
             }
         };
 
@@ -7899,6 +8077,9 @@
                 return tableSchemas['1.1.6'].render(targetYear);
             }
             if (currentTableCode.startsWith('4.1') && tableSchemas[currentTableCode]) {
+                return tableSchemas[currentTableCode].render(targetYear);
+            }
+            if ((currentTableCode === '5.2.1' || currentTableCode === '5.2.2') && tableSchemas[currentTableCode]) {
                 return tableSchemas[currentTableCode].render(targetYear);
             }
             const tempTable = document.createElement('table');
@@ -8075,6 +8256,15 @@
                         const val = localStorage.getItem(k);
                         if (val && (val.includes('212,10') || val.includes('105,22'))) {
                             safeSetLocalStorage(k, val.replace(/212,10/g, '8,84').replace(/105,22/g, '4,39'));
+                        }
+                    });
+                    ['5.2.1', '5.2.2'].forEach(code => {
+                        const k = `simonda_table_html_${code}_${y}`;
+                        const val = localStorage.getItem(k);
+                        if (val && (val.includes('Kopi Coffe') || (val.includes('Karet') && !val.includes('Kakao')))) {
+                            localStorage.removeItem(k);
+                            localStorage.removeItem(`simonda_table_source_${code}_${y}`);
+                            localStorage.removeItem(`simonda_table_is_saved_${code}_${y}`);
                         }
                     });
                     const k = `simonda_table_html_8.1.3_${y}`;
@@ -8258,7 +8448,23 @@
             };
         }
 
+        function get2YearPeriod(year) {
+            const yr = parseInt(year) || 2025;
+            const start = yr - 1;
+            const end = yr;
+            return {
+                start: start,
+                end: end,
+                yearsAsc: [start, end],
+                yearsDesc: [end, start],
+                label: `${start}–${end}`
+            };
+        }
+
         function getTablePeriod(year, tableCode) {
+            if (tableCode === '5.2.1' || tableCode === '5.2.2') {
+                return get2YearPeriod(year);
+            }
             if (tableCode === '4.1.20' || tableCode === '2.4.1' || tableCode === '2.4.2') {
                 return get4YearPeriod(year);
             }
@@ -8885,9 +9091,27 @@
                 }
             }
 
+            // Self-healing tabel 5.2.1 & 5.2.2: pastikan 10 komoditi lengkap (21 kolom) dan header 2-tier tidak rusak
+            if ((currentTableCode === '5.2.1' || currentTableCode === '5.2.2') && savedHtml) {
+                const tempDiv = document.createElement('table');
+                tempDiv.innerHTML = savedHtml;
+                const headerThs = tempDiv.querySelectorAll('thead tr:last-child th');
+                const hasKakao = savedHtml.includes('Kakao') || savedHtml.includes('Cocoa');
+                const hasCorruptSingleHeaders = savedHtml.includes('Kopi Coffe') || (savedHtml.includes('Karet') && !savedHtml.includes('Kakao'));
+                if (headerThs.length < 21 || !hasKakao || hasCorruptSingleHeaders) {
+                    localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`simonda_table_source_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`);
+                    if (serverDbMetadata) {
+                        serverDbMetadata.table_html = null;
+                    }
+                    savedHtml = (tableSchemas[currentTableCode]) ? tableSchemas[currentTableCode].render(currentYear) : null;
+                }
+            }
+
             // Validasi savedHtml untuk tabel multi-tahun (8.1.1, 8.1.2, 8.1.3, 8.1.4, 8.1.5, 8.2.2, 2.2.5, 1.1.10 atau schema.isMultiYear)
             const isMultiYearTable = Boolean(schema && (schema.isMultiYear || schema.isExcludeSelectedYear)) || 
-                                     ['8.1.1', '8.1.2', '8.1.3', '8.1.4', '8.1.5', '8.2.2', '2.2.5', '1.1.10', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2'].includes(currentTableCode);
+                                     ['8.1.1', '8.1.2', '8.1.3', '8.1.4', '8.1.5', '8.2.2', '2.2.5', '1.1.10', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2', '5.2.1', '5.2.2'].includes(currentTableCode);
 
             if (!isLocallySaved && isMultiYearTable && savedHtml && !['8.1.4', '8.1.5', '1.1.10', '4.2.4', '4.2.5', '4.2.7', '4.2.9', '4.2.10', '4.2.13', '4.2.15', '4.2.16'].includes(currentTableCode)) {
                 const tempDiv = document.createElement('table');
@@ -14117,6 +14341,154 @@
                     tbodyHtml += `</tr>`;
                 });
                 tbodyHtml += '</tbody>';
+            } else if (currentTableCode === '5.2.1' || currentTableCode === '5.2.2') {
+                const is521 = (currentTableCode === '5.2.1');
+                const yrInt = parseInt(currentYear) || 2025;
+                const y1 = yrInt - 1;
+                const y2 = yrInt;
+
+                titleId = is521
+                    ? `Luas Areal Tanaman Perkebunan Menurut Kecamatan dan Jenis Tanaman di Kota Bukittinggi (ha), ${y1}–${y2}`
+                    : `Produksi Tanaman Perkebunan Menurut Kecamatan dan Jenis Tanaman di Kota Bukittinggi (ton), ${y1}–${y2}`;
+                titleEn = is521
+                    ? `Planted Area of Estate Crops by District and Types of Crops in Bukittinggi Municipality (ha), ${y1}–${y2}`
+                    : `Production of Estate Crops by District and Types of Crops in Bukittinggi Municipality (ton), ${y1}–${y2}`;
+
+                const crops = [
+                    { id: 'Kelapa Sawit', en: 'Oil Palm' },
+                    { id: 'Kelapa', en: 'Coconut' },
+                    { id: 'Karet', en: 'Rubber' },
+                    { id: 'Kopi', en: 'Coffee' },
+                    { id: 'Kulit Manis', en: 'Cassiavera' },
+                    { id: 'Cengkeh', en: 'Clove' },
+                    { id: 'Pala', en: 'Nutmeg' },
+                    { id: 'Pinang', en: 'Areca Nut' },
+                    { id: 'Tebu', en: 'Sugar Cane' },
+                    { id: 'Kakao', en: 'Cocoa' }
+                ];
+
+                let thCropsHtml = '';
+                let thYearsHtml = '';
+                let thNumsHtml = '<th class="py-1 px-3 border border-slate-700 text-left">(1)</th>';
+                let cNum = 2;
+
+                crops.forEach(c => {
+                    thCropsHtml += `
+                        <th class="py-2 px-3 font-bold border border-slate-700 text-center" colspan="2">
+                            <div>${c.id}</div><div class="italic font-normal text-[11px] sm:text-xs">${c.en}</div>
+                        </th>
+                    `;
+                    thYearsHtml += `
+                        <th class="py-2 px-2 border border-slate-700">${y1}</th>
+                        <th class="py-2 px-2 border border-slate-700">${y2}</th>
+                    `;
+                    thNumsHtml += `
+                        <th class="py-1 px-2 border border-slate-700">(${cNum})</th>
+                        <th class="py-1 px-2 border border-slate-700">(${cNum + 1})</th>
+                    `;
+                    cNum += 2;
+                });
+
+                theadHtml = `<thead>
+                    <tr class="bg-[#f95a00] text-white text-center font-bold">
+                        <th class="py-3 px-4 font-bold border border-slate-700 align-middle" rowspan="2">
+                            <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                        </th>
+                        ${thCropsHtml}
+                    </tr>
+                    <tr class="bg-[#f95a00] text-white text-center font-bold text-xs">
+                        ${thYearsHtml}
+                    </tr>
+                    <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                        ${thNumsHtml}
+                    </tr>
+                </thead>`;
+
+                // Ekstrak 4 baris kecamatan: Guguk Panjang, Mandiangin, Aur Birugo, Bukittinggi
+                const distDefs = [
+                    { name: '01. Guguk Panjang', match: 'guguk', vals: Array(20).fill('-') },
+                    { name: '02. Mandiangin Koto Selayan', match: 'mandiangin', vals: Array(20).fill('-') },
+                    { name: '03. Aur Birugo Tigo Baleh', match: 'aur', vals: Array(20).fill('-') },
+                    { name: 'Bukittinggi', match: 'bukittinggi', vals: Array(20).fill('-') }
+                ];
+
+                // Jika berkas Excel memiliki beberapa tabel bertingkat (misal 2024-2025 di atas dan 2023-2024 di bawah),
+                // cari blok baris yang relevan dengan tahun aktif.
+                let relevantStartIdx = 0;
+                let relevantEndIdx = rawRows.length;
+                for (let r = 0; r < rawRows.length; r++) {
+                    const rStr = (rawRows[r] || []).map(c => (c !== null && c !== undefined ? c.toString() : '')).join(' ').toLowerCase();
+                    if ((rStr.includes(`${y1}–${y2}`) || rStr.includes(`${y1}-${y2}`) || (rStr.includes(`${y1}`) && rStr.includes(`${y2}`))) &&
+                        (rStr.includes('5.2.1') || rStr.includes('5.2.2') || rStr.includes('perkebunan') || rStr.includes('tabel') || rStr.includes('table'))) {
+                        relevantStartIdx = r;
+                        for (let nr = r + 4; nr < rawRows.length; nr++) {
+                            const nextStr = (rawRows[nr] || []).map(c => (c !== null && c !== undefined ? c.toString() : '')).join(' ').toLowerCase();
+                            if ((nextStr.includes('5.2.1') || nextStr.includes('5.2.2')) && (nextStr.includes('luas') || nextStr.includes('produksi') || nextStr.includes('planted'))) {
+                                relevantEndIdx = nr;
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                }
+
+                for (let r = relevantStartIdx; r < relevantEndIdx; r++) {
+                    const row = rawRows[r] || [];
+                    if (!Array.isArray(row)) continue;
+                    const rowStr = row.map(c => (c !== null && c !== undefined ? c.toString().trim() : '')).join(' ').toLowerCase();
+                    if (!rowStr || rowStr.startsWith('sumber') || rowStr.startsWith('source') || rowStr.includes('(1)')) continue;
+
+                    let targetDef = null;
+                    const firstCell = (row[0] || '').toString().toLowerCase();
+                    for (let dk of distDefs) {
+                        if (firstCell.includes(dk.match) || rowStr.includes(dk.match)) {
+                            targetDef = dk;
+                            break;
+                        }
+                    }
+
+                    if (targetDef) {
+                        let nameColIdx = 0;
+                        for (let c = 0; c < Math.min(row.length, 5); c++) {
+                            const cText = (row[c] || '').toString().toLowerCase();
+                            if (cText.includes(targetDef.match)) {
+                                nameColIdx = c;
+                                break;
+                            }
+                        }
+                        let colOffset = nameColIdx + 1;
+                        if (row.length >= 21 + colOffset) {
+                            // tepat
+                        } else if (row.length >= 21) {
+                            colOffset = row.length - 20;
+                        }
+
+                        for (let c = 0; c < 20; c++) {
+                            const raw = row[colOffset + c];
+                            const val = sanitizeExcelNumericCell(raw);
+                            targetDef.vals[c] = (val !== '' && val !== undefined && val !== null) ? val : '-';
+                        }
+                    }
+                }
+
+                let rowsHtml = '';
+                distDefs.slice(0, 3).forEach(d => {
+                    rowsHtml += `
+                        <tr class="hover:bg-amber-100/60 transition-colors">
+                            <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${d.name}</td>
+                            ${d.vals.map(v => `<td class="py-2.5 px-3 border border-slate-700 text-right align-top pr-4 font-medium">${v}</td>`).join('')}
+                        </tr>
+                    `;
+                });
+                const totalDef = distDefs[3];
+                rowsHtml += `
+                    <tr class="bg-[#fed7aa] font-bold">
+                        <td class="py-2.5 px-4 border border-slate-700 text-left font-extrabold align-top">${totalDef.name}</td>
+                        ${totalDef.vals.map(v => `<td class="py-2.5 px-3 border border-slate-700 text-right align-top pr-4 font-extrabold">${v}</td>`).join('')}
+                    </tr>
+                `;
+
+                tbodyHtml = `<tbody class="bg-[#fef9c3] text-slate-900 font-medium">${rowsHtml}</tbody>`;
             } else if (currentTableCode === '8.1.4') {
                 theadHtml = `<thead>
                     <tr class="bg-[#f95a00] text-white text-center font-bold">
