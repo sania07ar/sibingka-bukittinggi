@@ -10342,7 +10342,7 @@
                 }
 
                 if (!sourceHtml) {
-                    const checkYears = [2025, 2024, 2023, 2022, 2021, 2026, 2027];
+                    const checkYears = [2025, 2024, 2023, 2022, 2021, 2026, 2027, 2028, 2029, 2030, 2020, 2019, 2018];
                     for (let y of checkYears) {
                         if (y.toString() === currentYear.toString()) continue;
                         const localKey = `simonda_table_html_${currentTableCode}_${y}`;
@@ -10357,6 +10357,10 @@
 
                 if (sourceHtml && !sourceHtml.includes('Belum ada data untuk tabel ini')) {
                     savedHtml = buildEmptyTemplateFromSource(sourceHtml, currentYear, sourceYr);
+                    try {
+                        localStorage.setItem(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                        localStorage.setItem(`simonda_table_source_${currentTableCode}_${currentYear}`, 'template');
+                    } catch(e) {}
                 }
             }
 
@@ -11147,7 +11151,7 @@
             if (selectYearEl) selectYearEl.value = currentYear;
 
             try {
-                const res = await fetch(`{{ route('tabel-opd.api.data') }}?code=${currentTableCode}&opd=${currentOpdCode}&year=${currentYear}`);
+                const res = await fetch(`{{ route('tabel-opd.api.data') }}?code=${currentTableCode}&opd=${currentOpdCode}&year=${currentYear}&type=${typeof currentType !== 'undefined' ? currentType : 'opd'}`);
                 const dataRes = await res.json();
                 if (dataRes.success) {
                     if (dataRes.dataStore) {
@@ -11942,25 +11946,30 @@
                     });
                 }
 
-                await fetch('{{ route("tabel-opd.api.save") }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
-                    },
-                    body: JSON.stringify({
-                        table_code: currentTableCode,
-                        opd_code: currentOpdCode,
-                        year: currentYear,
-                        table_html: clone.innerHTML,
-                        title_id: document.getElementById('metaTableTitleId') ? document.getElementById('metaTableTitleId').innerText : '',
-                        title_en: document.getElementById('metaTableTitleEn') ? document.getElementById('metaTableTitleEn').innerText : '',
-                        source: document.getElementById('tableSourceContent') ? document.getElementById('tableSourceContent').innerHTML : '',
-                        note: document.getElementById('tableNoteContent') ? document.getElementById('tableNoteContent').innerHTML : '',
-                        source_type: 'manual',
-                        rows_data: rowsData
-                    })
-                });
+                    const targetSourceType = (typeof currentType !== 'undefined' && currentType === 'bps') 
+                        ? 'custom_bps' 
+                        : ((typeof currentType !== 'undefined' && currentType === 'instansi') ? 'custom_instansi' : 'manual');
+
+                    await fetch('{{ route("tabel-opd.api.save") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify({
+                            table_code: currentTableCode,
+                            opd_code: currentOpdCode,
+                            year: currentYear,
+                            table_html: clone.innerHTML,
+                            title_id: document.getElementById('metaTableTitleId') ? document.getElementById('metaTableTitleId').innerText : '',
+                            title_en: document.getElementById('metaTableTitleEn') ? document.getElementById('metaTableTitleEn').innerText : '',
+                            source: document.getElementById('tableSourceContent') ? document.getElementById('tableSourceContent').innerHTML : '',
+                            note: document.getElementById('tableNoteContent') ? document.getElementById('tableNoteContent').innerHTML : '',
+                            source_type: targetSourceType,
+                            type: typeof currentType !== 'undefined' ? currentType : 'opd',
+                            rows_data: rowsData
+                        })
+                    });
             } catch(e) {
                 console.warn('Gagal menyimpan ke database:', e);
             }

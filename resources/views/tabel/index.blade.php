@@ -8510,6 +8510,22 @@
             let customSource = (serverDbMetadata && serverDbMetadata.source) ? serverDbMetadata.source : (localStorage.getItem(`simonda_table_source_text_${currentTableCode}_${currentYear}`) || (serverDbFallbackMetadata && serverDbFallbackMetadata.source ? serverDbFallbackMetadata.source : null));
             let customNote = (serverDbMetadata && serverDbMetadata.note !== undefined && serverDbMetadata.note !== null) ? serverDbMetadata.note : (localStorage.getItem(`simonda_table_note_${currentTableCode}_${currentYear}`) || (serverDbFallbackMetadata && serverDbFallbackMetadata.note !== undefined ? serverDbFallbackMetadata.note : null));
 
+            // Jika custom title belum ada untuk tahun ini, cari dari tahun lain di localStorage
+            if (!customTitleId) {
+                const searchYears = [2025, 2024, 2023, 2022, 2021, 2026, 2027, 2028, 2029, 2030, 2020, 2019, 2018];
+                for (let y of searchYears) {
+                    if (y.toString() === currentYear.toString()) continue;
+                    const altTitle = localStorage.getItem(`simonda_table_title_id_${currentTableCode}_${y}`);
+                    if (altTitle && !altTitle.includes('Tabel Data Statistik Sektoral')) {
+                        customTitleId = altTitle;
+                        if (!customTitleEn) customTitleEn = localStorage.getItem(`simonda_table_title_en_${currentTableCode}_${y}`);
+                        if (!customSource) customSource = localStorage.getItem(`simonda_table_source_text_${currentTableCode}_${y}`);
+                        if (!customNote) customNote = localStorage.getItem(`simonda_table_note_${currentTableCode}_${y}`);
+                        break;
+                    }
+                }
+            }
+
             // Bersihkan jika title hanya berisi kata 'Table' atau 'Tabel'
             if (customTitleEn && (customTitleEn.trim().toLowerCase() === 'table' || customTitleEn.trim().toLowerCase() === 'tabel')) {
                 localStorage.removeItem(`simonda_table_title_en_${currentTableCode}_${currentYear}`);
@@ -9042,7 +9058,7 @@
                 }
 
                 if (!sourceHtml) {
-                    const checkYears = [2025, 2024, 2023, 2022, 2021, 2026, 2027];
+                    const checkYears = [2025, 2024, 2023, 2022, 2021, 2026, 2027, 2028, 2029, 2030, 2020, 2019, 2018];
                     for (let y of checkYears) {
                         if (y.toString() === currentYear.toString()) continue;
                         const localKey = `simonda_table_html_${currentTableCode}_${y}`;
@@ -9058,6 +9074,10 @@
                 if (sourceHtml && !sourceHtml.includes('Belum ada data untuk tabel ini')) {
                     savedHtml = buildEmptyTemplateFromSource(sourceHtml, currentYear, sourceYr);
                     isInheritedTemplate = true;
+                    try {
+                        localStorage.setItem(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                        localStorage.setItem(`simonda_table_source_${currentTableCode}_${currentYear}`, 'template');
+                    } catch(e) {}
                 }
             }
 
@@ -9521,7 +9541,7 @@
 
             // Ambil data terbaru dari database MySQL untuk tahun ini
             try {
-                const res = await fetch(`{{ route('tabel-opd.api.data') }}?code=${currentTableCode}&opd=${currentOpdCode}&year=${currentYear}`);
+                const res = await fetch(`{{ route('tabel-opd.api.data') }}?code=${currentTableCode}&opd=${currentOpdCode}&year=${currentYear}&type=${typeof currentType !== 'undefined' ? currentType : 'opd'}`);
                 const dataRes = await res.json();
                 if (dataRes.success) {
                     if (dataRes.dataStore) {
@@ -15790,8 +15810,12 @@
             }
 
             // 8. Save to localStorage
+            const savedSourceType = (typeof currentType !== 'undefined' && currentType === 'bps') 
+                ? 'custom_bps' 
+                : ((typeof currentType !== 'undefined' && currentType === 'instansi') ? 'custom_instansi' : 'excel');
+
             localStorage.setItem(`simonda_table_html_${currentTableCode}_${currentYear}`, completeTableHtml);
-            localStorage.setItem(`simonda_table_source_${currentTableCode}_${currentYear}`, 'excel');
+            localStorage.setItem(`simonda_table_source_${currentTableCode}_${currentYear}`, savedSourceType);
 
             if (titleId) {
                 localStorage.setItem(`simonda_table_title_id_${currentTableCode}_${currentYear}`, titleId);
@@ -15805,6 +15829,34 @@
             if (extractedNote) {
                 localStorage.setItem(`simonda_table_note_${currentTableCode}_${currentYear}`, extractedNote);
             }
+
+            // Sinkronkan empty template ke tahun-tahun lain di localStorage jika belum ada data tersimpan
+            const syncYears = [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036];
+            const srcYrNum = parseInt(currentYear) || 2024;
+            syncYears.forEach(targetY => {
+                if (targetY === srcYrNum) return;
+                const existingLocal = localStorage.getItem(`simonda_table_html_${currentTableCode}_${targetY}`);
+                const isSaved = localStorage.getItem(`simonda_table_is_saved_${currentTableCode}_${targetY}`) === '1';
+                if (!existingLocal || !isSaved || existingLocal.includes('Belum ada data untuk tabel ini')) {
+                    const emptyTpl = buildEmptyTemplateFromSource(completeTableHtml, targetY, srcYrNum);
+                    if (emptyTpl) {
+                        localStorage.setItem(`simonda_table_html_${currentTableCode}_${targetY}`, emptyTpl);
+                        localStorage.setItem(`simonda_table_source_${currentTableCode}_${targetY}`, 'template');
+                        if (titleId) {
+                            localStorage.setItem(`simonda_table_title_id_${currentTableCode}_${targetY}`, titleId);
+                        }
+                        if (titleEn) {
+                            localStorage.setItem(`simonda_table_title_en_${currentTableCode}_${targetY}`, titleEn);
+                        }
+                        if (extractedSource) {
+                            localStorage.setItem(`simonda_table_source_text_${currentTableCode}_${targetY}`, extractedSource);
+                        }
+                        if (extractedNote) {
+                            localStorage.setItem(`simonda_table_note_${currentTableCode}_${targetY}`, extractedNote);
+                        }
+                    }
+                }
+            });
 
             // Langsung tandai tersimpan dan simpan ke database MySQL!
             localStorage.setItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`, '1');
@@ -16294,6 +16346,10 @@
                     });
                 }
 
+                const targetSourceType = (typeof currentType !== 'undefined' && currentType === 'bps') 
+                    ? 'custom_bps' 
+                    : ((typeof currentType !== 'undefined' && currentType === 'instansi') ? 'custom_instansi' : 'excel');
+
                 await fetch('{{ route("tabel-opd.api.save") }}', {
                     method: 'POST',
                     headers: {
@@ -16309,13 +16365,14 @@
                         title_en: titleEn,
                         source: source,
                         note: note,
-                        source_type: 'excel',
+                        source_type: targetSourceType,
+                        type: typeof currentType !== 'undefined' ? currentType : 'opd',
                         rows_data: rowsData
                     })
                 });
 
                 // Ambil data terbaru dari database MySQL untuk tahun ini
-                const res = await fetch(`{{ route('tabel-opd.api.data') }}?code=${currentTableCode}&opd=${currentOpdCode}&year=${currentYear}`);
+                const res = await fetch(`{{ route('tabel-opd.api.data') }}?code=${currentTableCode}&opd=${currentOpdCode}&year=${currentYear}&type=${typeof currentType !== 'undefined' ? currentType : 'opd'}`);
                 const dataRes = await res.json();
                 if (dataRes.success) {
                     if (dataRes.dataStore) {
@@ -16358,7 +16415,8 @@
                         body: JSON.stringify({
                             table_code: currentTableCode,
                             opd_code: currentOpdCode,
-                            year: currentYear
+                            year: currentYear,
+                            type: typeof currentType !== 'undefined' ? currentType : 'opd'
                         })
                     });
                 } catch(e) {}

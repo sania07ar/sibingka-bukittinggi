@@ -66,15 +66,28 @@ class TabelOpdController extends Controller
 
         $cleanOpd = str_pad($opdCode, 2, '0', STR_PAD_LEFT);
         $dbDataStore = $this->loadDbDataStore($tableCode, $opdCode);
-        $dbMetadata = $this->getOrCreateMetadata($tableCode, $opdCode, $year);
+        $dbMetadata = $this->getOrCreateMetadata($tableCode, $opdCode, $year, $type);
 
         $dbFallbackMetadata = null;
         if (!$dbMetadata || empty($dbMetadata->table_html)) {
-            $dbFallbackMetadata = TabelMetadata::where('table_code', $tableCode)
+            $fallbackQuery = TabelMetadata::where('table_code', $tableCode)
                 ->whereNotNull('table_html')
                 ->where('table_html', '!=', '')
-                ->orderByRaw("CASE WHEN source_type NOT IN ('template') THEN 0 ELSE 1 END ASC, ABS(year - {$year}) ASC")
-                ->first();
+                ->orderByRaw("CASE WHEN source_type NOT IN ('template') THEN 0 ELSE 1 END ASC, ABS(year - {$year}) ASC");
+            if ($type === 'bps') {
+                $fallbackQuery->where(function($q) use ($opdCode, $cleanOpd) {
+                    $q->whereIn('opd_code', array_unique([$opdCode, $cleanOpd]))
+                      ->orWhere('source_type', 'like', '%bps%');
+                });
+            } elseif ($type === 'instansi') {
+                $fallbackQuery->where(function($q) use ($opdCode, $cleanOpd) {
+                    $q->whereIn('opd_code', array_unique([$opdCode, $cleanOpd]))
+                      ->orWhere('source_type', 'like', '%instansi%');
+                });
+            } else {
+                $fallbackQuery->whereIn('opd_code', array_unique([$opdCode, $cleanOpd]));
+            }
+            $dbFallbackMetadata = $fallbackQuery->first();
             if ($dbFallbackMetadata) {
                 $dbFallbackMetadata->opd_code = $opdCode;
             }
@@ -119,15 +132,28 @@ class TabelOpdController extends Controller
 
         $cleanOpd = str_pad($opdCode, 2, '0', STR_PAD_LEFT);
         $dbDataStore = $this->loadDbDataStore($tableCode, $opdCode);
-        $dbMetadata = $this->getOrCreateMetadata($tableCode, $opdCode, $year);
+        $dbMetadata = $this->getOrCreateMetadata($tableCode, $opdCode, $year, $type);
 
         $dbFallbackMetadata = null;
         if (!$dbMetadata || empty($dbMetadata->table_html)) {
-            $dbFallbackMetadata = TabelMetadata::where('table_code', $tableCode)
+            $fallbackQuery = TabelMetadata::where('table_code', $tableCode)
                 ->whereNotNull('table_html')
                 ->where('table_html', '!=', '')
-                ->orderByRaw("CASE WHEN source_type NOT IN ('template') THEN 0 ELSE 1 END ASC, ABS(year - {$year}) ASC")
-                ->first();
+                ->orderByRaw("CASE WHEN source_type NOT IN ('template') THEN 0 ELSE 1 END ASC, ABS(year - {$year}) ASC");
+            if ($type === 'bps') {
+                $fallbackQuery->where(function($q) use ($opdCode, $cleanOpd) {
+                    $q->whereIn('opd_code', array_unique([$opdCode, $cleanOpd]))
+                      ->orWhere('source_type', 'like', '%bps%');
+                });
+            } elseif ($type === 'instansi') {
+                $fallbackQuery->where(function($q) use ($opdCode, $cleanOpd) {
+                    $q->whereIn('opd_code', array_unique([$opdCode, $cleanOpd]))
+                      ->orWhere('source_type', 'like', '%instansi%');
+                });
+            } else {
+                $fallbackQuery->whereIn('opd_code', array_unique([$opdCode, $cleanOpd]));
+            }
+            $dbFallbackMetadata = $fallbackQuery->first();
             if ($dbFallbackMetadata) {
                 $dbFallbackMetadata->opd_code = $opdCode;
             }
@@ -170,16 +196,29 @@ class TabelOpdController extends Controller
         $year = (int) $request->query('year', 2025);
 
         $dbDataStore = $this->loadDbDataStore($tableCode, $opdCode);
-        $dbMetadata = $this->getOrCreateMetadata($tableCode, $opdCode, $year);
+        $dbMetadata = $this->getOrCreateMetadata($tableCode, $opdCode, $year, $type);
 
         $cleanOpd = str_pad($opdCode, 2, '0', STR_PAD_LEFT);
         $dbFallbackMetadata = null;
         if (!$dbMetadata || empty($dbMetadata->table_html)) {
-            $dbFallbackMetadata = TabelMetadata::where('table_code', $tableCode)
+            $fallbackQuery = TabelMetadata::where('table_code', $tableCode)
                 ->whereNotNull('table_html')
                 ->where('table_html', '!=', '')
-                ->orderByRaw("CASE WHEN source_type NOT IN ('template') THEN 0 ELSE 1 END ASC, ABS(year - {$year}) ASC")
-                ->first();
+                ->orderByRaw("CASE WHEN source_type NOT IN ('template') THEN 0 ELSE 1 END ASC, ABS(year - {$year}) ASC");
+            if ($type === 'bps') {
+                $fallbackQuery->where(function($q) use ($opdCode, $cleanOpd) {
+                    $q->whereIn('opd_code', array_unique([$opdCode, $cleanOpd]))
+                      ->orWhere('source_type', 'like', '%bps%');
+                });
+            } elseif ($type === 'instansi') {
+                $fallbackQuery->where(function($q) use ($opdCode, $cleanOpd) {
+                    $q->whereIn('opd_code', array_unique([$opdCode, $cleanOpd]))
+                      ->orWhere('source_type', 'like', '%instansi%');
+                });
+            } else {
+                $fallbackQuery->whereIn('opd_code', array_unique([$opdCode, $cleanOpd]));
+            }
+            $dbFallbackMetadata = $fallbackQuery->first();
             if ($dbFallbackMetadata) {
                 $dbFallbackMetadata->opd_code = $opdCode;
             }
@@ -214,15 +253,32 @@ class TabelOpdController extends Controller
     /**
      * Ambil metadata tabel dari database, atau generate template kosong (dengan nilai '-') dan simpan langsung ke database
      */
-    private function getOrCreateMetadata(string $tableCode, string $opdCode, int $year): ?TabelMetadata
+    private function getOrCreateMetadata(string $tableCode, string $opdCode, int $year, string $type = 'opd'): ?TabelMetadata
     {
-        $opdCode = $this->normalizeOpdCode($tableCode, $opdCode);
-        $dbMetadata = TabelMetadata::where('table_code', $tableCode)
-            ->where('opd_code', $opdCode)
-            ->where('year', $year)
-            ->first();
+        if ($type !== 'bps' && $type !== 'instansi') {
+            $opdCode = $this->normalizeOpdCode($tableCode, $opdCode);
+        }
 
-        $definitiveOpd = $this->normalizeOpdCode($tableCode, '');
+        $cleanOpd = str_pad($opdCode, 2, '0', STR_PAD_LEFT);
+        $metaQuery = TabelMetadata::where('table_code', $tableCode)
+            ->where('year', $year);
+
+        if ($type === 'bps') {
+            $metaQuery->where(function($q) use ($opdCode, $cleanOpd) {
+                $q->whereIn('opd_code', array_unique([$opdCode, $cleanOpd]))
+                  ->orWhere('source_type', 'like', '%bps%');
+            });
+        } elseif ($type === 'instansi') {
+            $metaQuery->where(function($q) use ($opdCode, $cleanOpd) {
+                $q->whereIn('opd_code', array_unique([$opdCode, $cleanOpd]))
+                  ->orWhere('source_type', 'like', '%instansi%');
+            });
+        } else {
+            $metaQuery->whereIn('opd_code', array_unique([$opdCode, $cleanOpd]));
+        }
+        $dbMetadata = $metaQuery->first();
+
+        $definitiveOpd = ($type !== 'bps' && $type !== 'instansi') ? $this->normalizeOpdCode($tableCode, '') : '';
         if (!$dbMetadata) {
             if (!empty($definitiveOpd)) {
                 $dbMetadata = TabelMetadata::where('table_code', $tableCode)
@@ -232,9 +288,14 @@ class TabelOpdController extends Controller
                     $dbMetadata->opd_code = $definitiveOpd;
                 }
             } else {
-                $existingOpd = TabelMetadata::where('table_code', $tableCode)
-                    ->whereNotNull('table_html')
-                    ->value('opd_code');
+                $existingOpdQuery = TabelMetadata::where('table_code', $tableCode)
+                    ->whereNotNull('table_html');
+                if ($type === 'bps') {
+                    $existingOpdQuery->where('source_type', 'like', '%bps%');
+                } elseif ($type === 'instansi') {
+                    $existingOpdQuery->where('source_type', 'like', '%instansi%');
+                }
+                $existingOpd = $existingOpdQuery->value('opd_code');
                 if ($existingOpd && $existingOpd !== $opdCode) {
                     $opdCode = $existingOpd;
                     $dbMetadata = TabelMetadata::where('table_code', $tableCode)
@@ -880,11 +941,25 @@ class TabelOpdController extends Controller
         }
 
         // Cari struktur tabel dari tahun lain sebagai sumber (hanya untuk tabel non-multi-tahun)
-        $sourceMeta = TabelMetadata::where('table_code', $tableCode)
-            ->where('opd_code', $opdCode)
+        $sourceMetaQuery = TabelMetadata::where('table_code', $tableCode)
             ->whereNotNull('table_html')
-            ->where('table_html', '!=', '')
-            ->orderByRaw("CASE WHEN source_type != 'template' THEN 0 ELSE 1 END ASC, ABS(year - {$year}) ASC")
+            ->where('table_html', '!=', '');
+
+        if ($type === 'bps') {
+            $sourceMetaQuery->where(function($q) use ($opdCode, $cleanOpd) {
+                $q->whereIn('opd_code', array_unique([$opdCode, $cleanOpd]))
+                  ->orWhere('source_type', 'like', '%bps%');
+            });
+        } elseif ($type === 'instansi') {
+            $sourceMetaQuery->where(function($q) use ($opdCode, $cleanOpd) {
+                $q->whereIn('opd_code', array_unique([$opdCode, $cleanOpd]))
+                  ->orWhere('source_type', 'like', '%instansi%');
+            });
+        } else {
+            $sourceMetaQuery->where('opd_code', $opdCode);
+        }
+
+        $sourceMeta = $sourceMetaQuery->orderByRaw("CASE WHEN source_type NOT IN ('template') THEN 0 ELSE 1 END ASC, ABS(year - {$year}) ASC")
             ->first();
 
         if (!$sourceMeta) {
@@ -922,6 +997,12 @@ class TabelOpdController extends Controller
             }
         }
 
+        $targetSourceType = match($type) {
+            'bps' => 'custom_bps',
+            'instansi' => 'custom_instansi',
+            default => 'template'
+        };
+
         return TabelMetadata::updateOrCreate(
             [
                 'table_code' => $tableCode,
@@ -934,7 +1015,7 @@ class TabelOpdController extends Controller
                 'source' => $sourceMeta->source,
                 'note' => $yNote,
                 'table_html' => $yHtml,
-                'source_type' => 'template',
+                'source_type' => $targetSourceType,
                 'is_saved' => true,
             ]
         );
@@ -961,7 +1042,12 @@ class TabelOpdController extends Controller
             $source = trim($source);
         }
         $note = $request->input('note');
-        $sourceType = $request->input('source_type', 'database');
+        $defaultSourceType = match($type) {
+            'bps' => 'custom_bps',
+            'instansi' => 'custom_instansi',
+            default => 'database'
+        };
+        $sourceType = $request->input('source_type', $defaultSourceType);
         $rowsData = $request->input('rows_data'); // format: [year => [row_key => value]]
 
         // Pisahkan jika title_id memuat baris ganda (Indonesia & Inggris tergabung dengan newline)
@@ -1073,8 +1159,21 @@ class TabelOpdController extends Controller
                 ], fn($v) => $v !== null)
             );
 
-            // Template otomatis ke tahun lain ditiadakan agar database tidak terisi template kosong
-            // Struktur tabel untuk tahun lain akan diambil secara dinamis via fallback metadata
+            // Otomatis sinkronkan template kosong ke tahun-tahun lain agar saat pengguna berpindah tahun, format tabel langsung menyesuaikan
+            if (!empty($tableHtml)) {
+                $this->syncTemplateToOtherYears(
+                    $tableCode,
+                    $opdCode,
+                    $year,
+                    $tableHtml,
+                    $titleId ?: ($existingMeta?->title_id),
+                    $titleEn ?: ($existingMeta?->title_en),
+                    $source ?: ($existingMeta?->source),
+                    $note !== null ? $note : ($existingMeta?->note),
+                    $sourceType,
+                    $type
+                );
+            }
 
             // Jika multi-tahun, tandai juga tahun-tahun lain yang ada datanya dengan range tahun yang sesuai
             if (is_array($rowsData) && (str_starts_with($tableCode, '8.1.') || in_array($tableCode, ['2.2.5', '1.1.10', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2']))) {
@@ -1232,6 +1331,7 @@ class TabelOpdController extends Controller
         $tableCode = $request->input('table_code', '8.1.1');
         $opdCode = $request->input('opd_code', '01');
         $year = (int) $request->input('year', 2025);
+        $type = $request->input('type', 'opd');
         $defaultHtml = $request->input('default_html');
 
         $cleanOpd = str_pad($opdCode, 2, '0', STR_PAD_LEFT);
@@ -1246,6 +1346,12 @@ class TabelOpdController extends Controller
             ->where('year', $year)
             ->delete();
 
+        $targetSourceType = match($type) {
+            'bps' => 'custom_bps',
+            'instansi' => 'custom_instansi',
+            default => 'template'
+        };
+
         // Update TabelMetadata ke nilai default resmi
         if (!empty($defaultHtml)) {
             TabelMetadata::where('table_code', $tableCode)
@@ -1253,21 +1359,26 @@ class TabelOpdController extends Controller
                 ->where('year', $year)
                 ->update([
                     'table_html' => $defaultHtml,
-                    'source_type' => 'template',
+                    'source_type' => $targetSourceType,
                     'is_saved' => false,
                 ]);
         } else {
             // Jika tidak ada schema bawaan di frontend, bersihkan nilai data tbody ke '-' tanpa merusak struktur header/kolom
-            $meta = TabelMetadata::where('table_code', $tableCode)
-                ->whereIn('opd_code', $opdCodes)
-                ->where('year', $year)
-                ->first();
+            $metaQuery = TabelMetadata::where('table_code', $tableCode)->where('year', $year);
+            if ($type === 'bps') {
+                $metaQuery->where(function($q) use ($opdCodes) {
+                    $q->whereIn('opd_code', $opdCodes)->orWhere('source_type', 'like', '%bps%');
+                });
+            } else {
+                $metaQuery->whereIn('opd_code', $opdCodes);
+            }
+            $meta = $metaQuery->first();
 
             if ($meta && !empty($meta->table_html)) {
                 $cleanHtml = $this->buildEmptyTemplateFromHtml($meta->table_html);
                 $meta->update([
                     'table_html' => $cleanHtml,
-                    'source_type' => 'template',
+                    'source_type' => $targetSourceType,
                     'is_saved' => false,
                 ]);
             }
@@ -1429,15 +1540,15 @@ class TabelOpdController extends Controller
     /**
      * Otomatis membuat template kosong pada tahun-tahun lain di database jika belum ada data tersimpan
      */
-    private function syncTemplateToOtherYears(string $tableCode, string $opdCode, int $sourceYear, string $html, ?string $titleId, ?string $titleEn, ?string $source, ?string $note, string $sourceType = 'template'): void
+    private function syncTemplateToOtherYears(string $tableCode, string $opdCode, int $sourceYear, string $html, ?string $titleId, ?string $titleEn, ?string $source, ?string $note, string $sourceType = 'template', string $type = 'opd'): void
     {
         if ($source) {
             $source = preg_replace('/^\s*(?:sumber\s*[\/:]\s*source|sumber\s*[\/:]|source\s*[\/:]|sumber|source)\s*:\s*/i', '', $source);
             $source = trim($source);
         }
-        $years = range(2021, 2036);
+        $years = range(2018, 2036);
         $cleanHtml = $this->buildEmptyTemplateFromHtml($html);
-        $targetSourceType = in_array($sourceType, ['custom_bps', 'custom_instansi', 'custom', 'custom_opd']) ? $sourceType : 'template';
+        $targetSourceType = in_array($sourceType, ['custom_bps', 'custom_instansi', 'custom', 'custom_opd']) ? $sourceType : ($type === 'bps' ? 'custom_bps' : ($type === 'instansi' ? 'custom_instansi' : 'template'));
 
         foreach ($years as $targetYear) {
             if ($targetYear === $sourceYear) continue;
