@@ -507,6 +507,15 @@
                                 <i class="fa-solid fa-pen-to-square text-[11px]"></i>
                                 <span>Edit Tabel</span>
                             </button>
+
+                            <!-- Button: Reset Nilai Asli -->
+                            <button onclick="resetTableOriginal()" 
+                                    id="btnResetTableOriginal"
+                                    class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 font-bold text-xs flex items-center space-x-1.5 shadow-2xs transition-all cursor-pointer"
+                                    title="Kembalikan tabel ke data awal resmi BPS">
+                                <i class="fa-solid fa-rotate-left text-xs"></i>
+                                <span>Reset Nilai</span>
+                            </button>
                         @endif
 
                         <!-- Button: Tampilan Google Spreadsheet (Publikasi Pusat) -->
@@ -16830,37 +16839,67 @@
             }
         }
 
-        async function resetGeneratedExcel() {
-            if (confirm(`Apakah Anda yakin ingin menghapus data hasil generate Excel untuk Tahun ${currentYear}?`)) {
-                localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
-                localStorage.removeItem(`simonda_table_source_${currentTableCode}_${currentYear}`);
-                localStorage.removeItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`);
-                localStorage.removeItem(`simonda_table_title_id_${currentTableCode}_${currentYear}`);
-                localStorage.removeItem(`simonda_table_title_en_${currentTableCode}_${currentYear}`);
-                localStorage.removeItem(`simonda_table_source_text_${currentTableCode}_${currentYear}`);
-                localStorage.removeItem(`simonda_table_note_${currentTableCode}_${currentYear}`);
-
-                // Hapus juga di database MySQL
-                try {
-                    await fetch('{{ route("tabel-opd.api.delete") }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': csrfToken
-                        },
-                        body: JSON.stringify({
-                            table_code: currentTableCode,
-                            opd_code: currentOpdCode,
-                            year: currentYear,
-                            type: typeof currentType !== 'undefined' ? currentType : 'opd'
-                        })
-                    });
-                } catch(e) {}
-
-                renderTablePage();
-                showToast('🗑️ Data Excel tahun ini berhasil dihapus dari database.');
+        async function resetTableOriginal() {
+            if (!confirm(`Apakah Anda yakin ingin mereset seluruh nilai data Tabel ${currentTableCode} kembali ke data asli resmi BPS?`)) {
+                return;
             }
+
+            // 1. Bersihkan seluruh cache localStorage untuk tabel ini
+            try {
+                const keysToRemove = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const k = localStorage.key(i);
+                    if (k && (k.includes(`${currentTableCode}_${currentYear}`) || k.includes(`_${currentTableCode}_`) || k.endsWith(`_${currentTableCode}`))) {
+                        keysToRemove.push(k);
+                    }
+                }
+                keysToRemove.forEach(k => localStorage.removeItem(k));
+            } catch(e) {}
+
+            // 2. Ambil HTML template resmi BPS jika ada skema
+            let defaultHtml = null;
+            if (tableSchemas[currentTableCode] && typeof tableSchemas[currentTableCode].render === 'function') {
+                try {
+                    defaultHtml = tableSchemas[currentTableCode].render(currentYear);
+                } catch(err) {
+                    console.error('Error rendering default schema:', err);
+                }
+            }
+
+            // 3. Panggil API delete/reset ke server
+            try {
+                await fetch('{{ route("tabel-opd.api.delete") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({
+                        table_code: currentTableCode,
+                        opd_code: currentOpdCode,
+                        year: currentYear,
+                        type: typeof currentType !== 'undefined' ? currentType : 'opd',
+                        default_html: defaultHtml
+                    })
+                });
+            } catch(e) {
+                console.error('Reset API error:', e);
+            }
+
+            if (serverDbMetadata) {
+                serverDbMetadata.table_html = defaultHtml;
+                serverDbMetadata.is_saved = false;
+                serverDbMetadata.source_type = 'template';
+            }
+
+            showToast('🔄 Nilai tabel berhasil dikembalikan ke data awal resmi BPS!');
+            setTimeout(() => {
+                window.location.reload();
+            }, 300);
         }
+
+        // Aliaskan juga resetGeneratedExcel ke resetTableOriginal
+        window.resetGeneratedExcel = resetTableOriginal;
 
         function escapeHtml(str) {
             return str

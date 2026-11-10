@@ -11278,14 +11278,16 @@
                 return;
             }
 
-            // 1. Bersihkan seluruh cache localStorage untuk tabel ini pada tahun ini
+            // 1. Bersihkan seluruh cache localStorage untuk tabel ini
             try {
-                for (let i = localStorage.length - 1; i >= 0; i--) {
+                const keysToRemove = [];
+                for (let i = 0; i < localStorage.length; i++) {
                     const k = localStorage.key(i);
-                    if (k && k.includes(`${currentTableCode}_${currentYear}`)) {
-                        localStorage.removeItem(k);
+                    if (k && (k.includes(`${currentTableCode}_${currentYear}`) || k.includes(`_${currentTableCode}_`) || k.endsWith(`_${currentTableCode}`))) {
+                        keysToRemove.push(k);
                     }
                 }
+                keysToRemove.forEach(k => localStorage.removeItem(k));
             } catch(e) {}
 
             // 2. Ambil HTML template resmi BPS jika ada skema
@@ -11310,11 +11312,19 @@
                         table_code: currentTableCode,
                         opd_code: currentOpdCode,
                         year: currentYear,
+                        type: typeof currentType !== 'undefined' ? currentType : 'opd',
                         default_html: defaultHtml
                     })
                 });
             } catch(e) {
                 console.error('Reset API error:', e);
+            }
+
+            // 4. Update in-memory server metadata
+            if (serverDbMetadata) {
+                serverDbMetadata.table_html = defaultHtml;
+                serverDbMetadata.is_saved = false;
+                serverDbMetadata.source_type = 'template';
             }
 
             showToast('🔄 Nilai tabel berhasil dikembalikan ke data awal resmi BPS!');

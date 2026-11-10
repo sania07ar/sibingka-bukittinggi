@@ -1363,6 +1363,22 @@ class TabelOpdController extends Controller
         $type = $request->input('type', 'opd');
         $defaultHtml = $request->input('default_html');
 
+        if ($type !== 'bps' && $type !== 'instansi') {
+            $opdCode = $this->normalizeOpdCode($tableCode, $opdCode);
+        }
+
+        // Cari metadata yang ada untuk mengambil opd_code yang sesungguhnya tercatat di database jika ada
+        $existingMetaQuery = TabelMetadata::where('table_code', $tableCode)->where('year', $year);
+        if ($type === 'bps') {
+            $existingMetaQuery->where('source_type', 'like', '%bps%');
+        } elseif ($type === 'instansi') {
+            $existingMetaQuery->where('source_type', 'like', '%instansi%');
+        }
+        $existingMeta = $existingMetaQuery->first();
+        if ($existingMeta && !empty($existingMeta->opd_code)) {
+            $opdCode = $existingMeta->opd_code;
+        }
+
         $cleanOpd = str_pad($opdCode, 2, '0', STR_PAD_LEFT);
         $opdCodes = array_values(array_unique([$opdCode, $cleanOpd, ltrim($opdCode, '0')]));
 
@@ -1371,7 +1387,9 @@ class TabelOpdController extends Controller
 
         // Hapus custom data baris jika ada
         TabelData::where('table_code', $tableCode)
-            ->whereIn('opd_code', $opdCodes)
+            ->where(function($q) use ($opdCodes) {
+                $q->whereIn('opd_code', $opdCodes)->orWhereNull('opd_code');
+            })
             ->where('year', $year)
             ->delete();
 
@@ -1382,34 +1400,52 @@ class TabelOpdController extends Controller
         };
 
         // Update TabelMetadata ke nilai default resmi
+        $metaQuery = TabelMetadata::where('table_code', $tableCode)->where('year', $year);
+        if ($type === 'bps') {
+            $metaQuery->where(function($q) use ($opdCodes) {
+                $q->whereIn('opd_code', $opdCodes)->orWhere('source_type', 'like', '%bps%');
+            });
+        } elseif ($type === 'instansi') {
+            $metaQuery->where(function($q) use ($opdCodes) {
+                $q->whereIn('opd_code', $opdCodes)->orWhere('source_type', 'like', '%instansi%');
+            });
+        } else {
+            $metaQuery->where(function($q) use ($opdCodes) {
+                $q->whereIn('opd_code', $opdCodes)->orWhereNotNull('id');
+            });
+        }
+        $metaRecords = $metaQuery->get();
+
         if (!empty($defaultHtml)) {
-            TabelMetadata::where('table_code', $tableCode)
-                ->whereIn('opd_code', $opdCodes)
-                ->where('year', $year)
-                ->update([
+            if ($metaRecords->isNotEmpty()) {
+                foreach ($metaRecords as $rec) {
+                    $rec->update([
+                        'table_html' => $defaultHtml,
+                        'source_type' => $targetSourceType,
+                        'is_saved' => false,
+                    ]);
+                }
+            } else {
+                TabelMetadata::create([
+                    'table_code' => $tableCode,
+                    'opd_code' => $opdCode,
+                    'year' => $year,
                     'table_html' => $defaultHtml,
                     'source_type' => $targetSourceType,
                     'is_saved' => false,
                 ]);
+            }
         } else {
             // Jika tidak ada schema bawaan di frontend, bersihkan nilai data tbody ke '-' tanpa merusak struktur header/kolom
-            $metaQuery = TabelMetadata::where('table_code', $tableCode)->where('year', $year);
-            if ($type === 'bps') {
-                $metaQuery->where(function($q) use ($opdCodes) {
-                    $q->whereIn('opd_code', $opdCodes)->orWhere('source_type', 'like', '%bps%');
-                });
-            } else {
-                $metaQuery->whereIn('opd_code', $opdCodes);
-            }
-            $meta = $metaQuery->first();
-
-            if ($meta && !empty($meta->table_html)) {
-                $cleanHtml = $this->buildEmptyTemplateFromHtml($meta->table_html);
-                $meta->update([
-                    'table_html' => $cleanHtml,
-                    'source_type' => $targetSourceType,
-                    'is_saved' => false,
-                ]);
+            if ($metaRecords->isNotEmpty()) {
+                foreach ($metaRecords as $rec) {
+                    $cleanHtml = !empty($rec->table_html) ? $this->buildEmptyTemplateFromHtml($rec->table_html) : null;
+                    $rec->update([
+                        'table_html' => $cleanHtml,
+                        'source_type' => $targetSourceType,
+                        'is_saved' => false,
+                    ]);
+                }
             }
         }
 
