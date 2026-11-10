@@ -8765,6 +8765,13 @@
                 savedHtml = (serverDbMetadata && serverDbMetadata.table_html) ? serverDbMetadata.table_html : null;
             }
 
+            // Sanity check: jika savedHtml adalah starter dummy placeholder ("Indikator 1" / "Indicator Details" / "Belum ada data")
+            if (savedHtml && (savedHtml.includes('Indicator Details') || (savedHtml.includes('Indikator 1') && savedHtml.includes('Rincian Indikator')) || savedHtml.includes('Belum ada data untuk tabel ini'))) {
+                localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
+                localStorage.removeItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`);
+                savedHtml = null;
+            }
+
             if (savedHtml && currentTableCode === '2.4.2') {
                 savedHtml = savedHtml.replace(/Jenis Pendapatan/gi, 'Jenis Belanja');
                 savedHtml = savedHtml.replace(/Kind of Revenues/gi, 'Kind of Expenditures');
@@ -9052,7 +9059,7 @@
                 let sourceHtml = null;
                 let sourceYr = null;
 
-                if (serverDbFallbackMetadata && serverDbFallbackMetadata.table_html && !serverDbFallbackMetadata.table_html.includes('Belum ada data untuk tabel ini')) {
+                if (serverDbFallbackMetadata && serverDbFallbackMetadata.table_html && !serverDbFallbackMetadata.table_html.includes('Belum ada data untuk tabel ini') && !serverDbFallbackMetadata.table_html.includes('Indicator Details')) {
                     sourceHtml = serverDbFallbackMetadata.table_html;
                     sourceYr = serverDbFallbackMetadata.year;
                 }
@@ -9063,7 +9070,7 @@
                         if (y.toString() === currentYear.toString()) continue;
                         const localKey = `simonda_table_html_${currentTableCode}_${y}`;
                         const localHtml = localStorage.getItem(localKey);
-                        if (localHtml && !localHtml.includes('Belum ada data untuk tabel ini')) {
+                        if (localHtml && !localHtml.includes('Belum ada data untuk tabel ini') && !localHtml.includes('Indicator Details') && !(localHtml.includes('Indikator 1') && localHtml.includes('Rincian Indikator'))) {
                             sourceHtml = localHtml;
                             sourceYr = y;
                             break;

@@ -69,10 +69,12 @@ class TabelOpdController extends Controller
         $dbMetadata = $this->getOrCreateMetadata($tableCode, $opdCode, $year, $type);
 
         $dbFallbackMetadata = null;
-        if (!$dbMetadata || empty($dbMetadata->table_html)) {
+        if (!$dbMetadata || empty($dbMetadata->table_html) || str_contains($dbMetadata->table_html, 'Indicator Details')) {
             $fallbackQuery = TabelMetadata::where('table_code', $tableCode)
                 ->whereNotNull('table_html')
                 ->where('table_html', '!=', '')
+                ->where('table_html', 'not like', '%Indicator Details%')
+                ->where('table_html', 'not like', '%Belum ada data untuk tabel ini%')
                 ->orderByRaw("CASE WHEN source_type NOT IN ('template') THEN 0 ELSE 1 END ASC, ABS(year - {$year}) ASC");
             if ($type === 'bps') {
                 $fallbackQuery->where(function($q) use ($opdCode, $cleanOpd) {
@@ -135,10 +137,12 @@ class TabelOpdController extends Controller
         $dbMetadata = $this->getOrCreateMetadata($tableCode, $opdCode, $year, $type);
 
         $dbFallbackMetadata = null;
-        if (!$dbMetadata || empty($dbMetadata->table_html)) {
+        if (!$dbMetadata || empty($dbMetadata->table_html) || str_contains($dbMetadata->table_html, 'Indicator Details')) {
             $fallbackQuery = TabelMetadata::where('table_code', $tableCode)
                 ->whereNotNull('table_html')
                 ->where('table_html', '!=', '')
+                ->where('table_html', 'not like', '%Indicator Details%')
+                ->where('table_html', 'not like', '%Belum ada data untuk tabel ini%')
                 ->orderByRaw("CASE WHEN source_type NOT IN ('template') THEN 0 ELSE 1 END ASC, ABS(year - {$year}) ASC");
             if ($type === 'bps') {
                 $fallbackQuery->where(function($q) use ($opdCode, $cleanOpd) {
@@ -200,10 +204,12 @@ class TabelOpdController extends Controller
 
         $cleanOpd = str_pad($opdCode, 2, '0', STR_PAD_LEFT);
         $dbFallbackMetadata = null;
-        if (!$dbMetadata || empty($dbMetadata->table_html)) {
+        if (!$dbMetadata || empty($dbMetadata->table_html) || str_contains($dbMetadata->table_html, 'Indicator Details')) {
             $fallbackQuery = TabelMetadata::where('table_code', $tableCode)
                 ->whereNotNull('table_html')
                 ->where('table_html', '!=', '')
+                ->where('table_html', 'not like', '%Indicator Details%')
+                ->where('table_html', 'not like', '%Belum ada data untuk tabel ini%')
                 ->orderByRaw("CASE WHEN source_type NOT IN ('template') THEN 0 ELSE 1 END ASC, ABS(year - {$year}) ASC");
             if ($type === 'bps') {
                 $fallbackQuery->where(function($q) use ($opdCode, $cleanOpd) {
@@ -914,7 +920,17 @@ class TabelOpdController extends Controller
             );
         }
 
+        $isStarterDummy = false;
         if ($dbMetadata && !empty($dbMetadata->table_html)) {
+            $htmlLower = strtolower($dbMetadata->table_html);
+            if (str_contains($htmlLower, 'indicator details') || 
+                (str_contains($htmlLower, 'indikator 1') && str_contains($htmlLower, 'rincian indikator')) || 
+                str_contains($htmlLower, 'belum ada data untuk tabel ini')) {
+                $isStarterDummy = true;
+            }
+        }
+
+        if ($dbMetadata && !empty($dbMetadata->table_html) && !$isStarterDummy) {
             // Untuk tabel multi-tahun (8.1.x, 2.2.5, 1.1.10, 9.1, 9.3, 2.4.3, 2.4.1, 2.4.2), pastikan table_html memuat tahun awal dan tahun akhir rentang
             $isMultiYear = str_starts_with($tableCode, '8.1.') || in_array($tableCode, ['2.2.5', '1.1.10', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2']);
             if ($isMultiYear) {
@@ -943,7 +959,9 @@ class TabelOpdController extends Controller
         // Cari struktur tabel dari tahun lain sebagai sumber (hanya untuk tabel non-multi-tahun)
         $sourceMetaQuery = TabelMetadata::where('table_code', $tableCode)
             ->whereNotNull('table_html')
-            ->where('table_html', '!=', '');
+            ->where('table_html', '!=', '')
+            ->where('table_html', 'not like', '%Indicator Details%')
+            ->where('table_html', 'not like', '%Belum ada data untuk tabel ini%');
 
         if ($type === 'bps') {
             $sourceMetaQuery->where(function($q) use ($opdCode, $cleanOpd) {
@@ -1558,8 +1576,18 @@ class TabelOpdController extends Controller
                 ->where('year', $targetYear)
                 ->first();
 
-            // Jika belum ada data atau table_html kosong, isi template
-            if (!$existing || empty($existing->table_html) || $existing->source_type === 'template') {
+            $isPlaceholder = false;
+            if ($existing && !empty($existing->table_html)) {
+                $htmlLower = strtolower($existing->table_html);
+                if (str_contains($htmlLower, 'indicator details') || 
+                    (str_contains($htmlLower, 'indikator 1') && str_contains($htmlLower, 'rincian indikator')) || 
+                    str_contains($htmlLower, 'belum ada data untuk tabel ini')) {
+                    $isPlaceholder = true;
+                }
+            }
+
+            // Jika belum ada data atau table_html kosong, atau starter dummy, atau source_type template: isi template
+            if (!$existing || empty($existing->table_html) || $existing->source_type === 'template' || $isPlaceholder) {
                 $yHtml = $this->adjustYearInHtml($cleanHtml, $sourceYear, $targetYear);
                 $yTitleId = $this->adjustYearInTitle($titleId, $sourceYear, $targetYear);
                 $yTitleEn = $this->adjustYearInTitle($titleEn, $sourceYear, $targetYear);
@@ -1572,10 +1600,10 @@ class TabelOpdController extends Controller
                         'year' => $targetYear,
                     ],
                     [
-                        'title_id' => $yTitleId,
-                        'title_en' => $yTitleEn,
-                        'source' => $source,
-                        'note' => $yNote,
+                        'title_id' => $yTitleId ?: ($existing?->title_id),
+                        'title_en' => $yTitleEn ?: ($existing?->title_en),
+                        'source' => $source ?: ($existing?->source),
+                        'note' => $yNote !== null ? $yNote : ($existing?->note),
                         'table_html' => $yHtml,
                         'source_type' => $targetSourceType,
                         'is_saved' => true,
@@ -2043,9 +2071,9 @@ class TabelOpdController extends Controller
                 [
                     'title_id' => $titleId,
                     'title_en' => $titleEn,
-                    'source_type' => $sourceType,
+                    'source_type' => 'template',
                     'table_html' => $starterHtml,
-                    'is_saved' => true,
+                    'is_saved' => false,
                 ]
             );
         }
