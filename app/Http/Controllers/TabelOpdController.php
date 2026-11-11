@@ -388,12 +388,28 @@ class TabelOpdController extends Controller
             return $tableHtml;
         }
 
-        return preg_replace_callback('/<tbody[^>]*>(.*?)<\/tbody>/is', function($tbodyMatch) use ($filteredRows) {
-            $tbodyHtml = $tbodyMatch[1];
+        // Auto-heal header jika tabel 2.2.2 masih memuat Kolom 6
+        if (str_contains($tableHtml, 'Kolom 6') && (str_contains($tableHtml, 'SMU') || str_contains($tableHtml, 'DIV'))) {
+            $tableHtml = str_replace(
+                ['<div>Kolom 6</div>', 'Kolom 6', 'colspan="2"><div>S2/S3</div>'],
+                ['<div>S2/S3</div>', 'S2/S3', '><div>S2/S3</div>'],
+                $tableHtml
+            );
+        }
+
+        return preg_replace_callback('/<tbody([^>]*)>(.*?)<\/tbody>/is', function($tbodyMatch) use ($filteredRows) {
+            $tbodyAttr = trim($tbodyMatch[1]);
+            if (empty($tbodyAttr) || !str_contains($tbodyAttr, 'bg-')) {
+                $tbodyAttr = ' class="bg-[#fef9c3] text-slate-900 font-medium"';
+            } else {
+                $tbodyAttr = ' ' . $tbodyAttr;
+            }
+
+            $tbodyHtml = $tbodyMatch[2];
             $excelCursor = 0;
 
             $newTbody = preg_replace_callback('/<tr([^>]*)>(.*?)<\/tr>/is', function($trMatch) use (&$excelCursor, $filteredRows) {
-                $trAttr = $trMatch[1];
+                $trAttr = trim($trMatch[1]);
                 $rowHtml = $trMatch[2];
 
                 preg_match_all('/<td([^>]*)>(.*?)<\/td>/is', $rowHtml, $tdMatches, PREG_SET_ORDER);
@@ -401,6 +417,17 @@ class TabelOpdController extends Controller
 
                 $rawRowLabel = trim(strip_tags($tdMatches[0][2]));
                 $normRowLabel = $this->normalizeRowLabel($rawRowLabel);
+                $isTotalRow = preg_match('/(?:Jumlah|Total|Rata-rata|Average|BUKITTINGGI)/i', $rawRowLabel);
+
+                if (empty($trAttr) || !str_contains($trAttr, 'hover:')) {
+                    if ($isTotalRow) {
+                        $trAttr = ' class="bg-[#fed7aa] font-bold text-slate-900"';
+                    } else {
+                        $trAttr = ' class="hover:bg-amber-100/60 transition-colors"';
+                    }
+                } else {
+                    $trAttr = ' ' . $trAttr;
+                }
 
                 $matchedRow = null;
                 // 1. Coba cocokkan berdasarkan kemiripan label teks
@@ -427,7 +454,7 @@ class TabelOpdController extends Controller
                 }
                 $excelCursor++;
 
-                if (!$matchedRow) return $trMatch[0];
+                if (!$matchedRow) return "<tr{$trAttr}>{$rowHtml}</tr>";
 
                 $dataValues = [];
                 $passedLabel = false;
@@ -443,10 +470,11 @@ class TabelOpdController extends Controller
 
                 $cellIndex = 0;
                 $valIndex = 0;
-                $newRowHtml = preg_replace_callback('/<td([^>]*)>(.*?)<\/td>/is', function($tdMatch) use (&$cellIndex, &$valIndex, $dataValues) {
+                $newRowHtml = preg_replace_callback('/<td([^>]*)>(.*?)<\/td>/is', function($tdMatch) use (&$cellIndex, &$valIndex, $dataValues, $isTotalRow) {
                     $cellIndex++;
-                    $attr = $tdMatch[1];
+                    $attr = trim($tdMatch[1]);
 
+                    // Sel pertama adalah label / tahun / nama kategori, pertahankan
                     if ($cellIndex === 1) {
                         return $tdMatch[0];
                     }
@@ -460,7 +488,20 @@ class TabelOpdController extends Controller
                             $cleanNum = trim($insertVal);
                             if ($cleanNum === '') $cleanNum = '-';
                         }
-                        return "<td{$attr}>{$cleanNum}</td>";
+
+                        // Pastikan atribut class sel tetap memiliki border dan alignment yang rapi
+                        if (empty($attr)) {
+                            $attr = 'class="py-2.5 px-4 border border-slate-700 text-center align-middle"';
+                        } elseif (!str_contains($attr, 'border-slate-700')) {
+                            $attr .= ' border border-slate-700';
+                        }
+
+                        // Format tampilan strip '-' atau angka
+                        if ($cleanNum === '-' || $cleanNum === '–' || $cleanNum === '—') {
+                            return "<td {$attr}><span class=\"text-slate-400 font-normal\">-</span></td>";
+                        }
+
+                        return "<td {$attr}>{$cleanNum}</td>";
                     }
 
                     return $tdMatch[0];
@@ -469,7 +510,7 @@ class TabelOpdController extends Controller
                 return "<tr{$trAttr}>{$newRowHtml}</tr>";
             }, $tbodyHtml);
 
-            return "<tbody>{$newTbody}</tbody>";
+            return "<tbody{$tbodyAttr}>{$newTbody}</tbody>";
         }, $tableHtml);
     }
 

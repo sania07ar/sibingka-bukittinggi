@@ -10060,17 +10060,62 @@
                 const yr = parseInt(targetYear) || 2026;
                 const ratarataCell = Array.from(tempTable.querySelectorAll('td')).find(td => td.innerText.trim().toLowerCase().includes('rata-rata') || td.innerText.trim().toLowerCase().includes('average'));
                 if (ratarataCell) {
+                    ratarataCell.setAttribute('rowspan', '5');
                     let currentRow = ratarataCell.parentElement;
+                    let tbody = currentRow.parentElement;
+                    const histAverages = {
+                        2025: ['9.750', '41.500', '256.667', '-', '32.917'],
+                        2024: ['6.417', '34.833', '190.833', '-', '32.000'],
+                        2023: ['6.083', '31.375', '173.333', '-', '26.833'],
+                        2022: ['6.433', '30.125', '166.667', '-', '31.625'],
+                        2021: ['5.791', '29.875', '162.083', '53.916', '29.083'],
+                        2020: ['5.889', '29.722', '160.000', '60.000', '28.333'],
+                        2019: ['4.917', '28.583', '150.000', '60.000', '25.833']
+                    };
+                    const colCount = 5;
+
+                    let subsequentRows = [];
+                    let r = currentRow.nextElementSibling;
+                    while (r) {
+                        subsequentRows.push(r);
+                        r = r.nextElementSibling;
+                    }
+                    while (subsequentRows.length < 4) {
+                        const newTr = document.createElement('tr');
+                        newTr.className = 'hover:bg-amber-100/60 transition-colors';
+                        tbody.appendChild(newTr);
+                        subsequentRows.push(newTr);
+                    }
+                    if (subsequentRows.length > 4) {
+                        for (let k = 4; k < subsequentRows.length; k++) {
+                            subsequentRows[k].remove();
+                        }
+                    }
+
                     for (let i = 0; i < 5; i++) {
-                        if (!currentRow) break;
                         const y = (yr - i).toString();
-                        const tds = currentRow.querySelectorAll('td');
+                        const known = histAverages[yr - i];
+                        const targetRow = (i === 0) ? currentRow : subsequentRows[i - 1];
+                        if (!targetRow) break;
+
+                        const tds = targetRow.querySelectorAll('td');
                         const yearTd = (i === 0) ? tds[1] : tds[0];
                         if (yearTd) {
                             yearTd.innerText = y;
                             yearTd.className = 'py-2.5 px-4 border border-slate-700 text-center align-top' + (i === 0 ? ' font-extrabold' : '');
                         }
-                        currentRow = currentRow.nextElementSibling;
+
+                        for (let c = 0; c < colCount; c++) {
+                            const valTd = (i === 0) ? tds[2 + c] : tds[1 + c];
+                            if (valTd) {
+                                if (i === 0) {
+                                    valTd.innerHTML = '<span class="text-slate-400 font-normal">-</span>';
+                                } else {
+                                    valTd.innerText = known ? known[c] : '-';
+                                }
+                                valTd.className = 'py-2.5 px-4 border border-slate-700 text-center align-top text-center align-middle';
+                            }
+                        }
                     }
                 }
             }
@@ -11493,18 +11538,81 @@
                 if (ratarataCell) {
                     const yr = parseInt(currentYear) || 2026;
                     let currentRow = ratarataCell.parentElement;
+                    let tbody = currentRow.parentElement;
                     let isCorruptYears = false;
+
+                    const histAverages = {
+                        2025: ['9.750', '41.500', '256.667', '-', '32.917'],
+                        2024: ['6.417', '34.833', '190.833', '-', '32.000'],
+                        2023: ['6.083', '31.375', '173.333', '-', '26.833'],
+                        2022: ['6.433', '30.125', '166.667', '-', '31.625'],
+                        2021: ['5.791', '29.875', '162.083', '53.916', '29.083'],
+                        2020: ['5.889', '29.722', '160.000', '60.000', '28.333'],
+                        2019: ['4.917', '28.583', '150.000', '60.000', '25.833']
+                    };
+                    const colCount = 5;
+
+                    if (ratarataCell.getAttribute('rowspan') !== '5') {
+                        ratarataCell.setAttribute('rowspan', '5');
+                        isCorruptYears = true;
+                    }
+
+                    // Kumpulkan baris-baris setelah Rata-rata
+                    let subsequentRows = [];
+                    let r = currentRow.nextElementSibling;
+                    while (r) {
+                        subsequentRows.push(r);
+                        r = r.nextElementSibling;
+                    }
+
+                    while (subsequentRows.length < 4) {
+                        const newTr = document.createElement('tr');
+                        newTr.className = 'hover:bg-amber-100/60 transition-colors';
+                        tbody.appendChild(newTr);
+                        subsequentRows.push(newTr);
+                        isCorruptYears = true;
+                    }
+
                     for (let i = 0; i < 5; i++) {
-                        if (!currentRow) break;
                         const expectedY = (yr - i).toString();
-                        const tds = currentRow.querySelectorAll('td');
+                        const known = histAverages[yr - i];
+                        const targetRow = (i === 0) ? currentRow : subsequentRows[i - 1];
+                        if (!targetRow) break;
+
+                        const tds = targetRow.querySelectorAll('td');
                         const yearTd = (i === 0) ? tds[1] : tds[0];
                         if (yearTd && yearTd.innerText.trim() !== expectedY) {
                             isCorruptYears = true;
                             yearTd.innerText = expectedY;
                         }
-                        currentRow = currentRow.nextElementSibling;
+
+                        // Isi nilai historis jika sel masih kosong/strip atau corrupt
+                        for (let c = 0; c < colCount; c++) {
+                            const valTd = (i === 0) ? tds[2 + c] : tds[1 + c];
+                            if (valTd) {
+                                const curVal = valTd.innerText.trim();
+                                if (known && (curVal === '-' || curVal === '')) {
+                                    valTd.innerText = known[c];
+                                    isCorruptYears = true;
+                                }
+                            } else if (i > 0) {
+                                const newTd = document.createElement('td');
+                                newTd.innerText = known ? known[c] : '-';
+                                newTd.className = 'py-2.5 px-4 border border-slate-700 text-center align-top text-center align-middle';
+                                targetRow.appendChild(newTd);
+                                isCorruptYears = true;
+                            }
+                        }
                     }
+
+                    // Hapus baris siluman berlebih jika > 4 baris setelah Rata-rata
+                    if (subsequentRows.length > 4) {
+                        for (let k = 4; k < subsequentRows.length; k++) {
+                            subsequentRows[k].remove();
+                        }
+                        isCorruptYears = true;
+                    }
+
                     if (isCorruptYears) {
                         savedHtml = tempDiv.innerHTML;
                         safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);

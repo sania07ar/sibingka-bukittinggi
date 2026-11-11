@@ -1,42 +1,33 @@
 <table>
-    <thead>
-        <tr>
-            <th colspan="{{ $maxCols }}" style="font-size: 13pt; font-weight: bold; text-align: left; height: 26px;">
-                Tabel {{ $tableCode }} {{ $titleId }}
-            </th>
-        </tr>
-        <tr>
-            <th colspan="{{ $maxCols }}" style="font-size: 10pt; font-style: italic; color: #555555; text-align: left; height: 22px;">
-                Table {{ $titleEn }}
-            </th>
-        </tr>
-        <tr>
-            <th colspan="{{ $maxCols }}" style="height: 12px;"></th>
-        </tr>
-    </thead>
-</table>
-
-<table>
+    <tr>
+        <td colspan="{{ $maxCols }}" style="font-size: 11pt; font-weight: bold; text-align: left;">
+            {{ $titleId }}
+        </td>
+    </tr>
+    @if(!empty($titleEn))
+    <tr>
+        <td colspan="{{ $maxCols }}" style="font-size: 9.5pt; font-style: italic; color: #475569; text-align: left;">
+            {{ $titleEn }}
+        </td>
+    </tr>
+    @endif
+    <tr>
+        <td colspan="{{ $maxCols }}"></td>
+    </tr>
     {!! $cleanTableHtml !!}
+    <tr>
+        <td colspan="{{ $maxCols }}"></td>
+    </tr>
+    <tr>
+        <td colspan="{{ $maxCols }}" style="font-size: 9pt;">
+            Sumber / Source: {{ $source ?? 'BPS Kota Bukittinggi' }}
+        </td>
+    </tr>
+    @if(!empty($note))
+    <tr>
+        <td colspan="{{ $maxCols }}" style="font-size: 8pt; color: #555555;">
+            Catatan / Note: {{ $note }}
+        </td>
+    </tr>
+    @endif
 </table>
-
-<table>
-    <tfoot>
-        <tr>
-            <td colspan="{{ $maxCols }}" style="height: 12px;"></td>
-        </tr>
-        <tr>
-            <td colspan="{{ $maxCols }}" style="font-size: 9pt; height: 20px;">
-                <strong>Sumber / <em>Source:</em></strong> {{ $source ?? 'BPS Kota Bukittinggi' }}
-            </td>
-        </tr>
-        @if(!empty($note))
-        <tr>
-            <td colspan="{{ $maxCols }}" style="font-size: 8pt; color: #555555; height: 18px;">
-                <strong>Catatan / <em>Note:</em></strong> {{ $note }}
-            </td>
-        </tr>
-        @endif
-    </tfoot>
-</table>
-

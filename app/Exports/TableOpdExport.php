@@ -46,11 +46,9 @@ class TableOpdExport implements FromView, ShouldAutoSize, WithTitle, WithStyles
                         $cellIndex++;
                         $attr = $tdMatch[1];
                         $val = trim(strip_tags($tdMatch[2]));
-                        // Sel pertama adalah label baris (nama kecamatan / bulan / kategori), jangan dihapus
                         if ($cellIndex === 1) {
                             return "<td{$attr}>{$val}</td>";
                         }
-                        // Jika sel numerik atau strip, jadikan tanda strip '-' bersih
                         return "<td{$attr}>-</td>";
                     }, $rowHtml);
                     return "<tr{$trAttr}>{$newRow}</tr>";
@@ -60,20 +58,22 @@ class TableOpdExport implements FromView, ShouldAutoSize, WithTitle, WithStyles
         }
 
         // Format judul agar tidak dobel prefix "Tabel" atau "Table"
-        $displayTitleId = $this->titleId ?: '';
-        if (!preg_match('/^Tabel\s+/i', $displayTitleId)) {
-            $displayTitleId = "Tabel {$this->tableCode} {$displayTitleId}";
-        }
+        $displayTitleId = trim($this->titleId ?: '');
+        $displayTitleId = preg_replace('/^Tabel\s*[\d\.]*\s*/i', '', $displayTitleId);
+        $displayTitleId = "Tabel {$this->tableCode} {$displayTitleId}";
 
-        $displayTitleEn = $this->titleEn ?: '';
-        if (!empty($displayTitleEn) && !preg_match('/^Table\s+/i', $displayTitleEn)) {
+        $displayTitleEn = trim($this->titleEn ?: '');
+        if (!empty($displayTitleEn)) {
+            $displayTitleEn = preg_replace('/^Table\s*[\d\.]*\s*/i', '', $displayTitleEn);
             $displayTitleEn = "Table {$displayTitleEn}";
         }
 
-        // Hitung estimasi max kolom
+        // Hitung jumlah kolom sebenarnya dari baris penomoran (1), (2) atau baris data pertama
         $maxCols = 6;
-        if (preg_match_all('/<th\b/i', $cleanHtml, $thMatches)) {
-            $maxCols = max(6, count($thMatches[0]));
+        if (preg_match('/<tr[^>]*>\s*<th[^>]*>\s*\(1\)[\s\S]*?<\/tr>/i', $cleanHtml, $mColRow)) {
+            $maxCols = max(1, substr_count($mColRow[0], '<th'));
+        } elseif (preg_match('/<tr[^>]*>([\s\S]*?)<\/tr>/i', $cleanHtml, $mFirstRow)) {
+            $maxCols = max(1, substr_count($mFirstRow[1], '<th') + substr_count($mFirstRow[1], '<td'));
         }
 
         return view('exports.table_excel', [
@@ -103,10 +103,8 @@ class TableOpdExport implements FromView, ShouldAutoSize, WithTitle, WithStyles
         $highestRow = $sheet->getHighestRow();
         $highestCol = $sheet->getHighestColumn();
 
-        $headerStartRow = null;
+        $headerStartRow = 4;
         $colNumberRow = null;
-        $dataStartRow = null;
-        $dataEndRow = null;
         $footerStartRow = null;
 
         for ($r = 1; $r <= $highestRow; $r++) {
@@ -115,49 +113,35 @@ class TableOpdExport implements FromView, ShouldAutoSize, WithTitle, WithStyles
                 $rowText .= ' ' . trim((string) $sheet->getCell("{$c}{$r}")->getValue());
             }
 
-            if ($r > 3 && !$headerStartRow && (
-                str_contains($rowText, 'Kecamatan') || 
-                str_contains($rowText, 'Bulan') || 
-                str_contains($rowText, 'District') ||
-                str_contains($rowText, 'No.') ||
-                str_contains($rowText, 'Rincian')
-            )) {
-                $headerStartRow = $r;
-            }
-
-            if (str_contains($rowText, '(1)')) {
+            if (str_contains($rowText, '(1)') && str_contains($rowText, '(2)')) {
                 $colNumberRow = $r;
-                $dataStartRow = $r + 1;
             }
 
             if (str_contains($rowText, 'Sumber') || str_contains($rowText, 'Source:')) {
                 $footerStartRow = $r;
-                if (!$dataEndRow && $dataStartRow) {
-                    $d = $r - 1;
-                    while ($d >= $dataStartRow && trim((string) $sheet->getCell("A{$d}")->getValue()) === '') {
-                        $d--;
-                    }
-                    $dataEndRow = $d;
-                }
             }
         }
 
-        if (!$headerStartRow) $headerStartRow = 5;
-        if (!$colNumberRow) $colNumberRow = $headerStartRow + 1;
-        if (!$dataStartRow) $dataStartRow = $colNumberRow + 1;
-        if (!$dataEndRow) $dataEndRow = $footerStartRow ? $footerStartRow - 2 : $highestRow - 2;
+        if (!$colNumberRow) $colNumberRow = 5;
+        $headerEndRow = $colNumberRow - 1;
+        $dataStartRow = $colNumberRow + 1;
+        $dataEndRow = $footerStartRow ? ($footerStartRow - 2) : ($highestRow - 2);
 
         // 1. Style Header Title (Row 1-2)
-        $sheet->getStyle("A1:{$highestCol}1")->getFont()->setBold(true)->setSize(12);
-        $sheet->getStyle("A2:{$highestCol}2")->getFont()->setItalic(true)->setSize(10)->getColor()->setARGB('FF475569');
+        $sheet->getStyle("A1:{$highestCol}1")->getFont()->setBold(true)->setSize(11);
+        $sheet->getStyle("A2:{$highestCol}2")->getFont()->setItalic(true)->setSize(9.5)->getColor()->setARGB('FF475569');
+        $sheet->getRowDimension(1)->setRowHeight(24);
+        if ($sheet->getCell('A2')->getValue()) {
+            $sheet->getRowDimension(2)->setRowHeight(20);
+        }
+        $sheet->getRowDimension(3)->setRowHeight(10);
 
-        // 2. Style Table Header Cells (Orange background, white bold text)
-        if ($headerStartRow && $colNumberRow && $headerStartRow < $colNumberRow) {
-            $headerEndRow = $colNumberRow - 1;
+        // 2. Style Table Header Cells (Official BPS Orange #F95A00, white bold text)
+        if ($headerStartRow <= $headerEndRow) {
             $sheet->getStyle("A{$headerStartRow}:{$highestCol}{$headerEndRow}")->applyFromArray([
                 'fill' => [
                     'fillType' => Fill::FILL_SOLID,
-                    'startColor' => ['argb' => 'FFEA580C'], // Official BPS Orange
+                    'startColor' => ['argb' => 'FFF95A00'],
                 ],
                 'font' => [
                     'bold' => true,
@@ -176,18 +160,21 @@ class TableOpdExport implements FromView, ShouldAutoSize, WithTitle, WithStyles
                     ],
                 ],
             ]);
+            for ($hr = $headerStartRow; $hr <= $headerEndRow; $hr++) {
+                $sheet->getRowDimension($hr)->setRowHeight(26);
+            }
         }
 
-        // 3. Style Column Number Row (1), (2), ... (Soft orange, dark orange text)
+        // 3. Style Column Number Row (1), (2), ... (Soft peach #FED7AA, dark text)
         if ($colNumberRow) {
             $sheet->getStyle("A{$colNumberRow}:{$highestCol}{$colNumberRow}")->applyFromArray([
                 'fill' => [
                     'fillType' => Fill::FILL_SOLID,
-                    'startColor' => ['argb' => 'FFFFEDD5'], // Light orange
+                    'startColor' => ['argb' => 'FFFED7AA'],
                 ],
                 'font' => [
                     'bold' => true,
-                    'color' => ['argb' => 'FF9A3412'],
+                    'color' => ['argb' => 'FF0F172A'],
                     'size' => 9,
                 ],
                 'alignment' => [
@@ -201,54 +188,63 @@ class TableOpdExport implements FromView, ShouldAutoSize, WithTitle, WithStyles
                     ],
                 ],
             ]);
+            $sheet->getRowDimension($colNumberRow)->setRowHeight(18);
         }
 
-        // 4. Style Data Rows
+        // 4. Style Data Rows (Signature BPS Soft Warm Yellow #FEF9C3, borders, alignments)
         if ($dataStartRow && $dataEndRow && $dataStartRow <= $dataEndRow) {
-            $sheet->getStyle("A{$dataStartRow}:{$highestCol}{$dataEndRow}")->applyFromArray([
-                'borders' => [
-                    'allBorders' => [
-                        'borderStyle' => Border::BORDER_THIN,
-                        'color' => ['argb' => 'FFCBD5E1'],
-                    ],
-                ],
-                'alignment' => [
-                    'vertical' => Alignment::VERTICAL_CENTER,
-                ],
-            ]);
-
-            // Cek setiap baris data
             for ($dr = $dataStartRow; $dr <= $dataEndRow; $dr++) {
+                $sheet->getRowDimension($dr)->setRowHeight(20);
                 $valA = trim((string) $sheet->getCell("A{$dr}")->getValue());
-                $isTotalRow = preg_match('/(?:Jumlah|Total|Rata-rata|Average)/i', $valA);
+                $isTotalRow = preg_match('/(?:Jumlah|Total|Rata-rata|Average|BUKITTINGGI)/i', $valA);
 
-                if ($isTotalRow) {
-                    $sheet->getStyle("A{$dr}:{$highestCol}{$dr}")->applyFromArray([
-                        'fill' => [
-                            'fillType' => Fill::FILL_SOLID,
-                            'startColor' => ['argb' => 'FFFFEDD5'],
-                        ],
-                        'font' => [
-                            'bold' => true,
-                        ],
-                    ]);
-                }
+                $fillColor = $isTotalRow ? 'FFFED7AA' : 'FFFFF9C3';
+                $isBold = $isTotalRow;
 
-                // Kolom label (A dan B) rata kiri, sisanya rata kanan
-                $sheet->getStyle("A{$dr}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+                $sheet->getStyle("A{$dr}:{$highestCol}{$dr}")->applyFromArray([
+                    'fill' => [
+                        'fillType' => Fill::FILL_SOLID,
+                        'startColor' => ['argb' => $fillColor],
+                    ],
+                    'font' => [
+                        'bold' => $isBold,
+                        'size' => 10,
+                        'color' => ['argb' => 'FF0F172A'],
+                    ],
+                    'borders' => [
+                        'allBorders' => [
+                            'borderStyle' => Border::BORDER_THIN,
+                            'color' => ['argb' => $isTotalRow ? 'FF334155' : 'FF94A3B8'],
+                        ],
+                    ],
+                    'alignment' => [
+                        'vertical' => Alignment::VERTICAL_CENTER,
+                    ],
+                ]);
+
+                // Alignment: Kolom A rata kiri, sisanya rata kanan jika angka, tengah jika strip
+                $sheet->getStyle("A{$dr}")->getAlignment()->setHorizontal($isTotalRow ? Alignment::HORIZONTAL_CENTER : Alignment::HORIZONTAL_LEFT);
                 for ($c = 'B'; $c <= $highestCol; $c++) {
                     $cVal = trim((string) $sheet->getCell("{$c}{$dr}")->getValue());
-                    if (is_numeric($cVal) || $cVal === '-') {
+                    if ($cVal === '-' || $cVal === '–' || $cVal === '') {
+                        $sheet->getStyle("{$c}{$dr}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                    } else {
                         $sheet->getStyle("{$c}{$dr}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
                     }
                 }
             }
         }
 
-        // 5. Footer styling (Sumber & Catatan)
+        // 5. Footer styling
         if ($footerStartRow) {
             $sheet->getStyle("A{$footerStartRow}:{$highestCol}{$highestRow}")->getFont()->setSize(9);
             $sheet->getStyle("A{$footerStartRow}")->getFont()->getColor()->setARGB('FF334155');
+        }
+
+        // 6. Column Widths
+        $sheet->getColumnDimension('A')->setWidth(35);
+        for ($c = 'B'; $c <= $highestCol; $c++) {
+            $sheet->getColumnDimension($c)->setWidth(16);
         }
 
         return [];
