@@ -13363,6 +13363,12 @@
         }
 
         function downloadEditExcelTemplate() {
+            const url = `/tabel-opd/export-excel?code=${encodeURIComponent(currentTableCode)}&opd=${encodeURIComponent(currentOpdCode)}&year=${encodeURIComponent(currentYear)}&type=${encodeURIComponent(currentType)}&template=1`;
+            window.location.href = url;
+            if (typeof showToast === 'function') {
+                showToast(`📥 Mengunduh template Excel Tabel ${currentTableCode} Tahun ${currentYear}...`);
+            }
+            return;
             try {
                 if (typeof XLSX === 'undefined') {
                     alert('Pustaka Excel belum siap. Silakan coba sesaat lagi.');
@@ -16897,9 +16903,54 @@
             return { sheetName: defaultName, worksheet: workbook.Sheets[defaultName] };
         }
 
-        function handleEditExcelImport(event) {
+        async function handleEditExcelImport(event) {
             const file = event.target.files ? event.target.files[0] : null;
             if (!file) return;
+
+            const loadingEl = document.getElementById('excelUploadLoading');
+            if (loadingEl) loadingEl.classList.remove('hidden');
+
+            try {
+                const formData = new FormData();
+                formData.append('excel_file', file);
+                formData.append('table_code', currentTableCode);
+                formData.append('opd_code', currentOpdCode);
+                formData.append('year', currentYear);
+                formData.append('type', currentType);
+                formData.append('_token', '{{ csrf_token() }}');
+
+                const response = await fetch('/tabel-opd/import-excel', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    if (typeof showToast === 'function') {
+                        showToast('✅ Berhasil mengimpor data dari Excel!');
+                    }
+                    if (result.table_html) {
+                        try {
+                            localStorage.setItem(`simonda_table_html_${currentTableCode}_${currentYear}`, result.table_html);
+                            localStorage.setItem(`simonda_table_saved_${currentTableCode}_${currentYear}`, 'true');
+                        } catch(e) {}
+                    }
+                    setTimeout(() => { window.location.reload(); }, 600);
+                } else {
+                    alert(result.message || 'Gagal mengimpor berkas Excel.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Terjadi kesalahan saat mengunggah berkas Excel: ' + (err.message || err));
+            } finally {
+                if (loadingEl) loadingEl.classList.add('hidden');
+                event.target.value = '';
+            }
+            return;
 
             const reader = new FileReader();
             reader.onload = async function(e) {

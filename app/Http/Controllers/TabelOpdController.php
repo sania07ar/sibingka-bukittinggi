@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\TabelData;
 use App\Models\TabelMetadata;
 use App\Models\TabelComment;
+use App\Exports\TableOpdExport;
+use App\Imports\TableOpdImport;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
 
 class TabelOpdController extends Controller
@@ -181,6 +184,251 @@ class TabelOpdController extends Controller
             'dbFallbackMetadata' => $dbFallbackMetadata,
             'dbCustomTables' => $dbCustomTables,
         ]);
+    }
+
+    /**
+     * Export Tabel OPD ke Microsoft Excel (.xlsx) menggunakan Laravel Excel (Maatwebsite\Excel)
+     */
+    public function exportExcel(Request $request)
+    {
+        $tableCode = $request->query('code', $request->query('table', '8.1.1'));
+        $opdCode = $request->query('opd', '01');
+        $year = (int) $request->query('year', 2025);
+        $type = $request->query('type', 'opd');
+        $isTemplate = (bool) $request->query('template', 0);
+
+        if ($type !== 'bps' && $type !== 'instansi') {
+            $opdCode = $this->normalizeOpdCode($tableCode, $opdCode);
+        }
+
+        $meta = $this->getOrCreateMetadata($tableCode, $opdCode, $year, $type);
+        if (!$meta || empty($meta->table_html) || str_contains($meta->table_html, 'Indicator Details')) {
+            $fallback = TabelMetadata::where('table_code', $tableCode)
+                ->whereNotNull('table_html')
+                ->where('table_html', '!=', '')
+                ->where('table_html', 'not like', '%Indicator Details%')
+                ->where('table_html', 'not like', '%Belum ada data untuk tabel ini%')
+                ->orderByRaw("ABS(year - {$year}) ASC")
+                ->first();
+            if ($fallback) {
+                $meta = $fallback;
+            }
+        }
+
+        $cleanTableCode = str_replace('.', '_', $tableCode);
+        $fileName = ($isTemplate ? "Template_Tabel_{$cleanTableCode}_{$year}.xlsx" : "Tabel_{$cleanTableCode}_{$year}.xlsx");
+
+        return Excel::download(
+            new TableOpdExport(
+                $tableCode,
+                $opdCode,
+                $year,
+                $meta?->title_id,
+                $meta?->title_en,
+                $meta?->source,
+                $meta?->note,
+                $meta?->table_html,
+                $isTemplate
+            ),
+            $fileName
+        );
+    }
+
+    /**
+     * Import Tabel OPD dari berkas Excel (.xlsx / .xls / .csv) menggunakan Laravel Excel
+     */
+    public function importExcel(Request $request)
+    {
+        $file = $request->file('excel_file') ?? $request->file('file');
+        if (!$file) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada berkas Excel yang diunggah.',
+            ], 400);
+        }
+
+        $tableCode = $request->input('table_code');
+        $opdCode = $request->input('opd_code', '01');
+        $year = (int) $request->input('year', 2025);
+        $type = $request->input('type', 'opd');
+
+        if ($type !== 'bps' && $type !== 'instansi') {
+            $opdCode = $this->normalizeOpdCode($tableCode, $opdCode);
+        }
+
+        $meta = $this->getOrCreateMetadata($tableCode, $opdCode, $year, $type);
+        if (!$meta || empty($meta->table_html)) {
+            $fallback = TabelMetadata::where('table_code', $tableCode)
+                ->whereNotNull('table_html')
+                ->where('table_html', '!=', '')
+                ->where('table_html', 'not like', '%Indicator Details%')
+                ->orderByRaw("ABS(year - {$year}) ASC")
+                ->first();
+            if ($fallback) {
+                $meta = $fallback;
+                $meta->year = $year;
+                $meta->opd_code = $opdCode;
+            }
+        }
+
+        if (!$meta || empty($meta->table_html)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Struktur tabel tidak ditemukan di database.',
+            ], 404);
+        }
+
+        try {
+            $import = new TableOpdImport();
+            $sheets = Excel::toArray($import, $file);
+            $rows = $sheets[0] ?? [];
+
+            if (empty($rows)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Berkas Excel kosong atau tidak terbaca.',
+                ], 400);
+            }
+
+            $updatedHtml = $this->applyExcelRowsToTableHtml($meta->table_html, $rows);
+
+            $meta->table_html = $updatedHtml;
+            $meta->is_saved = true;
+            $meta->save();
+
+            // Simpan file cache snapshot
+            try {
+                $cacheDir = storage_path('app/tables');
+                if (!is_dir($cacheDir)) @mkdir($cacheDir, 0777, true);
+                $cleanOpd = str_pad($opdCode, 2, '0', STR_PAD_LEFT);
+                $cacheFile = "{$cacheDir}/table_{$type}_{$cleanOpd}_{$tableCode}_{$year}.json";
+                @file_put_contents($cacheFile, json_encode($meta->toArray()));
+            } catch (\Throwable $e) {}
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data tabel berhasil diimpor dari berkas Excel!',
+                'table_html' => $updatedHtml,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memproses berkas Excel: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Terapkan baris data dari berkas Excel ke dalam table_html
+     */
+    protected function applyExcelRowsToTableHtml(string $tableHtml, array $excelRows): string
+    {
+        $filteredRows = [];
+        foreach ($excelRows as $row) {
+            if (!is_array($row)) continue;
+            $cells = [];
+            foreach ($row as $cell) {
+                $cells[] = $cell !== null ? trim((string)$cell) : '';
+            }
+            $nonEmpty = array_filter($cells, fn($c) => $c !== '');
+            if (empty($nonEmpty)) continue;
+
+            $firstCell = reset($nonEmpty);
+            if (preg_match('/^(?:Tabel|Table|Sumber|Source|Catatan|Note)/i', $firstCell)) {
+                continue;
+            }
+            if (preg_match('/^\(1\)$/i', $firstCell) || (in_array('(1)', $cells) && in_array('(2)', $cells))) {
+                continue;
+            }
+
+            $filteredRows[] = $cells;
+        }
+
+        if (empty($filteredRows)) {
+            return $tableHtml;
+        }
+
+        return preg_replace_callback('/<tbody[^>]*>(.*?)<\/tbody>/is', function($tbodyMatch) use ($filteredRows) {
+            $tbodyHtml = $tbodyMatch[1];
+            $excelCursor = 0;
+
+            $newTbody = preg_replace_callback('/<tr([^>]*)>(.*?)<\/tr>/is', function($trMatch) use (&$excelCursor, $filteredRows) {
+                $trAttr = $trMatch[1];
+                $rowHtml = $trMatch[2];
+
+                preg_match_all('/<td([^>]*)>(.*?)<\/td>/is', $rowHtml, $tdMatches, PREG_SET_ORDER);
+                if (empty($tdMatches)) return $trMatch[0];
+
+                $rowLabel = trim(strip_tags($tdMatches[0][2]));
+
+                $matchedRow = null;
+                foreach ($filteredRows as $eRow) {
+                    $eFirst = null;
+                    foreach ($eRow as $c) {
+                        if ($c !== '') {
+                            $eFirst = $c;
+                            break;
+                        }
+                    }
+                    if ($eFirst && (
+                        strcasecmp($eFirst, $rowLabel) === 0 ||
+                        str_contains(strtolower($eFirst), strtolower($rowLabel)) ||
+                        str_contains(strtolower($rowLabel), strtolower($eFirst))
+                    )) {
+                        $matchedRow = $eRow;
+                        break;
+                    }
+                }
+
+                if (!$matchedRow && isset($filteredRows[$excelCursor])) {
+                    $matchedRow = $filteredRows[$excelCursor];
+                }
+                $excelCursor++;
+
+                if (!$matchedRow) return $trMatch[0];
+
+                $dataValues = [];
+                $passedLabel = false;
+                foreach ($matchedRow as $val) {
+                    if (!$passedLabel) {
+                        if ($val !== '') {
+                            $passedLabel = true;
+                        }
+                        continue;
+                    }
+                    $dataValues[] = ($val !== '') ? $val : '-';
+                }
+
+                $cellIndex = 0;
+                $valIndex = 0;
+                $newRowHtml = preg_replace_callback('/<td([^>]*)>(.*?)<\/td>/is', function($tdMatch) use (&$cellIndex, &$valIndex, $dataValues) {
+                    $cellIndex++;
+                    $attr = $tdMatch[1];
+
+                    if ($cellIndex === 1) {
+                        return $tdMatch[0];
+                    }
+
+                    if (isset($dataValues[$valIndex])) {
+                        $insertVal = $dataValues[$valIndex];
+                        $valIndex++;
+                        if (is_numeric($insertVal)) {
+                            $cleanNum = (float)$insertVal == (int)$insertVal ? (string)(int)$insertVal : (string)$insertVal;
+                        } else {
+                            $cleanNum = trim($insertVal);
+                            if ($cleanNum === '') $cleanNum = '-';
+                        }
+                        return "<td{$attr}>{$cleanNum}</td>";
+                    }
+
+                    return $tdMatch[0];
+                }, $rowHtml);
+
+                return "<tr{$trAttr}>{$newRowHtml}</tr>";
+            }, $tbodyHtml);
+
+            return "<tbody>{$newTbody}</tbody>";
+        }, $tableHtml);
     }
 
     /**
