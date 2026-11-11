@@ -326,6 +326,7 @@ class TabelOpdController extends Controller
         $s = strip_tags($str);
         $s = html_entity_decode($s, ENT_QUOTES | ENT_HTML5, 'UTF-8');
         $s = preg_replace('/[\x{2013}\x{2014}\-\–\—]/u', '-', $s);
+        $s = preg_replace('/^\s*\d+[\.\)\-]\s*/u', '', $s);
         $s = preg_replace('/[^\p{L}\p{N}]+/u', ' ', $s);
         return strtolower(trim($s));
     }
@@ -389,12 +390,10 @@ class TabelOpdController extends Controller
         }
 
         // Auto-heal header jika tabel 2.2.2 masih memuat Kolom 6
-        if (str_contains($tableHtml, 'Kolom 6') && (str_contains($tableHtml, 'SMU') || str_contains($tableHtml, 'DIV'))) {
-            $tableHtml = str_replace(
-                ['<div>Kolom 6</div>', 'Kolom 6', 'colspan="2"><div>S2/S3</div>'],
-                ['<div>S2/S3</div>', 'S2/S3', '><div>S2/S3</div>'],
-                $tableHtml
-            );
+        if (str_contains($tableHtml, 'Kolom 6') || str_contains($tableHtml, 'kolom 6')) {
+            $tableHtml = preg_replace('/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/i', '<th class="py-3 px-4 font-bold border border-slate-700"><div>S2/S3</div></th>', $tableHtml);
+            $tableHtml = preg_replace('/<th([^>]*)>\s*Kolom\s*6\s*<\/th>/i', '<th class="py-3 px-4 font-bold border border-slate-700"><div>S2/S3</div></th>', $tableHtml);
+            $tableHtml = preg_replace('/>\s*Kolom\s*6\s*</i', '>S2/S3<', $tableHtml);
         }
 
         return preg_replace_callback('/<tbody([^>]*)>(.*?)<\/tbody>/is', function($tbodyMatch) use ($filteredRows) {

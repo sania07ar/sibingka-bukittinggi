@@ -10455,6 +10455,12 @@
                             keysToRemove.push(k);
                         }
                     }
+                    if (k && k.includes('2.2.2')) {
+                        const val = localStorage.getItem(k) || '';
+                        if (val.includes('Kolom 6') || val.includes('kolom 6')) {
+                            keysToRemove.push(k);
+                        }
+                    }
                 }
                 keysToRemove.forEach(k => localStorage.removeItem(k));
             } catch(e) {}
@@ -11427,7 +11433,11 @@
                     savedHtml = savedHtml.replace(/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/gi, '<th class="py-3 px-4 font-bold border border-slate-700"><div>S2/S3</div></th>')
                                          .replace(/<th([^>]*)>\s*Kolom\s*6\s*<\/th>/gi, '<th class="py-3 px-4 font-bold border border-slate-700"><div>S2/S3</div></th>')
                                          .replace(/>\s*Kolom\s*6\s*</gi, '>S2/S3<');
+                    safeSetLocalStorage(scopedHtmlKey, savedHtml);
                     safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                    if (serverDbMetadata) {
+                        serverDbMetadata.table_html = savedHtml;
+                    }
                 } else if (['9.4', '5.1.18'].includes(currentTableCode) || savedHtml.includes('Mandiangin') || savedHtml.includes('Guguk Panjang')) {
                     savedHtml = savedHtml.replace(/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/gi, '<th class="py-3 px-4 font-bold border border-slate-700"><div>Aur Birugo Tigo Baleh</div></th>')
                                          .replace(/<th([^>]*)>\s*Kolom\s*6\s*<\/th>/gi, '<th$1>Aur Birugo Tigo Baleh</th>')
@@ -11847,6 +11857,15 @@
             cleanGhostColumns(tableEl);
             cleanGhostRows(tableEl);
 
+            // Jaminan header 2.2.2: Kolom ke-5 adalah S2/S3 (bukan Kolom 6)
+            if (currentTableCode === '2.2.2') {
+                tableEl.querySelectorAll('thead th').forEach(th => {
+                    if (/kolom\s*6/i.test(th.innerText.trim())) {
+                        th.innerHTML = '<div>S2/S3</div>';
+                    }
+                });
+            }
+
             // Atur lebar tabel agar proporsional, panjang, dan tidak sempit
             if (currentTableCode === '5.1.16' || currentTableCode === '5.1.17') {
                 tableEl.style.minWidth = '1600px';
@@ -12241,8 +12260,11 @@
                         const hasSub = childDivs.length >= 2 && (childDivs[1].classList.contains('italic') || childDivs[1].innerText.trim().length > 0);
                         
                         if (hasSub) {
-                            const titleVal = childDivs[0].innerText.trim();
-                            const subVal = childDivs[1].innerText.trim();
+                            let titleVal = childDivs[0].innerText.trim();
+                            let subVal = childDivs[1].innerText.trim();
+                            if (currentTableCode === '2.2.2' && /kolom\s*6/i.test(titleVal)) {
+                                titleVal = 'S2/S3';
+                            }
                             th.innerHTML = `
                                 <div class="flex flex-col gap-1 items-center justify-center p-1 w-full">
                                     <input type="text" 
@@ -12261,6 +12283,9 @@
                             `;
                         } else {
                             let titleVal = childDivs.length === 1 ? childDivs[0].innerText.trim() : th.innerText.trim();
+                            if (currentTableCode === '2.2.2' && /kolom\s*6/i.test(titleVal)) {
+                                titleVal = 'S2/S3';
+                            }
                             th.innerHTML = `
                                 <div class="flex items-center justify-center p-1 w-full">
                                     <input type="text" 
@@ -12550,7 +12575,8 @@
 
         function cleanGhostRows(table) {
             if (!table) return;
-            if (currentTableCode.startsWith('1.1.') || currentTableCode.startsWith('2.3.') || currentTableCode.startsWith('4.1') || currentTableCode.startsWith('5.1.') || currentTableCode.startsWith('5.2.') || currentOpdCode === '08' || currentOpdCode === '04') return;
+            // JANGAN PERNAH hapus baris data resmi pada tabel Dishub (8.1.x, OPD 20), BPN (1.1.x), BKPSDM (2.3.x), Pendidikan (4.1.x, 08), KPU/DPRD (2.2.2, 02, 03), atau Pertanian (5.1.x, 5.2.x, 9.11)
+            if (currentTableCode === '2.2.2' || currentTableCode.startsWith('1.1.') || currentTableCode.startsWith('2.3.') || currentTableCode.startsWith('4.1') || currentTableCode.startsWith('5.1.') || currentTableCode.startsWith('5.2.') || currentTableCode.startsWith('8.1.') || currentTableCode.startsWith('8.2.') || currentTableCode === '9.11' || currentOpdCode === '02' || currentOpdCode === '03' || currentOpdCode === '08' || currentOpdCode === '04' || currentOpdCode === '20' || currentOpdCode === '17') return;
             const tbody = table.querySelector('tbody');
             if (!tbody) return;
             const rows = tbody.querySelectorAll('tr');
@@ -12558,6 +12584,11 @@
             rows.forEach(tr => {
                 const tds = Array.from(tr.querySelectorAll('td')).filter(td => !td.classList.contains('col-edit-action'));
                 if (tds.length === 0) return;
+                // Baris yang memiliki label teks kategori/indikator di kolom pertama BUKAN baris hantu
+                const labelText = tds[0].innerText.trim();
+                if (/[a-zA-Z]{2,}/.test(labelText)) {
+                    return;
+                }
                 const hasMeaningful = tds.some(td => {
                     const input = td.querySelector('.table-edit-input');
                     const val = input ? input.value.trim() : td.innerText.trim();
@@ -12819,15 +12850,21 @@
                 const numInp = th.querySelector('.table-edit-header-num');
 
                 if (titleInp && subInp) {
-                    const title = (titleInp.value !== undefined ? titleInp.value : titleInp.getAttribute('value') || '').trim();
-                    const sub = (subInp.value !== undefined ? subInp.value : subInp.getAttribute('value') || '').trim();
+                    let title = (titleInp.value !== undefined ? titleInp.value : titleInp.getAttribute('value') || '').trim();
+                    let sub = (subInp.value !== undefined ? subInp.value : subInp.getAttribute('value') || '').trim();
+                    if (currentTableCode === '2.2.2' && /kolom\s*6/i.test(title)) {
+                        title = 'S2/S3';
+                    }
                     if (sub) {
                         th.innerHTML = `<div>${title}</div><div class="italic font-normal text-[11px] sm:text-xs">${sub}</div>`;
                     } else {
                         th.innerHTML = `<div>${title}</div>`;
                     }
                 } else if (titleInp) {
-                    const title = (titleInp.value !== undefined ? titleInp.value : titleInp.getAttribute('value') || '').trim();
+                    let title = (titleInp.value !== undefined ? titleInp.value : titleInp.getAttribute('value') || '').trim();
+                    if (currentTableCode === '2.2.2' && /kolom\s*6/i.test(title)) {
+                        title = 'S2/S3';
+                    }
                     th.innerHTML = `<div>${title}</div>`;
                 } else if (numInp) {
                     let numVal = (numInp.value !== undefined ? numInp.value : numInp.getAttribute('value') || '').trim();

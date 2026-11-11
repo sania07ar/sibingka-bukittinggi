@@ -30,6 +30,13 @@ class TableOpdExport implements FromView, ShouldAutoSize, WithTitle, WithStyles
     {
         $rawHtml = $this->tableHtml ?? '';
 
+        // Auto-heal Kolom 6 jika tabel 2.2.2 diekspor
+        if ($this->tableCode === '2.2.2' && (str_contains($rawHtml, 'Kolom 6') || str_contains($rawHtml, 'kolom 6'))) {
+            $rawHtml = preg_replace('/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/i', '<th class="py-3 px-4 font-bold border border-slate-700"><div>S2/S3</div></th>', $rawHtml);
+            $rawHtml = preg_replace('/<th([^>]*)>\s*Kolom\s*6\s*<\/th>/i', '<th class="py-3 px-4 font-bold border border-slate-700"><div>S2/S3</div></th>', $rawHtml);
+            $rawHtml = preg_replace('/>\s*Kolom\s*6\s*</i', '>S2/S3<', $rawHtml);
+        }
+
         // Bersihkan tag div dwibahasa menjadi spasi / slash yang rapi
         $cleanHtml = preg_replace('/<\/div>\s*<div[^>]*>/i', ' / ', $rawHtml);
         $cleanHtml = preg_replace('/<\/?div[^>]*>/i', '', $cleanHtml);
