@@ -17,8 +17,11 @@ class TabelOpdController extends Controller
      */
     protected function normalizeOpdCode(string $tableCode, string $opdCode): string
     {
-        if (str_starts_with($tableCode, '5.')) {
+        if (str_starts_with($tableCode, '5.') || $tableCode === '9.11') {
             return '17'; // Dinas Pertanian dan Pangan Kota Bukittinggi
+        }
+        if (str_starts_with($tableCode, '7.')) {
+            return '19'; // Dinas Pariwisata, Pemuda dan Olahraga
         }
         if (in_array($tableCode, ['8.1.6', '8.1.7', '8.1.8', '8.1.9'])) {
             return '20'; // Dinas Perhubungan

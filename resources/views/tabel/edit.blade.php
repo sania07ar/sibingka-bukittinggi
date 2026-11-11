@@ -7420,7 +7420,7 @@
                             { label: 'Jumlah/ Total', timbunan: '96,95', persentase: '100' }
                         ]
                     };
-                    const officialData = dataByYear[yr] || dataByYear[2024];
+                    const officialData = dataByYear[yr] || (dataByYear[2024] ? dataByYear[2024].map(r => ({ label: r.label, timbunan: '-', persentase: '-' })) : []);
 
                     const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
 
@@ -10676,7 +10676,10 @@
             tr.innerHTML = html;
 
             tr.querySelectorAll('.table-edit-input').forEach(inp => {
-                inp.addEventListener('change', () => persistTableData(false));
+                inp.addEventListener('input', () => {
+                    inp.setAttribute('value', inp.value);
+                    window._hasUnsavedEdits = true;
+                });
             });
 
             tbody.appendChild(tr);
@@ -10687,8 +10690,8 @@
                 firstInput.select();
             }
 
-            persistTableData(false);
-            showToast('✅ Baris data baru berhasil ditambahkan!');
+            window._hasUnsavedEdits = true;
+            showToast('✅ Baris data baru berhasil ditambahkan! Klik "Simpan Perubahan" setelah selesai.');
         }
 
 
@@ -12056,9 +12059,8 @@
                     th.querySelectorAll('.table-edit-header-input').forEach(inp => {
                         inp.addEventListener('input', () => {
                             inp.setAttribute('value', inp.value);
+                            window._hasUnsavedEdits = true;
                         });
-                        inp.addEventListener('change', () => persistTableData(false));
-                        inp.addEventListener('blur', () => persistTableData(false));
                     });
                 });
             });
@@ -12092,7 +12094,10 @@
                             `;
                             const inputEl = td.querySelector('.table-edit-input');
                             if (inputEl) {
-                                inputEl.addEventListener('change', () => persistTableData(false));
+                                inputEl.addEventListener('input', () => {
+                                    inputEl.setAttribute('value', inputEl.value);
+                                    window._hasUnsavedEdits = true;
+                                });
                             }
                         }
                     });
@@ -12128,8 +12133,6 @@
                     if (isHeader) {
                         return;
                     }
-
-                    const isTotalRow = (tds[0] && tds[0].innerText.trim() === 'Bukittinggi');
                     
                     tds.forEach((td, idx) => {
                         if (td.classList.contains('col-edit-action')) return;
@@ -12150,7 +12153,10 @@
                             `;
                             const inputEl = td.querySelector('.table-edit-input');
                             if (inputEl) {
-                                inputEl.addEventListener('change', () => persistTableData(false));
+                                inputEl.addEventListener('input', () => {
+                                    inputEl.setAttribute('value', inputEl.value);
+                                    window._hasUnsavedEdits = true;
+                                });
                             }
                         }
                     });
@@ -12180,7 +12186,10 @@
                             `;
                             const inputEl = td.querySelector('.table-edit-input');
                             if (inputEl) {
-                                inputEl.addEventListener('change', () => persistTableData(false));
+                                inputEl.addEventListener('input', () => {
+                                    inputEl.setAttribute('value', inputEl.value);
+                                    window._hasUnsavedEdits = true;
+                                });
                             }
                         }
                     });
@@ -12213,7 +12222,10 @@
                             `;
                             const inputEl = td.querySelector('.table-edit-input');
                             if (inputEl) {
-                                inputEl.addEventListener('change', () => persistTableData(false));
+                                inputEl.addEventListener('input', () => {
+                                    inputEl.setAttribute('value', inputEl.value);
+                                    window._hasUnsavedEdits = true;
+                                });
                             }
                         }
                     });
@@ -12252,18 +12264,23 @@
                         `;
                         const inputEl = td.querySelector('.table-edit-input');
                         if (inputEl) {
+                            inputEl.addEventListener('input', () => {
+                                inputEl.setAttribute('value', inputEl.value);
+                                window._hasUnsavedEdits = true;
+                            });
                             inputEl.addEventListener('blur', (e) => {
                                 const formatter = (isFinancialTable && idx > 0) ? formatRupiahNumber : formatBpsNumber;
                                 const formatted = formatter(e.target.value);
                                 if (formatted !== e.target.value) {
                                     e.target.value = formatted;
                                 }
-                                persistTableData(false);
+                                inputEl.setAttribute('value', e.target.value);
                             });
                             inputEl.addEventListener('change', () => {
                                 const formatter = (isFinancialTable && idx > 0) ? formatRupiahNumber : formatBpsNumber;
                                 inputEl.value = formatter(inputEl.value);
-                                persistTableData(false);
+                                inputEl.setAttribute('value', inputEl.value);
+                                window._hasUnsavedEdits = true;
                             });
                         }
                     } else {
@@ -12335,10 +12352,7 @@
             });
 
             if (removedAny) {
-                const savedKey = `simonda_table_html_${currentTableCode}_${currentYear}`;
-                if (localStorage.getItem(savedKey)) {
-                    safeSetLocalStorage(savedKey, table.innerHTML);
-                }
+                window._hasUnsavedEdits = true;
             }
         }
 
@@ -12355,8 +12369,8 @@
             if (confirm('Apakah Anda yakin ingin menghapus baris paling bawah dari tabel ini?')) {
                 const lastRow = rows[rows.length - 1];
                 deleteRowElement(lastRow);
-                persistTableData(false);
-                showToast('🗑️ Baris paling bawah berhasil dihapus!');
+                window._hasUnsavedEdits = true;
+                showToast('🗑️ Baris paling bawah berhasil dihapus! Klik "Simpan Perubahan" setelah selesai.');
             }
         }
 
@@ -12372,8 +12386,8 @@
             }
             if (confirm('Apakah Anda yakin ingin menghapus baris ini dari tabel?')) {
                 deleteRowElement(tr);
-                persistTableData(false);
-                showToast('🗑️ Baris tabel berhasil dihapus!');
+                window._hasUnsavedEdits = true;
+                showToast('🗑️ Baris tabel berhasil dihapus! Klik "Simpan Perubahan" setelah selesai.');
             }
         }
 
@@ -12463,12 +12477,12 @@
 
         async function resetTableOriginal() {
             window._isResetting = true;
-            if (!confirm(`Apakah Anda yakin ingin mereset seluruh nilai data Tabel ${currentTableCode} kembali ke data asli resmi BPS?`)) {
+            if (!confirm(`Apakah Anda yakin ingin mereset/menghapus seluruh nilai data Tabel ${currentTableCode} untuk tahun ${currentYear}? Seluruh angka data yang sudah terisi akan terhapus dan kembali kosong (-).`)) {
                 window._isResetting = false;
                 return;
             }
 
-            // 1. Bersihkan seluruh cache localStorage untuk tabel ini
+            // 1. Bersihkan seluruh cache localStorage untuk tabel & tahun ini
             try {
                 const scopedPrefix = `${typeof currentType !== 'undefined' ? currentType : 'opd'}_${(typeof currentOpdCode !== 'undefined' ? currentOpdCode : '01').toString().padStart(2, '0')}_${currentTableCode}`;
                 const keysToRemove = [];
@@ -12481,27 +12495,49 @@
                 keysToRemove.forEach(k => localStorage.removeItem(k));
             } catch(e) {}
 
-            // 2. Ambil HTML template resmi BPS jika ada skema
-            let defaultHtml = null;
-            if (tableSchemas[currentTableCode] && typeof tableSchemas[currentTableCode].render === 'function') {
-                try {
-                    defaultHtml = tableSchemas[currentTableCode].render(currentYear);
-                    // Pastikan defaultHtml bersih dari tag input formulir sebelum dikirim ke server
-                    if (defaultHtml && defaultHtml.includes('<input')) {
-                        const tempDiv = document.createElement('div');
-                        tempDiv.innerHTML = defaultHtml;
-                        tempDiv.querySelectorAll('input, .table-edit-input').forEach(inp => {
-                            const val = (inp.value !== undefined ? inp.value : inp.getAttribute('value') || '').trim();
-                            const parent = inp.closest('td, th') || inp.parentNode;
-                            if (parent) {
-                                parent.innerHTML = val;
-                            }
-                        });
-                        defaultHtml = tempDiv.innerHTML;
+            // 2. Bangun HTML kosong (seluruh angka data di-wipe menjadi '-') berdasarkan struktur tabel saat ini
+            const tableEl = document.getElementById('dataDisplayTable');
+            let emptyHtml = null;
+            if (tableEl) {
+                const clone = tableEl.cloneNode(true);
+                clone.querySelectorAll('.col-edit-action').forEach(el => el.remove());
+                
+                // Kembalikan header th ke teks statis
+                clone.querySelectorAll('thead th').forEach(th => {
+                    const titleInp = th.querySelector('.table-edit-header-title');
+                    const subInp = th.querySelector('.table-edit-header-sub');
+                    const numInp = th.querySelector('.table-edit-header-num');
+                    if (titleInp && subInp) {
+                        const title = (titleInp.value || titleInp.getAttribute('value') || '').trim();
+                        const sub = (subInp.value || subInp.getAttribute('value') || '').trim();
+                        th.innerHTML = sub ? `<div>${title}</div><div class="italic font-normal text-[11px] sm:text-xs">${sub}</div>` : `<div>${title}</div>`;
+                    } else if (titleInp) {
+                        th.innerHTML = `<div>${(titleInp.value || titleInp.getAttribute('value') || '').trim()}</div>`;
+                    } else if (numInp) {
+                        let numVal = (numInp.value || numInp.getAttribute('value') || '').trim();
+                        if (numVal && !numVal.startsWith('(') && /^\d+$/.test(numVal)) numVal = `(${numVal})`;
+                        th.innerHTML = numVal;
                     }
-                } catch(err) {
-                    console.error('Error rendering default schema:', err);
-                }
+                });
+
+                // Kosongkan seluruh sel input data di tbody menjadi '-'
+                clone.querySelectorAll('tbody tr').forEach(tr => {
+                    const tds = tr.querySelectorAll('td, th');
+                    tds.forEach((td, idx) => {
+                        const input = td.querySelector('.table-edit-input');
+                        if (input) {
+                            td.innerHTML = '<span class="text-slate-400 font-normal">-</span>';
+                            td.className = td.className.replace(/text-(left|right)/g, '') + ' text-center align-middle';
+                        }
+                    });
+                });
+
+                emptyHtml = clone.innerHTML;
+            }
+
+            // Jika ada buildEmptyTemplateFromSource, gunakan untuk memastikan struktur tahun teratur
+            if (emptyHtml && typeof buildEmptyTemplateFromSource === 'function') {
+                emptyHtml = buildEmptyTemplateFromSource(emptyHtml, currentYear, currentYear);
             }
 
             // 3. Panggil API delete/reset ke server
@@ -12517,7 +12553,7 @@
                         opd_code: currentOpdCode,
                         year: currentYear,
                         type: typeof currentType !== 'undefined' ? currentType : 'opd',
-                        default_html: defaultHtml
+                        default_html: emptyHtml
                     })
                 });
             } catch(e) {
@@ -12526,12 +12562,13 @@
 
             // 4. Update in-memory server metadata
             if (serverDbMetadata) {
-                serverDbMetadata.table_html = defaultHtml;
+                serverDbMetadata.table_html = emptyHtml;
                 serverDbMetadata.is_saved = false;
                 serverDbMetadata.source_type = 'template';
             }
 
-            showToast('🔄 Nilai tabel berhasil dikembalikan ke data awal resmi BPS!');
+            window._hasUnsavedEdits = false;
+            showToast('🗑️ Seluruh nilai data tabel berhasil dihapus/direset ke kosong (-)!');
             setTimeout(() => {
                 window.location.reload();
             }, 300);
@@ -13310,10 +13347,16 @@
         }
 
         async function saveAndReturn() {
+            window._hasUnsavedEdits = false;
             await persistTableData(true);
         }
 
         function backToTableView() {
+            if (window._hasUnsavedEdits) {
+                if (!confirm('Perubahan yang Anda ketik belum disimpan. Apakah Anda yakin ingin membatalkan dan keluar? Semua perubahan yang belum disimpan akan dibatalkan.')) {
+                    return;
+                }
+            }
             let url = `{{ route('tabel-opd') }}?code=${currentTableCode}&opd=${currentOpdCode}&year=${currentYear}`;
             if (currentType) url += `&type=${currentType}`;
             window.location.href = url;

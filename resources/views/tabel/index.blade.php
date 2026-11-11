@@ -7020,7 +7020,7 @@
                             { label: 'Jumlah/ Total', timbunan: '96,95', persentase: '100' }
                         ]
                     };
-                    const officialData4214 = dataByYear[yr] || dataByYear[2024];
+                    const officialData4214 = dataByYear[yr] || (dataByYear[2024] ? dataByYear[2024].map(r => ({ label: r.label, timbunan: '-', persentase: '-' })) : []);
 
                     let rowsHtml = '';
                     officialData4214.forEach(row => {
