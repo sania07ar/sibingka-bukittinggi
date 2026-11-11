@@ -9988,6 +9988,120 @@
                 }
             }
 
+            // Khusus tabel pariwisata 7.3, 7.4, 7.5 (Dinas Pariwisata): atur 5 rentang tahun historis pada bagian Jumlah [targetYear, targetYear-1, ..., targetYear-4]
+            if (['7.3', '7.4', '7.5'].includes(currentTableCode)) {
+                const yr = parseInt(targetYear) || 2026;
+                const histTotals = {
+                    '7.3': {
+                        2025: ['750.821', '17.768.964'],
+                        2024: ['604.541', '14.472.272'],
+                        2023: ['820.943', '19.536.206'],
+                        2022: ['991.632', '24.205.697'],
+                        2021: ['618.049', '14.876.991'],
+                        2020: ['363.045', '8.746.437'],
+                        2019: ['729.705', '10.620.300']
+                    },
+                    '7.4': {
+                        2025: ['175.214', '3.360.118'],
+                        2024: ['160.099', '3.085.615'],
+                        2023: ['220.525', '3.170.210'],
+                        2022: ['236.449', '3.440.474'],
+                        2021: ['131.873', '1.860.079']
+                    },
+                    '7.5': {
+                        2025: ['45.094'],
+                        2024: ['35.303'],
+                        2023: ['19.390'],
+                        2022: ['491'],
+                        2021: ['17'],
+                        2020: ['2.337'],
+                        2019: ['32.653']
+                    }
+                };
+                const colCount = currentTableCode === '7.5' ? 1 : 2;
+
+                // Khusus 7.5 bersihkan 1926 pada baris Belanda jika targetYear >= 2026
+                if (currentTableCode === '7.5' && yr >= 2026) {
+                    tempTable.querySelectorAll('tbody tr').forEach(tr => {
+                        if (tr.innerText.includes('Belanda') || tr.innerText.includes('Netherland')) {
+                            const tds = tr.querySelectorAll('td');
+                            if (tds.length >= 2 && tds[tds.length - 1].innerText.trim() === '1926') {
+                                tds[tds.length - 1].innerHTML = '<span class="text-slate-400 font-normal">-</span>';
+                            }
+                        }
+                    });
+                }
+
+                const jumlahCell = Array.from(tempTable.querySelectorAll('td')).find(td => td.innerText.trim().toLowerCase().includes('jumlah') || td.innerText.trim().toLowerCase().includes('total'));
+                if (jumlahCell) {
+                    jumlahCell.setAttribute('rowspan', '5');
+                    let currentRow = jumlahCell.parentElement;
+                    let tbody = currentRow.parentElement;
+                    let subsequentRows = [];
+                    let r = currentRow.nextElementSibling;
+                    while (r) {
+                        subsequentRows.push(r);
+                        r = r.nextElementSibling;
+                    }
+
+                    // Pastikan ada 4 baris setelah Jumlah (sehingga total 5 tahun)
+                    while (subsequentRows.length < 4) {
+                        const newTr = document.createElement('tr');
+                        newTr.className = 'hover:bg-amber-100/60 transition-colors';
+                        tbody.appendChild(newTr);
+                        subsequentRows.push(newTr);
+                    }
+
+                    for (let i = 0; i < 5; i++) {
+                        const targetY = yr - i;
+                        const known = histTotals[currentTableCode] && histTotals[currentTableCode][targetY];
+                        const targetRow = (i === 0) ? currentRow : subsequentRows[i - 1];
+
+                        if (i === 0) {
+                            const tds = targetRow.querySelectorAll('td');
+                            if (tds[1]) {
+                                tds[1].innerText = targetY.toString();
+                                tds[1].className = 'py-2.5 px-4 border border-slate-700 text-center align-top font-extrabold';
+                            }
+                            for (let c = 0; c < colCount; c++) {
+                                if (tds[2 + c]) {
+                                    if (known) {
+                                        tds[2 + c].innerText = known[c];
+                                    } else {
+                                        tds[2 + c].innerHTML = '<span class="text-slate-400 font-normal">-</span>';
+                                    }
+                                    tds[2 + c].className = 'py-2.5 px-4 border border-slate-700 text-center align-top font-extrabold text-center align-middle';
+                                }
+                            }
+                        } else {
+                            targetRow.innerHTML = '';
+                            const yTd = document.createElement('td');
+                            yTd.innerText = targetY.toString();
+                            yTd.className = 'py-2.5 px-4 border border-slate-700 text-center align-top';
+                            targetRow.appendChild(yTd);
+
+                            for (let c = 0; c < colCount; c++) {
+                                const dTd = document.createElement('td');
+                                if (known) {
+                                    dTd.innerText = known[c];
+                                } else {
+                                    dTd.innerHTML = '<span class="text-slate-400 font-normal">-</span>';
+                                }
+                                dTd.className = 'py-2.5 px-4 border border-slate-700 text-center align-top text-center align-middle';
+                                targetRow.appendChild(dTd);
+                            }
+                        }
+                    }
+
+                    // Hapus baris berlebih jika ada
+                    if (subsequentRows.length > 4) {
+                        for (let k = 4; k < subsequentRows.length; k++) {
+                            subsequentRows[k].remove();
+                        }
+                    }
+                }
+            }
+
             return tempTable.innerHTML;
         }
 
@@ -11278,6 +11392,132 @@
                         }
                         currentRow = currentRow.nextElementSibling;
                     }
+                    if (isCorruptYears) {
+                        savedHtml = tempDiv.innerHTML;
+                        safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                        if (serverDbMetadata) {
+                            serverDbMetadata.table_html = savedHtml;
+                        }
+                    }
+                }
+            }
+
+            // Self-healing tabel pariwisata 7.3, 7.4, 7.5 (Dinas Pariwisata - Jumlah 5 tahun berjalan)
+            if (['7.3', '7.4', '7.5'].includes(currentTableCode) && savedHtml) {
+                const tempDiv = document.createElement('table');
+                tempDiv.innerHTML = savedHtml;
+                const jumlahCell = Array.from(tempDiv.querySelectorAll('td')).find(td => td.innerText.trim().toLowerCase().includes('jumlah') || td.innerText.trim().toLowerCase().includes('total'));
+                if (jumlahCell) {
+                    const yr = parseInt(currentYear) || 2026;
+                    let currentRow = jumlahCell.parentElement;
+                    let tbody = currentRow.parentElement;
+                    let isCorruptYears = false;
+
+                    const histTotals = {
+                        '7.3': {
+                            2025: ['750.821', '17.768.964'],
+                            2024: ['604.541', '14.472.272'],
+                            2023: ['820.943', '19.536.206'],
+                            2022: ['991.632', '24.205.697'],
+                            2021: ['618.049', '14.876.991'],
+                            2020: ['363.045', '8.746.437'],
+                            2019: ['729.705', '10.620.300']
+                        },
+                        '7.4': {
+                            2025: ['175.214', '3.360.118'],
+                            2024: ['160.099', '3.085.615'],
+                            2023: ['220.525', '3.170.210'],
+                            2022: ['236.449', '3.440.474'],
+                            2021: ['131.873', '1.860.079']
+                        },
+                        '7.5': {
+                            2025: ['45.094'],
+                            2024: ['35.303'],
+                            2023: ['19.390'],
+                            2022: ['491'],
+                            2021: ['17'],
+                            2020: ['2.337'],
+                            2019: ['32.653']
+                        }
+                    };
+                    const colCount = currentTableCode === '7.5' ? 1 : 2;
+
+                    // Pastikan rowspan Jumlah adalah 5
+                    if (jumlahCell.getAttribute('rowspan') !== '5') {
+                        jumlahCell.setAttribute('rowspan', '5');
+                        isCorruptYears = true;
+                    }
+
+                    // Khusus 7.5 bersihkan 1926 pada baris Belanda jika currentYear >= 2026
+                    if (currentTableCode === '7.5' && yr >= 2026) {
+                        tempDiv.querySelectorAll('tbody tr').forEach(tr => {
+                            if (tr.innerText.includes('Belanda') || tr.innerText.includes('Netherland')) {
+                                const tds = tr.querySelectorAll('td');
+                                if (tds.length >= 2 && tds[tds.length - 1].innerText.trim() === '1926') {
+                                    tds[tds.length - 1].innerHTML = '<span class="text-slate-400 font-normal">-</span>';
+                                    isCorruptYears = true;
+                                }
+                            }
+                        });
+                    }
+
+                    // Kumpulkan baris-baris setelah Jumlah
+                    let subsequentRows = [];
+                    let r = currentRow.nextElementSibling;
+                    while (r) {
+                        subsequentRows.push(r);
+                        r = r.nextElementSibling;
+                    }
+
+                    // Jika jumlah baris setelah Jumlah < 4 (misal tabel 7.4 sebelumnya cuma 3 baris), tambahkan baris ke-4 (tahun ke-5)
+                    while (subsequentRows.length < 4) {
+                        const newTr = document.createElement('tr');
+                        newTr.className = 'hover:bg-amber-100/60 transition-colors';
+                        tbody.appendChild(newTr);
+                        subsequentRows.push(newTr);
+                        isCorruptYears = true;
+                    }
+
+                    for (let i = 0; i < 5; i++) {
+                        const expectedY = (yr - i).toString();
+                        const known = histTotals[currentTableCode] && histTotals[currentTableCode][yr - i];
+                        const targetRow = (i === 0) ? currentRow : subsequentRows[i - 1];
+                        if (!targetRow) break;
+
+                        const tds = targetRow.querySelectorAll('td');
+                        const yearTd = (i === 0) ? tds[1] : tds[0];
+                        if (yearTd && yearTd.innerText.trim() !== expectedY) {
+                            isCorruptYears = true;
+                            yearTd.innerText = expectedY;
+                        }
+
+                        // Isi nilai historis jika sel masih kosong/strip atau corrupt
+                        for (let c = 0; c < colCount; c++) {
+                            const valTd = (i === 0) ? tds[2 + c] : tds[1 + c];
+                            if (valTd) {
+                                const curVal = valTd.innerText.trim();
+                                if (known && (curVal === '-' || curVal === '')) {
+                                    valTd.innerText = known[c];
+                                    isCorruptYears = true;
+                                }
+                            } else if (i > 0) {
+                                const newTd = document.createElement('td');
+                                newTd.innerText = known ? known[c] : '-';
+                                newTd.className = 'py-2.5 px-4 border border-slate-700 text-center align-top text-center align-middle';
+                                targetRow.appendChild(newTd);
+                                isCorruptYears = true;
+                            }
+                        }
+                    }
+
+                    // Hapus baris siluman berlebih jika > 4 baris setelah Jumlah
+                    if (subsequentRows.length > 4) {
+                        for (let k = 4; k < subsequentRows.length; k++) {
+                            subsequentRows[k].remove();
+                        }
+                        isCorruptYears = true;
+                    }
+
                     if (isCorruptYears) {
                         savedHtml = tempDiv.innerHTML;
                         safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
