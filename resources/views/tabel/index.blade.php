@@ -7868,8 +7868,8 @@
                     dists.forEach(label => {
                         rowsHtml += `
                             <tr class="hover:bg-amber-100/60 transition-colors">
-                                <td colspan="2" class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${label}</td>
-                                ${Array(12).fill(0).map(() => `<td class="py-2 px-1 border border-slate-700 text-center">-</td>`).join('')}
+                                <td colspan="2" class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top min-w-[200px]">${label}</td>
+                                ${Array(12).fill(0).map(() => `<td class="py-2.5 px-2.5 border border-slate-700 text-center min-w-[110px]">-</td>`).join('')}
                             </tr>
                         `;
                     });
@@ -7885,9 +7885,9 @@
 
                         rowsHtml += `
                             <tr class="${rowCls}">
-                                ${isFirstYear ? `<td rowspan="5" class="py-2.5 px-4 border border-slate-700 text-center font-extrabold align-middle bg-[#fed7aa]">Jumlah / Total</td>` : ''}
-                                <td class="py-2.5 px-3 border border-slate-700 text-center font-bold align-middle bg-[#fed7aa]">${y}</td>
-                                ${Array(12).fill(0).map(() => `<td class="py-2 px-1 border border-slate-700 text-center">-</td>`).join('')}
+                                ${isFirstYear ? `<td rowspan="5" class="py-2.5 px-4 border border-slate-700 text-center font-extrabold align-middle bg-[#fed7aa] min-w-[130px]">Jumlah / Total</td>` : ''}
+                                <td class="py-2.5 px-3 border border-slate-700 text-center font-bold align-middle bg-[#fed7aa] min-w-[70px]">${y}</td>
+                                ${Array(12).fill(0).map(() => `<td class="py-2.5 px-2.5 border border-slate-700 text-center min-w-[110px]">-</td>`).join('')}
                             </tr>
                         `;
                     });
@@ -7895,33 +7895,71 @@
                     return `
                         <thead>
                             <tr class="bg-[#f95a00] text-white text-center font-bold">
-                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2" colspan="2">
-                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                <th class="py-3.5 px-4 font-bold border border-slate-700 min-w-[200px]" rowspan="2" colspan="2">
+                                    <div class="text-xs sm:text-sm">Kecamatan</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs text-orange-100">District</div>
                                 </th>
-                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="6">
-                                    <div>Target</div>
+                                <th class="py-3 px-3 font-bold border border-slate-700 min-w-[700px]" colspan="6">
+                                    <div class="text-xs sm:text-sm">Target</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs text-orange-100">Target</div>
                                 </th>
-                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="6">
-                                    <div>Realisasi</div><div class="italic font-normal text-[11px] sm:text-xs">Realization</div>
+                                <th class="py-3 px-3 font-bold border border-slate-700 min-w-[700px]" colspan="6">
+                                    <div class="text-xs sm:text-sm">Realisasi</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs text-orange-100">Realization</div>
                                 </th>
                             </tr>
-                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs">
-                                <th class="py-2 px-1 border border-slate-700">Jagung</th>
-                                <th class="py-2 px-1 border border-slate-700">Kacang Tanah</th>
-                                <th class="py-2 px-1 border border-slate-700">Kedelai</th>
-                                <th class="py-2 px-1 border border-slate-700">Kacang Hijau</th>
-                                <th class="py-2 px-1 border border-slate-700">Ubi Kayu</th>
-                                <th class="py-2 px-1 border border-slate-700">Ubi Jalar</th>
-                                <th class="py-2 px-1 border border-slate-700">Jagung</th>
-                                <th class="py-2 px-1 border border-slate-700">Kacang Tanah</th>
-                                <th class="py-2 px-1 border border-slate-700">Kedelai</th>
-                                <th class="py-2 px-1 border border-slate-700">Kacang Hijau</th>
-                                <th class="py-2 px-1 border border-slate-700">Ubi Kayu</th>
-                                <th class="py-2 px-1 border border-slate-700">Ubi Jalar</th>
+                            <tr class="bg-[#ea580c] text-white text-center font-bold text-xs">
+                                <th class="py-2.5 px-2 border border-slate-700 min-w-[110px]">
+                                    <div>Jagung</div><div class="italic font-normal text-[10px] text-orange-100">Maize</div>
+                                </th>
+                                <th class="py-2.5 px-2 border border-slate-700 min-w-[125px]">
+                                    <div>Kacang Tanah</div><div class="italic font-normal text-[10px] text-orange-100">Peanuts</div>
+                                </th>
+                                <th class="py-2.5 px-2 border border-slate-700 min-w-[110px]">
+                                    <div>Kedelai</div><div class="italic font-normal text-[10px] text-orange-100">Soybeans</div>
+                                </th>
+                                <th class="py-2.5 px-2 border border-slate-700 min-w-[125px]">
+                                    <div>Kacang Hijau</div><div class="italic font-normal text-[10px] text-orange-100">Mungbeans</div>
+                                </th>
+                                <th class="py-2.5 px-2 border border-slate-700 min-w-[110px]">
+                                    <div>Ubi Kayu</div><div class="italic font-normal text-[10px] text-orange-100">Cassava</div>
+                                </th>
+                                <th class="py-2.5 px-2 border border-slate-700 min-w-[125px]">
+                                    <div>Ubi Jalar</div><div class="italic font-normal text-[10px] text-orange-100">Sweet Potatoes</div>
+                                </th>
+                                <th class="py-2.5 px-2 border border-slate-700 min-w-[110px]">
+                                    <div>Jagung</div><div class="italic font-normal text-[10px] text-orange-100">Maize</div>
+                                </th>
+                                <th class="py-2.5 px-2 border border-slate-700 min-w-[125px]">
+                                    <div>Kacang Tanah</div><div class="italic font-normal text-[10px] text-orange-100">Peanuts</div>
+                                </th>
+                                <th class="py-2.5 px-2 border border-slate-700 min-w-[110px]">
+                                    <div>Kedelai</div><div class="italic font-normal text-[10px] text-orange-100">Soybeans</div>
+                                </th>
+                                <th class="py-2.5 px-2 border border-slate-700 min-w-[125px]">
+                                    <div>Kacang Hijau</div><div class="italic font-normal text-[10px] text-orange-100">Mungbeans</div>
+                                </th>
+                                <th class="py-2.5 px-2 border border-slate-700 min-w-[110px]">
+                                    <div>Ubi Kayu</div><div class="italic font-normal text-[10px] text-orange-100">Cassava</div>
+                                </th>
+                                <th class="py-2.5 px-2 border border-slate-700 min-w-[125px]">
+                                    <div>Ubi Jalar</div><div class="italic font-normal text-[10px] text-orange-100">Sweet Potatoes</div>
+                                </th>
                             </tr>
                             <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
-                                <th class="py-1 px-3 border border-slate-700" colspan="2">(1)</th>
-                                ${Array(12).fill(0).map((_, i) => `<th class="py-1 px-1 border border-slate-700">(${i + 2})</th>`).join('')}
+                                <th class="py-1.5 px-3 border border-slate-700" colspan="2">(1)</th>
+                                <th class="py-1.5 px-2 border border-slate-700">(2)</th>
+                                <th class="py-1.5 px-2 border border-slate-700">(3)</th>
+                                <th class="py-1.5 px-2 border border-slate-700">(4)</th>
+                                <th class="py-1.5 px-2 border border-slate-700">(5)</th>
+                                <th class="py-1.5 px-2 border border-slate-700">(6)</th>
+                                <th class="py-1.5 px-2 border border-slate-700">(7)</th>
+                                <th class="py-1.5 px-2 border border-slate-700">(8)</th>
+                                <th class="py-1.5 px-2 border border-slate-700">(9)</th>
+                                <th class="py-1.5 px-2 border border-slate-700">(10)</th>
+                                <th class="py-1.5 px-2 border border-slate-700">(11)</th>
+                                <th class="py-1.5 px-2 border border-slate-700">(12)</th>
+                                <th class="py-1.5 px-2 border border-slate-700">(13)</th>
                             </tr>
                         </thead>
                         <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
@@ -8019,24 +8057,20 @@
                     const y1 = yr - 1;
                     const y2 = yr;
                     const is2025 = (yr === 2025);
+                    const is2024 = (yr === 2024);
+                    // Standar BPS resmi: HANYA 4 Komoditi (Kelapa Sawit, Kelapa, Karet, Kopi) -> 8 kolom data (Kolom 2 s.d 9)
                     const dists = [
-                        { name: '01. Guguk Panjang', data: is2025 ? ['-', '-', '0,86', '0,86', '-', '-', '69,36', '60,00', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'] : Array(20).fill('-') },
-                        { name: '02. Mandiangin Koto Selayan', data: is2025 ? ['-', '-', '2', '1,9', '-', '-', '52,48', '50,24', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'] : Array(20).fill('-') },
-                        { name: '03. Aur Birugo Tigo Baleh', data: is2025 ? ['-', '-', '0,9', '0,9', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'] : Array(20).fill('-') }
+                        { name: '01. Guguk Panjang', data: is2025 ? ['-', '-', '0,86', '0,86', '-', '-', '2,9', '2,5'] : (is2024 ? ['-', '-', '-', '0,86', '-', '-', '2,9', '2,9'] : Array(8).fill('-')) },
+                        { name: '02. Mandiangin Koto Selayan', data: is2025 ? ['-', '-', '2', '1,9', '-', '-', '2,2', '2,1'] : (is2024 ? ['-', '-', '-', '2', '-', '-', '2,2', '2,2'] : Array(8).fill('-')) },
+                        { name: '03. Aur Birugo Tigo Baleh', data: is2025 ? ['-', '-', '0,9', '0,9', '-', '-', '-', '-'] : (is2024 ? ['-', '-', '-', '0,9', '-', '-', '-', '-'] : Array(8).fill('-')) }
                     ];
-                    const totalData = is2025 ? ['-', '-', '3,76', '3,66', '-', '-', '122,24', '110,24', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'] : Array(20).fill('-');
+                    const totalData = is2025 ? ['-', '-', '3,76', '3,66', '-', '-', '5,1', '4,6'] : (is2024 ? ['-', '-', '-', '3,76', '-', '-', '5,1', '5,1'] : Array(8).fill('-'));
 
                     const crops = [
                         { id: 'Kelapa Sawit', en: 'Oil Palm' },
                         { id: 'Kelapa', en: 'Coconut' },
                         { id: 'Karet', en: 'Rubber' },
-                        { id: 'Kopi', en: 'Coffee' },
-                        { id: 'Kulit Manis', en: 'Cassiavera' },
-                        { id: 'Cengkeh', en: 'Clove' },
-                        { id: 'Pala', en: 'Nutmeg' },
-                        { id: 'Pinang', en: 'Areca Nut' },
-                        { id: 'Tebu', en: 'Sugar Cane' },
-                        { id: 'Kakao', en: 'Cocoa' }
+                        { id: 'Kopi', en: 'Coffee' }
                     ];
 
                     let thCropsHtml = '';
@@ -8108,24 +8142,19 @@
                     const y1 = yr - 1;
                     const y2 = yr;
                     const is2025 = (yr === 2025);
+                    // Standar BPS resmi: HANYA 4 Komoditi (Kelapa Sawit, Kelapa, Karet, Kopi) -> 8 kolom data (Kolom 2 s.d 9)
                     const dists = [
-                        { name: '01. Guguk Panjang', data: is2025 ? ['-', '-', '0,0034', '0,0002', '-', '-', '0,0011', '0,0004', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'] : Array(20).fill('-') },
-                        { name: '02. Mandiangin Koto Selayan', data: is2025 ? ['-', '-', '0,0012', '0,0002', '-', '-', '0,0008', '0,0001', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'] : Array(20).fill('-') },
-                        { name: '03. Aur Birugo Tigo Baleh', data: is2025 ? ['-', '-', '0,001', '0,0002', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'] : Array(20).fill('-') }
+                        { name: '01. Guguk Panjang', data: is2025 ? ['-', '-', '0,0034', '0,0002', '-', '-', '0,0011', '0,0004'] : Array(8).fill('-') },
+                        { name: '02. Mandiangin Koto Selayan', data: is2025 ? ['-', '-', '0,0012', '0,0002', '-', '-', '0,0008', '0,0001'] : Array(8).fill('-') },
+                        { name: '03. Aur Birugo Tigo Baleh', data: is2025 ? ['-', '-', '0,001', '0,0002', '-', '-', '-', '-'] : Array(8).fill('-') }
                     ];
-                    const totalData = is2025 ? ['-', '-', '0,0055', '0,0006', '-', '-', '0,0019', '0,00055', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'] : Array(20).fill('-');
+                    const totalData = is2025 ? ['-', '-', '0,0055', '0,0006', '-', '-', '0,0019', '0,00055'] : Array(8).fill('-');
 
                     const crops = [
                         { id: 'Kelapa Sawit', en: 'Oil Palm' },
                         { id: 'Kelapa', en: 'Coconut' },
                         { id: 'Karet', en: 'Rubber' },
-                        { id: 'Kopi', en: 'Coffee' },
-                        { id: 'Kulit Manis', en: 'Cassiavera' },
-                        { id: 'Cengkeh', en: 'Clove' },
-                        { id: 'Pala', en: 'Nutmeg' },
-                        { id: 'Pinang', en: 'Areca Nut' },
-                        { id: 'Tebu', en: 'Sugar Cane' },
-                        { id: 'Kakao', en: 'Cocoa' }
+                        { id: 'Kopi', en: 'Coffee' }
                     ];
 
                     let thCropsHtml = '';
@@ -8427,7 +8456,7 @@
                     ['5.2.1', '5.2.2'].forEach(code => {
                         const k = `simonda_table_html_${code}_${y}`;
                         const val = localStorage.getItem(k);
-                        if (val && (val.includes('Kopi Coffe') || (val.includes('Karet') && !val.includes('Kakao')))) {
+                        if (val && (val.includes('Kulit Manis') || val.includes('Cassiavera') || val.includes('Cengkeh') || val.includes('Pala') || val.includes('Pinang') || val.includes('Tebu') || val.includes('Kakao') || val.includes('Cocoa') || val.includes('(10)') || val.includes('(21)'))) {
                             localStorage.removeItem(k);
                             localStorage.removeItem(`simonda_table_source_${code}_${y}`);
                             localStorage.removeItem(`simonda_table_is_saved_${code}_${y}`);
@@ -9248,6 +9277,36 @@
                 }
             }
 
+            // Self-healing tabel 5.1.16: pastikan thead selalu bilingual (Maize, Peanuts, dll) dan lebar kolom lega
+            if (currentTableCode === '5.1.16' && savedHtml) {
+                if (!savedHtml.includes('Maize') || !savedHtml.includes('Peanuts')) {
+                    const tempTable = document.createElement('table');
+                    tempTable.innerHTML = savedHtml;
+                    const schemaHtml = tableSchemas['5.1.16'] ? tableSchemas['5.1.16'].render(currentYear) : '';
+                    if (schemaHtml) {
+                        const tempSchema = document.createElement('table');
+                        tempSchema.innerHTML = schemaHtml;
+                        const newThead = tempSchema.querySelector('thead');
+                        const oldThead = tempTable.querySelector('thead');
+                        if (newThead && oldThead) {
+                            oldThead.replaceWith(newThead);
+                            tempTable.querySelectorAll('tbody td').forEach(td => {
+                                if (td.colSpan >= 2) {
+                                    td.classList.add('min-w-[200px]');
+                                } else {
+                                    td.classList.add('min-w-[110px]');
+                                }
+                            });
+                            savedHtml = tempTable.innerHTML;
+                            safeSetLocalStorage(scopedHtmlKey, savedHtml);
+                            if (serverDbMetadata) {
+                                serverDbMetadata.table_html = savedHtml;
+                            }
+                        }
+                    }
+                }
+            }
+
             // Self-healing tabel 9.4, 5.1.18 & tabel kecamatan: pastikan Kolom 6 selalu diganti dengan Aur Birugo Tigo Baleh
             if (savedHtml && (savedHtml.includes('Kolom 6') || savedHtml.includes('kolom 6'))) {
                 if (['9.4', '5.1.18'].includes(currentTableCode) || savedHtml.includes('Mandiangin') || savedHtml.includes('Guguk Panjang')) {
@@ -9285,14 +9344,19 @@
                 }
             }
 
-            // Self-healing tabel 5.2.1 & 5.2.2: pastikan 10 komoditi lengkap (21 kolom) dan header 2-tier tidak rusak
+            // Self-healing tabel 5.2.1 & 5.2.2: pastikan HANYA 4 komoditi resmi (Kelapa Sawit, Kelapa, Karet, Kopi) dengan 9 kolom total (1 s.d 9)
             if ((currentTableCode === '5.2.1' || currentTableCode === '5.2.2') && savedHtml) {
+                const hasExtraCrops = savedHtml.includes('Kulit Manis') || savedHtml.includes('Cassiavera') ||
+                                      savedHtml.includes('Cengkeh') || savedHtml.includes('Clove') ||
+                                      savedHtml.includes('Pala') || savedHtml.includes('Nutmeg') ||
+                                      savedHtml.includes('Pinang') || savedHtml.includes('Areca Nut') ||
+                                      savedHtml.includes('Tebu') || savedHtml.includes('Sugar Cane') ||
+                                      savedHtml.includes('Kakao') || savedHtml.includes('Cocoa') ||
+                                      savedHtml.includes('(10)') || savedHtml.includes('(21)');
                 const tempDiv = document.createElement('table');
                 tempDiv.innerHTML = savedHtml;
                 const headerThs = tempDiv.querySelectorAll('thead tr:last-child th');
-                const hasKakao = savedHtml.includes('Kakao') || savedHtml.includes('Cocoa');
-                const hasCorruptSingleHeaders = savedHtml.includes('Kopi Coffe') || (savedHtml.includes('Karet') && !savedHtml.includes('Kakao'));
-                if (headerThs.length < 21 || !hasKakao || hasCorruptSingleHeaders) {
+                if (hasExtraCrops || headerThs.length !== 9) {
                     localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
                     localStorage.removeItem(`simonda_table_source_${currentTableCode}_${currentYear}`);
                     localStorage.removeItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`);
@@ -9604,6 +9668,20 @@
 
             cleanGhostColumns(tableEl);
             cleanGhostRows(tableEl);
+
+            // Atur lebar tabel agar proporsional, panjang, dan tidak sempit
+            if (currentTableCode === '5.1.16' || currentTableCode === '5.1.17') {
+                tableEl.style.minWidth = '1600px';
+                tableEl.classList.add('table-auto');
+            } else if (currentTableCode === '5.2.1' || currentTableCode === '5.2.2') {
+                tableEl.style.minWidth = '1100px';
+                tableEl.classList.add('table-auto');
+            } else if (currentTableCode === '5.1.15') {
+                tableEl.style.minWidth = '1100px';
+                tableEl.classList.add('table-auto');
+            } else {
+                tableEl.style.minWidth = '';
+            }
 
             // Pastikan semua sel yang berisi tanda strip (-) berada persis di tengah (horizontal & vertikal)
             // Dan deteksi otomatis format angka ribuan dengan titik pemisah untuk tabel keuangan (OPD 05 / Tabel 2.4.x)
@@ -14390,27 +14468,56 @@
                     : `Target and Realization of Vegetables Intensification per District in Bukittinggi Municipality, ${currentYear}`;
 
                 const subHeaders = isPalawija
-                    ? ['Jagung', 'Kacang Tanah', 'Kedelai', 'Kacang Hijau', 'Ubi Kayu', 'Ubi Jalar', 'Jagung', 'Kacang Tanah', 'Kedelai', 'Kacang Hijau', 'Ubi Kayu', 'Ubi Jalar']
-                    : ['Kentang', 'Tomat', 'Lombok', 'Bawang Daun', 'Lainnya', 'Jumlah', 'Kentang', 'Tomat', 'Lombok', 'Bawang Daun', 'Lainnya', 'Jumlah'];
+                    ? [
+                        { id: 'Jagung', en: 'Maize', minW: '110px' },
+                        { id: 'Kacang Tanah', en: 'Peanuts', minW: '125px' },
+                        { id: 'Kedelai', en: 'Soybeans', minW: '110px' },
+                        { id: 'Kacang Hijau', en: 'Mungbeans', minW: '125px' },
+                        { id: 'Ubi Kayu', en: 'Cassava', minW: '110px' },
+                        { id: 'Ubi Jalar', en: 'Sweet Potatoes', minW: '125px' },
+                        { id: 'Jagung', en: 'Maize', minW: '110px' },
+                        { id: 'Kacang Tanah', en: 'Peanuts', minW: '125px' },
+                        { id: 'Kedelai', en: 'Soybeans', minW: '110px' },
+                        { id: 'Kacang Hijau', en: 'Mungbeans', minW: '125px' },
+                        { id: 'Ubi Kayu', en: 'Cassava', minW: '110px' },
+                        { id: 'Ubi Jalar', en: 'Sweet Potatoes', minW: '125px' }
+                    ]
+                    : [
+                        { id: 'Kentang', en: 'Potato', minW: '110px' },
+                        { id: 'Tomat', en: 'Tomato', minW: '110px' },
+                        { id: 'Lombok', en: 'Chili', minW: '110px' },
+                        { id: 'Bawang Daun', en: 'Spring Onion', minW: '120px' },
+                        { id: 'Lainnya', en: 'Others', minW: '110px' },
+                        { id: 'Jumlah', en: 'Total', minW: '110px' },
+                        { id: 'Kentang', en: 'Potato', minW: '110px' },
+                        { id: 'Tomat', en: 'Tomato', minW: '110px' },
+                        { id: 'Lombok', en: 'Chili', minW: '110px' },
+                        { id: 'Bawang Daun', en: 'Spring Onion', minW: '120px' },
+                        { id: 'Lainnya', en: 'Others', minW: '110px' },
+                        { id: 'Jumlah', en: 'Total', minW: '110px' }
+                    ];
 
                 theadHtml = `<thead>
                     <tr class="bg-[#f95a00] text-white text-center font-bold">
-                        <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2" colspan="2">
-                            <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                        <th class="py-3.5 px-4 font-bold border border-slate-700 min-w-[200px]" rowspan="2" colspan="2">
+                            <div class="text-xs sm:text-sm">Kecamatan</div>
+                            <div class="italic font-normal text-[11px] sm:text-xs text-orange-100">District</div>
                         </th>
-                        <th class="py-3 px-4 font-bold border border-slate-700" colspan="6">
-                            <div>Target</div>
+                        <th class="py-3 px-3 font-bold border border-slate-700 min-w-[700px]" colspan="6">
+                            <div class="text-xs sm:text-sm">Target</div>
+                            <div class="italic font-normal text-[11px] sm:text-xs text-orange-100">Target</div>
                         </th>
-                        <th class="py-3 px-4 font-bold border border-slate-700" colspan="6">
-                            <div>Realisasi</div><div class="italic font-normal text-[11px] sm:text-xs">Realization</div>
+                        <th class="py-3 px-3 font-bold border border-slate-700 min-w-[700px]" colspan="6">
+                            <div class="text-xs sm:text-sm">Realisasi</div>
+                            <div class="italic font-normal text-[11px] sm:text-xs text-orange-100">Realization</div>
                         </th>
                     </tr>
-                    <tr class="bg-[#f95a00] text-white text-center font-bold text-xs">
-                        ${subHeaders.map(h => `<th class="py-2 px-1 border border-slate-700">${h}</th>`).join('')}
+                    <tr class="bg-[#ea580c] text-white text-center font-bold text-xs">
+                        ${subHeaders.map(h => `<th class="py-2.5 px-2 border border-slate-700 min-w-[${h.minW}]"><div>${h.id}</div><div class="italic font-normal text-[10px] text-orange-100">${h.en}</div></th>`).join('')}
                     </tr>
                     <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
-                        <th class="py-1 px-3 border border-slate-700" colspan="2">(1)</th>
-                        ${Array(12).fill(0).map((_, i) => `<th class="py-1 px-1 border border-slate-700">(${i + 2})</th>`).join('')}
+                        <th class="py-1.5 px-3 border border-slate-700" colspan="2">(1)</th>
+                        ${Array(12).fill(0).map((_, i) => `<th class="py-1.5 px-2 border border-slate-700">(${i + 2})</th>`).join('')}
                     </tr>
                 </thead>`;
 
@@ -14570,13 +14677,7 @@
                     { id: 'Kelapa Sawit', en: 'Oil Palm' },
                     { id: 'Kelapa', en: 'Coconut' },
                     { id: 'Karet', en: 'Rubber' },
-                    { id: 'Kopi', en: 'Coffee' },
-                    { id: 'Kulit Manis', en: 'Cassiavera' },
-                    { id: 'Cengkeh', en: 'Clove' },
-                    { id: 'Pala', en: 'Nutmeg' },
-                    { id: 'Pinang', en: 'Areca Nut' },
-                    { id: 'Tebu', en: 'Sugar Cane' },
-                    { id: 'Kakao', en: 'Cocoa' }
+                    { id: 'Kopi', en: 'Coffee' }
                 ];
 
                 let thCropsHtml = '';
@@ -14616,12 +14717,12 @@
                     </tr>
                 </thead>`;
 
-                // Ekstrak 4 baris kecamatan: Guguk Panjang, Mandiangin, Aur Birugo, Bukittinggi
+                // Ekstrak 4 baris kecamatan: Guguk Panjang, Mandiangin, Aur Birugo, Bukittinggi (4 komoditi x 2 tahun = 8 kolom data)
                 const distDefs = [
-                    { name: '01. Guguk Panjang', match: 'guguk', vals: Array(20).fill('-') },
-                    { name: '02. Mandiangin Koto Selayan', match: 'mandiangin', vals: Array(20).fill('-') },
-                    { name: '03. Aur Birugo Tigo Baleh', match: 'aur', vals: Array(20).fill('-') },
-                    { name: 'Bukittinggi', match: 'bukittinggi', vals: Array(20).fill('-') }
+                    { name: '01. Guguk Panjang', match: 'guguk', vals: Array(8).fill('-') },
+                    { name: '02. Mandiangin Koto Selayan', match: 'mandiangin', vals: Array(8).fill('-') },
+                    { name: '03. Aur Birugo Tigo Baleh', match: 'aur', vals: Array(8).fill('-') },
+                    { name: 'Bukittinggi', match: 'bukittinggi', vals: Array(8).fill('-') }
                 ];
 
                 // Jika berkas Excel memiliki beberapa tabel bertingkat (misal 2024-2025 di atas dan 2023-2024 di bawah),
@@ -14669,13 +14770,13 @@
                             }
                         }
                         let colOffset = nameColIdx + 1;
-                        if (row.length >= 21 + colOffset) {
+                        if (row.length >= 9 + colOffset) {
                             // tepat
-                        } else if (row.length >= 21) {
-                            colOffset = row.length - 20;
+                        } else if (row.length >= 9) {
+                            colOffset = row.length - 8;
                         }
 
-                        for (let c = 0; c < 20; c++) {
+                        for (let c = 0; c < 8; c++) {
                             const raw = row[colOffset + c];
                             const val = sanitizeExcelNumericCell(raw);
                             targetDef.vals[c] = (val !== '' && val !== undefined && val !== null) ? val : '-';
