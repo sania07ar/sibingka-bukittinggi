@@ -507,15 +507,6 @@
                                 <i class="fa-solid fa-pen-to-square text-[11px]"></i>
                                 <span>Edit Tabel</span>
                             </button>
-
-                            <!-- Button: Reset Nilai Asli -->
-                            <button onclick="resetTableOriginal()" 
-                                    id="btnResetTableOriginal"
-                                    class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 font-bold text-xs flex items-center space-x-1.5 shadow-2xs transition-all cursor-pointer"
-                                    title="Kembalikan tabel ke data awal resmi BPS">
-                                <i class="fa-solid fa-rotate-left text-xs"></i>
-                                <span>Reset Nilai</span>
-                            </button>
                         @endif
 
                         <!-- Button: Tampilan Google Spreadsheet (Publikasi Pusat) -->
@@ -951,6 +942,118 @@
 
         // Table Schemas & Structured Data
         const tableSchemas = {
+            '4.1.18': {
+                titleId: 'Jumlah Dosen di Perguruan Tinggi',
+                titleEn: 'Number of Lecturer in Bukittinggi',
+                isMultiYear: true,
+                render: function(year) {
+                    const yrInt = parseInt(year) || 2025;
+                    const years = [yrInt - 4, yrInt - 3, yrInt - 2, yrInt - 1, yrInt];
+                    let rowsHtml = '';
+                    years.forEach(y => {
+                        rowsHtml += `
+                            <tr class="hover:bg-amber-50">
+                                <td class="py-2.5 px-4 font-semibold border border-slate-700 text-right">${y}</td>
+                                <td class="py-2.5 px-4 text-center border border-slate-700">-</td>
+                                <td class="py-2.5 px-4 text-center border border-slate-700">-</td>
+                                <td class="py-2.5 px-4 text-center border border-slate-700">-</td>
+                                <td class="py-2.5 px-4 text-center border border-slate-700 font-bold">-</td>
+                            </tr>
+                        `;
+                    });
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+                                    <div>Perguruan Tinggi</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">College</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="4">
+                                    <div>Dosen</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Lecturer</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Tetap</div><div class="italic font-normal text-[11px] sm:text-xs">Full Time</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Tidak tetap</div><div class="italic font-normal text-[11px] sm:text-xs">Part Time</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Asisten</div><div class="italic font-normal text-[11px] sm:text-xs">Assistant</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div></th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700">(5)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+            '4.1.19': {
+                titleId: 'Jumlah Mahasiswa dan Lulusan di Perguruan Tinggi',
+                titleEn: 'Number of Students and Graduated in Academy/University in Bukittinggi',
+                isMultiYear: true,
+                render: function(year) {
+                    const yrInt = parseInt(year) || 2025;
+                    const years = [yrInt - 4, yrInt - 3, yrInt - 2, yrInt - 1, yrInt];
+                    let rowsHtml = '';
+                    years.forEach(y => {
+                        rowsHtml += `
+                            <tr class="hover:bg-amber-50">
+                                <td class="py-2.5 px-4 font-semibold border border-slate-700 text-right">${y}</td>
+                                <td class="py-2.5 px-4 text-center border border-slate-700">-</td>
+                                <td class="py-2.5 px-4 text-center border border-slate-700">-</td>
+                                <td class="py-2.5 px-4 text-center border border-slate-700 font-bold">-</td>
+                                <td class="py-2.5 px-4 text-center border border-slate-700">-</td>
+                                <td class="py-2.5 px-4 text-center border border-slate-700">-</td>
+                                <td class="py-2.5 px-4 text-center border border-slate-700 font-bold">-</td>
+                            </tr>
+                        `;
+                    });
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+                                    <div>Perguruan Tinggi</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">College</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="3">
+                                    <div>Mahasiswa</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Students</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="3">
+                                    <div>Lulusan</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Graduated</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Laki-laki</div><div class="italic font-normal text-[11px] sm:text-xs">Male</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Perempuan</div><div class="italic font-normal text-[11px] sm:text-xs">Female</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Laki-laki</div><div class="italic font-normal text-[11px] sm:text-xs">Male</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Perempuan</div><div class="italic font-normal text-[11px] sm:text-xs">Female</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div></th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700">(7)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
             '1.1.8': {
                 titleId: 'Jumlah Pembuatan Sertifikat Menurut Jenis Kepemilikan di Kota Bukittinggi',
                 titleEn: 'Number of Certificate Issuances by Type of Ownership in Bukittinggi Municipality',
@@ -6891,29 +6994,45 @@
                 source: 'Dinas Lingkungan Hidup Kota Bukittinggi / <span class="italic text-slate-500">Environmental Services Bukittinggi Municipality</span>',
                 render: function(year) {
                     const yr = parseInt(year) || 2025;
-                    const officialData4214 = [
-                        { label: '01. Rumah Tangga / Pemukiman', timbunan: '47.43', persentase: '52.51' },
-                        { label: '02. Pasar', timbunan: '17.10', persentase: '18.93' },
-                        { label: '03. Pertokoan/Komersial Fasilitas & Umum', timbunan: '8.94', persentase: '9.9' },
-                        { label: '04. Perkantoran', timbunan: '0.42', persentase: '0.46' },
-                        { label: '05. Sekolah', timbunan: '5.36', persentase: '5.93' },
-                        { label: '06. Rumah Sakit', timbunan: '2.43', persentase: '2.69' },
-                        { label: '07. Hotel', timbunan: '6.77', persentase: '7.49' },
-                        { label: '08. Restorant', timbunan: '1.19', persentase: '1.32' },
-                        { label: '09. Lainnya', timbunan: '0.70', persentase: '0.77' },
-                        { label: 'Jumlah/ Total', timbunan: '90.33', persentase: '100' }
-                    ];
+                    const dataByYear = {
+                        2023: [
+                            { label: '01. Rumah Tangga / Pemukiman', timbunan: '47,43', persentase: '52,51' },
+                            { label: '02. Pasar', timbunan: '17,10', persentase: '18,93' },
+                            { label: '03. Pertokoan/Komersial Fasilitas & Umum', timbunan: '8,94', persentase: '9,90' },
+                            { label: '04. Perkantoran', timbunan: '0,42', persentase: '0,46' },
+                            { label: '05. Sekolah', timbunan: '5,36', persentase: '5,93' },
+                            { label: '06. Rumah Sakit', timbunan: '2,43', persentase: '2,69' },
+                            { label: '07. Hotel', timbunan: '6,77', persentase: '7,49' },
+                            { label: '08. Restorant', timbunan: '1,19', persentase: '1,32' },
+                            { label: '09. Lainnya', timbunan: '0,70', persentase: '0,77' },
+                            { label: 'Jumlah/ Total', timbunan: '90,33', persentase: '100' }
+                        ],
+                        2024: [
+                            { label: '01. Rumah Tangga / Pemukiman', timbunan: '25,45', persentase: '26,25' },
+                            { label: '02. Pasar', timbunan: '20,36', persentase: '21,00' },
+                            { label: '03. Pertokoan / Komersial Fasilitas & Umum', timbunan: '14,06', persentase: '14,50' },
+                            { label: '04. Perkantoran', timbunan: '0,35', persentase: '0,36' },
+                            { label: '05. Sekolah', timbunan: '0,28', persentase: '0,29' },
+                            { label: '06. Rumah Sakit', timbunan: '7,28', persentase: '7,51' },
+                            { label: '07. Hotel', timbunan: '0,40', persentase: '0,41' },
+                            { label: '08. Restorant', timbunan: '0,70', persentase: '0,72' },
+                            { label: '09. Lainnya', timbunan: '28,06', persentase: '28,94' },
+                            { label: 'Jumlah/ Total', timbunan: '96,95', persentase: '100' }
+                        ]
+                    };
+                    const officialData4214 = dataByYear[yr] || dataByYear[2024];
 
                     let rowsHtml = '';
                     officialData4214.forEach(row => {
                         const isTotal = row.label.toLowerCase().includes('jumlah');
                         const trClass = isTotal ? 'bg-[#fed7aa] font-bold' : 'hover:bg-amber-100/60 transition-colors';
                         const fontClass = isTotal ? 'font-bold' : 'font-semibold';
+                        const alignClass = isTotal ? 'font-extrabold text-right' : 'font-semibold text-right';
                         rowsHtml += `
                             <tr class="${trClass}">
-                                <td class="py-2.5 px-4 border border-slate-700 text-left ${fontClass} align-top">${row.label}</td>
-                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${row.timbunan}</td>
-                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${row.persentase}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-left ${fontClass} align-middle">${row.label}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 align-middle ${alignClass}" style="text-align: right;">${row.timbunan}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 align-middle ${alignClass}" style="text-align: right;">${row.persentase}</td>
                             </tr>
                         `;
                     });
@@ -8203,29 +8322,67 @@
         let currentType = '{{ $currentType ?? "opd" }}';
         let isEditMode = false;
 
+        function getStorageKey(prefix, code = currentTableCode, yr = currentYear) {
+            const t = (typeof currentType !== 'undefined' && currentType) ? currentType : 'opd';
+            const opd = (typeof currentOpdCode !== 'undefined' && currentOpdCode) ? currentOpdCode.toString().padStart(2, '0') : '01';
+            return `${prefix}_${t}_${opd}_${code}_${yr}`;
+        }
+
+        function getScopedLocalStorageItem(prefix, code = currentTableCode, yr = currentYear) {
+            const scopedKey = getStorageKey(prefix, code, yr);
+            const val = localStorage.getItem(scopedKey);
+            if (val !== null) return val;
+            if (typeof currentType !== 'undefined' && currentType === 'instansi') {
+                return null;
+            }
+            return localStorage.getItem(`${prefix}_${code}_${yr}`);
+        }
+
+        function setScopedLocalStorageItem(prefix, val, code = currentTableCode, yr = currentYear) {
+            const scopedKey = getStorageKey(prefix, code, yr);
+            safeSetLocalStorage(scopedKey, val);
+        }
+
+        function removeScopedLocalStorageItem(prefix, code = currentTableCode, yr = currentYear) {
+            const scopedKey = getStorageKey(prefix, code, yr);
+            try { localStorage.removeItem(scopedKey); } catch(e) {}
+            try { localStorage.removeItem(`${prefix}_${code}_${yr}`); } catch(e) {}
+        }
+
+
         function cleanupLocalStorageQuota(force = false) {
             try {
                 let totalChars = 0;
                 const htmlKeys = [];
+                const activeScopedKey = (typeof getStorageKey === 'function') 
+                    ? getStorageKey('simonda_table_html', currentTableCode, currentYear) 
+                    : `simonda_table_html_${currentTableCode}_${currentYear}`;
+
                 for (let i = 0; i < localStorage.length; i++) {
                     const k = localStorage.key(i);
                     if (!k) continue;
                     const val = localStorage.getItem(k) || '';
                     totalChars += k.length + val.length;
-                    if (k.startsWith('simonda_table_html_')) {
-                        htmlKeys.push({ key: k, len: val.length });
+
+                    // Bersihkan segera key legacy unscoped 4.1.18 & 4.1.19 yang memicu tabrakan data antar kampus 05-23
+                    if (/^simonda_table_(?:html|is_saved|source|title|note)_(?:4\.1\.18|4\.1\.19)_/.test(k)) {
+                        try { localStorage.removeItem(k); } catch(e) {}
+                        continue;
+                    }
+
+                    if (k.includes('simonda_table_html')) {
+                        htmlKeys.push(k);
                     }
                 }
 
-                // Kuota browser umumnya 5MB. Jika pemakaian > 1.5MB atau ada lebih dari 5 cache tabel HTML, atau force=true
-                if (force || totalChars > 1500000 || htmlKeys.length > 5) {
-                    const currentHtmlKey = `simonda_table_html_${currentTableCode}_${currentYear}`;
-                    htmlKeys.forEach(item => {
-                        if (item.key !== currentHtmlKey) {
-                            localStorage.removeItem(item.key);
+                // Hapus cache HTML tabel lama yang bukan tabel aktif saat kuota mendekati batas
+                if (force || totalChars > 350000 || htmlKeys.length > 2) {
+                    htmlKeys.forEach(k => {
+                        if (k !== activeScopedKey) {
+                            try { localStorage.removeItem(k); } catch(e) {}
                         }
                     });
-                    console.log(`[LocalStorage Cleaner] Dibersihkan cache HTML lama agar kuota browser tetap aman.`);
+                    console.log('[LocalStorage Cleaner] Kuota cache HTML tabel lama dibersihkan.');
                 }
             } catch (e) {
                 console.warn('[LocalStorage Cleaner] Error:', e);
@@ -8771,10 +8928,21 @@
             document.getElementById('pageMainHeading').innerText = (schema.isMultiYear || schema.isExcludeSelectedYear || is822) ? `Tabel ${currentTableCode} Tahun ${yearLabel}` : `Tabel ${currentTableCode} Tahun ${currentYear}`;
             
             // Check for custom titles/source saved from Database, Fallback Structure, or Excel
-            let customTitleId = (serverDbMetadata && serverDbMetadata.title_id) ? serverDbMetadata.title_id : (localStorage.getItem(`simonda_table_title_id_${currentTableCode}_${currentYear}`) || (serverDbFallbackMetadata && serverDbFallbackMetadata.title_id ? serverDbFallbackMetadata.title_id : null));
-            let customTitleEn = (serverDbMetadata && serverDbMetadata.title_en) ? serverDbMetadata.title_en : (localStorage.getItem(`simonda_table_title_en_${currentTableCode}_${currentYear}`) || (serverDbFallbackMetadata && serverDbFallbackMetadata.title_en ? serverDbFallbackMetadata.title_en : null));
-            let customSource = (serverDbMetadata && serverDbMetadata.source) ? serverDbMetadata.source : (localStorage.getItem(`simonda_table_source_text_${currentTableCode}_${currentYear}`) || (serverDbFallbackMetadata && serverDbFallbackMetadata.source ? serverDbFallbackMetadata.source : null));
-            let customNote = (serverDbMetadata && serverDbMetadata.note !== undefined && serverDbMetadata.note !== null) ? serverDbMetadata.note : (localStorage.getItem(`simonda_table_note_${currentTableCode}_${currentYear}`) || (serverDbFallbackMetadata && serverDbFallbackMetadata.note !== undefined ? serverDbFallbackMetadata.note : null));
+            let customTitleId = (serverDbMetadata && serverDbMetadata.title_id) ? serverDbMetadata.title_id : (getScopedLocalStorageItem('simonda_table_title_id') || (serverDbFallbackMetadata && serverDbFallbackMetadata.title_id ? serverDbFallbackMetadata.title_id : null));
+            let customTitleEn = (serverDbMetadata && serverDbMetadata.title_en) ? serverDbMetadata.title_en : (getScopedLocalStorageItem('simonda_table_title_en') || (serverDbFallbackMetadata && serverDbFallbackMetadata.title_en ? serverDbFallbackMetadata.title_en : null));
+            let customSource = (serverDbMetadata && serverDbMetadata.source) ? serverDbMetadata.source : (getScopedLocalStorageItem('simonda_table_source_text') || (serverDbFallbackMetadata && serverDbFallbackMetadata.source ? serverDbFallbackMetadata.source : null));
+            let customNote = (serverDbMetadata && serverDbMetadata.note !== undefined && serverDbMetadata.note !== null) ? serverDbMetadata.note : (getScopedLocalStorageItem('simonda_table_note') || (serverDbFallbackMetadata && serverDbFallbackMetadata.note !== undefined ? serverDbFallbackMetadata.note : null));
+
+            // Isolasi judul & sumber untuk Instansi Vertikal Kampus (05 s.d 23): selalu prioritaskan nama kampus resmi dari katalog
+            if (isInstansi && catInfo && catInfo.title) {
+                if (!customTitleId || customTitleId.includes('Perguruan Tinggi') || customTitleId.includes('Tabel Data Statistik Sektoral')) {
+                    customTitleId = catInfo.title;
+                    customTitleEn = catInfo.titleEn || catInfo.title;
+                }
+                if (!customSource || customSource.includes('Dinas') || customSource.includes('Kecamatan')) {
+                    customSource = `${agencyName} / <span class="italic text-slate-500">Bukittinggi Municipality</span>`;
+                }
+            }
 
             // Catatan resmi untuk Tabel 4.3.3 (PODES Bencana Alam)
             if (currentTableCode === '4.3.3') {
@@ -9026,24 +9194,41 @@
 
             // Check if table data was edited in dedicated edit page or generated from Excel
             // Prioritaskan localStorage jika ada status tersimpan lokal (simonda_table_is_saved)
-            const localSavedHtml = localStorage.getItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
-            const isLocallySaved = (localStorage.getItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`) === '1');
-            let savedHtml = (isLocallySaved && localSavedHtml && localSavedHtml.includes('<tr'))
-                ? localSavedHtml
-                : ((serverDbMetadata && serverDbMetadata.table_html && serverDbMetadata.table_html.includes('<tr')) ? serverDbMetadata.table_html : localSavedHtml);
+            const scopedHtmlKey = getStorageKey('simonda_table_html');
+            const scopedSavedKey = getStorageKey('simonda_table_is_saved');
+            const localSavedHtml = localStorage.getItem(scopedHtmlKey);
+            const isLocallySaved = (localStorage.getItem(scopedSavedKey) === '1');
+            let savedHtml = (serverDbMetadata && serverDbMetadata.table_html && serverDbMetadata.table_html.includes('<tr'))
+                ? serverDbMetadata.table_html
+                : ((isLocallySaved && localSavedHtml && localSavedHtml.includes('<tr')) ? localSavedHtml : null);
             if (savedHtml) savedHtml = cleanHtmlYearRanges(savedHtml);
 
-            // Sanity check: jika savedHtml dari localStorage rusak atau tidak mengandung struktur <tr> dan <th>, bersihkan
+            // Sterilisasi: Bersihkan seluruh tag <input> yang mungkin pernah tersimpan di savedHtml
+            if (savedHtml && savedHtml.includes('<input')) {
+                const tempDiv = document.createElement('table');
+                tempDiv.innerHTML = savedHtml;
+                tempDiv.querySelectorAll('input, .table-edit-input').forEach(inp => {
+                    const val = (inp.value !== undefined ? inp.value : inp.getAttribute('value') || '').trim();
+                    const parent = inp.closest('td, th') || inp.parentNode;
+                    if (parent) {
+                        parent.innerHTML = val;
+                    }
+                });
+                savedHtml = tempDiv.innerHTML;
+                safeSetLocalStorage(scopedHtmlKey, savedHtml);
+            }
+
+            // Sanity check: jika savedHtml rusak atau tidak mengandung struktur <tr> dan <th>, bersihkan
             if (savedHtml && (!savedHtml.includes('<tr') || !savedHtml.includes('<th'))) {
-                localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
-                localStorage.removeItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`);
+                removeScopedLocalStorageItem('simonda_table_html');
+                removeScopedLocalStorageItem('simonda_table_is_saved');
                 savedHtml = (serverDbMetadata && serverDbMetadata.table_html) ? serverDbMetadata.table_html : null;
             }
 
             // Sanity check: jika savedHtml adalah starter dummy placeholder ("Indikator 1" / "Indicator Details" / "Belum ada data")
             if (savedHtml && (savedHtml.includes('Indicator Details') || (savedHtml.includes('Indikator 1') && savedHtml.includes('Rincian Indikator')) || savedHtml.includes('Belum ada data untuk tabel ini'))) {
-                localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
-                localStorage.removeItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`);
+                removeScopedLocalStorageItem('simonda_table_html');
+                removeScopedLocalStorageItem('simonda_table_is_saved');
                 savedHtml = null;
             }
 
@@ -9406,6 +9591,17 @@
                 tableEl.innerHTML = cleanHtmlYearRanges(schema.render(currentYear));
             }
 
+            // Jaminan Keamanan: Halaman utama (index.blade.php) adalah tampilan publikasi 100% read-only.
+            // Konversi seluruh elemen <input> yang ada di dalam tabel menjadi teks statis murni.
+            tableEl.querySelectorAll('input, .table-edit-input').forEach(inp => {
+                if (inp.type === 'file' || inp.type === 'hidden') return;
+                const val = (inp.value !== undefined ? inp.value : inp.getAttribute('value') || '').trim();
+                const parent = inp.closest('td, th') || inp.parentNode;
+                if (parent) {
+                    parent.innerHTML = val;
+                }
+            });
+
             cleanGhostColumns(tableEl);
             cleanGhostRows(tableEl);
 
@@ -9484,7 +9680,7 @@
             }
 
             // Khusus Tabel Dinas 08 / Tabel 4.1.x (Tabel 3-in-1: Sekolah, Guru, Murid)
-            const isEducation3in1 = ['4.1.1', '4.1.3', '4.1.4', '4.1.5', '4.1.15', '4.1.16', '4.1.17'].includes(currentTableCode);
+            const isEducation3in1 = ['4.1.1', '4.1.2', '4.1.3', '4.1.4', '4.1.5', '4.1.6', '4.1.7', '4.1.8', '4.1.9', '4.1.10', '4.1.11', '4.1.12', '4.1.13', '4.1.14', '4.1.15', '4.1.16', '4.1.17'].includes(currentTableCode);
             if (isEducation3in1) {
                 const yrInt = parseInt(currentYear) || 2025;
                 const expectedY1 = `${yrInt - 2}/${yrInt - 1}`;
@@ -9515,6 +9711,13 @@
                         tds[0].innerHTML = '&nbsp;';
                         return;
                     }
+
+                    const firstCellText = (tds[0] ? tds[0].innerText.trim() : '');
+                    const isDistrictRow = /^\s*0?\d\./.test(firstCellText) || 
+                                          firstCellText.includes('Guguk') || 
+                                          firstCellText.includes('Mandiangin') || 
+                                          firstCellText.includes('Aur Birugo');
+                    const isTotalRow = firstCellText === 'Bukittinggi' || firstCellText.startsWith('Bukittinggi');
 
                     if (text.includes('Guru') || text.includes('Teachers') || text.includes('Murid') || text.includes('Students')) {
                         // Pastikan ada baris pemisah / gap setidaknya 1 spasi sebelum header sub-tabel
@@ -9550,7 +9753,7 @@
                                 td.innerHTML = '<div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>';
                             }
                         });
-                    } else if (text.includes('202') && (tds.length >= 8 || (tds[0] && tds[0].innerText.includes('202')))) {
+                    } else if (!isDistrictRow && !isTotalRow && /\b(?:19|20)\d{2}\s*\/\s*(?:19|20)\d{2}\b/.test(text) && tds.length >= 6) {
                         tr.className = 'bg-[#f95a00] text-white text-center font-bold text-xs subtable-header-years';
                         let subAcadIdx = 0;
                         tds.forEach(td => {
@@ -9567,14 +9770,14 @@
                             td.className = 'py-1 px-2 border border-slate-700 text-center font-bold text-xs';
                             td.innerText = `(${idx + 1})`;
                         });
-                    } else if (text.startsWith('Bukittinggi') || (tds[0] && tds[0].innerText.trim() === 'Bukittinggi')) {
+                    } else if (isTotalRow) {
                         tr.className = 'bg-amber-100/70 font-bold border-t-2 border-b-2 border-slate-700 hover:bg-amber-200/60 transition-colors';
                         tds.forEach((td, idx) => {
                             td.classList.add('font-bold');
                             if (idx === 0) td.className = 'py-2.5 px-4 border border-slate-700 text-left font-bold align-middle';
                             else td.className = 'py-2.5 px-3 border border-slate-700 text-center font-bold align-middle';
                         });
-                    } else if (tds.length >= 10 && (tds[0].innerText.includes('Guguk') || tds[0].innerText.includes('Mandiangin') || tds[0].innerText.includes('Aur Birugo'))) {
+                    } else if (isDistrictRow) {
                         tr.className = 'hover:bg-amber-100/60 transition-colors bg-[#fef9c3] text-slate-900 font-medium';
                         tds.forEach((td, idx) => {
                             if (idx === 0) {
@@ -16861,6 +17064,18 @@
             if (tableSchemas[currentTableCode] && typeof tableSchemas[currentTableCode].render === 'function') {
                 try {
                     defaultHtml = tableSchemas[currentTableCode].render(currentYear);
+                    if (defaultHtml && defaultHtml.includes('<input')) {
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = defaultHtml;
+                        tempDiv.querySelectorAll('input, .table-edit-input').forEach(inp => {
+                            const val = (inp.value !== undefined ? inp.value : inp.getAttribute('value') || '').trim();
+                            const parent = inp.closest('td, th') || inp.parentNode;
+                            if (parent) {
+                                parent.innerHTML = val;
+                            }
+                        });
+                        defaultHtml = tempDiv.innerHTML;
+                    }
                 } catch(err) {
                     console.error('Error rendering default schema:', err);
                 }

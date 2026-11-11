@@ -643,6 +643,118 @@
 
         // Table Schemas & Structured Data
         const tableSchemas = {
+            '4.1.18': {
+                titleId: 'Jumlah Dosen di Perguruan Tinggi',
+                titleEn: 'Number of Lecturer in Bukittinggi',
+                isMultiYear: true,
+                render: function(year) {
+                    const yrInt = parseInt(year) || 2025;
+                    const years = [yrInt - 4, yrInt - 3, yrInt - 2, yrInt - 1, yrInt];
+                    let rowsHtml = '';
+                    years.forEach(y => {
+                        rowsHtml += `
+                            <tr class="hover:bg-amber-50">
+                                <td class="py-2.5 px-4 font-semibold border border-slate-700 text-right">${y}</td>
+                                <td class="py-2.5 px-4 text-center border border-slate-700">-</td>
+                                <td class="py-2.5 px-4 text-center border border-slate-700">-</td>
+                                <td class="py-2.5 px-4 text-center border border-slate-700">-</td>
+                                <td class="py-2.5 px-4 text-center border border-slate-700 font-bold">-</td>
+                            </tr>
+                        `;
+                    });
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+                                    <div>Perguruan Tinggi</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">College</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="4">
+                                    <div>Dosen</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Lecturer</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Tetap</div><div class="italic font-normal text-[11px] sm:text-xs">Full Time</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Tidak tetap</div><div class="italic font-normal text-[11px] sm:text-xs">Part Time</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Asisten</div><div class="italic font-normal text-[11px] sm:text-xs">Assistant</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div></th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700">(5)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+            '4.1.19': {
+                titleId: 'Jumlah Mahasiswa dan Lulusan di Perguruan Tinggi',
+                titleEn: 'Number of Students and Graduated in Academy/University in Bukittinggi',
+                isMultiYear: true,
+                render: function(year) {
+                    const yrInt = parseInt(year) || 2025;
+                    const years = [yrInt - 4, yrInt - 3, yrInt - 2, yrInt - 1, yrInt];
+                    let rowsHtml = '';
+                    years.forEach(y => {
+                        rowsHtml += `
+                            <tr class="hover:bg-amber-50">
+                                <td class="py-2.5 px-4 font-semibold border border-slate-700 text-right">${y}</td>
+                                <td class="py-2.5 px-4 text-center border border-slate-700">-</td>
+                                <td class="py-2.5 px-4 text-center border border-slate-700">-</td>
+                                <td class="py-2.5 px-4 text-center border border-slate-700 font-bold">-</td>
+                                <td class="py-2.5 px-4 text-center border border-slate-700">-</td>
+                                <td class="py-2.5 px-4 text-center border border-slate-700">-</td>
+                                <td class="py-2.5 px-4 text-center border border-slate-700 font-bold">-</td>
+                            </tr>
+                        `;
+                    });
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+                                    <div>Perguruan Tinggi</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">College</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="3">
+                                    <div>Mahasiswa</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Students</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="3">
+                                    <div>Lulusan</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Graduated</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Laki-laki</div><div class="italic font-normal text-[11px] sm:text-xs">Male</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Perempuan</div><div class="italic font-normal text-[11px] sm:text-xs">Female</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Laki-laki</div><div class="italic font-normal text-[11px] sm:text-xs">Male</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Perempuan</div><div class="italic font-normal text-[11px] sm:text-xs">Female</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div></th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700">(7)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
             '1.1.6': {
                 titleId: 'Nama Sungai/Batang, Lebar dan Kecamatan yang Dilalui di Kota Bukittinggi',
                 titleEn: 'Name, Width of The River and District Its Pass in Bukittinggi',
@@ -2361,7 +2473,611 @@
                     `;
                 }
             },
-                                    '4.1.15': {
+                                                '4.1.7': {
+                titleId: 'Jumlah Sekolah, Guru, dan Murid Sekolah Menengah Atas (SMA) di Bawah Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi Menurut Kecamatan di Kota Bukittinggi',
+                titleEn: 'Number of Schools, Teachers, and Pupils in Senior High Schools Under The Ministry of Education, Culture, Research, and Technology by Sub District in Bukittinggi Municipality',
+                source: 'Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi, Data Semester Ganjil / <span class="italic text-slate-500">Ministry of Education, Culture, Research, and Technology, Odd Semester Report Data</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const isFuture = (yr > 2025);
+                    const y1 = `${yr - 2}/${yr - 1}`;
+                    const y2 = `${yr - 1}/${yr}`;
+                    const y3 = `${yr}/${yr + 1}`;
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="3">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="6">
+                                    <div>Sekolah</div><div class="italic font-normal text-[11px] sm:text-xs">Schools</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2" colspan="3">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-2.5 px-3 font-bold border border-slate-700" colspan="3">
+                                    <div>Negeri</div><div class="italic font-normal text-[11px] sm:text-xs">Public</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700" colspan="3">
+                                    <div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs">
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700 text-center">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(7)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(8)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(9)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(10)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">01. Guguk Panjang</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '2'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '2'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '2'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '4'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '4'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '4'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '6'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '6'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '6'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">02. Mandiangin Koto Selayan</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '2'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '2'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '2'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '3'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '3'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '3'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">03. Aur Birugo Tigo Baleh</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '2'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '2'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '2'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '3'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '3'}</td>
+                            </tr>
+                            <tr class="bg-amber-100/70 font-bold border-t-2 border-b-2 border-slate-700">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-bold">Bukittinggi</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '5'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '5'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '5'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '6'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '7'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '7'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '11'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '12'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '12'}</td>
+                            </tr>
+
+                            <!-- PEMISAH 1 SPACE -->
+                            <tr class="subtable-spacer-row pointer-events-none select-none">
+                                <td colspan="10" class="h-7 sm:h-9 bg-[#f0f3f8] border-y border-slate-200/90 border-x-0 p-0 text-center">&nbsp;</td>
+                            </tr>
+
+                            <!-- 2. HEADER GURU -->
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-title">
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="3">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" colspan="6">
+                                    <div>Guru</div><div class="italic font-normal text-[11px] sm:text-xs">Teachers</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="2" colspan="3">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-subtitle">
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center" colspan="3">
+                                    <div>Negeri</div><div class="italic font-normal text-[11px] sm:text-xs">Public</div>
+                                </th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center" colspan="3">
+                                    <div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs subtable-header-years">
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y3}</th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs subtable-header-numbering">
+                                <th class="py-1 px-3 border border-slate-700 text-center">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(7)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(8)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(9)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(10)</th>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">01. Guguk Panjang</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '129'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '129'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '124'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '76'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '73'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '73'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '205'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '202'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '197'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">02. Mandiangin Koto Selayan</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '128'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '121'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '120'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '24'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '24'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '23'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '152'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '145'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '143'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">03. Aur Birugo Tigo Baleh</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '66'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '67'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '65'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '18'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '24'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '26'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '84'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '91'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '91'}</td>
+                            </tr>
+                            <tr class="bg-amber-100/70 font-bold border-t-2 border-b-2 border-slate-700">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-bold">Bukittinggi</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '323'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '317'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '309'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '118'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '121'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '122'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '441'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '438'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '431'}</td>
+                            </tr>
+
+                            <!-- PEMISAH 1 SPACE -->
+                            <tr class="subtable-spacer-row pointer-events-none select-none">
+                                <td colspan="10" class="h-7 sm:h-9 bg-[#f0f3f8] border-y border-slate-200/90 border-x-0 p-0 text-center">&nbsp;</td>
+                            </tr>
+
+                            <!-- 3. HEADER MURID -->
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-title">
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="3">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" colspan="6">
+                                    <div>Murid</div><div class="italic font-normal text-[11px] sm:text-xs">Students</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="2" colspan="3">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-subtitle">
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center" colspan="3">
+                                    <div>Negeri</div><div class="italic font-normal text-[11px] sm:text-xs">Public</div>
+                                </th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center" colspan="3">
+                                    <div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs subtable-header-years">
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y3}</th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs subtable-header-numbering">
+                                <th class="py-1 px-3 border border-slate-700 text-center">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(7)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(8)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(9)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(10)</th>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">01. Guguk Panjang</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '2.141'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '2.177'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '2.117'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '669'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '503'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '567'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '2.810'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '2.680'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '2.684'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">02. Mandiangin Koto Selayan</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '1.953'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '2.015'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '1.998'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '101'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '111'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '136'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '2.054'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '2.126'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '2.134'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">03. Aur Birugo Tigo Baleh</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '1.023'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '1.080'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '1.094'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '198'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '188'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '118'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '1.221'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '1.268'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '1.212'}</td>
+                            </tr>
+                            <tr class="bg-amber-100/70 font-bold border-t-2 border-b-2 border-slate-700">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-bold">Bukittinggi</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '5.117'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '5.272'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '5.209'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '968'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '802'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '821'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '6.085'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '6.074'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '6.030'}</td>
+                            </tr>
+                        </tbody>
+                    `;
+                }
+            },
+            '4.1.8': {
+                titleId: 'Jumlah Sekolah, Guru, dan Murid Sekolah Menengah Kejuruan (SMK) di Bawah Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi Menurut Kecamatan di Kota Bukittinggi',
+                titleEn: 'Number of Schools, Teachers, and Pupils in Vocational High Schools Under The Ministry of Education, Culture, Research, and Technology by Sub District in Bukittinggi Municipality',
+                source: 'Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi, Data Semester Ganjil / <span class="italic text-slate-500">Ministry of Education, Culture, Research, and Technology, Odd Semester Report Data</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const isFuture = (yr > 2025);
+                    const y1 = `${yr - 2}/${yr - 1}`;
+                    const y2 = `${yr - 1}/${yr}`;
+                    const y3 = `${yr}/${yr + 1}`;
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="3">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="6">
+                                    <div>Sekolah</div><div class="italic font-normal text-[11px] sm:text-xs">Schools</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2" colspan="3">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-2.5 px-3 font-bold border border-slate-700" colspan="3">
+                                    <div>Negeri</div><div class="italic font-normal text-[11px] sm:text-xs">Public</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700" colspan="3">
+                                    <div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs">
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y1}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y2}</th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center">${y3}</th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700 text-center">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(7)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(8)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(9)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(10)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">01. Guguk Panjang</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '2'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '5'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '7'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">02. Mandiangin Koto Selayan</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '3'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '3'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">03. Aur Birugo Tigo Baleh</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '1'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '1'}</td>
+                            </tr>
+                            <tr class="bg-amber-100/70 font-bold border-t-2 border-b-2 border-slate-700">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-bold">Bukittinggi</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '2'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '9'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '11'}</td>
+                            </tr>
+
+                            <!-- PEMISAH 1 SPACE -->
+                            <tr class="subtable-spacer-row pointer-events-none select-none">
+                                <td colspan="10" class="h-7 sm:h-9 bg-[#f0f3f8] border-y border-slate-200/90 border-x-0 p-0 text-center">&nbsp;</td>
+                            </tr>
+
+                            <!-- 2. HEADER GURU -->
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-title">
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="3">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" colspan="6">
+                                    <div>Guru</div><div class="italic font-normal text-[11px] sm:text-xs">Teachers</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="2" colspan="3">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-subtitle">
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center" colspan="3">
+                                    <div>Negeri</div><div class="italic font-normal text-[11px] sm:text-xs">Public</div>
+                                </th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center" colspan="3">
+                                    <div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs subtable-header-years">
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y3}</th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs subtable-header-numbering">
+                                <th class="py-1 px-3 border border-slate-700 text-center">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(7)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(8)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(9)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(10)</th>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">01. Guguk Panjang</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '225'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '146'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '371'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">02. Mandiangin Koto Selayan</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '30'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '30'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">03. Aur Birugo Tigo Baleh</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '61'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '61'}</td>
+                            </tr>
+                            <tr class="bg-amber-100/70 font-bold border-t-2 border-b-2 border-slate-700">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-bold">Bukittinggi</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '225'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '237'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '462'}</td>
+                            </tr>
+
+                            <!-- PEMISAH 1 SPACE -->
+                            <tr class="subtable-spacer-row pointer-events-none select-none">
+                                <td colspan="10" class="h-7 sm:h-9 bg-[#f0f3f8] border-y border-slate-200/90 border-x-0 p-0 text-center">&nbsp;</td>
+                            </tr>
+
+                            <!-- 3. HEADER MURID -->
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-title">
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="3">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" colspan="6">
+                                    <div>Murid</div><div class="italic font-normal text-[11px] sm:text-xs">Students</div>
+                                </th>
+                                <th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle" rowspan="2" colspan="3">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-subtitle">
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center" colspan="3">
+                                    <div>Negeri</div><div class="italic font-normal text-[11px] sm:text-xs">Public</div>
+                                </th>
+                                <th class="py-2 px-2 font-bold border border-slate-700 text-center" colspan="3">
+                                    <div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs subtable-header-years">
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y3}</th>
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y1}</th>
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y2}</th>
+                                <th class="py-1.5 px-2 border border-slate-700 text-center">${y3}</th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs subtable-header-numbering">
+                                <th class="py-1 px-3 border border-slate-700 text-center">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(7)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(8)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(9)</th>
+                                <th class="py-1 px-3 border border-slate-700 text-center">(10)</th>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">01. Guguk Panjang</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '3.693'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '1.360'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '5.053'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">02. Mandiangin Koto Selayan</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '192'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '192'}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-semibold">03. Aur Birugo Tigo Baleh</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '542'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center">${isFuture ? '-' : '542'}</td>
+                            </tr>
+                            <tr class="bg-amber-100/70 font-bold border-t-2 border-b-2 border-slate-700">
+                                <td class="py-2 px-4 border border-slate-700 text-left font-bold">Bukittinggi</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '3.693'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '2.094'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '-'}</td>
+                                <td class="py-2 px-3 border border-slate-700 text-center font-bold">${isFuture ? '-' : '5.787'}</td>
+                            </tr>
+                        </tbody>
+                    `;
+                }
+            },
+            '4.1.15': {
                 titleId: 'Jumlah Sekolah, Guru, dan Murid Kelompok Bermain (KB) di Bawah Kementerian Pendidikan dan Kebudayaan Menurut Kecamatan di Kota Bukittinggi',
                 titleEn: 'Number of Schools, Teachers, and Pupils in Play Groups (KB) Under The Ministry of Education and Culture by District in Bukittinggi Municipality',
                 source: 'Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi, Data Semester Ganjil / <span class=\"italic text-slate-500\">Ministry of Education, Culture, Research, and Technology, Odd Semester Report Data</span>',
@@ -6678,18 +7394,33 @@
                 source: 'Dinas Lingkungan Hidup Kota Bukittinggi / <span class="italic text-slate-500">Environmental Services Bukittinggi Municipality</span>',
                 render: function(year) {
                     const yr = parseInt(year) || 2025;
-                    const officialData = [
-                        { label: '01. Rumah Tangga / Pemukiman', timbunan: '47.43', persentase: '52.51' },
-                        { label: '02. Pasar', timbunan: '17.10', persentase: '18.93' },
-                        { label: '03. Pertokoan/Komersial Fasilitas & Umum', timbunan: '8.94', persentase: '9.9' },
-                        { label: '04. Perkantoran', timbunan: '0.42', persentase: '0.46' },
-                        { label: '05. Sekolah', timbunan: '5.36', persentase: '5.93' },
-                        { label: '06. Rumah Sakit', timbunan: '2.43', persentase: '2.69' },
-                        { label: '07. Hotel', timbunan: '6.77', persentase: '7.49' },
-                        { label: '08. Restorant', timbunan: '1.19', persentase: '1.32' },
-                        { label: '09. Lainnya', timbunan: '0.70', persentase: '0.77' },
-                        { label: 'Jumlah/ Total', timbunan: '90.33', persentase: '100' }
-                    ];
+                    const dataByYear = {
+                        2023: [
+                            { label: '01. Rumah Tangga / Pemukiman', timbunan: '47,43', persentase: '52,51' },
+                            { label: '02. Pasar', timbunan: '17,10', persentase: '18,93' },
+                            { label: '03. Pertokoan/Komersial Fasilitas & Umum', timbunan: '8,94', persentase: '9,90' },
+                            { label: '04. Perkantoran', timbunan: '0,42', persentase: '0,46' },
+                            { label: '05. Sekolah', timbunan: '5,36', persentase: '5,93' },
+                            { label: '06. Rumah Sakit', timbunan: '2,43', persentase: '2,69' },
+                            { label: '07. Hotel', timbunan: '6,77', persentase: '7,49' },
+                            { label: '08. Restorant', timbunan: '1,19', persentase: '1,32' },
+                            { label: '09. Lainnya', timbunan: '0,70', persentase: '0,77' },
+                            { label: 'Jumlah/ Total', timbunan: '90,33', persentase: '100' }
+                        ],
+                        2024: [
+                            { label: '01. Rumah Tangga / Pemukiman', timbunan: '25,45', persentase: '26,25' },
+                            { label: '02. Pasar', timbunan: '20,36', persentase: '21,00' },
+                            { label: '03. Pertokoan / Komersial Fasilitas & Umum', timbunan: '14,06', persentase: '14,50' },
+                            { label: '04. Perkantoran', timbunan: '0,35', persentase: '0,36' },
+                            { label: '05. Sekolah', timbunan: '0,28', persentase: '0,29' },
+                            { label: '06. Rumah Sakit', timbunan: '7,28', persentase: '7,51' },
+                            { label: '07. Hotel', timbunan: '0,40', persentase: '0,41' },
+                            { label: '08. Restorant', timbunan: '0,70', persentase: '0,72' },
+                            { label: '09. Lainnya', timbunan: '28,06', persentase: '28,94' },
+                            { label: 'Jumlah/ Total', timbunan: '96,95', persentase: '100' }
+                        ]
+                    };
+                    const officialData = dataByYear[yr] || dataByYear[2024];
 
                     const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-right pr-2 bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
 
@@ -9238,29 +9969,66 @@
             return html.replace(/<div>\s*((?:19|20)\d{2})\s*<\/div>\s*<div class="italic[^>]*>\s*((?:19|20)\d{2})\s*<\/div>/gi, '<div>$1/$2</div>');
         }
 
+                function getStorageKey(prefix, code = currentTableCode, yr = currentYear) {
+            const t = (typeof currentType !== 'undefined' && currentType) ? currentType : 'opd';
+            const opd = (typeof currentOpdCode !== 'undefined' && currentOpdCode) ? currentOpdCode.toString().padStart(2, '0') : '01';
+            return `${prefix}_${t}_${opd}_${code}_${yr}`;
+        }
+
+        function getScopedLocalStorageItem(prefix, code = currentTableCode, yr = currentYear) {
+            const scopedKey = getStorageKey(prefix, code, yr);
+            const val = localStorage.getItem(scopedKey);
+            if (val !== null) return val;
+            if (typeof currentType !== 'undefined' && currentType === 'instansi') {
+                return null;
+            }
+            return localStorage.getItem(`${prefix}_${code}_${yr}`);
+        }
+
+        function setScopedLocalStorageItem(prefix, val, code = currentTableCode, yr = currentYear) {
+            const scopedKey = getStorageKey(prefix, code, yr);
+            safeSetLocalStorage(scopedKey, val);
+        }
+
+        function removeScopedLocalStorageItem(prefix, code = currentTableCode, yr = currentYear) {
+            const scopedKey = getStorageKey(prefix, code, yr);
+            try { localStorage.removeItem(scopedKey); } catch(e) {}
+            try { localStorage.removeItem(`${prefix}_${code}_${yr}`); } catch(e) {}
+        }
+
         function cleanupLocalStorageQuota(force = false) {
             try {
                 let totalChars = 0;
                 const htmlKeys = [];
+                const activeScopedKey = (typeof getStorageKey === 'function') 
+                    ? getStorageKey('simonda_table_html', currentTableCode, currentYear) 
+                    : `simonda_table_html_${currentTableCode}_${currentYear}`;
+
                 for (let i = 0; i < localStorage.length; i++) {
                     const k = localStorage.key(i);
                     if (!k) continue;
                     const val = localStorage.getItem(k) || '';
                     totalChars += k.length + val.length;
-                    if (k.startsWith('simonda_table_html_')) {
-                        htmlKeys.push({ key: k, len: val.length });
+
+                    // Bersihkan segera key legacy unscoped 4.1.18 & 4.1.19 yang memicu tabrakan data antar kampus 05-23
+                    if (/^simonda_table_(?:html|is_saved|source|title|note)_(?:4\.1\.18|4\.1\.19)_/.test(k)) {
+                        try { localStorage.removeItem(k); } catch(e) {}
+                        continue;
+                    }
+
+                    if (k.includes('simonda_table_html')) {
+                        htmlKeys.push(k);
                     }
                 }
 
-                // Kuota browser umumnya 5MB. Jika pemakaian > 1.5MB atau ada lebih dari 5 cache tabel HTML, atau force=true
-                if (force || totalChars > 1500000 || htmlKeys.length > 5) {
-                    const currentHtmlKey = `simonda_table_html_${currentTableCode}_${currentYear}`;
-                    htmlKeys.forEach(item => {
-                        if (item.key !== currentHtmlKey) {
-                            localStorage.removeItem(item.key);
+                // Hapus cache HTML tabel lama yang bukan tabel aktif saat kuota mendekati batas
+                if (force || totalChars > 350000 || htmlKeys.length > 2) {
+                    htmlKeys.forEach(k => {
+                        if (k !== activeScopedKey) {
+                            try { localStorage.removeItem(k); } catch(e) {}
                         }
                     });
-                    console.log(`[LocalStorage Cleaner] Dibersihkan cache HTML lama agar kuota browser tetap aman.`);
+                    console.log('[LocalStorage Cleaner] Kuota cache HTML tabel lama dibersihkan.');
                 }
             } catch (e) {
                 console.warn('[LocalStorage Cleaner] Error:', e);
@@ -9271,16 +10039,12 @@
             try {
                 localStorage.setItem(key, val);
             } catch (e) {
-                if (e && (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED' || e.code === 22 || e.code === 1014 || (e.message && e.message.includes('quota')))) {
-                    console.warn('[LocalStorage] Kuota penuh saat menyimpan ' + key + '. Membersihkan cache HTML lama...', e);
+                console.warn('[LocalStorage] Kuota penuh saat menyimpan ' + key + '. Membersihkan cache HTML lama...', e);
+                try {
                     cleanupLocalStorageQuota(true);
-                    try {
-                        localStorage.setItem(key, val);
-                    } catch (retryErr) {
-                        console.warn('[LocalStorage] Tidak dapat menyimpan ke cache lokal setelah pembersihan; database server tetap aman.', retryErr);
-                    }
-                } else {
-                    console.warn('[LocalStorage] Error saving ' + key, e);
+                    localStorage.setItem(key, val);
+                } catch (retryErr) {
+                    console.warn('[LocalStorage] Gagal menyimpan ke cache lokal browser; data server database tetap aman.', retryErr);
                 }
             }
         }
@@ -9875,10 +10639,21 @@
             document.getElementById('pageMainHeading').innerText = isRangeTable ? `Edit Data Tabel ${currentTableCode} (${yearLabel})` : `Edit Data Tabel ${currentTableCode} Tahun ${currentYear}`;
 
             // Check for custom titles/source saved from Database, Fallback Structure, or Excel
-            let customTitleId = (serverDbMetadata && serverDbMetadata.title_id) ? serverDbMetadata.title_id : (localStorage.getItem(`simonda_table_title_id_${currentTableCode}_${currentYear}`) || (serverDbFallbackMetadata && serverDbFallbackMetadata.title_id ? serverDbFallbackMetadata.title_id : null));
-            let customTitleEn = (serverDbMetadata && serverDbMetadata.title_en) ? serverDbMetadata.title_en : (localStorage.getItem(`simonda_table_title_en_${currentTableCode}_${currentYear}`) || (serverDbFallbackMetadata && serverDbFallbackMetadata.title_en ? serverDbFallbackMetadata.title_en : null));
-            let customSource = (serverDbMetadata && serverDbMetadata.source) ? serverDbMetadata.source : (localStorage.getItem(`simonda_table_source_text_${currentTableCode}_${currentYear}`) || (serverDbFallbackMetadata && serverDbFallbackMetadata.source ? serverDbFallbackMetadata.source : null));
-            let customNote = (serverDbMetadata && serverDbMetadata.note !== undefined && serverDbMetadata.note !== null) ? serverDbMetadata.note : (localStorage.getItem(`simonda_table_note_${currentTableCode}_${currentYear}`) || (serverDbFallbackMetadata && serverDbFallbackMetadata.note !== undefined ? serverDbFallbackMetadata.note : null));
+            let customTitleId = (serverDbMetadata && serverDbMetadata.title_id) ? serverDbMetadata.title_id : (getScopedLocalStorageItem('simonda_table_title_id') || (serverDbFallbackMetadata && serverDbFallbackMetadata.title_id ? serverDbFallbackMetadata.title_id : null));
+            let customTitleEn = (serverDbMetadata && serverDbMetadata.title_en) ? serverDbMetadata.title_en : (getScopedLocalStorageItem('simonda_table_title_en') || (serverDbFallbackMetadata && serverDbFallbackMetadata.title_en ? serverDbFallbackMetadata.title_en : null));
+            let customSource = (serverDbMetadata && serverDbMetadata.source) ? serverDbMetadata.source : (getScopedLocalStorageItem('simonda_table_source_text') || (serverDbFallbackMetadata && serverDbFallbackMetadata.source ? serverDbFallbackMetadata.source : null));
+            let customNote = (serverDbMetadata && serverDbMetadata.note !== undefined && serverDbMetadata.note !== null) ? serverDbMetadata.note : (getScopedLocalStorageItem('simonda_table_note') || (serverDbFallbackMetadata && serverDbFallbackMetadata.note !== undefined ? serverDbFallbackMetadata.note : null));
+
+            // Isolasi judul & sumber untuk Instansi Vertikal Kampus (05 s.d 23): selalu prioritaskan nama kampus resmi dari katalog
+            if (isInstansi && catInfo && catInfo.title) {
+                if (!customTitleId || customTitleId.includes('Perguruan Tinggi') || customTitleId.includes('Tabel Data Statistik Sektoral')) {
+                    customTitleId = catInfo.title;
+                    customTitleEn = catInfo.titleEn || catInfo.title;
+                }
+                if (!customSource || customSource.includes('Dinas') || customSource.includes('Kecamatan')) {
+                    customSource = `${agencyName} / <span class="italic text-slate-500">Bukittinggi Municipality</span>`;
+                }
+            }
 
             // Catatan resmi untuk Tabel 4.3.3 (PODES Bencana Alam)
             if (currentTableCode === '4.3.3') {
@@ -10118,16 +10893,19 @@
             // Check if user previously saved custom data (prioritas database, kemudian localStorage)
                         // Check if table data was edited in dedicated edit page or generated from Excel
             // Prioritaskan localStorage jika ada status tersimpan lokal (simonda_table_is_saved)
-            const localSavedHtml = localStorage.getItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
-            const isLocallySaved = (localStorage.getItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`) === '1');
-            let savedHtml = (isLocallySaved && localSavedHtml && localSavedHtml.includes('<tr'))
-                ? localSavedHtml
-                : ((serverDbMetadata && serverDbMetadata.table_html && serverDbMetadata.table_html.includes('<tr')) ? serverDbMetadata.table_html : localSavedHtml);
+            const scopedHtmlKey = getStorageKey('simonda_table_html');
+            const scopedSavedKey = getStorageKey('simonda_table_is_saved');
+            const localSavedHtml = localStorage.getItem(scopedHtmlKey);
+            const isLocallySaved = (localStorage.getItem(scopedSavedKey) === '1');
+            let savedHtml = (serverDbMetadata && serverDbMetadata.table_html && serverDbMetadata.table_html.includes('<tr'))
+                ? serverDbMetadata.table_html
+                : ((isLocallySaved && localSavedHtml && localSavedHtml.includes('<tr')) ? localSavedHtml : null);
             if (savedHtml) savedHtml = cleanHtmlYearRanges(savedHtml);
 
             // Sanity check: jika savedHtml dari localStorage rusak atau tidak mengandung struktur <tr> dan <th>, bersihkan
             if (savedHtml && (!savedHtml.includes('<tr') || !savedHtml.includes('<th'))) {
-                localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
+                removeScopedLocalStorageItem('simonda_table_html');
+                removeScopedLocalStorageItem('simonda_table_is_saved');
                 savedHtml = (serverDbMetadata && serverDbMetadata.table_html) ? serverDbMetadata.table_html : null;
             }
 
@@ -10544,6 +11322,13 @@
                         return;
                     }
 
+                    const firstCellText = (tds[0] ? tds[0].innerText.trim() : '');
+                    const isDistrictRow = /^\s*0?\d\./.test(firstCellText) || 
+                                          firstCellText.includes('Guguk') || 
+                                          firstCellText.includes('Mandiangin') || 
+                                          firstCellText.includes('Aur Birugo');
+                    const isTotalRow = firstCellText === 'Bukittinggi' || firstCellText.startsWith('Bukittinggi');
+
                     if (text.includes('Guru') || text.includes('Teachers') || text.includes('Murid') || text.includes('Students')) {
                         // Pastikan ada baris pemisah / gap setidaknya 1 spasi sebelum header sub-tabel
                         const prevTr = tr.previousElementSibling;
@@ -10578,7 +11363,7 @@
                                 td.innerHTML = '<div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>';
                             }
                         });
-                    } else if (text.includes('202') && (tds.length >= 8 || (tds[0] && tds[0].innerText.includes('202')))) {
+                    } else if (!isDistrictRow && !isTotalRow && /\b(?:19|20)\d{2}\s*\/\s*(?:19|20)\d{2}\b/.test(text) && tds.length >= 6) {
                         tr.className = 'bg-[#f95a00] text-white text-center font-bold text-xs subtable-header-years';
                         let subAcadIdx = 0;
                         tds.forEach(td => {
@@ -10595,12 +11380,21 @@
                             td.className = 'py-1 px-2 border border-slate-700 text-center font-bold text-xs';
                             td.innerText = `(${idx + 1})`;
                         });
-                    } else if (text.startsWith('Bukittinggi') || (tds[0] && tds[0].innerText.trim() === 'Bukittinggi')) {
+                    } else if (isTotalRow) {
                         tr.className = 'bg-amber-100/70 font-bold border-t-2 border-b-2 border-slate-700 hover:bg-amber-200/60 transition-colors';
                         tds.forEach((td, idx) => {
                             td.classList.add('font-bold');
                             if (idx === 0) td.className = 'py-2.5 px-4 border border-slate-700 text-left font-bold align-middle';
                             else td.className = 'py-2.5 px-3 border border-slate-700 text-center font-bold align-middle';
+                        });
+                    } else if (isDistrictRow) {
+                        tr.className = 'hover:bg-amber-100/60 transition-colors bg-[#fef9c3] text-slate-900 font-medium';
+                        tds.forEach((td, idx) => {
+                            if (idx === 0) {
+                                td.className = 'py-2 px-4 border border-slate-700 text-left font-semibold align-middle';
+                            } else {
+                                td.className = 'py-2 px-3 border border-slate-700 text-center align-middle';
+                            }
                         });
                     }
                 });
@@ -10927,14 +11721,22 @@
                     const tds = tr.querySelectorAll('td, th');
                     
                     // Cek baris header dalam tbody (Guru / Murid headers) atau baris pemisah -> JANGAN jadikan input!
+                    const firstCellText = (tds[0] ? tds[0].innerText.trim() : '');
+                    const isDistrictRow = /^\s*0?\d\./.test(firstCellText) || 
+                                          firstCellText.includes('Guguk') || 
+                                          firstCellText.includes('Mandiangin') || 
+                                          firstCellText.includes('Aur Birugo');
+                    const isTotalRow = firstCellText === 'Bukittinggi' || firstCellText.startsWith('Bukittinggi');
+
+                    // Cek baris header dalam tbody (Guru / Murid headers) atau baris pemisah -> JANGAN jadikan input!
                     const isHeader = tr.classList.contains('subtable-spacer-row') ||
                                      text.includes('Guru') || text.includes('Teachers') || 
                                      text.includes('Murid') || text.includes('Students') ||
                                      text.includes('Negeri') || text.includes('Swasta') ||
-                                     (text.includes('202') && tds.length >= 8) ||
+                                     (!isDistrictRow && !isTotalRow && /\b(?:19|20)\d{2}\s*\/\s*(?:19|20)\d{2}\b/.test(text) && tds.length >= 6) ||
                                      text.includes('(1)') || text.includes('-1') ||
                                      tds.length === 1; // Baris separator
-                    
+
                     if (isHeader) {
                         return;
                     }
@@ -11280,10 +12082,11 @@
 
             // 1. Bersihkan seluruh cache localStorage untuk tabel ini
             try {
+                const scopedPrefix = `${typeof currentType !== 'undefined' ? currentType : 'opd'}_${(typeof currentOpdCode !== 'undefined' ? currentOpdCode : '01').toString().padStart(2, '0')}_${currentTableCode}`;
                 const keysToRemove = [];
                 for (let i = 0; i < localStorage.length; i++) {
                     const k = localStorage.key(i);
-                    if (k && (k.includes(`${currentTableCode}_${currentYear}`) || k.includes(`_${currentTableCode}_`) || k.endsWith(`_${currentTableCode}`))) {
+                    if (k && (k.includes(scopedPrefix) || k.includes(`${currentTableCode}_${currentYear}`))) {
                         keysToRemove.push(k);
                     }
                 }
@@ -11295,6 +12098,19 @@
             if (tableSchemas[currentTableCode] && typeof tableSchemas[currentTableCode].render === 'function') {
                 try {
                     defaultHtml = tableSchemas[currentTableCode].render(currentYear);
+                    // Pastikan defaultHtml bersih dari tag input formulir sebelum dikirim ke server
+                    if (defaultHtml && defaultHtml.includes('<input')) {
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = defaultHtml;
+                        tempDiv.querySelectorAll('input, .table-edit-input').forEach(inp => {
+                            const val = (inp.value !== undefined ? inp.value : inp.getAttribute('value') || '').trim();
+                            const parent = inp.closest('td, th') || inp.parentNode;
+                            if (parent) {
+                                parent.innerHTML = val;
+                            }
+                        });
+                        defaultHtml = tempDiv.innerHTML;
+                    }
                 } catch(err) {
                     console.error('Error rendering default schema:', err);
                 }
@@ -11418,8 +12234,16 @@
             cleanGhostRows(clone);
 
             // Save to localStorage
-            safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, clone.innerHTML);
-            safeSetLocalStorage(`simonda_table_is_saved_${currentTableCode}_${currentYear}`, '1');
+            const scopedHtmlKey = getStorageKey('simonda_table_html');
+            const scopedSavedKey = getStorageKey('simonda_table_is_saved');
+            safeSetLocalStorage(scopedHtmlKey, clone.innerHTML);
+            safeSetLocalStorage(scopedSavedKey, '1');
+
+            // Bersihkan legacy unscoped key agar tidak mencemari tabel kampus lain
+            try {
+                localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
+                localStorage.removeItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`);
+            } catch(e) {}
 
             // Simpan perubahan ke Database MySQL
             try {

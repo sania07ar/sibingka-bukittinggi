@@ -408,6 +408,7 @@ function getCatalogTableInfo(code, opdCode, type) {
             if (found) return { title: found.title, titleEn: found.titleEn || '' };
         }
         for (const k in instansiTablesCatalog) {
+            if (['4.1.18', '4.1.19'].includes(cleanCode)) continue; // Jangan pinjam judul kampus lain untuk 4.1.18 & 4.1.19!
             const found = instansiTablesCatalog[k].find(t => t.code.toString().trim().replace(/\.+$/, '') === cleanCode);
             if (found) return { title: found.title, titleEn: found.titleEn || '' };
         }
@@ -428,6 +429,7 @@ function getCatalogTableInfo(code, opdCode, type) {
     // 1d. Fallback ke instansi / BPS jika belum ketemu
     if (typeof instansiTablesCatalog !== 'undefined') {
         for (const k in instansiTablesCatalog) {
+            if (['4.1.18', '4.1.19'].includes(cleanCode)) continue; // Jangan salah pasang judul kampus
             const found = instansiTablesCatalog[k].find(t => t.code.toString().trim().replace(/\.+$/, '') === cleanCode);
             if (found) return { title: found.title, titleEn: found.titleEn || '' };
         }
@@ -503,7 +505,15 @@ function getAgencyInfoForTable(tableCode, defaultOpd = '01', defaultType = 'opd'
                     return { opdCode: cleanDefaultOpd, type: 'instansi' };
                 }
             }
+            // Khusus tabel kampus 4.1.18 & 4.1.19: jika instansi vertikal 05 s.d. 23 sedang aktif, TETAP PERTAHANKAN OPD INI!
+            if (['4.1.18', '4.1.19'].includes(cleanCode) && cleanDefaultOpd) {
+                const opdNum = parseInt(cleanDefaultOpd, 10);
+                if (opdNum >= 5 && opdNum <= 23) {
+                    return { opdCode: cleanDefaultOpd, type: 'instansi' };
+                }
+            }
             for (const inst in instansiTablesCatalog) {
+                if (['4.1.18', '4.1.19'].includes(cleanCode)) continue; // JANGAN switch kampus 05-23 ke kampus pertama!
                 if (instansiTablesCatalog[inst].some(t => t.code.toString().trim().replace(/\.+$/, '') === cleanCode)) {
                     return { opdCode: inst, type: 'instansi' };
                 }
@@ -546,6 +556,7 @@ function getAgencyInfoForTable(tableCode, defaultOpd = '01', defaultType = 'opd'
     // 2. Cari di katalog Instansi Vertikal
     if (typeof instansiTablesCatalog !== 'undefined') {
         for (const inst in instansiTablesCatalog) {
+            if (['4.1.18', '4.1.19'].includes(cleanCode)) continue; // Jangan auto-redirect ke 05 untuk tabel kampus
             if (instansiTablesCatalog[inst].some(t => t.code.toString().trim().replace(/\.+$/, '') === cleanCode)) {
                 return { opdCode: inst, type: 'instansi' };
             }
