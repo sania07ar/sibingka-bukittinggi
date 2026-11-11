@@ -836,76 +836,61 @@
             },
             '1.1.8': {
                 titleId: 'Jumlah Pembuatan Sertifikat Menurut Jenis Kepemilikan di Kota Bukittinggi',
-                titleEn: 'Number of Certificate Issuances by Type of Ownership in Bukittinggi Municipality',
+                titleEn: 'Number of Issued Land Certificates by Type of Ownership in Bukittinggi',
                 source: 'Kantor Pertanahan Kota Bukittinggi (BPN) / <span class="italic text-slate-500">Land Office of Bukittinggi Municipality</span>',
+                isMultiYear: true,
                 render: function(year) {
-                    const yrKey = year ? year.toString() : '2025';
-                    const d = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[yrKey]) ? serverDbDataStore[yrKey] : {};
-                    const vMilik = d['hak_milik'] !== undefined ? d['hak_milik'] : '-';
-                    const vHgb = d['hak_guna_bangunan'] !== undefined ? d['hak_guna_bangunan'] : '-';
-                    const vPakai = d['hak_pakai'] !== undefined ? d['hak_pakai'] : '-';
-                    const vPengelolaan = d['hak_pengelolaan'] !== undefined ? d['hak_pengelolaan'] : '-';
-                    const vWakaf = d['hak_wakaf'] !== undefined ? d['hak_wakaf'] : '-';
-                    
-                    let numMilik = parseFloat(String(vMilik).replace(',', '.')) || 0;
-                    let numHgb = parseFloat(String(vHgb).replace(',', '.')) || 0;
-                    let numPakai = parseFloat(String(vPakai).replace(',', '.')) || 0;
-                    let numPengelolaan = parseFloat(String(vPengelolaan).replace(',', '.')) || 0;
-                    let numWakaf = parseFloat(String(vWakaf).replace(',', '.')) || 0;
-                    let calcTotal = (vMilik !== '-' || vHgb !== '-' || vPakai !== '-' || vPengelolaan !== '-' || vWakaf !== '-')
-                        ? (numMilik + numHgb + numPakai + numPengelolaan + numWakaf)
-                        : '-';
-                    const vTotal = d['total'] !== undefined ? d['total'] : calcTotal;
-
+                    const yr = parseInt(year) || 2025;
+                    const startYr = yr - 6;
+                    const known = {
+                        2017: ['68', '4', '10', '–', '–', '596'],
+                        2018: ['1.167', '14', '5', '0', '0', '-'],
+                        2019: ['995', '8', '31', '0', '0', '-'],
+                        2020: ['410', '9', '23', '0', '0', '268'],
+                        2021: ['433', '6', '18', '0', '0', '433'],
+                        2022: ['369', '3', '135', '0', '0', '400'],
+                        2023: ['751', '7', '65', '0', '0', '398'],
+                        2024: ['774', '9', '72', '0', '0', '392'],
+                        2025: ['200', '5', '35', '-', '-', '286']
+                    };
+                    let rowsHtml = '';
+                    for (let y = startYr; y <= yr; y++) {
+                        const vals = known[y] || ['-', '-', '-', '-', '-', '-'];
+                        rowsHtml += `
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${y}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${vals[0]}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${vals[1]}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${vals[2]}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${vals[3]}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${vals[4]}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${vals[5]}</td>
+                            </tr>
+                        `;
+                    }
                     return `
                         <thead>
                             <tr class="bg-[#f95a00] text-white text-center font-bold">
-                                <th class="py-3 px-4 font-bold border border-slate-700 w-16">No</th>
-                                <th class="py-3 px-4 font-bold border border-slate-700 w-[60%] text-left">
-                                    <div>Jenis Kepemilikan</div>
-                                    <div class="italic font-normal text-[11px] sm:text-xs">Type of Ownership</div>
-                                </th>
-                                <th class="py-3 px-4 font-bold border border-slate-700 w-[30%]">
-                                    <div>Jumlah Sertifikat</div>
-                                    <div class="italic font-normal text-[11px] sm:text-xs">Number of Certificates</div>
-                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Tahun</div><div class="italic font-normal text-[11px] sm:text-xs">Year</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Hak Milik</div><div class="italic font-normal text-[11px] sm:text-xs">Freehold Title</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Hak Guna Bangunan</div><div class="italic font-normal text-[11px] sm:text-xs">Building Rights Title</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Hak Pakai</div><div class="italic font-normal text-[11px] sm:text-xs">Right of Use Title</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Hak Pengelolaan</div><div class="italic font-normal text-[11px] sm:text-xs">Management Rights</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Hak Guna Usaha</div><div class="italic font-normal text-[11px] sm:text-xs">Commercial Exploitation Rights</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Hak Tanggungan</div><div class="italic font-normal text-[11px] sm:text-xs">Mortgage Rights</div></th>
                             </tr>
                             <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
                                 <th class="py-1 px-3 border border-slate-700">(1)</th>
-                                <th class="py-1 px-3 border border-slate-700 text-left">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
                                 <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700">(7)</th>
                             </tr>
                         </thead>
                         <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
-                            <tr>
-                                <td class="py-2.5 px-4 text-center border border-slate-700 font-bold">1</td>
-                                <td class="py-2.5 px-4 font-semibold border border-slate-700 text-left">Hak Milik / Freehold</td>
-                                <td class="py-2.5 px-4 text-center border border-slate-700">${vMilik}</td>
-                            </tr>
-                            <tr>
-                                <td class="py-2.5 px-4 text-center border border-slate-700 font-bold">2</td>
-                                <td class="py-2.5 px-4 font-semibold border border-slate-700 text-left">Hak Guna Bangunan / Right to Build</td>
-                                <td class="py-2.5 px-4 text-center border border-slate-700">${vHgb}</td>
-                            </tr>
-                            <tr>
-                                <td class="py-2.5 px-4 text-center border border-slate-700 font-bold">3</td>
-                                <td class="py-2.5 px-4 font-semibold border border-slate-700 text-left">Hak Pakai / Right to Use</td>
-                                <td class="py-2.5 px-4 text-center border border-slate-700">${vPakai}</td>
-                            </tr>
-                            <tr>
-                                <td class="py-2.5 px-4 text-center border border-slate-700 font-bold">4</td>
-                                <td class="py-2.5 px-4 font-semibold border border-slate-700 text-left">Hak Pengelolaan / Right of Management</td>
-                                <td class="py-2.5 px-4 text-center border border-slate-700">${vPengelolaan}</td>
-                            </tr>
-                            <tr>
-                                <td class="py-2.5 px-4 text-center border border-slate-700 font-bold">5</td>
-                                <td class="py-2.5 px-4 font-semibold border border-slate-700 text-left">Hak Wakaf / Waqf Land Title</td>
-                                <td class="py-2.5 px-4 text-center border border-slate-700">${vWakaf}</td>
-                            </tr>
-                            <tr class="bg-[#fed7aa] font-bold">
-                                <td class="py-2.5 px-4 text-center border border-slate-700" colspan="2">Jumlah / Total</td>
-                                <td class="py-2.5 px-4 text-center border border-slate-700">${vTotal}</td>
-                            </tr>
+                            ${rowsHtml}
                         </tbody>
                     `;
                 }
@@ -9956,6 +9941,9 @@
          */
         function buildEmptyTemplateFromSource(sourceHtml, targetYear, sourceYear) {
             if (!sourceHtml) return null;
+                        if (currentTableCode === '1.1.8' && tableSchemas['1.1.8']) {
+                return tableSchemas['1.1.8'].render(targetYear);
+            }
             if (currentTableCode === '1.1.6' && tableSchemas['1.1.6']) {
                 return tableSchemas['1.1.6'].render(targetYear);
             }
@@ -11472,6 +11460,14 @@
             }
 
             // Auto-repair header tabel 5.4.2 (Petani Ikan Darat: Sewaktu-waktu/Sometime & Kolom (5))
+                            // Self-healing tabel 1.1.8 (Kantor Pertanahan): Bersihkan cache lokal jika format lama 3 kolom atau rentang tahun salah
+                if (currentTableCode === '1.1.8' && savedHtml) {
+                    if (savedHtml.includes('w-[60%]') || !savedHtml.includes('(7)') || !savedHtml.includes(currentYear.toString())) {
+                        localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
+                        localStorage.removeItem(`simonda_table_source_${currentTableCode}_${currentYear}`);
+                        localStorage.removeItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`);
+                    }
+                }
             if (currentTableCode === '5.4.2' && savedHtml) {
                 if (savedHtml.includes('colspan="2"><div>Sewaktu-waktu</div>') || savedHtml.includes('(6)</th>') || !savedHtml.includes('Sometime')) {
                     savedHtml = savedHtml.replace(/<th([^>]*?)colspan=[\'"]?2[\'"]?([^>]*?)>\s*<div>Sewaktu-waktu<\/div>\s*<\/th>/gi, '<th$1$2><div>Sewaktu-waktu</div><div class="italic font-normal text-[11px] sm:text-xs">Sometime</div></th>')
@@ -12887,12 +12883,18 @@
                 } else if (currentTableCode === '1.1.8') {
                     rowsData = {};
                     const bodyRows = tableEl.querySelectorAll('tbody tr');
-                    const keys = ['hak_milik', 'hak_guna_bangunan', 'hak_pakai', 'hak_pengelolaan', 'hak_wakaf', 'total'];
-                    if (!rowsData[currentYear]) rowsData[currentYear] = {};
-                    bodyRows.forEach((tr, trIdx) => {
-                        const inp = tr.querySelector('.table-edit-input');
-                        if (inp && keys[trIdx]) {
-                            rowsData[currentYear][keys[trIdx]] = inp.value.trim();
+                    const keys = ['hak_milik', 'hak_guna_bangunan', 'hak_pakai', 'hak_pengelolaan', 'hak_guna_usaha', 'hak_tanggungan'];
+                    bodyRows.forEach((tr) => {
+                        const firstTd = tr.querySelector('td:first-child');
+                        const rowYr = firstTd ? firstTd.innerText.trim() : null;
+                        if (rowYr && /^\d{4}$/.test(rowYr)) {
+                            if (!rowsData[rowYr]) rowsData[rowYr] = {};
+                            const inps = tr.querySelectorAll('.table-edit-input');
+                            inps.forEach((inp, iIdx) => {
+                                if (keys[iIdx]) {
+                                    rowsData[rowYr][keys[iIdx]] = inp.value.trim();
+                                }
+                            });
                         }
                     });
                 } else if (currentTableCode === '1.1.9') {

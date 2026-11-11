@@ -545,6 +545,10 @@ class TabelOpdController extends Controller
      */
     private function getOrCreateMetadata(string $tableCode, string $opdCode, int $year, string $type = 'opd'): ?TabelMetadata
     {
+        if ($tableCode === '1.18') {
+            $tableCode = '1.1.8';
+        }
+
         if ($type !== 'bps' && $type !== 'instansi') {
             $opdCode = $this->normalizeOpdCode($tableCode, $opdCode);
         }
@@ -777,7 +781,48 @@ class TabelOpdController extends Controller
             return $dbMetadata;
         }
 
-        // Khusus tabel 3.1.8 (Disdukcapil - Penduduk Wajib KTP & KTP Elektronik)
+        // Khusus tabel 1.1.8 (Kantor Pertanahan - Pembuatan Sertifikat Menurut Jenis Kepemilikan)
+        // Memastikan rentang 7 tahun dinamis [year - 6 s.d. year] dan struktur kolom lengkap
+        if ($tableCode === '1.1.8') {
+            $startYear = $year - 6;
+            $expectedTitle = "Jumlah Pembuatan Sertifikat Menurut Jenis Kepemilikan di Kota Bukittinggi, {$startYear}–{$year}";
+            $hasCorrectRange = false;
+            if ($dbMetadata && !empty($dbMetadata->table_html)) {
+                $hasStartYear = str_contains($dbMetadata->table_html, (string)$startYear);
+                $hasEndYear = str_contains($dbMetadata->table_html, (string)$year);
+                $hasCorrectCols = str_contains($dbMetadata->table_html, '(7)') || str_contains($dbMetadata->table_html, 'Hak Tanggungan');
+                if ($hasStartYear && $hasEndYear && $hasCorrectCols && $dbMetadata->title_id === $expectedTitle) {
+                    $hasCorrectRange = true;
+                }
+            }
+
+            if (!$hasCorrectRange) {
+                $fixedHtml = $this->buildTabel118Html($year, $dbMetadata ? $dbMetadata->table_html : null);
+                $titleId = $expectedTitle;
+                $titleEn = "Number of Issued Land Certificates by Type of Ownership in Bukittinggi, {$startYear}–{$year}";
+                $source = 'Kantor Pertanahan Kota Bukittinggi / <span class="italic text-slate-500">Land Office of Bukittinggi Municipality</span>';
+
+                return TabelMetadata::updateOrCreate(
+                    [
+                        'table_code' => $tableCode,
+                        'opd_code' => $opdCode,
+                        'year' => $year,
+                    ],
+                    [
+                        'title_id' => $titleId,
+                        'title_en' => $titleEn,
+                        'source' => $source,
+                        'note' => '',
+                        'table_html' => $fixedHtml,
+                        'source_type' => in_array($year, [2023, 2024, 2025]) ? 'excel' : 'template',
+                        'is_saved' => true,
+                    ]
+                );
+            }
+            return $dbMetadata;
+        }
+
+                // Khusus tabel 3.1.8 (Disdukcapil - Penduduk Wajib KTP & KTP Elektronik)
         // Memastikan 6 tahun historis pada Jumlah dinamis [year, year-1, ..., year-5] dan tanpa ghost cell
         if ($tableCode === '3.1.8') {
             if ($dbMetadata && !empty($dbMetadata->table_html)) {
@@ -1977,7 +2022,107 @@ class TabelOpdController extends Controller
      * Membangun HTML bersih dan akurat untuk Tabel 11.2 (Dinas PMPTSP - NIB Menurut Sektor)
      * dengan rentang 6 tahun historis pada bagian Jumlah: [year, year-1, ..., year-5]
      */
-    private function buildTabel112Html(int $year, ?string $existingHtml = null): string
+    /**
+     * Membangun HTML bersih dan akurat untuk Tabel 1.1.8 (Kantor Pertanahan - Pembuatan Sertifikat Menurut Jenis Kepemilikan)
+     * dengan rentang 7 tahun historis dinamis: [year - 6 s.d. year]
+     */
+    private function buildTabel118Html(int $year, ?string $existingHtml = null): string
+    {
+        $dash = '<span class="text-slate-400 font-normal">-</span>';
+
+        $knownData = [
+            2017 => ['68', '4', '10', '–', '–', '596'],
+            2018 => ['1.167', '14', '5', '0', '0', '-'],
+            2019 => ['995', '8', '31', '0', '0', '-'],
+            2020 => ['410', '9', '23', '0', '0', '268'],
+            2021 => ['433', '6', '18', '0', '0', '433'],
+            2022 => ['369', '3', '135', '0', '0', '400'],
+            2023 => ['751', '7', '65', '0', '0', '398'],
+            2024 => ['774', '9', '72', '0', '0', '392'],
+            2025 => ['200', '5', '35', '-', '-', '286'],
+        ];
+
+        // Ekstrak baris data yang sudah ada dari existingHtml jika relevan
+        $existingRowData = [];
+        if (!empty($existingHtml)) {
+            if (preg_match('/<tbody[^>]*>(.*?)<\/tbody>/is', $existingHtml, $m)) {
+                preg_match_all('/<tr[^>]*>(.*?)<\/tr>/is', $m[1], $trs);
+                foreach ($trs[1] as $tr) {
+                    preg_match_all('/<td[^>]*>(.*?)<\/td>/is', $tr, $tds);
+                    if (isset($tds[1]) && count($tds[1]) >= 7) {
+                        $rYear = (int)trim(strip_tags($tds[1][0]));
+                        if ($rYear > 1900 && $rYear < 2100) {
+                            $vals = [];
+                            for ($i = 1; $i <= 6; $i++) {
+                                $v = trim(strip_tags($tds[1][$i]));
+                                $vals[] = ($v === '' || $v === '-') ? $dash : $v;
+                            }
+                            $existingRowData[$rYear] = $vals;
+                        }
+                    }
+                }
+            }
+        }
+
+        $startYear = $year - 6;
+
+        $html = '<thead>' . "\n";
+        $html .= '    <tr class="bg-[#f95a00] text-white text-center font-bold">' . "\n";
+        $html .= '        <th class="py-3 px-4 font-bold border border-slate-700">' . "\n";
+        $html .= '            <div>Tahun</div><div class="italic font-normal text-[11px] sm:text-xs">Year</div>' . "\n";
+        $html .= '        </th>' . "\n";
+        $html .= '        <th class="py-3 px-4 font-bold border border-slate-700">' . "\n";
+        $html .= '            <div>Hak Milik</div><div class="italic font-normal text-[11px] sm:text-xs">Freehold Title</div>' . "\n";
+        $html .= '        </th>' . "\n";
+        $html .= '        <th class="py-3 px-4 font-bold border border-slate-700">' . "\n";
+        $html .= '            <div>Hak Guna Bangunan</div><div class="italic font-normal text-[11px] sm:text-xs">Building Rights Title</div>' . "\n";
+        $html .= '        </th>' . "\n";
+        $html .= '        <th class="py-3 px-4 font-bold border border-slate-700">' . "\n";
+        $html .= '            <div>Hak Pakai</div><div class="italic font-normal text-[11px] sm:text-xs">Right of Use Title</div>' . "\n";
+        $html .= '        </th>' . "\n";
+        $html .= '        <th class="py-3 px-4 font-bold border border-slate-700">' . "\n";
+        $html .= '            <div>Hak Pengelolaan</div><div class="italic font-normal text-[11px] sm:text-xs">Management Rights</div>' . "\n";
+        $html .= '        </th>' . "\n";
+        $html .= '        <th class="py-3 px-4 font-bold border border-slate-700">' . "\n";
+        $html .= '            <div>Hak Guna Usaha</div><div class="italic font-normal text-[11px] sm:text-xs">Commercial Exploitation Rights</div>' . "\n";
+        $html .= '        </th>' . "\n";
+        $html .= '        <th class="py-3 px-4 font-bold border border-slate-700">' . "\n";
+        $html .= '            <div>Hak Tanggungan</div><div class="italic font-normal text-[11px] sm:text-xs">Mortgage Rights</div>' . "\n";
+        $html .= '        </th>' . "\n";
+        $html .= '    </tr>' . "\n";
+        $html .= '    <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">' . "\n";
+        $html .= '        <th class="py-1 px-3 border border-slate-700">(1)</th>' . "\n";
+        $html .= '        <th class="py-1 px-3 border border-slate-700">(2)</th>' . "\n";
+        $html .= '        <th class="py-1 px-3 border border-slate-700">(3)</th>' . "\n";
+        $html .= '        <th class="py-1 px-3 border border-slate-700">(4)</th>' . "\n";
+        $html .= '        <th class="py-1 px-3 border border-slate-700">(5)</th>' . "\n";
+        $html .= '        <th class="py-1 px-3 border border-slate-700">(6)</th>' . "\n";
+        $html .= '        <th class="py-1 px-3 border border-slate-700">(7)</th>' . "\n";
+        $html .= '    </tr>' . "\n";
+        $html .= '</thead>' . "\n";
+
+        $html .= '<tbody class="bg-[#fef9c3] text-slate-900 font-medium">' . "\n";
+        for ($y = $startYear; $y <= $year; $y++) {
+            $rowVals = $existingRowData[$y] ?? $knownData[$y] ?? array_fill(0, 6, $dash);
+            $fmtVals = array_map(function($v) use ($dash) {
+                if ($v === null || $v === '' || $v === '-' || $v === '–') return $dash;
+                return $v;
+            }, $rowVals);
+
+            $html .= '    <tr class="hover:bg-amber-100/60 transition-colors">' . "\n";
+            $html .= '        <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">' . $y . '</td>' . "\n";
+            for ($col = 0; $col < 6; $col++) {
+                $val = $fmtVals[$col] ?? $dash;
+                $html .= '        <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">' . $val . '</td>' . "\n";
+            }
+            $html .= '    </tr>' . "\n";
+        }
+        $html .= '</tbody>';
+
+        return $html;
+    }
+
+        private function buildTabel112Html(int $year, ?string $existingHtml = null): string
     {
         $knownTotals = [
             2025 => '3565',
