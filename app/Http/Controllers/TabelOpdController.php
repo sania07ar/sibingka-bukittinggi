@@ -319,29 +319,69 @@ class TabelOpdController extends Controller
     }
 
     /**
+     * Normalisasi label baris untuk perbandingan nama/kategori yang akurat
+     */
+    protected function normalizeRowLabel(string $str): string
+    {
+        $s = strip_tags($str);
+        $s = html_entity_decode($s, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $s = preg_replace('/[\x{2013}\x{2014}\-\–\—]/u', '-', $s);
+        $s = preg_replace('/[^\p{L}\p{N}]+/u', ' ', $s);
+        return strtolower(trim($s));
+    }
+
+    /**
      * Terapkan baris data dari berkas Excel ke dalam table_html
      */
     protected function applyExcelRowsToTableHtml(string $tableHtml, array $excelRows): string
     {
+        $foundColNumberRow = false;
         $filteredRows = [];
+
         foreach ($excelRows as $row) {
             if (!is_array($row)) continue;
-            $cells = [];
-            foreach ($row as $cell) {
-                $cells[] = $cell !== null ? trim((string)$cell) : '';
-            }
-            $nonEmpty = array_filter($cells, fn($c) => $c !== '');
+            $cells = array_map(fn($c) => $c !== null ? trim((string)$c) : '', $row);
+            $nonEmpty = array_values(array_filter($cells, fn($c) => $c !== ''));
             if (empty($nonEmpty)) continue;
 
-            $firstCell = reset($nonEmpty);
-            if (preg_match('/^(?:Tabel|Table|Sumber|Source|Catatan|Note)/i', $firstCell)) {
+            // Lewati seluruh baris judul dan header sampai melewati baris penomoran kolom (1), (2), dst
+            if (!$foundColNumberRow) {
+                foreach ($cells as $c) {
+                    if (preg_match('/^\(1\)$/', $c) || preg_match('/^\(1\)/', $c)) {
+                        $foundColNumberRow = true;
+                        break;
+                    }
+                }
                 continue;
             }
-            if (preg_match('/^\(1\)$/i', $firstCell) || (in_array('(1)', $cells) && in_array('(2)', $cells))) {
-                continue;
+
+            // Setelah baris (1) ditemukan: hentikan pembacaan jika bertemu catatan/sumber di bagian bawah
+            $firstCell = $nonEmpty[0];
+            if (preg_match('/^(?:Sumber|Source|Catatan|Note)\b/i', $firstCell)) {
+                break;
             }
 
             $filteredRows[] = $cells;
+        }
+
+        // Jika tidak ada baris (1) (misal template custom), fallback ke filtering standar
+        if (empty($filteredRows)) {
+            foreach ($excelRows as $row) {
+                if (!is_array($row)) continue;
+                $cells = array_map(fn($c) => $c !== null ? trim((string)$c) : '', $row);
+                $nonEmpty = array_values(array_filter($cells, fn($c) => $c !== ''));
+                if (empty($nonEmpty)) continue;
+
+                $firstCell = $nonEmpty[0];
+                if (preg_match('/^(?:Tabel|Table|Sumber|Source|Catatan|Note)\b/i', $firstCell)) {
+                    continue;
+                }
+                if (preg_match('/^\(1\)$/i', $firstCell) || (in_array('(1)', $cells) && in_array('(2)', $cells))) {
+                    continue;
+                }
+
+                $filteredRows[] = $cells;
+            }
         }
 
         if (empty($filteredRows)) {
@@ -359,27 +399,29 @@ class TabelOpdController extends Controller
                 preg_match_all('/<td([^>]*)>(.*?)<\/td>/is', $rowHtml, $tdMatches, PREG_SET_ORDER);
                 if (empty($tdMatches)) return $trMatch[0];
 
-                $rowLabel = trim(strip_tags($tdMatches[0][2]));
+                $rawRowLabel = trim(strip_tags($tdMatches[0][2]));
+                $normRowLabel = $this->normalizeRowLabel($rawRowLabel);
 
                 $matchedRow = null;
+                // 1. Coba cocokkan berdasarkan kemiripan label teks
                 foreach ($filteredRows as $eRow) {
-                    $eFirst = null;
+                    $eLabel = '';
                     foreach ($eRow as $c) {
                         if ($c !== '') {
-                            $eFirst = $c;
+                            $eLabel = $c;
                             break;
                         }
                     }
-                    if ($eFirst && (
-                        strcasecmp($eFirst, $rowLabel) === 0 ||
-                        str_contains(strtolower($eFirst), strtolower($rowLabel)) ||
-                        str_contains(strtolower($rowLabel), strtolower($eFirst))
-                    )) {
-                        $matchedRow = $eRow;
-                        break;
+                    $normELabel = $this->normalizeRowLabel($eLabel);
+                    if (!empty($normELabel) && !empty($normRowLabel)) {
+                        if ($normELabel === $normRowLabel || str_contains($normELabel, $normRowLabel) || str_contains($normRowLabel, $normELabel)) {
+                            $matchedRow = $eRow;
+                            break;
+                        }
                     }
                 }
 
+                // 2. Fallback sequential jika tidak cocok label
                 if (!$matchedRow && isset($filteredRows[$excelCursor])) {
                     $matchedRow = $filteredRows[$excelCursor];
                 }
