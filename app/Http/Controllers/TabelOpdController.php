@@ -1424,7 +1424,11 @@ class TabelOpdController extends Controller
         if ($tableHtml) {
             // Koreksi otomatis jika Kolom 6 muncul pada tabel kecamatan (seperti 9.4, 5.1.18, dll)
             if (str_contains($tableHtml, 'Kolom 6') || str_contains($tableHtml, 'kolom 6')) {
-                if ($tableCode === '8.1.6') {
+                if ($tableCode === '2.2.2') {
+                    $tableHtml = preg_replace('/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/i', '<th class="py-3 px-4 font-bold border border-slate-700"><div>S2/S3</div></th>', $tableHtml);
+                    $tableHtml = preg_replace('/<th([^>]*)>\s*Kolom\s*6\s*<\/th>/i', '<th class="py-3 px-4 font-bold border border-slate-700"><div>S2/S3</div></th>', $tableHtml);
+                    $tableHtml = preg_replace('/>\s*Kolom\s*6\s*</i', '>S2/S3<', $tableHtml);
+                } elseif ($tableCode === '8.1.6') {
                     $tableHtml = preg_replace('/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/i', '<th class="py-3 px-4 font-bold border border-slate-700"><div>Taksi</div><div class="italic font-normal text-[11px] sm:text-xs">Taxi</div></th>', $tableHtml);
                     $tableHtml = preg_replace('/<th([^>]*)>\s*Kolom\s*6\s*<\/th>/i', '<th class="py-3 px-4 font-bold border border-slate-700"><div>Taksi</div><div class="italic font-normal text-[11px] sm:text-xs">Taxi</div></th>', $tableHtml);
                     $tableHtml = preg_replace('/>\s*Kolom\s*6\s*</i', '>Taksi<', $tableHtml);
