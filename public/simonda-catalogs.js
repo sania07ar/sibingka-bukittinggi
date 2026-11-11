@@ -523,7 +523,7 @@ function getAgencyInfoForTable(tableCode, defaultOpd = '01', defaultType = 'opd'
     }
 
     // Pemetaan khusus tabel yang memiliki instansi definitif (Hanya untuk OPD)
-    if (cleanCode.startsWith('5.')) return { opdCode: '17', type: 'opd' }; // 17. Dinas Pertanian dan Pangan
+    if (cleanCode.startsWith('5.') || cleanCode === '9.11') return { opdCode: '17', type: 'opd' }; // 17. Dinas Pertanian dan Pangan
     if (cleanCode.startsWith('2.2.')) return { opdCode: '03', type: 'opd' }; // 03. Sekretariat DPRD
     if (cleanCode.startsWith('2.3.')) return { opdCode: '04', type: 'opd' }; // 04. BKPSDM
     if (cleanCode.startsWith('2.4.')) return { opdCode: '05', type: 'opd' }; // 05. Badan Keuangan Daerah

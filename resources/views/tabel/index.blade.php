@@ -8336,6 +8336,26 @@
                 }
             }
 
+            // Khusus tabel 9.11 (Dinas Pertanian): atur 5 rentang tahun historis pada bagian Rata-rata [targetYear, targetYear-1, ..., targetYear-4]
+            if (currentTableCode === '9.11') {
+                const yr = parseInt(targetYear) || 2026;
+                const ratarataCell = Array.from(tempTable.querySelectorAll('td')).find(td => td.innerText.trim().toLowerCase().includes('rata-rata') || td.innerText.trim().toLowerCase().includes('average'));
+                if (ratarataCell) {
+                    let currentRow = ratarataCell.parentElement;
+                    for (let i = 0; i < 5; i++) {
+                        if (!currentRow) break;
+                        const y = (yr - i).toString();
+                        const tds = currentRow.querySelectorAll('td');
+                        const yearTd = (i === 0) ? tds[1] : tds[0];
+                        if (yearTd) {
+                            yearTd.innerText = y;
+                            yearTd.className = 'py-2.5 px-4 border border-slate-700 text-center align-top' + (i === 0 ? ' font-extrabold' : '');
+                        }
+                        currentRow = currentRow.nextElementSibling;
+                    }
+                }
+            }
+
             return tempTable.innerHTML;
         }
 
@@ -9383,6 +9403,36 @@
                     safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
                     if (serverDbMetadata) {
                         serverDbMetadata.table_html = savedHtml;
+                    }
+                }
+            }
+
+            // Self-healing tabel 9.11 (Dinas Pertanian - Rata-rata 5 tahun berjalan)
+            if (currentTableCode === '9.11' && savedHtml) {
+                const tempDiv = document.createElement('table');
+                tempDiv.innerHTML = savedHtml;
+                const ratarataCell = Array.from(tempDiv.querySelectorAll('td')).find(td => td.innerText.trim().toLowerCase().includes('rata-rata') || td.innerText.trim().toLowerCase().includes('average'));
+                if (ratarataCell) {
+                    const yr = parseInt(currentYear) || 2026;
+                    let currentRow = ratarataCell.parentElement;
+                    let isCorruptYears = false;
+                    for (let i = 0; i < 5; i++) {
+                        if (!currentRow) break;
+                        const expectedY = (yr - i).toString();
+                        const tds = currentRow.querySelectorAll('td');
+                        const yearTd = (i === 0) ? tds[1] : tds[0];
+                        if (yearTd && yearTd.innerText.trim() !== expectedY) {
+                            isCorruptYears = true;
+                            yearTd.innerText = expectedY;
+                        }
+                        currentRow = currentRow.nextElementSibling;
+                    }
+                    if (isCorruptYears) {
+                        savedHtml = tempDiv.innerHTML;
+                        safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                        if (serverDbMetadata) {
+                            serverDbMetadata.table_html = savedHtml;
+                        }
                     }
                 }
             }
