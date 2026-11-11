@@ -18,3 +18,4 @@ class TableOpdImport implements ToArray
         return $this->rows;
     }
 }
+

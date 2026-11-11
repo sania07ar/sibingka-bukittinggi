@@ -4494,6 +4494,102 @@
                     `;
                 }
             },
+            '8.1.6': {
+                titleId: 'Jumlah Mobil Penumpang Menurut Jenisnya di Kota Bukittinggi',
+                titleEn: 'Number of Passenger Cars by Kind of Vehicles in Bukittinggi Municipality',
+                isMultiYear: true,
+                isExcludeSelectedYear: false,
+                source: 'Dinas Perhubungan Kota Bukittinggi / <span class="italic text-slate-500">Transportation Services of Bukittinggi Municipality</span>',
+                note: null,
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const startYr = yr - 6;
+                    const years = [];
+                    for (let y = startYr; y <= yr; y++) {
+                        years.push(y);
+                    }
+
+                    const dataStore = {
+                        2015: { bemo: '-', angkot: '540', bus: '-', taksi: '-', total: '540' },
+                        2016: { bemo: '-', angkot: '540', bus: '-', taksi: '-', total: '540' },
+                        2017: { bemo: '-', angkot: '540', bus: '-', taksi: '-', total: '540' },
+                        2018: { bemo: '-', angkot: '540', bus: '-', taksi: '-', total: '540' },
+                        2019: { bemo: '-', angkot: '539', bus: '-', taksi: '-', total: '539' },
+                        2020: { bemo: '-', angkot: '539', bus: '-', taksi: '-', total: '539' },
+                        2021: { bemo: '-', angkot: '539', bus: '-', taksi: '-', total: '539' },
+                        2022: { bemo: '-', angkot: '489', bus: '-', taksi: '-', total: '489' },
+                        2023: { bemo: '-', angkot: '466', bus: '-', taksi: '-', total: '466' },
+                        2024: { bemo: '-', angkot: '466', bus: '-', taksi: '-', total: '466' },
+                        2025: { bemo: '-', angkot: '466', bus: '-', taksi: '-', total: '466' }
+                    };
+
+                    let bodyRows = '';
+                    years.forEach(y => {
+                        let d = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[y]) 
+                            ? serverDbDataStore[y] 
+                            : (dataStore[y] || { bemo: '-', angkot: '-', bus: '-', taksi: '-', total: '-' });
+
+                        bodyRows += `
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${y}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${d.bemo || '-'}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${d.angkot || '-'}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${d.bus || '-'}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${d.taksi || '-'}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-bold">${d.total || '-'}</td>
+                            </tr>
+                        `;
+                    });
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+                                    <div>Tahun</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Year</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="4">
+                                    <div>Jenis Kendaraan</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Kind of Vehicles</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+                                    <div>Jumlah</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Bemo</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Tricycle Motor</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Angkutan Kota</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Municipality Transport</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Bus Umum</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Public Bus</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Taksi</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Taxi</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700">(6)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${bodyRows}
+                        </tbody>
+                    `;
+                }
+            },
             '2.2.5': {
                 titleId: 'Keputusan dan Hasil Rapat Kerja DPRD di Kota Bukittinggi',
                 titleEn: 'Regional Representative Decision by Type of Decision in Bukittinggi Municipality',
@@ -9866,6 +9962,9 @@
             if (currentTableCode.startsWith('4.1') && tableSchemas[currentTableCode]) {
                 return tableSchemas[currentTableCode].render(targetYear);
             }
+            if (currentTableCode === '8.1.6' && tableSchemas['8.1.6']) {
+                return tableSchemas['8.1.6'].render(targetYear);
+            }
             const tempTable = document.createElement('table');
             tempTable.innerHTML = sourceHtml;
 
@@ -10425,10 +10524,7 @@
             if (tableCode === '4.1.20' || tableCode === '2.4.1' || tableCode === '2.4.2') {
                 return get4YearPeriod(year);
             }
-            if (tableCode === '4.2.20' || tableCode === '4.3.15') {
-                return get7YearPeriod(year);
-            }
-            if (tableCode === '9.3') {
+            if (tableCode === '4.2.20' || tableCode === '4.3.15' || tableCode === '9.3' || tableCode === '8.1.6') {
                 return get7YearPeriod(year);
             }
             return get5YearPeriod(year);
@@ -10923,6 +11019,19 @@
                 }
             }
 
+            if (currentTableCode === '8.1.6') {
+                const yrInt = parseInt(currentYear) || 2025;
+                const expectedRange = `${yrInt - 6}–${yrInt}`;
+                if (customTitleId && !customTitleId.includes(expectedRange)) {
+                    localStorage.removeItem(`simonda_table_title_id_${currentTableCode}_${currentYear}`);
+                    customTitleId = null;
+                }
+                if (customTitleEn && !customTitleEn.includes(expectedRange)) {
+                    localStorage.removeItem(`simonda_table_title_en_${currentTableCode}_${currentYear}`);
+                    customTitleEn = null;
+                }
+            }
+
             // For Table 9.3 and 9.4, ensure title does not contain year range, but single year [yr]
             if (currentTableCode === '9.3' || currentTableCode === '9.4') {
                 const yrInt = parseInt(currentYear) || 2025;
@@ -11108,7 +11217,7 @@
 
             // Validasi savedHtml untuk tabel multi-tahun (8.1.1, 8.1.2, 8.1.3, 8.1.4, 8.1.5, 8.2.2, 2.2.5, 1.1.10, 9.1, 9.3 atau schema.isMultiYear)
             const isMultiYearTable = Boolean(schema && (schema.isMultiYear || schema.isExcludeSelectedYear)) || 
-                                     ['8.1.1', '8.1.2', '8.1.3', '8.1.4', '8.1.5', '8.2.2', '2.2.5', '1.1.10', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2'].includes(currentTableCode);
+                                     ['8.1.1', '8.1.2', '8.1.3', '8.1.4', '8.1.5', '8.1.6', '8.2.2', '2.2.5', '1.1.10', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2'].includes(currentTableCode);
 
             if (currentTableCode === '9.3' && savedHtml) {
                 const yrInt = parseInt(currentYear) || 2025;
