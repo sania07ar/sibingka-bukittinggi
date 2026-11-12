@@ -782,10 +782,50 @@ class TabelOpdController extends Controller
             }
         }
 
-        // Khusus tabel-tabel sekolah (Dinas Pendidikan - 4.1.1 s.d. 4.1.17):
+        // Khusus tabel 4.1.2 (Kemenag - Raudatul Athfal): Hanya 2 tahun ajaran (Sekolah, Guru, Murid berstatus swasta)
+        if ($tableCode === '4.1.2') {
+            $expectedY1 = ($year - 1) . '/' . ($year);
+            $expectedY2 = ($year) . '/' . ($year + 1);
+            $expectedTitleEnd = "{$expectedY1} dan {$expectedY2}";
+
+            if ($dbMetadata && !empty($dbMetadata->table_html)) {
+                $needsUpdate = false;
+                $html = $dbMetadata->table_html;
+
+                if (preg_match('/\b\d{4}\s*\/\s*\d{4}\b/', $html)) {
+                    $idx = 0;
+                    $newHtml = preg_replace_callback('/\b\d{4}\s*\/\s*\d{4}\b/', function($matches) use (&$idx, $expectedY1, $expectedY2) {
+                        $col = $idx % 2;
+                        $idx++;
+                        return ($col === 0) ? $expectedY1 : $expectedY2;
+                    }, $html);
+
+                    if ($newHtml !== $html) {
+                        $html = $newHtml;
+                        $needsUpdate = true;
+                    }
+                }
+
+                if (!empty($dbMetadata->title_id) && !str_ends_with(trim($dbMetadata->title_id), $expectedTitleEnd)) {
+                    $dbMetadata->title_id = preg_replace('/(,\s*|\s+)\d{4}\s*\/\s*\d{4}.*$/i', ", {$expectedTitleEnd}", $dbMetadata->title_id);
+                    $needsUpdate = true;
+                }
+                if (!empty($dbMetadata->title_en) && !str_ends_with(trim($dbMetadata->title_en), $expectedTitleEnd)) {
+                    $dbMetadata->title_en = preg_replace('/(,\s*|\s+)\d{4}\s*\/\s*\d{4}.*$/i', ", {$expectedY1} and {$expectedY2}", $dbMetadata->title_en);
+                    $needsUpdate = true;
+                }
+
+                if ($needsUpdate) {
+                    $dbMetadata->table_html = $html;
+                    $dbMetadata->save();
+                }
+            }
+        }
+
+        // Khusus tabel-tabel sekolah (Dinas Pendidikan - 4.1.1, 4.1.3 s.d. 4.1.17):
         // Di SiAngka, tahun ajaran terkininya adalah Tahun + 1 (misal tahun 2025 memuat 2023/2024, 2024/2025, 2025/2026 dengan judul berakhiran 2025/2026)
         // Col 1: (year-2)/(year-1), Col 2: (year-1)/year, Col 3: year/(year+1), Judul: year/(year+1)
-        $schoolCodes = ['4.1.1', '4.1.2', '4.1.3', '4.1.4', '4.1.5', '4.1.6', '4.1.7', '4.1.8', '4.1.9', '4.1.10', '4.1.11', '4.1.12', '4.1.13', '4.1.14', '4.1.15', '4.1.16', '4.1.17'];
+        $schoolCodes = ['4.1.1', '4.1.3', '4.1.4', '4.1.5', '4.1.6', '4.1.7', '4.1.8', '4.1.9', '4.1.10', '4.1.11', '4.1.12', '4.1.13', '4.1.14', '4.1.15', '4.1.16', '4.1.17'];
         if (in_array($tableCode, $schoolCodes)) {
             $expectedY1 = ($year - 2) . '/' . ($year - 1);
             $expectedY2 = ($year - 1) . '/' . ($year);
@@ -1469,8 +1509,27 @@ class TabelOpdController extends Controller
         $yTitleEn = $this->adjustYearInTitle($sourceMeta->title_en, (int)$sourceMeta->year, $year);
         $yNote = $this->adjustYearInNote($sourceMeta->note, (int)$sourceMeta->year, $year);
 
-        // Khusus tabel sekolah jika dicopy dari tahun lain
-        if (in_array($tableCode, ['4.1.1', '4.1.2', '4.1.3', '4.1.4', '4.1.5', '4.1.6', '4.1.7', '4.1.8', '4.1.9', '4.1.10', '4.1.11', '4.1.12', '4.1.13', '4.1.14', '4.1.15', '4.1.16', '4.1.17'])) {
+        // Khusus tabel 4.1.2 (Kemenag RA)
+        if ($tableCode === '4.1.2') {
+            $expectedY1 = ($year - 1) . '/' . ($year);
+            $expectedY2 = ($year) . '/' . ($year + 1);
+            $expectedTitleEnd = "{$expectedY1} dan {$expectedY2}";
+
+            if (preg_match('/\b\d{4}\s*\/\s*\d{4}\b/', $yHtml)) {
+                $idx = 0;
+                $yHtml = preg_replace_callback('/\b\d{4}\s*\/\s*\d{4}\b/', function($matches) use (&$idx, $expectedY1, $expectedY2) {
+                    $col = $idx % 2;
+                    $idx++;
+                    return ($col === 0) ? $expectedY1 : $expectedY2;
+                }, $yHtml);
+            }
+            if (!empty($yTitleId)) {
+                $yTitleId = preg_replace('/(,\s*|\s+)\d{4}\s*\/\s*\d{4}.*$/i', ", {$expectedTitleEnd}", $yTitleId);
+            }
+            if (!empty($yTitleEn)) {
+                $yTitleEn = preg_replace('/(,\s*|\s+)\d{4}\s*\/\s*\d{4}.*$/i', ", {$expectedY1} and {$expectedY2}", $yTitleEn);
+            }
+        } elseif (in_array($tableCode, ['4.1.1', '4.1.3', '4.1.4', '4.1.5', '4.1.6', '4.1.7', '4.1.8', '4.1.9', '4.1.10', '4.1.11', '4.1.12', '4.1.13', '4.1.14', '4.1.15', '4.1.16', '4.1.17'])) {
             $expectedY1 = ($year - 2) . '/' . ($year - 1);
             $expectedY2 = ($year - 1) . '/' . ($year);
             $expectedY3 = ($year) . '/' . ($year + 1);

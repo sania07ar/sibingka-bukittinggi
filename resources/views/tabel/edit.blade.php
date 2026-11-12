@@ -10473,6 +10473,12 @@
                             keysToRemove.push(k);
                         }
                     }
+                    if (k && k.includes('4.1.2')) {
+                        const val = localStorage.getItem(k) || '';
+                        if (val.includes('2023/2024') && val.includes('2025/2026')) {
+                            keysToRemove.push(k);
+                        }
+                    }
                 }
                 keysToRemove.forEach(k => localStorage.removeItem(k));
             } catch(e) {}
@@ -11945,8 +11951,26 @@
                 });
             }
 
+            // Khusus Tabel 4.1.2 (Kemenag - RA): 2 Tahun Ajaran Berjalan
+            if (currentTableCode === '4.1.2') {
+                const yrInt = parseInt(currentYear) || 2025;
+                const expectedY1 = `${yrInt - 1}/${yrInt}`;
+                const expectedY2 = `${yrInt}/${yrInt + 1}`;
+                const validAcadYears = [expectedY1, expectedY2];
+
+                const theadThs = tableEl.querySelectorAll('thead th');
+                let thAcadIdx = 0;
+                theadThs.forEach(th => {
+                    if (/\b(?:19|20)\d{2}\s*\/\s*(?:19|20)\d{2}\b/.test(th.innerText)) {
+                        const correctYr = validAcadYears[thAcadIdx % 2];
+                        thAcadIdx++;
+                        th.innerHTML = `<div>${correctYr}</div>`;
+                    }
+                });
+            }
+
             // Khusus Tabel Dinas 08 / Tabel 4.1.x (Tabel Pendidikan: Sekolah, Guru, Murid)
-            const isEducation3in1 = ['4.1.1', '4.1.2', '4.1.3', '4.1.4', '4.1.5', '4.1.6', '4.1.7', '4.1.8', '4.1.9', '4.1.10', '4.1.11', '4.1.12', '4.1.13', '4.1.14', '4.1.15', '4.1.16', '4.1.17'].includes(currentTableCode);
+            const isEducation3in1 = ['4.1.1', '4.1.3', '4.1.4', '4.1.5', '4.1.6', '4.1.7', '4.1.8', '4.1.9', '4.1.10', '4.1.11', '4.1.12', '4.1.13', '4.1.14', '4.1.15', '4.1.16', '4.1.17'].includes(currentTableCode);
             if (isEducation3in1) {
                 const yrInt = parseInt(currentYear) || 2025;
                 const expectedY1 = `${yrInt - 2}/${yrInt - 1}`;

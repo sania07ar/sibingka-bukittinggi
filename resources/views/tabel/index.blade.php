@@ -8828,6 +8828,12 @@
                             keysToRemove.push(k);
                         }
                     }
+                    if (k && k.includes('4.1.2')) {
+                        const val = localStorage.getItem(k) || '';
+                        if (val.includes('2023/2024') && val.includes('2025/2026')) {
+                            keysToRemove.push(k);
+                        }
+                    }
                 }
                 keysToRemove.forEach(k => localStorage.removeItem(k));
             } catch(e) {}
@@ -10103,8 +10109,28 @@
                 }
             }
 
-            // Self-healing tabel sekolah (Dinas Pendidikan 4.1.1 s.d. 4.1.17): pastikan thead selalu urut [yr-2/yr-1, yr-1/yr, yr/yr+1]
-            const schoolEducationCodes = ['4.1.1', '4.1.2', '4.1.3', '4.1.4', '4.1.5', '4.1.6', '4.1.7', '4.1.8', '4.1.9', '4.1.10', '4.1.11', '4.1.12', '4.1.13', '4.1.14', '4.1.15', '4.1.16', '4.1.17'];
+            // Self-healing tabel 4.1.2 (Kemenag - RA): 2 tahun ajaran berjalan
+            if (currentTableCode === '4.1.2' && savedHtml) {
+                const yrInt = parseInt(currentYear) || 2025;
+                const expectedY1 = `${yrInt - 1}/${yrInt}`;
+                const expectedY2 = `${yrInt}/${yrInt + 1}`;
+                if (/\b\d{4}\s*\/\s*\d{4}\b/.test(savedHtml)) {
+                    let scIdx = 0;
+                    savedHtml = savedHtml.replace(/\b\d{4}\s*\/\s*\d{4}\b/g, () => {
+                        const col = scIdx % 2;
+                        scIdx++;
+                        return col === 0 ? expectedY1 : expectedY2;
+                    });
+                    safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                    safeSetLocalStorage(scopedHtmlKey, savedHtml);
+                    if (serverDbMetadata) {
+                        serverDbMetadata.table_html = savedHtml;
+                    }
+                }
+            }
+
+            // Self-healing tabel sekolah (Dinas Pendidikan 4.1.1, 4.1.3 s.d. 4.1.17): pastikan thead selalu urut [yr-2/yr-1, yr-1/yr, yr/yr+1]
+            const schoolEducationCodes = ['4.1.1', '4.1.3', '4.1.4', '4.1.5', '4.1.6', '4.1.7', '4.1.8', '4.1.9', '4.1.10', '4.1.11', '4.1.12', '4.1.13', '4.1.14', '4.1.15', '4.1.16', '4.1.17'];
             if (schoolEducationCodes.includes(currentTableCode) && savedHtml) {
                 const yrInt = parseInt(currentYear) || 2025;
                 const expectedY1 = `${yrInt - 2}/${yrInt - 1}`;
@@ -10335,8 +10361,26 @@
                 });
             }
 
+            // Khusus Tabel 4.1.2 (Kemenag - RA): 2 Tahun Ajaran Berjalan
+            if (currentTableCode === '4.1.2') {
+                const yrInt = parseInt(currentYear) || 2025;
+                const expectedY1 = `${yrInt - 1}/${yrInt}`;
+                const expectedY2 = `${yrInt}/${yrInt + 1}`;
+                const validAcadYears = [expectedY1, expectedY2];
+
+                const theadThs = tableEl.querySelectorAll('thead th');
+                let thAcadIdx = 0;
+                theadThs.forEach(th => {
+                    if (/\b(?:19|20)\d{2}\s*\/\s*(?:19|20)\d{2}\b/.test(th.innerText)) {
+                        const correctYr = validAcadYears[thAcadIdx % 2];
+                        thAcadIdx++;
+                        th.innerHTML = `<div>${correctYr}</div>`;
+                    }
+                });
+            }
+
             // Khusus Tabel Dinas 08 / Tabel 4.1.x (Tabel 3-in-1: Sekolah, Guru, Murid)
-            const isEducation3in1 = ['4.1.1', '4.1.2', '4.1.3', '4.1.4', '4.1.5', '4.1.6', '4.1.7', '4.1.8', '4.1.9', '4.1.10', '4.1.11', '4.1.12', '4.1.13', '4.1.14', '4.1.15', '4.1.16', '4.1.17'].includes(currentTableCode);
+            const isEducation3in1 = ['4.1.1', '4.1.3', '4.1.4', '4.1.5', '4.1.6', '4.1.7', '4.1.8', '4.1.9', '4.1.10', '4.1.11', '4.1.12', '4.1.13', '4.1.14', '4.1.15', '4.1.16', '4.1.17'].includes(currentTableCode);
             if (isEducation3in1) {
                 const yrInt = parseInt(currentYear) || 2025;
                 const expectedY1 = `${yrInt - 2}/${yrInt - 1}`;
