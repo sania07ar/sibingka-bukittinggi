@@ -33,6 +33,10 @@ class TabelOpdController extends Controller
             return '01'; // Dinas PUPR
         }
         if (str_starts_with($tableCode, '2.2.')) {
+            $cleanPassed = str_pad($opdCode, 2, '0', STR_PAD_LEFT);
+            if ($cleanPassed === '02') {
+                return '02'; // KPU Kota Bukittinggi
+            }
             return '03'; // Sekretariat DPRD
         }
         if (str_starts_with($tableCode, '2.3.')) {
@@ -290,7 +294,39 @@ class TabelOpdController extends Controller
                 ], 400);
             }
 
-            $updatedHtml = $this->applyExcelRowsToTableHtml($meta->table_html, $rows);
+            // Ekstrak Title & Source / Note dari berkas Excel jika tersedia
+            $excelTitleId = '';
+            $excelTitleEn = '';
+            $excelSource = '';
+            $excelNote = '';
+
+            for ($r = 0; $r < min(count($rows), 5); $r++) {
+                $rCells = array_values(array_filter(array_map('trim', $rows[$r] ?? []), fn($c) => $c !== ''));
+                if (count($rCells) === 1) {
+                    $cText = $rCells[0];
+                    if (preg_match('/^Tabel\b/i', $cText) || (preg_match('/\b(Jumlah|Banyaknya|Panjang|Luas|Rata-rata|Realisasi|Persentase)\b/i', $cText) && !$excelTitleId)) {
+                        $excelTitleId = preg_replace('/^Tabel\s*[\d\.]*\s*/i', '', $cText);
+                    } elseif (preg_match('/^Table\b/i', $cText) || (preg_match('/\b(Number|Length|Wide|Average|Percentage|Total)\b/i', $cText) && !$excelTitleEn)) {
+                        $excelTitleEn = preg_replace('/^Table\s*[\d\.]*\s*/i', '', $cText);
+                    }
+                }
+            }
+
+            for ($r = count($rows) - 1; $r >= max(0, count($rows) - 6); $r--) {
+                $rText = implode(' ', array_filter(array_map('trim', $rows[$r] ?? []), fn($c) => $c !== ''));
+                if (preg_match('/^(?:Sumber\s*[\/:]|Source\s*[\/:]|Sumber:|Source:)\s*(.*)$/i', $rText, $mSrc)) {
+                    $excelSource = trim($mSrc[1]);
+                } elseif (preg_match('/^(?:Catatan\s*[\/:]|Note\s*[\/:]|Catatan:|Note:)\s*(.*)$/i', $rText, $mNote)) {
+                    $excelNote = trim($mNote[1]);
+                }
+            }
+
+            if (!empty($excelTitleId)) $meta->title_id = $excelTitleId;
+            if (!empty($excelTitleEn)) $meta->title_en = $excelTitleEn;
+            if (!empty($excelSource)) $meta->source = $excelSource;
+            if (!empty($excelNote)) $meta->note = $excelNote;
+
+            $updatedHtml = $this->applyExcelRowsToTableHtml($meta->table_html, $rows, $tableCode);
 
             $meta->table_html = $updatedHtml;
             $meta->is_saved = true;
@@ -307,8 +343,12 @@ class TabelOpdController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Data tabel berhasil diimpor dari berkas Excel!',
+                'message' => 'Data tabel berhasil diimpor menggunakan Laravel Excel!',
                 'table_html' => $updatedHtml,
+                'title_id' => $meta->title_id,
+                'title_en' => $meta->title_en,
+                'source' => $meta->source,
+                'note' => $meta->note,
             ]);
         } catch (\Throwable $e) {
             return response()->json([
@@ -332,12 +372,28 @@ class TabelOpdController extends Controller
     }
 
     /**
-     * Terapkan baris data dari berkas Excel ke dalam table_html
+     * Terapkan baris data dari berkas Excel ke dalam table_html secara presisi menggunakan Laravel Excel
      */
-    protected function applyExcelRowsToTableHtml(string $tableHtml, array $excelRows): string
+    protected function applyExcelRowsToTableHtml(string $tableHtml, array $excelRows, string $tableCode = ''): string
     {
+        // 1. Auto-heal Header Kolom 6, Taksi, & Kecamatan
+        if ($tableCode === '2.2.2' || str_contains($tableHtml, 'Partai') || str_contains($tableHtml, 'Kolom 6') || str_contains($tableHtml, 'kolom 6')) {
+            $tableHtml = preg_replace('/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/i', '<th class="py-3 px-4 font-bold border border-slate-700"><div>S2/S3</div></th>', $tableHtml);
+            $tableHtml = preg_replace('/<th([^>]*)>\s*Kolom\s*6\s*<\/th>/i', '<th class="py-3 px-4 font-bold border border-slate-700"><div>S2/S3</div></th>', $tableHtml);
+            $tableHtml = preg_replace('/>\s*Kolom\s*6\s*</i', '>S2/S3<', $tableHtml);
+        }
+        if ($tableCode === '8.1.6' || (str_contains($tableHtml, 'Bemo') && str_contains($tableHtml, 'Bus Umum'))) {
+            $tableHtml = preg_replace('/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/i', '<th class="py-3 px-4 font-bold border border-slate-700"><div>Taksi</div><div class="italic font-normal text-[11px] sm:text-xs">Taxi</div></th>', $tableHtml);
+            $tableHtml = preg_replace('/>\s*Kolom\s*6\s*</i', '>Taksi/Taxi<', $tableHtml);
+        }
+        if (in_array($tableCode, ['9.4', '5.1.18']) || str_contains($tableHtml, 'Mandiangin') || str_contains($tableHtml, 'Guguk Panjang')) {
+            $tableHtml = preg_replace('/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/i', '<th class="py-3 px-4 font-bold border border-slate-700"><div>Aur Birugo Tigo Baleh</div></th>', $tableHtml);
+            $tableHtml = preg_replace('/>\s*Kolom\s*6\s*</i', '>Aur Birugo Tigo Baleh<', $tableHtml);
+        }
+
+        // 2. Parse baris data dari Excel hasil bacaan Laravel Excel
         $foundColNumberRow = false;
-        $filteredRows = [];
+        $excelDataRows = [];
 
         foreach ($excelRows as $row) {
             if (!is_array($row)) continue;
@@ -345,7 +401,7 @@ class TabelOpdController extends Controller
             $nonEmpty = array_values(array_filter($cells, fn($c) => $c !== ''));
             if (empty($nonEmpty)) continue;
 
-            // Lewati seluruh baris judul dan header sampai melewati baris penomoran kolom (1), (2), dst
+            // Lewati seluruh baris judul & header sampai melewati baris penomoran (1), (2), dst
             if (!$foundColNumberRow) {
                 foreach ($cells as $c) {
                     if (preg_match('/^\(1\)$/', $c) || preg_match('/^\(1\)/', $c)) {
@@ -356,17 +412,39 @@ class TabelOpdController extends Controller
                 continue;
             }
 
-            // Setelah baris (1) ditemukan: hentikan pembacaan jika bertemu catatan/sumber di bagian bawah
+            // Hentikan jika mencapai baris catatan atau sumber
             $firstCell = $nonEmpty[0];
             if (preg_match('/^(?:Sumber|Source|Catatan|Note)\b/i', $firstCell)) {
                 break;
             }
 
-            $filteredRows[] = $cells;
+            // Ekstrak label baris dan daftar nilai selnya
+            $label = '';
+            $vals = [];
+            $passedLabel = false;
+            foreach ($cells as $c) {
+                if (!$passedLabel) {
+                    if ($c !== '') {
+                        $label = $c;
+                        $passedLabel = true;
+                    }
+                    continue;
+                }
+                $vals[] = ($c !== '') ? $c : '-';
+            }
+
+            if (!empty($label)) {
+                $excelDataRows[] = [
+                    'label' => $label,
+                    'normLabel' => $this->normalizeRowLabel($label),
+                    'values' => $vals,
+                    'isTotal' => (bool) preg_match('/(?:Jumlah|Total|Rata-rata|Average|BUKITTINGGI)/i', $label),
+                ];
+            }
         }
 
-        // Jika tidak ada baris (1) (misal template custom), fallback ke filtering standar
-        if (empty($filteredRows)) {
+        // Fallback jika baris penomoran (1) tidak ditemukan
+        if (empty($excelDataRows)) {
             foreach ($excelRows as $row) {
                 if (!is_array($row)) continue;
                 $cells = array_map(fn($c) => $c !== null ? trim((string)$c) : '', $row);
@@ -374,40 +452,48 @@ class TabelOpdController extends Controller
                 if (empty($nonEmpty)) continue;
 
                 $firstCell = $nonEmpty[0];
-                if (preg_match('/^(?:Tabel|Table|Sumber|Source|Catatan|Note)\b/i', $firstCell)) {
-                    continue;
-                }
-                if (preg_match('/^\(1\)$/i', $firstCell) || (in_array('(1)', $cells) && in_array('(2)', $cells))) {
-                    continue;
+                if (preg_match('/^(?:Tabel|Table|Sumber|Source|Catatan|Note)\b/i', $firstCell)) continue;
+                if (preg_match('/^\(1\)$/i', $firstCell) || (in_array('(1)', $cells) && in_array('(2)', $cells))) continue;
+
+                $label = '';
+                $vals = [];
+                $passedLabel = false;
+                foreach ($cells as $c) {
+                    if (!$passedLabel) {
+                        if ($c !== '') {
+                            $label = $c;
+                            $passedLabel = true;
+                        }
+                        continue;
+                    }
+                    $vals[] = ($c !== '') ? $c : '-';
                 }
 
-                $filteredRows[] = $cells;
+                if (!empty($label)) {
+                    $excelDataRows[] = [
+                        'label' => $label,
+                        'normLabel' => $this->normalizeRowLabel($label),
+                        'values' => $vals,
+                        'isTotal' => (bool) preg_match('/(?:Jumlah|Total|Rata-rata|Average|BUKITTINGGI)/i', $label),
+                    ];
+                }
             }
         }
 
-        if (empty($filteredRows)) {
+        if (empty($excelDataRows)) {
             return $tableHtml;
         }
 
-        // Auto-heal header jika tabel 2.2.2 masih memuat Kolom 6
-        if (str_contains($tableHtml, 'Kolom 6') || str_contains($tableHtml, 'kolom 6')) {
-            $tableHtml = preg_replace('/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/i', '<th class="py-3 px-4 font-bold border border-slate-700"><div>S2/S3</div></th>', $tableHtml);
-            $tableHtml = preg_replace('/<th([^>]*)>\s*Kolom\s*6\s*<\/th>/i', '<th class="py-3 px-4 font-bold border border-slate-700"><div>S2/S3</div></th>', $tableHtml);
-            $tableHtml = preg_replace('/>\s*Kolom\s*6\s*</i', '>S2/S3<', $tableHtml);
-        }
-
-        return preg_replace_callback('/<tbody([^>]*)>(.*?)<\/tbody>/is', function($tbodyMatch) use ($filteredRows) {
-            $tbodyAttr = trim($tbodyMatch[1]);
-            if (empty($tbodyAttr) || !str_contains($tbodyAttr, 'bg-')) {
-                $tbodyAttr = ' class="bg-[#fef9c3] text-slate-900 font-medium"';
-            } else {
-                $tbodyAttr = ' ' . $tbodyAttr;
-            }
-
+        // 3. Terapkan data ke dalam <tbody> dengan styling resmi BPS
+        return preg_replace_callback('/<tbody([^>]*)>(.*?)<\/tbody>/is', function($tbodyMatch) use ($excelDataRows) {
+            $tbodyAttr = ' class="bg-[#fef9c3] text-slate-900 font-medium"';
             $tbodyHtml = $tbodyMatch[2];
-            $excelCursor = 0;
 
-            $newTbody = preg_replace_callback('/<tr([^>]*)>(.*?)<\/tr>/is', function($trMatch) use (&$excelCursor, $filteredRows) {
+            $excelCursor = 0;
+            $usedExcelIndices = [];
+
+            // Ganti nilai sel pada baris data yang sudah ada di HTML
+            $newTbody = preg_replace_callback('/<tr([^>]*)>(.*?)<\/tr>/is', function($trMatch) use (&$excelCursor, &$usedExcelIndices, $excelDataRows) {
                 $trAttr = trim($trMatch[1]);
                 $rowHtml = $trMatch[2];
 
@@ -418,96 +504,119 @@ class TabelOpdController extends Controller
                 $normRowLabel = $this->normalizeRowLabel($rawRowLabel);
                 $isTotalRow = preg_match('/(?:Jumlah|Total|Rata-rata|Average|BUKITTINGGI)/i', $rawRowLabel);
 
-                if (empty($trAttr) || !str_contains($trAttr, 'hover:')) {
-                    if ($isTotalRow) {
-                        $trAttr = ' class="bg-[#fed7aa] font-bold text-slate-900"';
-                    } else {
-                        $trAttr = ' class="hover:bg-amber-100/60 transition-colors"';
-                    }
+                if ($isTotalRow) {
+                    $trAttr = ' class="bg-[#fed7aa] font-bold text-slate-900 border-t-2 border-slate-700"';
                 } else {
-                    $trAttr = ' ' . $trAttr;
+                    $trAttr = ' class="hover:bg-amber-100/60 transition-colors"';
                 }
 
-                $matchedRow = null;
-                // 1. Coba cocokkan berdasarkan kemiripan label teks
-                foreach ($filteredRows as $eRow) {
-                    $eLabel = '';
-                    foreach ($eRow as $c) {
-                        if ($c !== '') {
-                            $eLabel = $c;
-                            break;
-                        }
-                    }
-                    $normELabel = $this->normalizeRowLabel($eLabel);
-                    if (!empty($normELabel) && !empty($normRowLabel)) {
-                        if ($normELabel === $normRowLabel || str_contains($normELabel, $normRowLabel) || str_contains($normRowLabel, $normELabel)) {
-                            $matchedRow = $eRow;
-                            break;
-                        }
+                // Cocokkan ke baris Excel
+                $matchedIdx = null;
+
+                // Prioritas 1: Kecocokan persis label normalisasi yang belum digunakan
+                foreach ($excelDataRows as $idx => $eRow) {
+                    if (isset($usedExcelIndices[$idx])) continue;
+                    if ($eRow['normLabel'] === $normRowLabel) {
+                        $matchedIdx = $idx;
+                        break;
                     }
                 }
 
-                // 2. Fallback sequential jika tidak cocok label
-                if (!$matchedRow && isset($filteredRows[$excelCursor])) {
-                    $matchedRow = $filteredRows[$excelCursor];
-                }
-                $excelCursor++;
-
-                if (!$matchedRow) return "<tr{$trAttr}>{$rowHtml}</tr>";
-
-                $dataValues = [];
-                $passedLabel = false;
-                foreach ($matchedRow as $val) {
-                    if (!$passedLabel) {
-                        if ($val !== '') {
-                            $passedLabel = true;
+                // Prioritas 2: Kecocokan substring jika belum cocok
+                if ($matchedIdx === null && !empty($normRowLabel)) {
+                    foreach ($excelDataRows as $idx => $eRow) {
+                        if (isset($usedExcelIndices[$idx])) continue;
+                        if (!empty($eRow['normLabel'])) {
+                            if (str_contains($eRow['normLabel'], $normRowLabel) || str_contains($normRowLabel, $eRow['normLabel'])) {
+                                $matchedIdx = $idx;
+                                break;
+                            }
                         }
-                        continue;
                     }
-                    $dataValues[] = ($val !== '') ? $val : '-';
                 }
 
-                $cellIndex = 0;
-                $valIndex = 0;
-                $newRowHtml = preg_replace_callback('/<td([^>]*)>(.*?)<\/td>/is', function($tdMatch) use (&$cellIndex, &$valIndex, $dataValues, $isTotalRow) {
-                    $cellIndex++;
-                    $attr = trim($tdMatch[1]);
+                // Prioritas 3: Sequential fallback
+                if ($matchedIdx === null) {
+                    while (isset($usedExcelIndices[$excelCursor]) && $excelCursor < count($excelDataRows)) {
+                        $excelCursor++;
+                    }
+                    if (isset($excelDataRows[$excelCursor])) {
+                        $matchedIdx = $excelCursor;
+                    }
+                }
 
-                    // Sel pertama adalah label / tahun / nama kategori, pertahankan
-                    if ($cellIndex === 1) {
+                if ($matchedIdx !== null) {
+                    $usedExcelIndices[$matchedIdx] = true;
+                    $matchedRow = $excelDataRows[$matchedIdx];
+                    $dataValues = $matchedRow['values'];
+
+                    $cellIndex = 0;
+                    $valIndex = 0;
+                    $newRowHtml = preg_replace_callback('/<td([^>]*)>(.*?)<\/td>/is', function($tdMatch) use (&$cellIndex, &$valIndex, $dataValues, $isTotalRow) {
+                        $cellIndex++;
+                        $attr = trim($tdMatch[1]);
+
+                        if ($cellIndex === 1) {
+                            // Pertahankan label sel pertama dengan border slate rapi
+                            return "<td class=\"py-2.5 px-4 border border-slate-700 text-left font-semibold align-top\">{$tdMatch[2]}</td>";
+                        }
+
+                        if (isset($dataValues[$valIndex])) {
+                            $insertVal = $dataValues[$valIndex];
+                            $valIndex++;
+
+                            if (is_numeric($insertVal)) {
+                                $cleanNum = (float)$insertVal == (int)$insertVal ? (string)(int)$insertVal : (string)$insertVal;
+                            } else {
+                                $cleanNum = trim($insertVal);
+                                if ($cleanNum === '' || $cleanNum === '...') $cleanNum = '-';
+                            }
+
+                            $alignClass = 'text-center align-middle';
+                            $boldClass = $isTotalRow ? ' font-extrabold' : ' font-medium';
+
+                            if ($cleanNum === '-' || $cleanNum === '–' || $cleanNum === '—') {
+                                return "<td class=\"py-2.5 px-4 border border-slate-700 {$alignClass}\"><span class=\"text-slate-400 font-normal\">-</span></td>";
+                            }
+
+                            return "<td class=\"py-2.5 px-4 border border-slate-700 {$alignClass}{$boldClass}\">{$cleanNum}</td>";
+                        }
+
                         return $tdMatch[0];
-                    }
+                    }, $rowHtml);
 
-                    if (isset($dataValues[$valIndex])) {
-                        $insertVal = $dataValues[$valIndex];
-                        $valIndex++;
-                        if (is_numeric($insertVal)) {
-                            $cleanNum = (float)$insertVal == (int)$insertVal ? (string)(int)$insertVal : (string)$insertVal;
-                        } else {
-                            $cleanNum = trim($insertVal);
-                            if ($cleanNum === '') $cleanNum = '-';
-                        }
+                    return "<tr{$trAttr}>{$newRowHtml}</tr>";
+                }
 
-                        // Pastikan atribut class sel tetap memiliki border dan alignment yang rapi
-                        if (empty($attr)) {
-                            $attr = 'class="py-2.5 px-4 border border-slate-700 text-center align-middle"';
-                        } elseif (!str_contains($attr, 'border-slate-700')) {
-                            $attr .= ' border border-slate-700';
-                        }
-
-                        // Format tampilan strip '-' atau angka
-                        if ($cleanNum === '-' || $cleanNum === '–' || $cleanNum === '—') {
-                            return "<td {$attr}><span class=\"text-slate-400 font-normal\">-</span></td>";
-                        }
-
-                        return "<td {$attr}>{$cleanNum}</td>";
-                    }
-
-                    return $tdMatch[0];
-                }, $rowHtml);
-
-                return "<tr{$trAttr}>{$newRowHtml}</tr>";
+                return "<tr{$trAttr}>{$rowHtml}</tr>";
             }, $tbodyHtml);
+
+            // 4. Masukkan baris baru dari Excel yang belum ada di HTML (misal 18 partai Pemilu 2024)
+            $extraRowsHtml = '';
+            foreach ($excelDataRows as $idx => $eRow) {
+                if (!isset($usedExcelIndices[$idx]) && !$eRow['isTotal']) {
+                    $rowClass = 'hover:bg-amber-100/60 transition-colors';
+                    $rowContent = "<td class=\"py-2.5 px-4 border border-slate-700 text-left font-semibold align-top\">" . htmlspecialchars($eRow['label']) . "</td>";
+                    foreach ($eRow['values'] as $v) {
+                        $vStr = is_numeric($v) ? ((float)$v == (int)$v ? (string)(int)$v : (string)$v) : trim($v);
+                        if ($vStr === '' || $vStr === '-' || $vStr === '–' || $vStr === '—' || $vStr === '...') {
+                            $rowContent .= "<td class=\"py-2.5 px-4 border border-slate-700 text-center align-middle\"><span class=\"text-slate-400 font-normal\">-</span></td>";
+                        } else {
+                            $rowContent .= "<td class=\"py-2.5 px-4 border border-slate-700 text-center align-middle font-medium\">" . htmlspecialchars($vStr) . "</td>";
+                        }
+                    }
+                    $extraRowsHtml .= "<tr class=\"{$rowClass}\">{$rowContent}</tr>\n";
+                }
+            }
+
+            if (!empty($extraRowsHtml)) {
+                // Sisipkan baris baru tepat sebelum baris total jika ada
+                if (preg_match('/(<tr[^>]*>(?:(?!<\/tr>).)*?(?:Jumlah|Total|BUKITTINGGI)(?:(?!<\/tr>).)*?<\/tr>)/is', $newTbody, $mTot)) {
+                    $newTbody = str_replace($mTot[1], $extraRowsHtml . $mTot[1], $newTbody);
+                } else {
+                    $newTbody .= "\n" . $extraRowsHtml;
+                }
+            }
 
             return "<tbody{$tbodyAttr}>{$newTbody}</tbody>";
         }, $tableHtml);
@@ -639,24 +748,22 @@ class TabelOpdController extends Controller
             $dbMetadata->opd_code = $definitiveOpd;
         }
 
-        // Cek file-based snapshot storage (resilient backup saat MySQL InnoDB dalam mode read-only / recovery)
-        $scopedCacheFile = storage_path("app/tables/table_{$type}_{$cleanOpd}_{$tableCode}_{$year}.json");
-        $legacyCacheFile = storage_path("app/tables/table_{$tableCode}_{$year}.json");
-        $cacheFile = file_exists($scopedCacheFile) ? $scopedCacheFile : $legacyCacheFile;
-        if (file_exists($cacheFile)) {
-            $cachedData = json_decode(@file_get_contents($cacheFile), true);
-            $isMatchingOpd = ($cacheFile === $scopedCacheFile) || 
-                             ($type !== 'instansi' && (!empty($cachedData['opd_code']) && in_array($cachedData['opd_code'], array_unique([$opdCode, $cleanOpd]))));
-            if ($isMatchingOpd && is_array($cachedData) && !empty($cachedData['table_html'])) {
-                if (!$dbMetadata) {
-                    $dbMetadata = new TabelMetadata();
-                    $dbMetadata->table_code = $tableCode;
-                    $dbMetadata->opd_code = $cachedData['opd_code'] ?? $opdCode;
-                    $dbMetadata->year = $year;
-                }
-                $fileTime = @filemtime($cacheFile);
-                $dbTime = $dbMetadata->updated_at ? strtotime((string)$dbMetadata->updated_at) : 0;
-                if ($fileTime >= $dbTime || empty($dbMetadata->table_html)) {
+        // Cek file-based snapshot storage hanya jika di database belum ada metadata / table_html
+        if (!$dbMetadata || empty($dbMetadata->table_html) || str_contains($dbMetadata->table_html, 'Indicator Details')) {
+            $scopedCacheFile = storage_path("app/tables/table_{$type}_{$cleanOpd}_{$tableCode}_{$year}.json");
+            $legacyCacheFile = storage_path("app/tables/table_{$tableCode}_{$year}.json");
+            $cacheFile = file_exists($scopedCacheFile) ? $scopedCacheFile : $legacyCacheFile;
+            if (file_exists($cacheFile)) {
+                $cachedData = json_decode(@file_get_contents($cacheFile), true);
+                $isMatchingOpd = ($cacheFile === $scopedCacheFile) || 
+                                 ($type !== 'instansi' && (!empty($cachedData['opd_code']) && in_array($cachedData['opd_code'], array_unique([$opdCode, $cleanOpd]))));
+                if ($isMatchingOpd && is_array($cachedData) && !empty($cachedData['table_html'])) {
+                    if (!$dbMetadata) {
+                        $dbMetadata = new TabelMetadata();
+                        $dbMetadata->table_code = $tableCode;
+                        $dbMetadata->opd_code = $cachedData['opd_code'] ?? $opdCode;
+                        $dbMetadata->year = $year;
+                    }
                     $dbMetadata->table_html = $cachedData['table_html'];
                     if (!empty($cachedData['title_id'])) $dbMetadata->title_id = $cachedData['title_id'];
                     if (!empty($cachedData['title_en'])) $dbMetadata->title_en = $cachedData['title_en'];

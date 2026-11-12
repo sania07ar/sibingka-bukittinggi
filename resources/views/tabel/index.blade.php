@@ -8816,6 +8816,18 @@
                             keysToRemove.push(k);
                         }
                     }
+                    if (k && (k.includes('8.1.7') || k.includes('8.1.9'))) {
+                        const val = localStorage.getItem(k) || '';
+                        if (val.includes('-2') || val.includes('-3') || val.includes('...')) {
+                            keysToRemove.push(k);
+                        }
+                    }
+                    if (k && k.includes('8.1.6')) {
+                        const val = localStorage.getItem(k) || '';
+                        if (val.includes('Kolom 6') || val.includes('kolom 6')) {
+                            keysToRemove.push(k);
+                        }
+                    }
                 }
                 keysToRemove.forEach(k => localStorage.removeItem(k));
             } catch(e) {}
@@ -14512,7 +14524,7 @@
 
                 if (result.success) {
                     if (typeof showToast === 'function') {
-                        showToast('✅ Berhasil mengimpor data dari Excel!');
+                        showToast('✅ Berhasil mengimpor data menggunakan Laravel Excel!');
                     }
                     if (result.table_html) {
                         try {
@@ -14523,6 +14535,10 @@
                             safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, result.table_html);
                             safeSetLocalStorage(`simonda_table_is_saved_${currentTableCode}_${currentYear}`, '1');
                             safeSetLocalStorage(`simonda_table_source_${currentTableCode}_${currentYear}`, 'excel');
+                            if (result.title_id && typeof getStorageKey === 'function') safeSetLocalStorage(getStorageKey('simonda_table_title_id'), result.title_id);
+                            if (result.title_en && typeof getStorageKey === 'function') safeSetLocalStorage(getStorageKey('simonda_table_title_en'), result.title_en);
+                            if (result.source && typeof getStorageKey === 'function') safeSetLocalStorage(getStorageKey('simonda_table_source_text'), result.source);
+                            if (result.note && typeof getStorageKey === 'function') safeSetLocalStorage(getStorageKey('simonda_table_note'), result.note);
                         } catch(e) {}
                         const tableEl = document.getElementById('dataDisplayTable');
                         if (tableEl) tableEl.innerHTML = result.table_html;
