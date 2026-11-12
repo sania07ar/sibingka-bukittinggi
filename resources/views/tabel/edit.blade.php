@@ -11441,10 +11441,19 @@
 
             // Self-healing tabel 9.4, 5.1.18 & tabel kecamatan: pastikan Kolom 6 selalu diganti dengan Aur Birugo Tigo Baleh
             if (savedHtml && (savedHtml.includes('Kolom 6') || savedHtml.includes('kolom 6'))) {
-                                if (currentTableCode === '2.2.2') {
+                if (currentTableCode === '2.2.2' || savedHtml.includes('Partai') || savedHtml.includes('Pendidikan')) {
                     savedHtml = savedHtml.replace(/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/gi, '<th class="py-3 px-4 font-bold border border-slate-700"><div>S2/S3</div></th>')
                                          .replace(/<th([^>]*)>\s*Kolom\s*6\s*<\/th>/gi, '<th class="py-3 px-4 font-bold border border-slate-700"><div>S2/S3</div></th>')
-                                         .replace(/>\s*Kolom\s*6\s*</gi, '>S2/S3<');
+                                         .replace(/>\s*Kolom\s*6\s*</gi, '>S2/S3<')
+                                         .replace(/Kolom\s*6/gi, 'S2/S3');
+                    safeSetLocalStorage(scopedHtmlKey, savedHtml);
+                    safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                    if (serverDbMetadata) {
+                        serverDbMetadata.table_html = savedHtml;
+                    }
+                } else if (currentTableCode === '4.2.11' || savedHtml.includes('Golongan Darah') || savedHtml.includes('Donatur Darah')) {
+                    savedHtml = savedHtml.replace(/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/gi, '<th class="py-3 px-4 font-bold border border-slate-700"><div>AB</div></th>')
+                                         .replace(/Kolom\s*6/gi, 'AB');
                     safeSetLocalStorage(scopedHtmlKey, savedHtml);
                     safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
                     if (serverDbMetadata) {
@@ -11870,10 +11879,17 @@
             cleanGhostRows(tableEl);
 
             // Jaminan header 2.2.2: Kolom ke-5 adalah S2/S3 (bukan Kolom 6)
-            if (currentTableCode === '2.2.2') {
+            if (currentTableCode === '2.2.2' || (tableEl && (tableEl.innerText.includes('Partai') || tableEl.innerText.includes('Pendidikan')))) {
                 tableEl.querySelectorAll('thead th').forEach(th => {
                     if (/kolom\s*6/i.test(th.innerText.trim())) {
                         th.innerHTML = '<div>S2/S3</div>';
+                    }
+                });
+            }
+            if (currentTableCode === '4.2.11' || (tableEl && tableEl.innerText.includes('Golongan Darah'))) {
+                tableEl.querySelectorAll('thead th').forEach(th => {
+                    if (/kolom\s*6/i.test(th.innerText.trim())) {
+                        th.innerHTML = '<div>AB</div>';
                     }
                 });
             }
@@ -12274,8 +12290,10 @@
                         if (hasSub) {
                             let titleVal = childDivs[0].innerText.trim();
                             let subVal = childDivs[1].innerText.trim();
-                            if (currentTableCode === '2.2.2' && /kolom\s*6/i.test(titleVal)) {
+                            if ((currentTableCode === '2.2.2' || (tableEl && tableEl.innerText.includes('Partai'))) && /kolom\s*6/i.test(titleVal)) {
                                 titleVal = 'S2/S3';
+                            } else if ((currentTableCode === '4.2.11' || (tableEl && tableEl.innerText.includes('Golongan Darah'))) && /kolom\s*6/i.test(titleVal)) {
+                                titleVal = 'AB';
                             }
                             th.innerHTML = `
                                 <div class="flex flex-col gap-1 items-center justify-center p-1 w-full">
@@ -12295,8 +12313,10 @@
                             `;
                         } else {
                             let titleVal = childDivs.length === 1 ? childDivs[0].innerText.trim() : th.innerText.trim();
-                            if (currentTableCode === '2.2.2' && /kolom\s*6/i.test(titleVal)) {
+                            if ((currentTableCode === '2.2.2' || (tableEl && tableEl.innerText.includes('Partai'))) && /kolom\s*6/i.test(titleVal)) {
                                 titleVal = 'S2/S3';
+                            } else if ((currentTableCode === '4.2.11' || (tableEl && tableEl.innerText.includes('Golongan Darah'))) && /kolom\s*6/i.test(titleVal)) {
+                                titleVal = 'AB';
                             }
                             th.innerHTML = `
                                 <div class="flex items-center justify-center p-1 w-full">
@@ -12864,8 +12884,10 @@
                 if (titleInp && subInp) {
                     let title = (titleInp.value !== undefined ? titleInp.value : titleInp.getAttribute('value') || '').trim();
                     let sub = (subInp.value !== undefined ? subInp.value : subInp.getAttribute('value') || '').trim();
-                    if (currentTableCode === '2.2.2' && /kolom\s*6/i.test(title)) {
+                    if ((currentTableCode === '2.2.2' || (tableEl && tableEl.innerText.includes('Partai'))) && /kolom\s*6/i.test(title)) {
                         title = 'S2/S3';
+                    } else if ((currentTableCode === '4.2.11' || (tableEl && tableEl.innerText.includes('Golongan Darah'))) && /kolom\s*6/i.test(title)) {
+                        title = 'AB';
                     }
                     if (sub) {
                         th.innerHTML = `<div>${title}</div><div class="italic font-normal text-[11px] sm:text-xs">${sub}</div>`;
@@ -12874,8 +12896,10 @@
                     }
                 } else if (titleInp) {
                     let title = (titleInp.value !== undefined ? titleInp.value : titleInp.getAttribute('value') || '').trim();
-                    if (currentTableCode === '2.2.2' && /kolom\s*6/i.test(title)) {
+                    if ((currentTableCode === '2.2.2' || (tableEl && tableEl.innerText.includes('Partai'))) && /kolom\s*6/i.test(title)) {
                         title = 'S2/S3';
+                    } else if ((currentTableCode === '4.2.11' || (tableEl && tableEl.innerText.includes('Golongan Darah'))) && /kolom\s*6/i.test(title)) {
+                        title = 'AB';
                     }
                     th.innerHTML = `<div>${title}</div>`;
                 } else if (numInp) {

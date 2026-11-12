@@ -377,18 +377,25 @@ class TabelOpdController extends Controller
     protected function applyExcelRowsToTableHtml(string $tableHtml, array $excelRows, string $tableCode = ''): string
     {
         // 1. Auto-heal Header Kolom 6, Taksi, & Kecamatan
-        if ($tableCode === '2.2.2' || str_contains($tableHtml, 'Partai') || str_contains($tableHtml, 'Kolom 6') || str_contains($tableHtml, 'kolom 6')) {
+        if ($tableCode === '2.2.2' || stripos($tableHtml, 'Partai') !== false || stripos($tableHtml, 'Pendidikan') !== false) {
             $tableHtml = preg_replace('/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/i', '<th class="py-3 px-4 font-bold border border-slate-700"><div>S2/S3</div></th>', $tableHtml);
             $tableHtml = preg_replace('/<th([^>]*)>\s*Kolom\s*6\s*<\/th>/i', '<th class="py-3 px-4 font-bold border border-slate-700"><div>S2/S3</div></th>', $tableHtml);
             $tableHtml = preg_replace('/>\s*Kolom\s*6\s*</i', '>S2/S3<', $tableHtml);
+            $tableHtml = preg_replace('/Kolom\s*6/i', 'S2/S3', $tableHtml);
         }
-        if ($tableCode === '8.1.6' || (str_contains($tableHtml, 'Bemo') && str_contains($tableHtml, 'Bus Umum'))) {
+        if ($tableCode === '4.2.11' || stripos($tableHtml, 'Donatur Darah') !== false || stripos($tableHtml, 'Golongan Darah') !== false) {
+            $tableHtml = preg_replace('/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/i', '<th class="py-3 px-4 font-bold border border-slate-700"><div>AB</div></th>', $tableHtml);
+            $tableHtml = preg_replace('/Kolom\s*6/i', 'AB', $tableHtml);
+        }
+        if ($tableCode === '8.1.6' || (stripos($tableHtml, 'Bemo') !== false && stripos($tableHtml, 'Bus Umum') !== false)) {
             $tableHtml = preg_replace('/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/i', '<th class="py-3 px-4 font-bold border border-slate-700"><div>Taksi</div><div class="italic font-normal text-[11px] sm:text-xs">Taxi</div></th>', $tableHtml);
             $tableHtml = preg_replace('/>\s*Kolom\s*6\s*</i', '>Taksi/Taxi<', $tableHtml);
+            $tableHtml = preg_replace('/Kolom\s*6/i', 'Taksi/Taxi', $tableHtml);
         }
-        if (in_array($tableCode, ['9.4', '5.1.18']) || str_contains($tableHtml, 'Mandiangin') || str_contains($tableHtml, 'Guguk Panjang')) {
+        if (in_array($tableCode, ['9.4', '5.1.18']) || stripos($tableHtml, 'Guguk Panjang') !== false) {
             $tableHtml = preg_replace('/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/i', '<th class="py-3 px-4 font-bold border border-slate-700"><div>Aur Birugo Tigo Baleh</div></th>', $tableHtml);
             $tableHtml = preg_replace('/>\s*Kolom\s*6\s*</i', '>Aur Birugo Tigo Baleh<', $tableHtml);
+            $tableHtml = preg_replace('/Kolom\s*6/i', 'Aur Birugo Tigo Baleh', $tableHtml);
         }
 
         // 2. Parse baris data dari Excel hasil bacaan Laravel Excel

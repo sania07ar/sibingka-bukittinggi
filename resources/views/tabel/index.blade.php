@@ -9621,10 +9621,19 @@
                         localStorage.removeItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`);
                     }
                 }
-                                if (currentTableCode === '2.2.2') {
+                                if (currentTableCode === '2.2.2' || savedHtml.includes('Partai') || savedHtml.includes('Pendidikan')) {
                     savedHtml = savedHtml.replace(/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/gi, '<th class="py-3 px-4 font-bold border border-slate-700"><div>S2/S3</div></th>')
                                          .replace(/<th([^>]*)>\s*Kolom\s*6\s*<\/th>/gi, '<th class="py-3 px-4 font-bold border border-slate-700"><div>S2/S3</div></th>')
-                                         .replace(/>\s*Kolom\s*6\s*</gi, '>S2/S3<');
+                                         .replace(/>\s*Kolom\s*6\s*</gi, '>S2/S3<')
+                                         .replace(/Kolom\s*6/gi, 'S2/S3');
+                    safeSetLocalStorage(scopedHtmlKey, savedHtml);
+                    safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                    if (serverDbMetadata) {
+                        serverDbMetadata.table_html = savedHtml;
+                    }
+                } else if (currentTableCode === '4.2.11' || savedHtml.includes('Golongan Darah') || savedHtml.includes('Donatur Darah')) {
+                    savedHtml = savedHtml.replace(/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/gi, '<th class="py-3 px-4 font-bold border border-slate-700"><div>AB</div></th>')
+                                         .replace(/Kolom\s*6/gi, 'AB');
                     safeSetLocalStorage(scopedHtmlKey, savedHtml);
                     safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
                     if (serverDbMetadata) {
@@ -10223,10 +10232,17 @@
             cleanGhostRows(tableEl);
 
             // Jaminan header 2.2.2: Kolom ke-5 adalah S2/S3 (bukan Kolom 6)
-            if (currentTableCode === '2.2.2') {
+            if (currentTableCode === '2.2.2' || (tableEl && (tableEl.innerText.includes('Partai') || tableEl.innerText.includes('Pendidikan')))) {
                 tableEl.querySelectorAll('thead th').forEach(th => {
                     if (/kolom\s*6/i.test(th.innerText.trim())) {
                         th.innerHTML = '<div>S2/S3</div>';
+                    }
+                });
+            }
+            if (currentTableCode === '4.2.11' || (tableEl && tableEl.innerText.includes('Golongan Darah'))) {
+                tableEl.querySelectorAll('thead th').forEach(th => {
+                    if (/kolom\s*6/i.test(th.innerText.trim())) {
+                        th.innerHTML = '<div>AB</div>';
                     }
                 });
             }

@@ -30,11 +30,18 @@ class TableOpdExport implements FromView, ShouldAutoSize, WithTitle, WithStyles
     {
         $rawHtml = $this->tableHtml ?? '';
 
-        // Auto-heal Kolom 6 jika tabel 2.2.2 diekspor
-        if ($this->tableCode === '2.2.2' && (str_contains($rawHtml, 'Kolom 6') || str_contains($rawHtml, 'kolom 6'))) {
-            $rawHtml = preg_replace('/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/i', '<th class="py-3 px-4 font-bold border border-slate-700"><div>S2/S3</div></th>', $rawHtml);
-            $rawHtml = preg_replace('/<th([^>]*)>\s*Kolom\s*6\s*<\/th>/i', '<th class="py-3 px-4 font-bold border border-slate-700"><div>S2/S3</div></th>', $rawHtml);
-            $rawHtml = preg_replace('/>\s*Kolom\s*6\s*</i', '>S2/S3<', $rawHtml);
+        // Auto-heal Kolom 6 jika diekspor
+        if ($this->tableCode === '2.2.2' || stripos($rawHtml, 'Partai') !== false || stripos($rawHtml, 'Pendidikan') !== false) {
+            $rawHtml = preg_replace('/Kolom\s*6/i', 'S2/S3', $rawHtml);
+        }
+        if ($this->tableCode === '4.2.11' || stripos($rawHtml, 'Donatur Darah') !== false || stripos($rawHtml, 'Golongan Darah') !== false) {
+            $rawHtml = preg_replace('/Kolom\s*6/i', 'AB', $rawHtml);
+        }
+        if ($this->tableCode === '8.1.6' || (stripos($rawHtml, 'Bemo') !== false && stripos($rawHtml, 'Bus Umum') !== false)) {
+            $rawHtml = preg_replace('/Kolom\s*6/i', 'Taksi / Taxi', $rawHtml);
+        }
+        if (in_array($this->tableCode, ['9.4', '5.1.18']) || stripos($rawHtml, 'Guguk Panjang') !== false) {
+            $rawHtml = preg_replace('/Kolom\s*6/i', 'Aur Birugo Tigo Baleh', $rawHtml);
         }
 
         // Bersihkan tag div dwibahasa menjadi spasi / slash yang rapi
