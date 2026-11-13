@@ -1290,7 +1290,7 @@ class TabelOpdController extends Controller
                     'source' => $source,
                     'note' => '',
                     'table_html' => $fixedHtml,
-                    'source_type' => 'template',
+                    'source_type' => 'excel',
                     'is_saved' => true,
                 ]
             );
@@ -1334,7 +1334,7 @@ class TabelOpdController extends Controller
                     'source' => $source,
                     'note' => '',
                     'table_html' => $fixedHtml,
-                    'source_type' => 'template',
+                    'source_type' => 'excel',
                     'is_saved' => true,
                 ]
             );
@@ -1450,7 +1450,7 @@ class TabelOpdController extends Controller
                     'source' => $source,
                     'note' => '',
                     'table_html' => $fixedHtml,
-                    'source_type' => 'template',
+                    'source_type' => in_array($year, [2023, 2024, 2025]) ? 'excel' : 'template',
                     'is_saved' => in_array($year, [2023, 2024, 2025]),
                 ]
             );
@@ -1531,7 +1531,7 @@ class TabelOpdController extends Controller
                     'source' => $source,
                     'note' => '',
                     'table_html' => $fixedHtml,
-                    'source_type' => 'template',
+                    'source_type' => in_array($year, [2023, 2024, 2025]) ? 'excel' : 'template',
                     'is_saved' => in_array($year, [2023, 2024, 2025]),
                 ]
             );
@@ -1577,7 +1577,7 @@ class TabelOpdController extends Controller
                     'source' => $source,
                     'note' => '',
                     'table_html' => $fixedHtml,
-                    'source_type' => 'template',
+                    'source_type' => 'excel',
                     'is_saved' => true,
                 ]
             );
@@ -2826,12 +2826,15 @@ class TabelOpdController extends Controller
             'bps' => ['custom_bps', 'bps'],
             default => ['custom', 'custom_opd']
         };
-
-        $query = TabelMetadata::whereIn('source_type', $sourceTypes);
+        // Juga sertakan tabel lama yang tersimpan sbg 'template' akibat bug (backward compat)
+        $allSourceTypes = array_merge($sourceTypes, ['template']);
+        $query = TabelMetadata::whereIn('source_type', $allSourceTypes);
         if ($opdCode) {
             $cleanOpd = str_pad($opdCode, 2, '0', STR_PAD_LEFT);
             $query->whereIn('opd_code', array_unique([$opdCode, $cleanOpd]));
         }
+        // Hanya ambil tabel yang punya judul (tabel kustom asli, bukan template sistem)
+        $query->whereNotNull('title_id')->where('title_id', '!=', '');
 
         $tables = $query->select('table_code as code', 'opd_code', 'title_id as title', 'title_en as titleEn')
             ->distinct()
@@ -2888,7 +2891,7 @@ class TabelOpdController extends Controller
                 [
                     'title_id' => $titleId,
                     'title_en' => $titleEn,
-                    'source_type' => 'template',
+                    'source_type' => $sourceType,
                     'table_html' => $starterHtml,
                     'is_saved' => false,
                 ]
