@@ -7,8 +7,8 @@
     <meta name="description" content="SiBingka Kota Bukittinggi - Sistem Informasi Bukittinggi dalam Angka - Badan Pusat Statistik Kota Bukittinggi">
 
     <!-- Favicon Logo BPS -->
-    <link rel="icon" type="image/png" href="{{ asset('images/bps-symbol.png') }}">
-    <link rel="shortcut icon" type="image/png" href="{{ asset('images/bps-symbol.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/sibingka-icon.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ asset('images/sibingka-icon.png') }}">
 
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -123,7 +123,7 @@
     <!-- 2. HEADER / TOP NAVBAR (BPS, BerAKHLAK, PROFIL & LOGOUT)                   -->
     <!-- ========================================================================= -->
     <header class="w-full bg-[#f0f2f5]/95 backdrop-blur-md border-b border-slate-200/70 py-2 sm:py-2.5 px-3 sm:px-8 lg:px-12 relative z-20 shrink-0">
-        <div class="max-w-7xl mx-auto flex flex-row items-center justify-between gap-3 sm:gap-6 flex-wrap sm:flex-nowrap">
+        <div class="max-w-7xl mx-auto grid items-center gap-2 sm:gap-4" style="grid-template-columns: 1fr auto 1fr;">
             
             <!-- Left: BPS Kota Bukittinggi Logo & Title -->
             @php
@@ -133,7 +133,7 @@
             @endphp
             <a href="{{ $navHomeUrl }}" class="flex items-center space-x-2 sm:space-x-2.5 transition-transform hover:scale-[1.02] no-underline text-inherit shrink-0">
                 <img src="{{ asset('images/bps-symbol.png') }}" alt="Logo BPS" class="h-7 sm:h-8 md:h-9 w-auto object-contain">
-                <div class="flex flex-col justify-center leading-tight">
+                <div class="hidden sm:flex flex-col justify-center leading-tight">
                     <span class="text-[9px] sm:text-[11px] md:text-xs font-black italic text-slate-900 tracking-tight uppercase font-sans">
                         BADAN PUSAT STATISTIK
                     </span>
@@ -143,8 +143,19 @@
                 </div>
             </a>
 
+            <!-- Center: Logo SiBingka (logo aplikasi) -->
+            <div class="flex items-center justify-center">
+                <a href="{{ $navHomeUrl }}" class="flex items-center justify-center gap-2.5 sm:gap-3 transition-transform hover:scale-[1.02] no-underline shrink-0" title="SiBingka - Sistem Informasi Bukittinggi dalam Angka">
+                    <img src="{{ asset('images/sibingka-logo.png') }}" alt="Logo SiBingka" class="h-10 sm:h-12 md:h-14 w-auto object-contain drop-shadow-sm">
+                    <div class="hidden lg:flex flex-col justify-center leading-tight text-left">
+                        <span class="text-xl font-black tracking-tight text-slate-900">SiBingka</span>
+                        <span class="text-[11px] font-medium text-slate-500">Sistem Informasi Bukittinggi dalam Angka</span>
+                    </div>
+                </a>
+            </div>
+
             <!-- Right: BerAKHLAK Logo & Optional Quick User Actions -->
-            <div class="flex items-center justify-end space-x-3 shrink-0">
+            <div class="flex items-center justify-end justify-self-end space-x-3 shrink-0">
                 <img src="{{ asset('images/berakhlak-clean.png') }}" alt="BerAKHLAK" class="h-6 sm:h-8 md:h-9 w-auto object-contain">
 
                 @if(session()->has('user'))

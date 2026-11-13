@@ -7,6 +7,10 @@
                     <a href="{{ route('home') }}" class="transition-transform hover:scale-105 shrink-0" title="Kembali ke Beranda">
                         <img src="{{ asset('images/bps-symbol.png') }}" alt="Logo BPS" class="h-8 sm:h-9 md:h-10 w-auto object-contain">
                     </a>
+                    <div class="h-8 sm:h-9 w-[1px] bg-slate-300/80 shrink-0"></div>
+                    <a href="{{ route('home') }}" class="transition-transform hover:scale-105 shrink-0" title="SiBingka - Sistem Informasi Bukittinggi dalam Angka">
+                        <img src="{{ asset('images/sibingka-logo.png') }}" alt="Logo SiBingka" class="h-9 sm:h-10 md:h-12 w-auto object-contain drop-shadow-sm">
+                    </a>
                     <div class="flex flex-col">
                         <div class="flex items-center space-x-2">
                             <h1 class="text-sm sm:text-base md:text-lg font-black tracking-tight text-slate-900 leading-tight">

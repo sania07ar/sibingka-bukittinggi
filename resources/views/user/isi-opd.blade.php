@@ -9,8 +9,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!-- Favicon Logo BPS -->
-    <link rel="icon" type="image/png" href="{{ asset('images/bps-symbol.png') }}">
-    <link rel="shortcut icon" type="image/png" href="{{ asset('images/bps-symbol.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/sibingka-icon.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ asset('images/sibingka-icon.png') }}">
     
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

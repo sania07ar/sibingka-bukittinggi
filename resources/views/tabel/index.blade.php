@@ -6,8 +6,8 @@
     <title>Tabel Data Statistik Sektoral - SiBingka Kota Bukittinggi</title>
     
     <!-- Favicon Logo BPS -->
-    <link rel="icon" type="image/png" href="{{ asset('images/bps-symbol.png') }}">
-    <link rel="shortcut icon" type="image/png" href="{{ asset('images/bps-symbol.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/sibingka-icon.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ asset('images/sibingka-icon.png') }}">
     
     <!-- Google Fonts: Inter (Standar Formal Pemerintahan & Publikasi Statistik) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -343,6 +343,7 @@
                     <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-3">
                             <img src="{{ asset('images/bps-symbol.png') }}" alt="Logo BPS" class="h-10 w-auto object-contain">
+                            <img src="{{ asset('images/sibingka-logo.png') }}" alt="Logo SiBingka" class="h-10 w-auto object-contain">
                             <div>
                                 <h1 class="text-xs font-black tracking-wider text-slate-900 uppercase leading-tight">
                                     BADAN PUSAT STATISTIK KOTA BUKITTINGGI

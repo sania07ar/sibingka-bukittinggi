@@ -7,8 +7,8 @@
     <meta name="description" content="Portal Masuk Khusus Administrator SiBingka Kota Bukittinggi - Sistem Informasi Bukittinggi dalam Angka - Badan Pusat Statistik Kota Bukittinggi">
     
     <!-- Favicon Logo BPS -->
-    <link rel="icon" type="image/png" href="{{ asset('images/bps-symbol.png') }}">
-    <link rel="shortcut icon" type="image/png" href="{{ asset('images/bps-symbol.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/sibingka-icon.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ asset('images/sibingka-icon.png') }}">
     
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -140,7 +140,7 @@
     </div>
 
     <!-- HEADER / LOGO BAR -->
-    @include('partials.navbar')
+    @include('partials.navbar', ['hideCenterLogo' => true])
 
     <!-- MAIN LOGIN CONTAINER (Compact 2-Column Layout) -->
     <main class="relative z-10 flex-1 flex items-center justify-center px-4 sm:px-8 py-2 min-h-0">
@@ -149,9 +149,9 @@
             <!-- LEFT COLUMN: BRAND LOGO & TITLE (Compact) -->
             <div class="flex flex-col items-center text-center justify-center space-y-2 md:pr-4">
                 
-                <!-- BPS Logo -->
+                <!-- Logo SiBingka -->
                 <div class="transition-transform duration-300 hover:scale-105">
-                    <img src="{{ asset('images/bps-symbol.png') }}" alt="Logo BPS" class="w-20 sm:w-24 h-auto object-contain drop-shadow-xs">
+                    <img src="{{ asset('images/sibingka-logo.png') }}" alt="Logo SiBingka" class="w-32 sm:w-40 h-auto object-contain drop-shadow-sm">
                 </div>
 
                 <!-- Brand Name: SiBingka Digital Application Style -->

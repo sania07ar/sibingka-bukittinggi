@@ -6,8 +6,8 @@
     <title>SiBingka Kota Bukittinggi - {{ (session('user.role') === 'walidata') ? 'Wali Data (Diskominfo)' : 'Administrator BPS Kota Bukittinggi' }}</title>
     
     <!-- Favicon Logo BPS -->
-    <link rel="icon" type="image/png" href="{{ asset('images/bps-symbol.png') }}">
-    <link rel="shortcut icon" type="image/png" href="{{ asset('images/bps-symbol.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/sibingka-icon.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ asset('images/sibingka-icon.png') }}">
     
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -219,46 +219,35 @@
     <!-- 1. HEADER / TOP NAVBAR                                   -->
     <!-- ======================================================== -->
     <header class="w-full bg-[#f0f2f5]/95 backdrop-blur-md border-b border-slate-200/70 relative z-20 shrink-0">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-3 sm:gap-4">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 grid items-center gap-2 sm:gap-4" style="grid-template-columns: 1fr auto 1fr;">
             
             <!-- Left: Logo & Brand -->
             <a href="{{ route('home') }}" class="flex items-center gap-2.5 sm:gap-3 group shrink-0 no-underline">
                 <img src="{{ asset('images/bps-symbol.png') }}" alt="Logo BPS" class="h-7 sm:h-8 w-auto object-contain transition-transform group-hover:scale-105">
-                <div class="flex flex-col justify-center leading-tight">
-                    <span class="text-[11px] sm:text-xs font-black text-slate-900 tracking-tight uppercase font-sans">
+                <div class="hidden sm:flex flex-col justify-center leading-tight">
+                    <span class="text-[11px] sm:text-xs font-black italic text-slate-900 tracking-tight uppercase font-sans">
                         BADAN PUSAT STATISTIK
                     </span>
-                    <span class="text-[9px] sm:text-[10px] font-semibold italic text-slate-600 tracking-wide uppercase font-sans">
+                    <span class="text-[9px] sm:text-[10px] font-black italic text-slate-800 tracking-tight uppercase font-sans">
                         KOTA BUKITTINGGI
                     </span>
                 </div>
             </a>
 
-            <!-- Center: Navigation Links -->
-            <nav class="hidden md:flex items-center space-x-6 lg:space-x-8 text-xs sm:text-sm font-semibold" id="topNavbar">
-                <a href="#beranda-section" 
-                   data-nav="beranda"
-                   onclick="selectNavTab('beranda', event)"
-                   class="nav-tab text-[#f95a00] border-b-2 border-[#f95a00] pb-1 transition-all cursor-pointer">
-                    Beranda
+            <!-- Center: Logo SiBingka -->
+            <div class="flex items-center justify-center">
+                <a href="{{ route('home') }}" class="flex items-center justify-center gap-2.5 sm:gap-3 transition-transform hover:scale-[1.02] no-underline shrink-0" title="SiBingka - Sistem Informasi Bukittinggi dalam Angka">
+                    <img src="{{ asset('images/sibingka-logo.png') }}" alt="Logo SiBingka" class="h-10 sm:h-12 md:h-14 w-auto object-contain drop-shadow-sm">
+                    <div class="hidden lg:flex flex-col justify-center leading-tight text-left">
+                        <span class="text-xl font-black tracking-tight text-slate-900">SiBingka</span>
+                        <span class="text-[11px] font-medium text-slate-500">Sistem Informasi Bukittinggi dalam Angka</span>
+                    </div>
                 </a>
-                @if($isAdmin)
-                    <a href="{{ route('kelola-akun') }}" 
-                       data-nav="kelola-akun"
-                       class="nav-tab text-slate-700 hover:text-[#f95a00] border-b-2 border-transparent hover:border-[#f95a00] pb-1 transition-all cursor-pointer">
-                        Kelola Akun
-                    </a>
-                @endif
-                <a href="#tentang-section" 
-                   data-nav="tentang"
-                   onclick="selectNavTab('tentang', event)"
-                   class="nav-tab text-slate-700 hover:text-[#f95a00] border-b-2 border-transparent hover:border-[#f95a00] pb-1 transition-all cursor-pointer">
-                    Tentang
-                </a>
-            </nav>
+            </div>
 
-            <!-- Right: Actions & Official Badges -->
-            <div class="flex items-center gap-2.5 sm:gap-3.5 shrink-0">
+
+<!-- Right: Actions & Official Badges -->
+            <div class="flex items-center gap-2.5 sm:gap-3.5 shrink-0 justify-self-end">
                 <div class="hidden md:flex items-center">
                     <img src="{{ asset('images/berakhlak-clean.png') }}" alt="BerAKHLAK" class="h-6 sm:h-7 w-auto object-contain">
                 </div>
@@ -291,6 +280,33 @@
                         </button>
                     </form>
                 </div>
+            </div>
+        </div>
+
+        <!-- Sub-navigation -->
+        <div class="hidden md:block border-t border-slate-200/70 bg-white/40">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1.5 flex justify-center">
+                <nav class="hidden md:flex items-center space-x-6 lg:space-x-8 text-xs sm:text-sm font-semibold" id="topNavbar">
+                    <a href="#beranda-section" 
+                       data-nav="beranda"
+                       onclick="selectNavTab('beranda', event)"
+                       class="nav-tab text-[#f95a00] border-b-2 border-[#f95a00] pb-1 transition-all cursor-pointer">
+                        Beranda
+                    </a>
+                    @if($isAdmin)
+                        <a href="{{ route('kelola-akun') }}" 
+                           data-nav="kelola-akun"
+                           class="nav-tab text-slate-700 hover:text-[#f95a00] border-b-2 border-transparent hover:border-[#f95a00] pb-1 transition-all cursor-pointer">
+                            Kelola Akun
+                        </a>
+                    @endif
+                    <a href="#tentang-section" 
+                       data-nav="tentang"
+                       onclick="selectNavTab('tentang', event)"
+                       class="nav-tab text-slate-700 hover:text-[#f95a00] border-b-2 border-transparent hover:border-[#f95a00] pb-1 transition-all cursor-pointer">
+                        Tentang
+                    </a>
+                </nav>
             </div>
         </div>
     </header>
@@ -588,7 +604,7 @@
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
             <div class="flex items-center gap-3 mb-4">
-                <img src="{{ asset('images/bps-symbol.png') }}" alt="Logo BPS" class="h-8 w-auto">
+                <img src="{{ asset('images/sibingka-logo.png') }}" alt="Logo SiBingka" class="h-10 w-auto">
                 <div>
                     <h3 class="font-bold text-slate-800 text-lg">Tentang SiBingka</h3>
                     <p class="text-xs text-slate-600 font-semibold">Badan Pusat Statistik Kota Bukittinggi</p>
