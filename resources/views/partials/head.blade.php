@@ -1,7 +1,7 @@
 <!-- Meta Tags -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{ $title ?? 'SiAngka Kota Bukittinggi | BPS Kota Bukittinggi' }}</title>
+<title>{{ $title ?? 'SiBingka Kota Bukittinggi | BPS Kota Bukittinggi' }}</title>
 
 <!-- Favicon Logo BPS -->
 <link rel="icon" type="image/png" href="{{ asset('images/bps-symbol.png') }}">

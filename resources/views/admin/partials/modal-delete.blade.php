@@ -12,7 +12,7 @@
         <!-- Title & Warning -->
         <h3 class="text-lg font-black text-slate-900 mb-1">Konfirmasi Hapus Akun</h3>
         <p class="text-xs text-slate-500 mb-4">
-            Apakah Anda yakin ingin menghapus akun berikut dari sistem SiAngka Kota Bukittinggi?
+            Apakah Anda yakin ingin menghapus akun berikut dari sistem SiBingka Kota Bukittinggi?
         </p>
 
         <!-- Detail Box -->

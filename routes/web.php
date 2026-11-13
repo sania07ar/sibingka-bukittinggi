@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Web Routes - SiMonDa Bukittinggi dalam Angka
+| Web Routes - SiBingka - Sistem Informasi Bukittinggi dalam Angka
 |--------------------------------------------------------------------------
 */
 
@@ -16,9 +16,9 @@ Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::any('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Protected Routes (Requires Login)
-Route::middleware(['simonda.auth'])->group(function () {
+Route::middleware(['sibingka.auth'])->group(function () {
 
-    // 1. Halaman Pilihan Portal (Setelah Login: Kelola Akun atau Masuk SiMonDa)
+    // 1. Halaman Pilihan Portal (Setelah Login: Kelola Akun atau Masuk SiBingka)
     Route::get('/portal', [AuthController::class, 'showPortal'])->name('portal');
 
     // 2. Modul Kelola Akun Administrator & Akun Dinas
@@ -34,14 +34,14 @@ Route::middleware(['simonda.auth'])->group(function () {
     Route::post('/kelola-akun/dinas/batch-seed', [AuthController::class, 'batchSeedDinasUsers'])->name('kelola-akun.dinas.batch-seed');
     Route::post('/kelola-akun/instansi/batch-seed', [AuthController::class, 'batchSeedInstansiUsers'])->name('kelola-akun.instansi.batch-seed');
 
-    // 3. Modul Utama SiMonDa Bukittinggi (Berisi Isi Data OPD, Instansi, BPS, Monitoring, dll)
+    // 3. Modul Utama SiBingka Bukittinggi (Berisi Isi Data OPD, Instansi, BPS, Monitoring, dll)
     Route::get('/', function () {
         return view('welcome');
     })->name('home');
 
-    Route::get('/simonda', function () {
+    Route::get('/sibingka', function () {
         return view('welcome');
-    })->name('simonda');
+    })->name('sibingka');
 
     Route::get('/isi-data-opd', function () {
         $customTables = \App\Models\TabelMetadata::whereIn('source_type', ['custom', 'custom_opd'])

@@ -107,7 +107,7 @@
                         </div>
                         <span class="text-[11px] font-extrabold text-slate-800 uppercase tracking-wider">Pilihan Format Ekspor</span>
                     </div>
-                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">SiAngka</span>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">SiBingka</span>
                 </div>
 
                 <div class="p-1.5 space-y-1">

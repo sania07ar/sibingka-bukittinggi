@@ -54,7 +54,7 @@
             <!-- + Buat Akun Baru -->
             <button type="button" 
                     onclick="openCreateModal()" 
-                    class="btn-simonda text-xs">
+                    class="btn-sibingka text-xs">
                 <i class="fa-solid fa-user-plus mr-1.5 text-xs"></i>
                 <span>Buat Akun Baru</span>
             </button>

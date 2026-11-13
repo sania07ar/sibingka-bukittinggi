@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Halaman Edit Data Tabel Statistik Sektoral - SiAngka Kota Bukittinggi BPS">
-    <title>Edit Data Tabel - SiAngka Kota Bukittinggi</title>
+    <meta name="description" content="Halaman Edit Data Tabel Statistik Sektoral - SiBingka Kota Bukittinggi BPS">
+    <title>Edit Data Tabel - SiBingka Kota Bukittinggi</title>
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
@@ -16,7 +16,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 
     <!-- Master Tables Catalog (All OPD & Instansi) -->
-    <script src="{{ asset('simonda-catalogs.js') }}"></script>
+    <script src="{{ asset('sibingka-catalogs.js') }}"></script>
     <!-- Table Helpers & Schemas -->
     <script src="{{ asset('js/tabel/helpers.js') }}?v={{ time() }}"></script>
     <script src="{{ asset('js/tabel/schemas-edit.js') }}?v={{ time() }}"></script>
@@ -166,9 +166,9 @@
     <!-- Decorative Top Background Glow -->
     <div class="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-64 bg-gradient-to-b from-orange-100/40 via-orange-50/20 to-transparent pointer-events-none -z-10"></div>
 
-    <!-- Background SiAngka Jam Gadang Watermark -->
+    <!-- Background SiBingka Jam Gadang Watermark -->
     <div class="fixed inset-0 pointer-events-none -z-10 overflow-hidden flex items-center justify-center opacity-15 select-none">
-        <img src="{{ asset('images/siangka-watermark-jamgadang.jpg') }}" alt="Watermark SiAngka Jam Gadang" class="w-[850px] sm:w-[1100px] lg:w-[1300px] max-w-none transform -translate-x-16 sm:-translate-x-28 -translate-y-6 object-contain mix-blend-multiply">
+        <img src="{{ asset('images/sibingka-watermark-jamgadang.jpg') }}" alt="Watermark SiBingka Jam Gadang" class="w-[850px] sm:w-[1100px] lg:w-[1300px] max-w-none transform -translate-x-16 sm:-translate-x-28 -translate-y-6 object-contain mix-blend-multiply">
     </div>
 
     <!-- MAIN WRAPPER -->
@@ -178,7 +178,7 @@
         <header class="w-full bg-white/90 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-40 transition-all shadow-2xs">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-2.5 sm:py-3 flex items-center justify-between">
                 
-                <!-- Left: Logo BPS & Title SiAngka -->
+                <!-- Left: Logo BPS & Title SiBingka -->
                 <div class="flex items-center space-x-3 sm:space-x-4">
                     <a href="{{ route('home') }}" class="transition-transform hover:scale-105 shrink-0" title="Kembali ke Beranda">
                         <img src="{{ asset('images/bps-symbol.png') }}" alt="Logo BPS" class="h-8 sm:h-9 md:h-10 w-auto object-contain">
@@ -186,14 +186,14 @@
                     <div class="flex flex-col">
                         <div class="flex items-center space-x-2">
                             <h1 class="text-sm sm:text-base md:text-lg font-black tracking-tight text-slate-900 leading-tight">
-                                SiAngka <span class="font-bold text-[#f95a00] text-xs sm:text-sm">Kota Bukittinggi</span>
+                                SiBingka <span class="font-bold text-[#f95a00] text-xs sm:text-sm">Kota Bukittinggi</span>
                             </h1>
                             <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200/90 font-bold text-[10px] tracking-wider uppercase">
                                 Editor Data
                             </span>
                         </div>
                         <p class="text-[11px] sm:text-xs text-slate-500 font-medium hidden sm:block">
-                            Sistem Informasi Data Daerah dalam Angka Bukittinggi
+                            Sistem Informasi Bukittinggi dalam Angka
                         </p>
                     </div>
                 </div>
@@ -557,9 +557,9 @@
     </div>
 
 
-    <!-- 1. GLOBAL SIANGKA CONFIGURATION & STATE (HARUS PERTAMA SEBELUM MODUL JS LAINNYA) -->
+    <!-- 1. GLOBAL SIBINGKA CONFIGURATION & STATE (HARUS PERTAMA SEBELUM MODUL JS LAINNYA) -->
     <script>
-        window.SiAngkaConfig = {
+        window.SiBingkaConfig = {
             csrfToken: '{{ csrf_token() }}',
             currentOpdCode: '{{ $currentOpdCode ?? "01" }}',
             currentTableCode: '{{ $currentTableCode ?? "1.1.6" }}',
@@ -587,16 +587,16 @@
         };
 
         // Sinkronisasi variabel ke global window agar kompatibel 100%
-        window.currentOpdCode = window.SiAngkaConfig.currentOpdCode;
-        window.currentTableCode = window.SiAngkaConfig.currentTableCode;
-        window.currentYear = window.SiAngkaConfig.currentYear;
-        window.currentType = window.SiAngkaConfig.currentType;
-        window.csrfToken = window.SiAngkaConfig.csrfToken;
-        window.serverDbDataStore = window.SiAngkaConfig.serverDbDataStore;
-        window.serverDbMetadata = window.SiAngkaConfig.serverDbMetadata;
-        window.serverDbFallbackMetadata = window.SiAngkaConfig.serverDbFallbackMetadata;
-        window.serverDbCustomTables = window.SiAngkaConfig.serverDbCustomTables;
-        window.currentUserData = window.SiAngkaConfig.currentUserData;
+        window.currentOpdCode = window.SiBingkaConfig.currentOpdCode;
+        window.currentTableCode = window.SiBingkaConfig.currentTableCode;
+        window.currentYear = window.SiBingkaConfig.currentYear;
+        window.currentType = window.SiBingkaConfig.currentType;
+        window.csrfToken = window.SiBingkaConfig.csrfToken;
+        window.serverDbDataStore = window.SiBingkaConfig.serverDbDataStore;
+        window.serverDbMetadata = window.SiBingkaConfig.serverDbMetadata;
+        window.serverDbFallbackMetadata = window.SiBingkaConfig.serverDbFallbackMetadata;
+        window.serverDbCustomTables = window.SiBingkaConfig.serverDbCustomTables;
+        window.currentUserData = window.SiBingkaConfig.currentUserData;
         window.tableSchemas = window.tableSchemas || {};
         window.isEditMode = true;
     </script>

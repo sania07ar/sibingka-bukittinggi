@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    @include('partials.head', ['title' => 'Pilih Layanan - SiAngka Kota Bukittinggi | BPS Kota Bukittinggi'])
+    @include('partials.head', ['title' => 'Pilih Layanan - SiBingka Kota Bukittinggi | BPS Kota Bukittinggi'])
     @include('admin.partials.portal-styles')
 </head>
 <body class="min-h-screen w-full bg-[#f1f4f9] text-slate-800 antialiased flex flex-col justify-between relative selection:bg-orange-500 selection:text-white overflow-x-hidden overflow-y-auto">
@@ -73,7 +73,7 @@
                 Pilih Menu Layanan
             </h1>
             <p class="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed max-w-xl mx-auto">
-                Halo, <strong class="text-slate-900">{{ $dinasName }}</strong>! Silakan pilih untuk langsung menginput tabel data atau menuju ke beranda informasi SiAngka.
+                Halo, <strong class="text-slate-900">{{ $dinasName }}</strong>! Silakan pilih untuk langsung menginput tabel data atau menuju ke beranda informasi SiBingka.
             </p>
         </div>
 
@@ -104,7 +104,7 @@
                 </div>
             </a>
 
-            <!-- KARTU 2: BERANDA UTAMA SIANGKA -->
+            <!-- KARTU 2: BERANDA UTAMA SIBINGKA -->
             <a href="{{ route('home') }}" 
                class="portal-card block h-full bg-white/95 backdrop-blur-md rounded-2xl p-5 sm:p-6 border border-slate-200/90 shadow-lg shadow-slate-900/5 relative overflow-hidden flex flex-col justify-between group hover:border-blue-400 hover:shadow-blue-500/10 active:border-blue-400 no-underline text-inherit cursor-pointer">
                 <div>
@@ -115,11 +115,11 @@
                     </div>
 
                     <h2 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight mb-1 group-hover:text-blue-600 transition-colors">
-                        Beranda SiAngka
+                        Beranda SiBingka
                     </h2>
                     
                     <p class="text-xs text-slate-600 leading-relaxed mb-3 sm:mb-4">
-                        Lihat ringkasan informasi, petunjuk pengisian, dan fitur utama Sistem Informasi Data Daerah dalam Angka Bukittinggi.
+                        Lihat ringkasan informasi, petunjuk pengisian, dan fitur utama Sistem Informasi Bukittinggi dalam Angka.
                     </p>
                 </div>
 

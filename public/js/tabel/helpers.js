@@ -1,5 +1,5 @@
 /**
- * SiAngka Kota Bukittinggi - Shared Helpers & Agency Dictionaries
+ * SiBingka Kota Bukittinggi - Shared Helpers & Agency Dictionaries
  * Digunakan bersama oleh index.blade.php dan edit.blade.php
  */
 
@@ -129,8 +129,8 @@
                 let totalChars = 0;
                 const htmlKeys = [];
                 const activeScopedKey = (typeof getStorageKey === 'function') 
-                    ? getStorageKey('simonda_table_html', currentTableCode, currentYear) 
-                    : `simonda_table_html_${currentTableCode}_${currentYear}`;
+                    ? getStorageKey('sibingka_table_html', currentTableCode, currentYear) 
+                    : `sibingka_table_html_${currentTableCode}_${currentYear}`;
 
                 for (let i = 0; i < localStorage.length; i++) {
                     const k = localStorage.key(i);
@@ -139,12 +139,12 @@
                     totalChars += k.length + val.length;
 
                     // Bersihkan segera key legacy unscoped 4.1.18 & 4.1.19 yang memicu tabrakan data antar kampus 05-23
-                    if (/^simonda_table_(?:html|is_saved|source|title|note)_(?:4\.1\.18|4\.1\.19)_/.test(k)) {
+                    if (/^sibingka_table_(?:html|is_saved|source|title|note)_(?:4\.1\.18|4\.1\.19)_/.test(k)) {
                         try { localStorage.removeItem(k); } catch(e) {}
                         continue;
                     }
 
-                    if (k.includes('simonda_table_html')) {
+                    if (k.includes('sibingka_table_html')) {
                         htmlKeys.push(k);
                     }
                 }

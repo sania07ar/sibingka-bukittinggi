@@ -37,9 +37,9 @@ class AuthController extends Controller
         $username = trim($request->input('username'));
         $password = $request->input('password');
 
-        $configuredUsername = config('simonda.admin_username', 'admin_bps');
-        $configuredPassword = config('simonda.admin_password', 'bpsbukittinggi');
-        $adminDisplayName = config('simonda.admin_name', 'Admin BPS Bukittinggi');
+        $configuredUsername = config('sibingka.admin_username', 'admin_bps');
+        $configuredPassword = config('sibingka.admin_password', 'bpsbukittinggi');
+        $adminDisplayName = config('sibingka.admin_name', 'Admin BPS Bukittinggi');
         $storedAdminPassword = session('user.custom_password', $configuredPassword);
 
         // 1. Check Super Admin credentials
@@ -55,7 +55,7 @@ class AuthController extends Controller
                 'roleLabel' => 'Administrator BPS Kota Bukittinggi',
                 'dinas_name' => 'BPS Kota Bukittinggi',
                 'opd_code' => null,
-                'allowed_pages' => array_keys(config('simonda.pages', [])),
+                'allowed_pages' => array_keys(config('sibingka.pages', [])),
                 'loginTime' => now()->translatedFormat('d F Y, H:i') . ' WIB',
             ];
 
@@ -64,8 +64,8 @@ class AuthController extends Controller
         }
 
         // 1b. Check BPS Operator credentials (direct session login so it works seamlessly even if DB is read-only)
-        $configuredBpsUsername = config('simonda.bps_operator_username', 'operator_bps');
-        $configuredBpsPassword = config('simonda.bps_operator_password', 'bpsbukittinggi');
+        $configuredBpsUsername = config('sibingka.bps_operator_username', 'operator_bps');
+        $configuredBpsPassword = config('sibingka.bps_operator_password', 'bpsbukittinggi');
         $bpsAliases = ['operator_bps', 'bps', 'bps_bukittinggi', 'petugas_bps'];
         $bpsPasswords = ['bpsbukittinggi', 'bps123'];
 
@@ -107,7 +107,7 @@ class AuthController extends Controller
                 // Silently continue if database is read-only
             }
 
-            return redirect()->route('home')->with('success', 'Selamat datang di SiAngka, Operator BPS Kota Bukittinggi!');
+            return redirect()->route('home')->with('success', 'Selamat datang di SiBingka, Operator BPS Kota Bukittinggi!');
         }
 
         // 2. Check Database Users (Dinas / OPD / Registered Admin / Wali Data)
@@ -194,7 +194,7 @@ class AuthController extends Controller
                     return redirect()->route('home')->with('success', "Selamat datang, {$dbUser->name}!");
                 }
 
-                return redirect()->route('home')->with('success', "Selamat datang di SiAngka Kota Bukittinggi, {$dbUser->dinas_name}!");
+                return redirect()->route('home')->with('success', "Selamat datang di SiBingka Kota Bukittinggi, {$dbUser->dinas_name}!");
             }
         }
 
@@ -204,7 +204,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Show the Portal Selection page (Redirects directly to SiAngka Home).
+     * Show the Portal Selection page (Redirects directly to SiBingka Home).
      */
     public function showPortal()
     {
@@ -292,9 +292,9 @@ class AuthController extends Controller
         }
 
         $dinasUsers = $query->orderBy('role')->orderBy('opd_code')->orderBy('name')->get();
-        $pagesList = config('simonda.pages', []);
-        $opdList = config('simonda.opd_list', []);
-        $instansiList = config('simonda.instansi_list', []);
+        $pagesList = config('sibingka.pages', []);
+        $opdList = config('sibingka.opd_list', []);
+        $instansiList = config('sibingka.instansi_list', []);
 
         return view('admin.kelola-akun', compact('dinasUsers', 'pagesList', 'opdList', 'instansiList', 'search', 'filterStatus', 'filterType'));
     }
@@ -501,7 +501,7 @@ class AuthController extends Controller
      */
     public function batchSeedDinasUsers()
     {
-        $opdList = config('simonda.opd_list', []);
+        $opdList = config('sibingka.opd_list', []);
         $defaultPages = ['isi-data-opd', 'monitoring-opd', 'tabel-opd', 'edit-tabel-opd'];
         $createdCount = 0;
         $updatedCount = 0;
@@ -548,7 +548,7 @@ class AuthController extends Controller
      */
     public function batchSeedInstansiUsers()
     {
-        $instansiList = config('simonda.instansi_list', []);
+        $instansiList = config('sibingka.instansi_list', []);
         $defaultPages = ['isi-data-instansi', 'monitoring-instansi', 'tabel-opd', 'edit-tabel-opd'];
         $createdCount = 0;
         $updatedCount = 0;
@@ -606,7 +606,7 @@ class AuthController extends Controller
                 'new_password.confirmed' => 'Konfirmasi kata sandi baru tidak sesuai.',
             ]);
 
-            $configuredPassword = config('simonda.admin_password', 'bpsbukittinggi');
+            $configuredPassword = config('sibingka.admin_password', 'bpsbukittinggi');
             $currentStoredPassword = session('user.custom_password', $configuredPassword);
 
             if ($request->input('current_password') !== $currentStoredPassword) {
@@ -650,6 +650,6 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login')->with('success', 'Anda telah berhasil keluar dari portal SiAngka Kota Bukittinggi.');
+        return redirect()->route('login')->with('success', 'Anda telah berhasil keluar dari portal SiBingka Kota Bukittinggi.');
     }
 }

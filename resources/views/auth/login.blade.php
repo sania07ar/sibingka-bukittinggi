@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login BPS - SiAngka Kota Bukittinggi | BPS Kota Bukittinggi</title>
-    <meta name="description" content="Portal Masuk Khusus Administrator SiAngka Kota Bukittinggi - Sistem Informasi Data Daerah dalam Angka Bukittinggi - Badan Pusat Statistik Kota Bukittinggi">
+    <title>Login BPS - SiBingka Kota Bukittinggi | BPS Kota Bukittinggi</title>
+    <meta name="description" content="Portal Masuk Khusus Administrator SiBingka Kota Bukittinggi - Sistem Informasi Bukittinggi dalam Angka - Badan Pusat Statistik Kota Bukittinggi">
     
     <!-- Favicon Logo BPS -->
     <link rel="icon" type="image/png" href="{{ asset('images/bps-symbol.png') }}">
@@ -56,8 +56,8 @@
             transition: all 0.5s ease;
         }
 
-        /* Standard SiMonDa Orange Button */
-        .btn-simonda {
+        /* Standard SiBingka Orange Button */
+        .btn-sibingka {
             background: linear-gradient(135deg, #f95a00 0%, #eb5200 100%);
             color: #ffffff;
             font-weight: 700;
@@ -77,19 +77,19 @@
             width: 100%;
         }
 
-        .btn-simonda:hover {
+        .btn-sibingka:hover {
             background: linear-gradient(135deg, #ea5200 0%, #db4500 100%);
             transform: translateY(-1px);
             box-shadow: 0 6px 18px rgba(249, 90, 0, 0.35);
         }
 
-        .btn-simonda:active {
+        .btn-sibingka:active {
             transform: translateY(0.5px) scale(0.99);
             box-shadow: 0 2px 6px rgba(249, 90, 0, 0.2);
         }
 
         /* Shimmer effect on button */
-        .btn-simonda::after {
+        .btn-sibingka::after {
             content: '';
             position: absolute;
             top: -50%;
@@ -106,19 +106,19 @@
             transition: all 0.65s ease;
         }
 
-        .btn-simonda:hover::after {
+        .btn-sibingka:hover::after {
             left: 130%;
         }
 
-        /* Custom Input Styling (SiMonDa Theme) */
-        .input-simonda {
+        /* Custom Input Styling (SiBingka Theme) */
+        .input-sibingka {
             background-color: #f8fafc;
             border: 1px solid #cbd5e1;
             color: #1e293b;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .input-simonda:focus {
+        .input-sibingka:focus {
             background-color: #ffffff;
             border-color: #f95a00;
             outline: none;
@@ -134,9 +134,9 @@
         <div class="ambient-sphere w-72 h-72 bg-blue-100/50 -bottom-10 -left-10"></div>
     </div>
 
-    <!-- Background SiAngka Jam Gadang Watermark -->
+    <!-- Background SiBingka Jam Gadang Watermark -->
     <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden flex items-center justify-center opacity-25 select-none">
-        <img src="{{ asset('images/siangka-watermark-jamgadang.jpg') }}" alt="Watermark SiAngka Jam Gadang" class="w-[850px] lg:w-[1050px] max-w-none transform -translate-x-12 sm:-translate-x-20 object-contain mix-blend-multiply">
+        <img src="{{ asset('images/sibingka-watermark-jamgadang.jpg') }}" alt="Watermark SiBingka Jam Gadang" class="w-[850px] lg:w-[1050px] max-w-none transform -translate-x-12 sm:-translate-x-20 object-contain mix-blend-multiply">
     </div>
 
     <!-- HEADER / LOGO BAR -->
@@ -154,16 +154,16 @@
                     <img src="{{ asset('images/bps-symbol.png') }}" alt="Logo BPS" class="w-20 sm:w-24 h-auto object-contain drop-shadow-xs">
                 </div>
 
-                <!-- Brand Name: SiAngka Digital Application Style -->
+                <!-- Brand Name: SiBingka Digital Application Style -->
                 <div class="space-y-1.5 flex flex-col items-center">
                     <h1 class="text-3xl sm:text-4xl font-bold tracking-tight leading-none text-slate-800">
-                        SiAngka
+                        SiBingka
                     </h1>
                     <p class="text-xs font-bold text-[#f95a00] uppercase tracking-wider">
                         Kota Bukittinggi
                     </p>
                     <p class="text-xs text-slate-700 font-medium leading-relaxed max-w-[240px]">
-                        Sistem Informasi Data Daerah dalam Angka
+                        Sistem Informasi Bukittinggi dalam Angka
                     </p>
                 </div>
 
@@ -227,7 +227,7 @@
                                        required
                                        value="{{ old('username') }}"
                                        placeholder="Masukkan email, username, atau NIP"
-                                       class="input-simonda w-full pl-8 pr-3 py-2 rounded-lg text-xs font-semibold placeholder:font-normal placeholder:text-slate-400">
+                                       class="input-sibingka w-full pl-8 pr-3 py-2 rounded-lg text-xs font-semibold placeholder:font-normal placeholder:text-slate-400">
                             </div>
                         </div>
 
@@ -251,7 +251,7 @@
                                        autocomplete="current-password"
                                        required
                                        placeholder="Masukkan kata sandi"
-                                       class="input-simonda w-full pl-8 pr-8 py-2 rounded-lg text-xs font-semibold placeholder:font-normal placeholder:text-slate-400">
+                                       class="input-sibingka w-full pl-8 pr-8 py-2 rounded-lg text-xs font-semibold placeholder:font-normal placeholder:text-slate-400">
                                 <button type="button" 
                                         onclick="togglePasswordVisibility()" 
                                         class="absolute right-2.5 text-slate-400 hover:text-slate-600 p-1 transition-colors cursor-pointer"
@@ -271,7 +271,7 @@
 
                         <!-- Submit Button -->
                         <div class="pt-1">
-                            <button type="submit" id="btnSubmit" class="btn-simonda text-xs tracking-wider uppercase">
+                            <button type="submit" id="btnSubmit" class="btn-sibingka text-xs tracking-wider uppercase">
                                 <span id="btnText" class="flex items-center justify-center space-x-1.5">
                                     <span>MASUK</span>
                                     <i class="fa-solid fa-arrow-right-to-bracket text-[11px]"></i>
@@ -293,7 +293,7 @@
 
     <!-- FOOTER -->
     <footer class="relative z-10 w-full py-2 px-4 text-center text-[10px] text-slate-500 border-t border-slate-200/70 bg-white/60 shrink-0">
-        <p>© <span id="currentYear"></span> <strong>Badan Pusat Statistik Kota Bukittinggi</strong>. SiAngka Kota Bukittinggi - Sistem Informasi Data Daerah dalam Angka.</p>
+        <p>© <span id="currentYear"></span> <strong>Badan Pusat Statistik Kota Bukittinggi</strong>. SiBingka Kota Bukittinggi - Sistem Informasi Bukittinggi dalam Angka.</p>
     </footer>
 
     <!-- MODAL FORGOT PASSWORD / HUBUNGI ADMIN -->

@@ -83,7 +83,7 @@
                     <span id="spreadsheetStatsInfo" class="font-medium text-[11px] text-slate-600">0 baris, 0 kolom</span>
                 </div>
                 <div class="flex items-center space-x-3 text-[11px]">
-                    <span class="text-slate-400 hidden sm:inline">Penyusun: BPS Kota Bukittinggi (SiAngka)</span>
+                    <span class="text-slate-400 hidden sm:inline">Penyusun: BPS Kota Bukittinggi (SiBingka)</span>
                     <button onclick="copyTableForSpreadsheet(false)" class="text-emerald-700 hover:text-emerald-900 font-bold hover:underline cursor-pointer">
                         <i class="fa-solid fa-copy mr-1"></i>Salin ke Clipboard
                     </button>

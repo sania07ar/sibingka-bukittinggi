@@ -23,7 +23,7 @@
 
 <!-- PRINT ONLY FOOTER (OFFICIAL VERIFICATION LINE) -->
 <div class="print-only print-footer-info">
-    <span>Dokumen resmi publikasi statistik sektoral diexport melalui SiAngka BPS Kota Bukittinggi.</span>
+    <span>Dokumen resmi publikasi statistik sektoral diexport melalui SiBingka BPS Kota Bukittinggi.</span>
     <span>Standar Publikasi Daerah Dalam Angka (DDA) &bull; Format Excel Landscape</span>
 </div>
 

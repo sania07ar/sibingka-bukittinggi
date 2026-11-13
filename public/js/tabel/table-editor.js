@@ -1,10 +1,10 @@
 /**
- * SiAngka Kota Bukittinggi - Table Editor Logic
+ * SiBingka Kota Bukittinggi - Table Editor Logic
  * Modul JavaScript untuk editor grid spreadsheet data tabel
  */
 
-// Sinkronisasi variabel global dari window.SiAngkaConfig
-const cfg = window.SiAngkaConfig || {};
+// Sinkronisasi variabel global dari window.SiBingkaConfig
+const cfg = window.SiBingkaConfig || {};
 var serverDbDataStore = cfg.serverDbDataStore || [];
 var serverDbMetadata = cfg.serverDbMetadata || null;
 var serverDbFallbackMetadata = cfg.serverDbFallbackMetadata || null;
@@ -18,7 +18,7 @@ var currentUserData = cfg.currentUserData || { name: 'Pengguna', role: 'opd', di
 var tableSchemas = window.tableSchemas || {};
 var isEditMode = true;
 
-// Data dari Database MySQL SiMonDa Bukittinggi
+// Data dari Database MySQL SiBingka Bukittinggi
         
         
         
@@ -35,27 +35,27 @@ var isEditMode = true;
 
             // Clean up accidental saves
             try {
-                localStorage.removeItem('simonda_table_html_1.1.6_2026');
-                localStorage.removeItem('simonda_table_html_8.1.2_2026');
-                localStorage.removeItem('simonda_table_html_8.1.2_2027');
+                localStorage.removeItem('sibingka_table_html_1.1.6_2026');
+                localStorage.removeItem('sibingka_table_html_8.1.2_2026');
+                localStorage.removeItem('sibingka_table_html_8.1.2_2027');
                 for (let y = 2015; y <= 2035; y++) {
                     ['5.1.15', '5.1.16', '5.1.17'].forEach(code => {
-                        const k = `simonda_table_html_${code}_${y}`;
+                        const k = `sibingka_table_html_${code}_${y}`;
                         const val = localStorage.getItem(k);
                         if (val && (val.includes('212,10') || val.includes('105,22'))) {
                             safeSetLocalStorage(k, val.replace(/212,10/g, '8,84').replace(/105,22/g, '4,39'));
                         }
                     });
                     ['5.2.1', '5.2.2'].forEach(code => {
-                        const k = `simonda_table_html_${code}_${y}`;
+                        const k = `sibingka_table_html_${code}_${y}`;
                         const val = localStorage.getItem(k);
                         if (val && (val.includes('Kulit Manis') || val.includes('Cassiavera') || val.includes('Cengkeh') || val.includes('Pala') || val.includes('Pinang') || val.includes('Tebu') || val.includes('Kakao') || val.includes('Cocoa') || val.includes('(10)') || val.includes('(21)'))) {
                             localStorage.removeItem(k);
-                            localStorage.removeItem(`simonda_table_source_${code}_${y}`);
-                            localStorage.removeItem(`simonda_table_is_saved_${code}_${y}`);
+                            localStorage.removeItem(`sibingka_table_source_${code}_${y}`);
+                            localStorage.removeItem(`sibingka_table_is_saved_${code}_${y}`);
                         }
                     });
-                    const k542 = `simonda_table_html_5.4.2_${y}`;
+                    const k542 = `sibingka_table_html_5.4.2_${y}`;
                     const val542 = localStorage.getItem(k542);
                     if (val542 && (val542.includes('colspan="2"><div>Sewaktu-waktu</div>') || val542.includes('(6)</th>') || !val542.includes('Sometime'))) {
                         safeSetLocalStorage(k542, val542.replace(/<th([^>]*?)colspan=[\'"]?2[\'"]?([^>]*?)>\s*<div>Sewaktu-waktu<\/div>\s*<\/th>/gi, '<th$1$2><div>Sewaktu-waktu</div><div class="italic font-normal text-[11px] sm:text-xs">Sometime</div></th>')
@@ -64,36 +64,36 @@ var isEditMode = true;
                     }
                 }
                 for (let y = 2015; y <= 2030; y++) {
-                    const k = `simonda_table_html_8.1.3_${y}`;
+                    const k = `sibingka_table_html_8.1.3_${y}`;
                     const val = localStorage.getItem(k);
                     if (val && (val.includes('72,40') || val.includes('123,20') || val.includes('74,10') || y <= 2020 || y >= 2026)) {
                         localStorage.removeItem(k);
                     }
-                    const k231 = `simonda_table_html_2.3.1_${y}`;
+                    const k231 = `sibingka_table_html_2.3.1_${y}`;
                     const val231 = localStorage.getItem(k231);
                     if (val231 && (!val231.includes('Pegawai Negeri Sipil') || !val231.includes('PPPK'))) {
                         localStorage.removeItem(k231);
-                        localStorage.removeItem(`simonda_table_source_2.3.1_${y}`);
-                        localStorage.removeItem(`simonda_table_is_saved_2.3.1_${y}`);
+                        localStorage.removeItem(`sibingka_table_source_2.3.1_${y}`);
+                        localStorage.removeItem(`sibingka_table_is_saved_2.3.1_${y}`);
                     }
-                    const k232 = `simonda_table_html_2.3.2_${y}`;
+                    const k232 = `sibingka_table_html_2.3.2_${y}`;
                     const val232 = localStorage.getItem(k232);
                     if (val232 && (!val232.includes('Pegawai Negeri Sipil') || !val232.includes('PPPK'))) {
                         localStorage.removeItem(k232);
-                        localStorage.removeItem(`simonda_table_source_2.3.2_${y}`);
-                        localStorage.removeItem(`simonda_table_is_saved_2.3.2_${y}`);
+                        localStorage.removeItem(`sibingka_table_source_2.3.2_${y}`);
+                        localStorage.removeItem(`sibingka_table_is_saved_2.3.2_${y}`);
                     }
-                    const k233 = `simonda_table_html_2.3.3_${y}`;
+                    const k233 = `sibingka_table_html_2.3.3_${y}`;
                     const val233 = localStorage.getItem(k233);
                     if (val233 && (!val233.includes('Pangkat') || !val233.includes('Pegawai Negeri Sipil'))) {
                         localStorage.removeItem(k233);
-                        localStorage.removeItem(`simonda_table_source_2.3.3_${y}`);
-                        localStorage.removeItem(`simonda_table_is_saved_2.3.3_${y}`);
+                        localStorage.removeItem(`sibingka_table_source_2.3.3_${y}`);
+                        localStorage.removeItem(`sibingka_table_is_saved_2.3.3_${y}`);
                     }
-                    const tid311 = localStorage.getItem(`simonda_table_title_id_3.1.1_${y}`);
+                    const tid311 = localStorage.getItem(`sibingka_table_title_id_3.1.1_${y}`);
                     if (tid311 && !tid311.includes('Rasio Jenis Kelamin')) {
-                        localStorage.removeItem(`simonda_table_title_id_3.1.1_${y}`);
-                        localStorage.removeItem(`simonda_table_title_en_3.1.1_${y}`);
+                        localStorage.removeItem(`sibingka_table_title_id_3.1.1_${y}`);
+                        localStorage.removeItem(`sibingka_table_title_en_3.1.1_${y}`);
                     }
                 }
 
@@ -113,7 +113,7 @@ var isEditMode = true;
                     }
 
                     // 2. Bersihkan cache tahun ajaran acak / korup pada tabel pendidikan 4.1.x
-                    if (k.startsWith('simonda_table_html_4.1.')) {
+                    if (k.startsWith('sibingka_table_html_4.1.')) {
                         const val = localStorage.getItem(k) || '';
                         if (val.includes('2023/2026') || val.includes('2026/2025') || val.includes('2023/2025')) {
                             keysToRemove.push(k);
@@ -121,19 +121,19 @@ var isEditMode = true;
                         }
                     }
 
-                    if (k.startsWith('simonda_table_html_')) {
+                    if (k.startsWith('sibingka_table_html_')) {
                         const val = localStorage.getItem(k);
                         if (val && val.includes('sm:text-xs">20')) {
                             safeSetLocalStorage(k, cleanHtmlYearRanges(val));
                         }
                     }
-                    if (k.startsWith('simonda_table_title_en_')) {
+                    if (k.startsWith('sibingka_table_title_en_')) {
                         const val = localStorage.getItem(k);
                         if (val && (val.trim().toLowerCase() === 'table' || val.trim().toLowerCase() === 'tabel')) {
                             keysToRemove.push(k);
                         }
                     }
-                    if (k.startsWith('simonda_table_title_id_')) {
+                    if (k.startsWith('sibingka_table_title_id_')) {
                         const val = localStorage.getItem(k);
                         if (val && (/2023\/20\d{2}/.test(val) || /2024\/20\d{2}/.test(val))) {
                             keysToRemove.push(k);
@@ -408,7 +408,7 @@ var isEditMode = true;
             const breadcrumbCatalogLink = document.getElementById('breadcrumbCatalogLink');
             const breadcrumbCatalogText = document.getElementById('breadcrumbCatalogText');
             if (breadcrumbCatalogLink) {
-                breadcrumbCatalogLink.href = isBps ? window.SiAngkaConfig.routes.dataBps : (isInstansi ? window.SiAngkaConfig.routes.isiDataInstansi : window.SiAngkaConfig.routes.isiDataOpd);
+                breadcrumbCatalogLink.href = isBps ? window.SiBingkaConfig.routes.dataBps : (isInstansi ? window.SiBingkaConfig.routes.isiDataInstansi : window.SiBingkaConfig.routes.isiDataOpd);
             }
             if (breadcrumbCatalogText) {
                 breadcrumbCatalogText.innerText = isBps ? 'Data BPS' : (isInstansi ? 'Daftar Instansi' : 'Daftar OPD');
@@ -478,10 +478,10 @@ var isEditMode = true;
             document.getElementById('pageMainHeading').innerText = isRangeTable ? `Edit Data Tabel ${currentTableCode} (${yearLabel})` : `Edit Data Tabel ${currentTableCode} Tahun ${currentYear}`;
 
             // Check for custom titles/source saved from Database, Fallback Structure, or Excel
-            let customTitleId = (serverDbMetadata && serverDbMetadata.title_id) ? serverDbMetadata.title_id : (getScopedLocalStorageItem('simonda_table_title_id') || (serverDbFallbackMetadata && serverDbFallbackMetadata.title_id ? serverDbFallbackMetadata.title_id : null));
-            let customTitleEn = (serverDbMetadata && serverDbMetadata.title_en) ? serverDbMetadata.title_en : (getScopedLocalStorageItem('simonda_table_title_en') || (serverDbFallbackMetadata && serverDbFallbackMetadata.title_en ? serverDbFallbackMetadata.title_en : null));
-            let customSource = (serverDbMetadata && serverDbMetadata.source) ? serverDbMetadata.source : (getScopedLocalStorageItem('simonda_table_source_text') || (serverDbFallbackMetadata && serverDbFallbackMetadata.source ? serverDbFallbackMetadata.source : null));
-            let customNote = (serverDbMetadata && serverDbMetadata.note !== undefined && serverDbMetadata.note !== null) ? serverDbMetadata.note : (getScopedLocalStorageItem('simonda_table_note') || (serverDbFallbackMetadata && serverDbFallbackMetadata.note !== undefined ? serverDbFallbackMetadata.note : null));
+            let customTitleId = (serverDbMetadata && serverDbMetadata.title_id) ? serverDbMetadata.title_id : (getScopedLocalStorageItem('sibingka_table_title_id') || (serverDbFallbackMetadata && serverDbFallbackMetadata.title_id ? serverDbFallbackMetadata.title_id : null));
+            let customTitleEn = (serverDbMetadata && serverDbMetadata.title_en) ? serverDbMetadata.title_en : (getScopedLocalStorageItem('sibingka_table_title_en') || (serverDbFallbackMetadata && serverDbFallbackMetadata.title_en ? serverDbFallbackMetadata.title_en : null));
+            let customSource = (serverDbMetadata && serverDbMetadata.source) ? serverDbMetadata.source : (getScopedLocalStorageItem('sibingka_table_source_text') || (serverDbFallbackMetadata && serverDbFallbackMetadata.source ? serverDbFallbackMetadata.source : null));
+            let customNote = (serverDbMetadata && serverDbMetadata.note !== undefined && serverDbMetadata.note !== null) ? serverDbMetadata.note : (getScopedLocalStorageItem('sibingka_table_note') || (serverDbFallbackMetadata && serverDbFallbackMetadata.note !== undefined ? serverDbFallbackMetadata.note : null));
 
             // Isolasi judul & sumber untuk Instansi Vertikal Kampus (05 s.d 23): selalu prioritaskan nama kampus resmi dari katalog
             if (isInstansi && catInfo && catInfo.title) {
@@ -499,42 +499,42 @@ var isEditMode = true;
                 const officialNote433 = '<div class="space-y-1"><div><sup>1</sup> Desa pada tabel ini termasuk Unit Permukiman Transmigrasi (UPT) yang masih dibina oleh kementerian terkait dan nagari di Provinsi Sumatera Barat / <span class="italic text-slate-500">Villages in this table are included in Transmigration Settlement Unit which is still fostered by the relevant ministries and the nagari in the Province of Sumatera Barat</span></div><div><sup>2</sup> Kejadian dalam setahun sebelum tahun pencacahan / <span class="italic text-slate-500">Occurred during the last one year before the enumeration years</span></div><div><sup>3</sup> Periode tahun 2024 adalah Januari - April / <span class="italic text-slate-500">2024 Period is January-April</span></div></div>';
                 if (!customNote || customNote.length < 50 || !customNote.includes('Transmigrasi')) {
                     customNote = officialNote433;
-                    safeSetLocalStorage(`simonda_table_note_${currentTableCode}_${currentYear}`, officialNote433);
+                    safeSetLocalStorage(`sibingka_table_note_${currentTableCode}_${currentYear}`, officialNote433);
                 }
             }
 
             // Bersihkan jika title hanya berisi kata 'Table' atau 'Tabel'
             if (customTitleEn && (customTitleEn.trim().toLowerCase() === 'table' || customTitleEn.trim().toLowerCase() === 'tabel')) {
-                localStorage.removeItem(`simonda_table_title_en_${currentTableCode}_${currentYear}`);
+                localStorage.removeItem(`sibingka_table_title_en_${currentTableCode}_${currentYear}`);
                 customTitleEn = null;
             }
             if (customTitleId && (customTitleId.trim().toLowerCase() === 'table' || customTitleId.trim().toLowerCase() === 'tabel' || /2023\/20\d{2}/.test(customTitleId) || /2024\/20\d{2}/.test(customTitleId))) {
-                localStorage.removeItem(`simonda_table_title_id_${currentTableCode}_${currentYear}`);
+                localStorage.removeItem(`sibingka_table_title_id_${currentTableCode}_${currentYear}`);
                 customTitleId = null;
             }
 
             // Bersihkan custom title jika masih berupa placeholder generik lawas atau terpotong
             if (catInfo && catInfo.title) {
                 if (customTitleId && customTitleId.includes('Tabel Data Statistik Sektoral')) {
-                    localStorage.removeItem(`simonda_table_title_id_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_title_id_${currentTableCode}_${currentYear}`);
                     customTitleId = null;
                 }
                 if (customTitleEn && customTitleEn.includes('Sectoral Statistics Table')) {
-                    localStorage.removeItem(`simonda_table_title_en_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_title_en_${currentTableCode}_${currentYear}`);
                     customTitleEn = null;
                 }
                 if (customTitleId && currentTableCode === '3.1.1' && !customTitleId.includes('Rasio Jenis Kelamin')) {
-                    localStorage.removeItem(`simonda_table_title_id_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_title_id_${currentTableCode}_${currentYear}`);
                     customTitleId = null;
                 }
                 if (customTitleEn && currentTableCode === '3.1.1' && !customTitleEn.includes('Sex Ratio')) {
-                    localStorage.removeItem(`simonda_table_title_en_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_title_en_${currentTableCode}_${currentYear}`);
                     customTitleEn = null;
                 }
                 // Jika tabel bukan 4.1.1 tetapi customTitleId memuat Taman Kanak-Kanak / (TK), bersihkan cache yang keliru
                 if (currentTableCode !== '4.1.1' && customTitleId && (customTitleId.includes('Taman Kanak') || customTitleId.includes('(TK)'))) {
-                    localStorage.removeItem(`simonda_table_title_id_${currentTableCode}_${currentYear}`);
-                    localStorage.removeItem(`simonda_table_title_en_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_title_id_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_title_en_${currentTableCode}_${currentYear}`);
                     customTitleId = null;
                     customTitleEn = null;
                 }
@@ -580,11 +580,11 @@ var isEditMode = true;
                 const yrInt = parseInt(currentYear) || 2025;
                 const expectedRange = `${yrInt - 4}–${yrInt}`;
                 if (customTitleId && !customTitleId.includes(expectedRange)) {
-                    localStorage.removeItem(`simonda_table_title_id_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_title_id_${currentTableCode}_${currentYear}`);
                     customTitleId = null;
                 }
                 if (customTitleEn && (!customTitleEn.includes(expectedRange) || customTitleEn.includes('XXX'))) {
-                    localStorage.removeItem(`simonda_table_title_en_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_title_en_${currentTableCode}_${currentYear}`);
                     customTitleEn = null;
                 }
             }
@@ -593,11 +593,11 @@ var isEditMode = true;
                 const yrInt = parseInt(currentYear) || 2025;
                 const expectedRange = `${yrInt - 6}–${yrInt}`;
                 if (customTitleId && !customTitleId.includes(expectedRange)) {
-                    localStorage.removeItem(`simonda_table_title_id_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_title_id_${currentTableCode}_${currentYear}`);
                     customTitleId = null;
                 }
                 if (customTitleEn && !customTitleEn.includes(expectedRange)) {
-                    localStorage.removeItem(`simonda_table_title_en_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_title_en_${currentTableCode}_${currentYear}`);
                     customTitleEn = null;
                 }
             }
@@ -606,11 +606,11 @@ var isEditMode = true;
             if (currentTableCode === '9.3' || currentTableCode === '9.4') {
                 const yrInt = parseInt(currentYear) || 2025;
                 if (customTitleId && (customTitleId.match(/(19|20)\d{2}\s*[–\-]\s*(19|20)\d{2}/) || (currentTableCode === '9.4' && !customTitleId.includes(currentYear)))) {
-                    localStorage.removeItem(`simonda_table_title_id_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_title_id_${currentTableCode}_${currentYear}`);
                     customTitleId = null;
                 }
                 if (customTitleEn && (customTitleEn.match(/(19|20)\d{2}\s*[–\-]\s*(19|20)\d{2}/) || (currentTableCode === '9.4' && !customTitleEn.includes(currentYear)))) {
-                    localStorage.removeItem(`simonda_table_title_en_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_title_en_${currentTableCode}_${currentYear}`);
                     customTitleEn = null;
                 }
             }
@@ -619,7 +619,7 @@ var isEditMode = true;
             if (customSource) {
                 const sLower = customSource.toLowerCase();
                 if (customSource.length > 220 || sLower.includes('catatan') || sLower.includes('tabel ') || sLower.includes('table ') || sLower.includes('negara') || sLower.includes('jumlah') || sLower.includes('rahmat afrisyaf') || sLower.includes('180.17')) {
-                    localStorage.removeItem(`simonda_table_source_text_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_source_text_${currentTableCode}_${currentYear}`);
                     customSource = null;
                 }
             }
@@ -628,14 +628,14 @@ var isEditMode = true;
             if (customNote) {
                 const nLower = customNote.toLowerCase();
                 if (customNote.length > 600 || nLower.includes('tabel ') || nLower.includes('table ') || nLower.includes('negara') || nLower.includes('rahmat afrisyaf')) {
-                    localStorage.removeItem(`simonda_table_note_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_note_${currentTableCode}_${currentYear}`);
                     customNote = null;
                 }
             }
 
             // Ensure title always contains the appropriate year or year range label
             function formatTitleWithYear(title, defaultTitle, yLabel) {
-                // Khusus tabel pendidikan 4.1.x: tahun ajaran SiAngka Bukittinggi = Tahun + 1 (misal 2025 -> 2025/2026)
+                // Khusus tabel pendidikan 4.1.x: tahun ajaran SiBingka Bukittinggi = Tahun + 1 (misal 2025 -> 2025/2026)
                 if (typeof currentTableCode === 'string' && currentTableCode.startsWith('4.1') && currentTableCode !== '4.1.20' && currentTableCode !== '4.1.24') {
                     const yrInt = parseInt(yLabel) || 2025;
                     const acadYr = `${yrInt}/${yrInt + 1}`;
@@ -744,9 +744,9 @@ var isEditMode = true;
 
             // Check if user previously saved custom data (prioritas database, kemudian localStorage)
                         // Check if table data was edited in dedicated edit page or generated from Excel
-            // Prioritaskan localStorage jika ada status tersimpan lokal (simonda_table_is_saved)
-            const scopedHtmlKey = getStorageKey('simonda_table_html');
-            const scopedSavedKey = getStorageKey('simonda_table_is_saved');
+            // Prioritaskan localStorage jika ada status tersimpan lokal (sibingka_table_is_saved)
+            const scopedHtmlKey = getStorageKey('sibingka_table_html');
+            const scopedSavedKey = getStorageKey('sibingka_table_is_saved');
             const localSavedHtml = localStorage.getItem(scopedHtmlKey);
             const isLocallySaved = (localStorage.getItem(scopedSavedKey) === '1');
             let savedHtml = (serverDbMetadata && serverDbMetadata.table_html && serverDbMetadata.table_html.includes('<tr'))
@@ -756,8 +756,8 @@ var isEditMode = true;
 
             // Sanity check: jika savedHtml dari localStorage rusak atau tidak mengandung struktur <tr> dan <th>, bersihkan
             if (savedHtml && (!savedHtml.includes('<tr') || !savedHtml.includes('<th'))) {
-                removeScopedLocalStorageItem('simonda_table_html');
-                removeScopedLocalStorageItem('simonda_table_is_saved');
+                removeScopedLocalStorageItem('sibingka_table_html');
+                removeScopedLocalStorageItem('sibingka_table_is_saved');
                 savedHtml = (serverDbMetadata && serverDbMetadata.table_html) ? serverDbMetadata.table_html : null;
             }
 
@@ -781,7 +781,7 @@ var isEditMode = true;
                     rowsToRemove.forEach(tr => tr.remove());
                     savedHtml = tempTable.innerHTML;
                     savedHtml = savedHtml.replace(/Aur Birugo Tigo baleh/g, 'Aur Birugo Tigo Baleh');
-                    safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                    safeSetLocalStorage(`sibingka_table_html_${currentTableCode}_${currentYear}`, savedHtml);
                 }
             }
 
@@ -794,9 +794,9 @@ var isEditMode = true;
                 const expectedStartYear = (yrInt - 6).toString();
                 const expectedEndYear = yrInt.toString();
                 if (!savedHtml.includes(expectedStartYear) || !savedHtml.includes(expectedEndYear)) {
-                    localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
-                    localStorage.removeItem(`simonda_table_source_${currentTableCode}_${currentYear}`);
-                    localStorage.removeItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_source_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_is_saved_${currentTableCode}_${currentYear}`);
                     if (serverDbMetadata) {
                         serverDbMetadata.table_html = null;
                     }
@@ -808,9 +808,9 @@ var isEditMode = true;
             if (savedHtml && (currentTableCode === '1.1.10' || currentTableCode === '8.1.5' || currentTableCode === '8.1.4' || currentTableCode === '8.1.1' || currentTableCode === '8.1.2' || currentTableCode === '8.1.3' || currentTableCode === '2.2.5' || currentTableCode === '9.1')) {
                 const yrInt = parseInt(currentYear) || 2025;
                 if (!savedHtml.includes(yrInt.toString())) {
-                    localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
-                    localStorage.removeItem(`simonda_table_source_${currentTableCode}_${currentYear}`);
-                    localStorage.removeItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_source_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_is_saved_${currentTableCode}_${currentYear}`);
                     if (serverDbMetadata) {
                         serverDbMetadata.table_html = null;
                     }
@@ -835,9 +835,9 @@ var isEditMode = true;
                 const isRowBasedYearTable = ['4.1.18', '4.1.19', '8.1.4', '8.1.5', '8.1.6', '1.1.10'].includes(currentTableCode);
 
                 if (!serverDbMetadata && !isLocallySaved && (!hasStartYearInHeader || !hasEndYearInHeader || isMissingCells) && !isRowBasedYearTable) {
-                    localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
-                    localStorage.removeItem(`simonda_table_source_${currentTableCode}_${currentYear}`);
-                    localStorage.removeItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_source_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_is_saved_${currentTableCode}_${currentYear}`);
                     savedHtml = null;
                 }
             }
@@ -850,9 +850,9 @@ var isEditMode = true;
                 const bodyRows = tempDiv.querySelectorAll('tbody tr');
                 const hasTambuo = savedHtml.includes('Batang Tambuo') || savedHtml.includes('Tambuo');
                 if (thCount < 4 || bodyRows.length < 2 || !hasTambuo || !savedHtml.includes('<tbody')) {
-                    localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
-                    localStorage.removeItem(`simonda_table_source_${currentTableCode}_${currentYear}`);
-                    localStorage.removeItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_source_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_is_saved_${currentTableCode}_${currentYear}`);
                     if (serverDbMetadata) {
                         serverDbMetadata.table_html = null;
                     }
@@ -861,7 +861,7 @@ var isEditMode = true;
             }
 
             // Reset cache lama jika tabel 8.1.2, 8.1.3, 8.1.4, atau 8.1.5 pernah tersimpan dengan nilai statis dummy
-            const tableSource = localStorage.getItem(`simonda_table_source_${currentTableCode}_${currentYear}`);
+            const tableSource = localStorage.getItem(`sibingka_table_source_${currentTableCode}_${currentYear}`);
             const isExcelImport = (tableSource === 'excel');
 
             if ((currentTableCode === '8.1.2' || currentTableCode === '8.1.3' || currentTableCode === '8.1.4' || currentTableCode === '8.1.5') && savedHtml && !isExcelImport) {
@@ -877,7 +877,7 @@ var isEditMode = true;
                                         (currentTableCode === '8.1.5' && (yrInt <= 2020 || yrInt >= 2027));
                 if (hasAncientDummy || isUnenteredYear) {
                     if (!serverDbMetadata || !serverDbMetadata.is_saved) {
-                        localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
+                        localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
                         savedHtml = null;
                     }
                 }
@@ -890,9 +890,9 @@ var isEditMode = true;
                 const thCount = tempDiv.querySelectorAll('thead th').length;
                 const isProper = thCount >= 9 && savedHtml.includes('Pegawai Negeri Sipil');
                 if (!isProper) {
-                    localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
-                    localStorage.removeItem(`simonda_table_source_${currentTableCode}_${currentYear}`);
-                    localStorage.removeItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_source_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_is_saved_${currentTableCode}_${currentYear}`);
                     if (serverDbMetadata) {
                         serverDbMetadata.table_html = null;
                     }
@@ -908,9 +908,9 @@ var isEditMode = true;
                 const hasCorruptedMismatch = Array.from(firstRowTds).some(td => td.innerText.trim() === '107' || td.innerText.trim() === '1.498');
                 const isProper = thCount >= 5 && savedHtml.includes('Pangkat') && !hasCorruptedMismatch;
                 if (!isProper) {
-                    localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
-                    localStorage.removeItem(`simonda_table_source_${currentTableCode}_${currentYear}`);
-                    localStorage.removeItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_source_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_is_saved_${currentTableCode}_${currentYear}`);
                     if (serverDbMetadata) {
                         serverDbMetadata.table_html = null;
                     }
@@ -947,9 +947,9 @@ var isEditMode = true;
                 }
 
                 if (isCorruptMulti) {
-                    localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
-                    localStorage.removeItem(`simonda_table_source_${currentTableCode}_${currentYear}`);
-                    localStorage.removeItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_source_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_is_saved_${currentTableCode}_${currentYear}`);
                     if (serverDbMetadata) {
                         serverDbMetadata.table_html = null;
                     }
@@ -965,7 +965,7 @@ var isEditMode = true;
                                          .replace(/>\s*Kolom\s*6\s*</gi, '>S2/S3<')
                                          .replace(/Kolom\s*6/gi, 'S2/S3');
                     safeSetLocalStorage(scopedHtmlKey, savedHtml);
-                    safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                    safeSetLocalStorage(`sibingka_table_html_${currentTableCode}_${currentYear}`, savedHtml);
                     if (serverDbMetadata) {
                         serverDbMetadata.table_html = savedHtml;
                     }
@@ -973,7 +973,7 @@ var isEditMode = true;
                     savedHtml = savedHtml.replace(/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/gi, '<th class="py-3 px-4 font-bold border border-slate-700"><div>AB</div></th>')
                                          .replace(/Kolom\s*6/gi, 'AB');
                     safeSetLocalStorage(scopedHtmlKey, savedHtml);
-                    safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                    safeSetLocalStorage(`sibingka_table_html_${currentTableCode}_${currentYear}`, savedHtml);
                     if (serverDbMetadata) {
                         serverDbMetadata.table_html = savedHtml;
                     }
@@ -981,7 +981,7 @@ var isEditMode = true;
                     savedHtml = savedHtml.replace(/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/gi, '<th class="py-3 px-4 font-bold border border-slate-700"><div>Aur Birugo Tigo Baleh</div></th>')
                                          .replace(/<th([^>]*)>\s*Kolom\s*6\s*<\/th>/gi, '<th$1>Aur Birugo Tigo Baleh</th>')
                                          .replace(/>\s*Kolom\s*6\s*</gi, '>Aur Birugo Tigo Baleh<');
-                    safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                    safeSetLocalStorage(`sibingka_table_html_${currentTableCode}_${currentYear}`, savedHtml);
                 }
             }
 
@@ -1020,9 +1020,9 @@ var isEditMode = true;
                 const yrInt = parseInt(currentYear) || 2025;
                 const expectedLastPastYear = (yrInt - 1).toString();
                 if ((savedHtml.includes('colspan="2"') && savedHtml.includes('Kecamatan')) || !savedHtml.includes(expectedLastPastYear)) {
-                    localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
-                    localStorage.removeItem(`simonda_table_source_${currentTableCode}_${currentYear}`);
-                    localStorage.removeItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_source_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_is_saved_${currentTableCode}_${currentYear}`);
                     savedHtml = (serverDbMetadata && serverDbMetadata.table_html) ? serverDbMetadata.table_html : null;
                 }
             }
@@ -1032,7 +1032,7 @@ var isEditMode = true;
                 savedHtml = savedHtml.replace(/Jumlah\s*\/\s*<span[^>]*>Total<\/span>/gi, 'Bukittinggi')
                                      .replace(/Jumlah\s*\/\s*Total/gi, 'Bukittinggi')
                                      .replace(/<td([^>]*)>\s*Jumlah\s*<\/td>/gi, '<td$1>Bukittinggi</td>');
-                safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                safeSetLocalStorage(`sibingka_table_html_${currentTableCode}_${currentYear}`, savedHtml);
             }
 
             // Self-healing tabel 5.2.1 & 5.2.2: pastikan HANYA 4 komoditi resmi (Kelapa Sawit, Kelapa, Karet, Kopi) dengan 9 kolom total (1 s.d 9)
@@ -1048,9 +1048,9 @@ var isEditMode = true;
                 tempDiv.innerHTML = savedHtml;
                 const headerThs = tempDiv.querySelectorAll('thead tr:last-child th');
                 if (hasExtraCrops || headerThs.length !== 9) {
-                    localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
-                    localStorage.removeItem(`simonda_table_source_${currentTableCode}_${currentYear}`);
-                    localStorage.removeItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_source_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_is_saved_${currentTableCode}_${currentYear}`);
                     if (serverDbMetadata) {
                         serverDbMetadata.table_html = null;
                     }
@@ -1062,9 +1062,9 @@ var isEditMode = true;
                             // Self-healing tabel 1.1.8 (Kantor Pertanahan): Bersihkan cache lokal jika format lama 3 kolom atau rentang tahun salah
                 if (currentTableCode === '1.1.8' && savedHtml) {
                     if (savedHtml.includes('w-[60%]') || !savedHtml.includes('(7)') || !savedHtml.includes(currentYear.toString())) {
-                        localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
-                        localStorage.removeItem(`simonda_table_source_${currentTableCode}_${currentYear}`);
-                        localStorage.removeItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`);
+                        localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
+                        localStorage.removeItem(`sibingka_table_source_${currentTableCode}_${currentYear}`);
+                        localStorage.removeItem(`sibingka_table_is_saved_${currentTableCode}_${currentYear}`);
                     }
                 }
             if (currentTableCode === '5.4.2' && savedHtml) {
@@ -1072,7 +1072,7 @@ var isEditMode = true;
                     savedHtml = savedHtml.replace(/<th([^>]*?)colspan=[\'"]?2[\'"]?([^>]*?)>\s*<div>Sewaktu-waktu<\/div>\s*<\/th>/gi, '<th$1$2><div>Sewaktu-waktu</div><div class="italic font-normal text-[11px] sm:text-xs">Sometime</div></th>')
                                          .replace(/colspan="2"><div>Sewaktu-waktu<\/div>/gi, '><div>Sewaktu-waktu</div><div class="italic font-normal text-[11px] sm:text-xs">Sometime</div>')
                                          .replace(/<th([^>]*?)>\s*\(6\)\s*<\/th>/gi, '<th$1>(5)</th>');
-                    safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                    safeSetLocalStorage(`sibingka_table_html_${currentTableCode}_${currentYear}`, savedHtml);
                     if (serverDbMetadata) {
                         serverDbMetadata.table_html = savedHtml;
                     }
@@ -1164,7 +1164,7 @@ var isEditMode = true;
 
                     if (isCorruptYears) {
                         savedHtml = tempDiv.innerHTML;
-                        safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                        safeSetLocalStorage(`sibingka_table_html_${currentTableCode}_${currentYear}`, savedHtml);
                         if (serverDbMetadata) {
                             serverDbMetadata.table_html = savedHtml;
                         }
@@ -1290,7 +1290,7 @@ var isEditMode = true;
 
                     if (isCorruptYears) {
                         savedHtml = tempDiv.innerHTML;
-                        safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                        safeSetLocalStorage(`sibingka_table_html_${currentTableCode}_${currentYear}`, savedHtml);
                         if (serverDbMetadata) {
                             serverDbMetadata.table_html = savedHtml;
                         }
@@ -1302,7 +1302,7 @@ var isEditMode = true;
             if (savedHtml && (currentTableCode === '5.1.15' || currentTableCode === '5.1.16' || currentTableCode === '5.1.17')) {
                 if (savedHtml.includes('212,10') || savedHtml.includes('105,22')) {
                     savedHtml = savedHtml.replace(/212,10/g, '8,84').replace(/105,22/g, '4,39');
-                    safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                    safeSetLocalStorage(`sibingka_table_html_${currentTableCode}_${currentYear}`, savedHtml);
                     if (serverDbMetadata) {
                         serverDbMetadata.table_html = savedHtml;
                     }
@@ -1341,16 +1341,16 @@ var isEditMode = true;
                     }
                 });
                 if (isCorrupt) {
-                    localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
-                    localStorage.removeItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_is_saved_${currentTableCode}_${currentYear}`);
                     savedHtml = null;
                 }
             }
 
             // Sanity check: jika savedHtml adalah starter dummy placeholder ("Indikator 1" / "Indicator Details" / "Belum ada data")
             if (savedHtml && (savedHtml.includes('Indicator Details') || (savedHtml.includes('Indikator 1') && savedHtml.includes('Rincian Indikator')) || savedHtml.includes('Belum ada data untuk tabel ini'))) {
-                localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
-                localStorage.removeItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`);
+                localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
+                localStorage.removeItem(`sibingka_table_is_saved_${currentTableCode}_${currentYear}`);
                 savedHtml = null;
             }
 
@@ -1368,7 +1368,7 @@ var isEditMode = true;
                     const checkYears = [2025, 2024, 2023, 2022, 2021, 2026, 2027, 2028, 2029, 2030, 2020, 2019, 2018];
                     for (let y of checkYears) {
                         if (y.toString() === currentYear.toString()) continue;
-                        const localKey = `simonda_table_html_${currentTableCode}_${y}`;
+                        const localKey = `sibingka_table_html_${currentTableCode}_${y}`;
                         const localHtml = localStorage.getItem(localKey);
                         if (localHtml && !localHtml.includes('Belum ada data untuk tabel ini') && !localHtml.includes('Indicator Details') && !(localHtml.includes('Indikator 1') && localHtml.includes('Rincian Indikator'))) {
                             sourceHtml = localHtml;
@@ -1381,8 +1381,8 @@ var isEditMode = true;
                 if (sourceHtml && !sourceHtml.includes('Belum ada data untuk tabel ini')) {
                     savedHtml = buildEmptyTemplateFromSource(sourceHtml, currentYear, sourceYr);
                     try {
-                        safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, savedHtml);
-                        safeSetLocalStorage(`simonda_table_source_${currentTableCode}_${currentYear}`, 'template');
+                        safeSetLocalStorage(`sibingka_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                        safeSetLocalStorage(`sibingka_table_source_${currentTableCode}_${currentYear}`, 'template');
                     } catch(e) {}
                 }
             }
@@ -1650,7 +1650,7 @@ var isEditMode = true;
                     }
                 });
 
-                const savedKey = `simonda_table_html_${currentTableCode}_${currentYear}`;
+                const savedKey = `sibingka_table_html_${currentTableCode}_${currentYear}`;
                 if (localStorage.getItem(savedKey)) {
                     safeSetLocalStorage(savedKey, table.innerHTML);
                 }
@@ -2149,7 +2149,7 @@ var isEditMode = true;
             if (selectYearEl) selectYearEl.value = currentYear;
 
             try {
-                const res = await fetch(`${window.SiAngkaConfig.routes.apiData}?code=${currentTableCode}&opd=${currentOpdCode}&year=${currentYear}&type=${typeof currentType !== 'undefined' ? currentType : 'opd'}`);
+                const res = await fetch(`${window.SiBingkaConfig.routes.apiData}?code=${currentTableCode}&opd=${currentOpdCode}&year=${currentYear}&type=${typeof currentType !== 'undefined' ? currentType : 'opd'}`);
                 const dataRes = await res.json();
                 if (dataRes.success) {
                     if (dataRes.dataStore) {
@@ -2235,7 +2235,7 @@ var isEditMode = true;
 
             // 3. Panggil API delete/reset ke server
             try {
-                await fetch(window.SiAngkaConfig.routes.apiDelete, {
+                await fetch(window.SiBingkaConfig.routes.apiDelete, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -2362,15 +2362,15 @@ var isEditMode = true;
             cleanGhostRows(clone);
 
             // Save to localStorage
-            const scopedHtmlKey = getStorageKey('simonda_table_html');
-            const scopedSavedKey = getStorageKey('simonda_table_is_saved');
+            const scopedHtmlKey = getStorageKey('sibingka_table_html');
+            const scopedSavedKey = getStorageKey('sibingka_table_is_saved');
             safeSetLocalStorage(scopedHtmlKey, clone.innerHTML);
             safeSetLocalStorage(scopedSavedKey, '1');
 
             // Bersihkan legacy unscoped key agar tidak mencemari tabel kampus lain
             try {
-                localStorage.removeItem(`simonda_table_html_${currentTableCode}_${currentYear}`);
-                localStorage.removeItem(`simonda_table_is_saved_${currentTableCode}_${currentYear}`);
+                localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
+                localStorage.removeItem(`sibingka_table_is_saved_${currentTableCode}_${currentYear}`);
             } catch(e) {}
 
             // Simpan perubahan ke Database MySQL
@@ -3019,7 +3019,7 @@ var isEditMode = true;
                         ? 'custom_bps' 
                         : ((typeof currentType !== 'undefined' && currentType === 'instansi') ? 'custom_instansi' : 'manual');
 
-                    await fetch(window.SiAngkaConfig.routes.apiSave, {
+                    await fetch(window.SiBingkaConfig.routes.apiSave, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -3046,7 +3046,7 @@ var isEditMode = true;
             if (redirectAfter) {
                 showToast('✅ Data tabel berhasil disimpan ke Database! Mengalihkan ke tabel...');
                 setTimeout(() => {
-                    let url = `${window.SiAngkaConfig.routes.tabelOpd}?code=${currentTableCode}&opd=${currentOpdCode}&year=${currentYear}&saved=1`;
+                    let url = `${window.SiBingkaConfig.routes.tabelOpd}?code=${currentTableCode}&opd=${currentOpdCode}&year=${currentYear}&saved=1`;
                     if (currentType) url += `&type=${currentType}`;
                     window.location.href = url;
                 }, 500);
@@ -3066,7 +3066,7 @@ var isEditMode = true;
                     return;
                 }
             }
-            let url = `${window.SiAngkaConfig.routes.tabelOpd}?code=${currentTableCode}&opd=${currentOpdCode}&year=${currentYear}`;
+            let url = `${window.SiBingkaConfig.routes.tabelOpd}?code=${currentTableCode}&opd=${currentOpdCode}&year=${currentYear}`;
             if (currentType) url += `&type=${currentType}`;
             window.location.href = url;
         }
@@ -3112,17 +3112,17 @@ var isEditMode = true;
                     }
                     if (result.table_html) {
                         try {
-                            const scopedHtmlKey = (typeof getStorageKey === 'function') ? getStorageKey('simonda_table_html') : `simonda_table_html_${currentTableCode}_${currentYear}`;
-                            const scopedSavedKey = (typeof getStorageKey === 'function') ? getStorageKey('simonda_table_is_saved') : `simonda_table_is_saved_${currentTableCode}_${currentYear}`;
+                            const scopedHtmlKey = (typeof getStorageKey === 'function') ? getStorageKey('sibingka_table_html') : `sibingka_table_html_${currentTableCode}_${currentYear}`;
+                            const scopedSavedKey = (typeof getStorageKey === 'function') ? getStorageKey('sibingka_table_is_saved') : `sibingka_table_is_saved_${currentTableCode}_${currentYear}`;
                             safeSetLocalStorage(scopedHtmlKey, result.table_html);
                             safeSetLocalStorage(scopedSavedKey, '1');
-                            safeSetLocalStorage(`simonda_table_html_${currentTableCode}_${currentYear}`, result.table_html);
-                            safeSetLocalStorage(`simonda_table_is_saved_${currentTableCode}_${currentYear}`, '1');
-                            safeSetLocalStorage(`simonda_table_source_${currentTableCode}_${currentYear}`, 'excel');
-                            if (result.title_id && typeof getStorageKey === 'function') safeSetLocalStorage(getStorageKey('simonda_table_title_id'), result.title_id);
-                            if (result.title_en && typeof getStorageKey === 'function') safeSetLocalStorage(getStorageKey('simonda_table_title_en'), result.title_en);
-                            if (result.source && typeof getStorageKey === 'function') safeSetLocalStorage(getStorageKey('simonda_table_source_text'), result.source);
-                            if (result.note && typeof getStorageKey === 'function') safeSetLocalStorage(getStorageKey('simonda_table_note'), result.note);
+                            safeSetLocalStorage(`sibingka_table_html_${currentTableCode}_${currentYear}`, result.table_html);
+                            safeSetLocalStorage(`sibingka_table_is_saved_${currentTableCode}_${currentYear}`, '1');
+                            safeSetLocalStorage(`sibingka_table_source_${currentTableCode}_${currentYear}`, 'excel');
+                            if (result.title_id && typeof getStorageKey === 'function') safeSetLocalStorage(getStorageKey('sibingka_table_title_id'), result.title_id);
+                            if (result.title_en && typeof getStorageKey === 'function') safeSetLocalStorage(getStorageKey('sibingka_table_title_en'), result.title_en);
+                            if (result.source && typeof getStorageKey === 'function') safeSetLocalStorage(getStorageKey('sibingka_table_source_text'), result.source);
+                            if (result.note && typeof getStorageKey === 'function') safeSetLocalStorage(getStorageKey('sibingka_table_note'), result.note);
                         } catch(e) {}
                     }
                     setTimeout(() => { window.location.reload(); }, 600);
@@ -3163,7 +3163,7 @@ var isEditMode = true;
             if (!confirm('Apakah Anda yakin ingin mengajukan data tabel ini ke Wali Data (Diskominfo) untuk diverifikasi?')) return;
             try {
                 const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || csrfToken;
-                const res = await fetch(window.SiAngkaConfig.routes.apiSubmitVerification, {
+                const res = await fetch(window.SiBingkaConfig.routes.apiSubmitVerification, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
                     body: JSON.stringify({
@@ -3191,7 +3191,7 @@ var isEditMode = true;
 
             try {
                 const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || csrfToken;
-                const res = await fetch(window.SiAngkaConfig.routes.apiApproveVerification, {
+                const res = await fetch(window.SiBingkaConfig.routes.apiApproveVerification, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
                     body: JSON.stringify({
@@ -3220,7 +3220,7 @@ var isEditMode = true;
 
             try {
                 const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || csrfToken;
-                const res = await fetch(window.SiAngkaConfig.routes.apiRejectVerification, {
+                const res = await fetch(window.SiBingkaConfig.routes.apiRejectVerification, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
                     body: JSON.stringify({

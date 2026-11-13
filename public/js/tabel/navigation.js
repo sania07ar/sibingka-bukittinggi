@@ -1,9 +1,9 @@
 /**
- * SiAngka Kota Bukittinggi - Table Switcher & Navigation Suite
+ * SiBingka Kota Bukittinggi - Table Switcher & Navigation Suite
  * Digunakan bersama oleh index.blade.php dan edit.blade.php
  */
 
-const cfgNav = window.SiAngkaConfig || {};
+const cfgNav = window.SiBingkaConfig || {};
 var currentYear = window.currentYear || cfgNav.currentYear || new Date().getFullYear().toString();
 var currentTableCode = window.currentTableCode || cfgNav.currentTableCode || '1.1.6';
 var currentOpdCode = window.currentOpdCode || cfgNav.currentOpdCode || '01';
@@ -193,7 +193,7 @@ function formatTitleWithYear(title, defaultTitle, yLabel) {
         return isEn ? `${cleanBase}, ${y1} and ${y2}` : `${cleanBase}, ${y1} dan ${y2}`;
     }
 
-    // Khusus tabel pendidikan 4.1.x (OPD 08): tahun ajaran SiAngka Bukittinggi = Tahun + 1 (misal 2025 -> 2025/2026)
+    // Khusus tabel pendidikan 4.1.x (OPD 08): tahun ajaran SiBingka Bukittinggi = Tahun + 1 (misal 2025 -> 2025/2026)
     if (typeof currentTableCode === 'string' && (currentOpdCode === '08' || currentTableCode.startsWith('4.1')) && currentTableCode !== '4.1.2' && currentTableCode !== '4.1.20' && currentTableCode !== '4.1.24') {
         const yrInt = parseInt(yLabel) || 2025;
         const acadYr = `${yrInt}/${yrInt + 1}`;

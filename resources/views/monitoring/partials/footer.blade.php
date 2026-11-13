@@ -23,7 +23,7 @@
         <!-- Copyright -->
         <div class="text-center sm:text-right text-[11px] text-slate-500">
             <div>© {{ date('Y') }} Badan Pusat Statistik Kota Bukittinggi.</div>
-            <div class="text-[10px] text-slate-400">SiAngka Kota Bukittinggi - Sistem Informasi Data Daerah dalam Angka.</div>
+            <div class="text-[10px] text-slate-400">SiBingka Kota Bukittinggi - Sistem Informasi Bukittinggi dalam Angka.</div>
         </div>
 
     </div>

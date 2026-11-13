@@ -64,13 +64,13 @@
                     <select id="monFilterAgency" onchange="onMonAgencyChanged(this.value)"
                             class="w-full appearance-none pl-9 pr-9 py-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 font-bold text-xs sm:text-[13px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#f95a00]/30 focus:border-[#f95a00] shadow-2xs transition-all cursor-pointer">
                         @if($activeTabType === 'instansi')
-                            @foreach(config('simonda.instansi_list', []) as $iCode => $iInfo)
+                            @foreach(config('sibingka.instansi_list', []) as $iCode => $iInfo)
                                 <option value="{{ $iCode }}" {{ $initialOpd === $iCode ? 'selected' : '' }}>
                                     {{ $iCode }}. {{ $iInfo['name'] ?? $iInfo['short_name'] }}
                                 </option>
                             @endforeach
                         @else
-                            @foreach(config('simonda.opd_list', []) as $oCode => $oInfo)
+                            @foreach(config('sibingka.opd_list', []) as $oCode => $oInfo)
                                 <option value="{{ $oCode }}" {{ $initialOpd === $oCode ? 'selected' : '' }}>
                                     {{ $oCode }}. {{ $oInfo['name'] ?? $oInfo['short_name'] }}
                                 </option>

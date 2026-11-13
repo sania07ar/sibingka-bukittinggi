@@ -19,7 +19,7 @@
         <div class="hidden md:flex items-center space-x-2 text-xs font-bold text-slate-600">
             <a href="{{ route('home') }}" class="hover:text-[#f95a00] flex items-center space-x-1 transition-colors">
                 <i class="fa-solid fa-house text-slate-400"></i>
-                <span>Beranda SiAngka</span>
+                <span>Beranda SiBingka</span>
             </a>
             <span class="text-slate-300">/</span>
             <span class="text-slate-900 flex items-center space-x-1.5">
@@ -28,11 +28,11 @@
             </span>
         </div>
 
-        <!-- Right: Direct to SiAngka & Logout -->
+        <!-- Right: Direct to SiBingka & Logout -->
         <div class="flex items-center space-x-2.5 shrink-0">
             <a href="{{ route('home') }}" 
                class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-[#f95a00] hover:bg-[#e04e00] shadow-sm transition-all">
-                <span>Masuk ke SiAngka</span>
+                <span>Masuk ke SiBingka</span>
                 <i class="fa-solid fa-arrow-right text-[10px]"></i>
             </a>
 

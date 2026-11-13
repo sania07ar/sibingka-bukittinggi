@@ -1,5 +1,5 @@
 # 📘 Panduan Struktur File & Panduan Perubahan Data
-## SiAngka (Sistem Informasi Data Daerah dalam Angka) - BPS Kota Bukittinggi
+## SiBingka (Sistem Informasi Bukittinggi dalam Angka) - BPS Kota Bukittinggi
 
 Dokumen ini dibuat khusus sebagai panduan navigasi cepat jika Anda ingin mengubah nama dinas, daftar instansi, judul tabel, link Google Drive, akun pengguna, atau tampilan website secara manual.
 
@@ -12,7 +12,7 @@ Dokumen ini dibuat khusus sebagai panduan navigasi cepat jika Anda ingin menguba
 | **Menambah / Mengubah Nama OPD** | `resources/views/dinas/isi-opd.blade.php` | Bagian `@php $allOpds = [ ... ] @endphp` |
 | **Menambah / Mengubah Daftar Instansi Vertikal** | `resources/views/dinas/isi-instansi.blade.php` | Bagian `@php $instansiList = [ ... ] @endphp` |
 | **Mengubah Daftar & Deskripsi Data BPS (PODES, Susenas, dll)** | `resources/views/dinas/data-bps.blade.php` | Bagian `@php $bpsDatasets = [ ... ] @endphp` |
-| **Mengubah Judul & Kode Tabel Publikasi BPS (Master Catalog)** | `public/simonda-catalogs.js` | `opdTablesCatalog`, `instansiTablesCatalog`, `bpsTablesCatalog` |
+| **Mengubah Judul & Kode Tabel Publikasi BPS (Master Catalog)** | `public/sibingka-catalogs.js` | `opdTablesCatalog`, `instansiTablesCatalog`, `bpsTablesCatalog` |
 | **Mengubah Link Folder Google Drive Blanko PDF** | `resources/views/dinas/isi-opd.blade.php` & `isi-instansi.blade.php` | Cari teks `https://drive.google.com/drive/folders/...` |
 | **Mengubah Link Google Drive per Dataset BPS** | `resources/views/dinas/data-bps.blade.php` | Di dalam array `$bpsDatasets` pada kunci `'link'` |
 | **Mengubah Desain Pop-up Daftar Tabel** | `resources/views/dinas/partials/modal-tabel-list.blade.php` | Komponen modal daftar tabel |
@@ -32,7 +32,7 @@ Dokumen ini dibuat khusus sebagai panduan navigasi cepat jika Anda ingin menguba
 
 ## 🛡️ Alur Kerja Verifikasi & ACC Data (Satu Data Indonesia)
 
-Sistem SiAngka kini dilengkapi alur verifikasi resmi antara produsen data (Dinas/Instansi) dan pembina data (BPS Bukittinggi):
+Sistem SiBingka kini dilengkapi alur verifikasi resmi antara produsen data (Dinas/Instansi) dan pembina data (BPS Bukittinggi):
 
 1. **Pengisian Data oleh Dinas/OPD:**
    * Dinas masuk dan langsung mengisi/mengedit angka pada tabel mereka.
@@ -58,7 +58,7 @@ Sistem SiAngka kini dilengkapi alur verifikasi resmi antara produsen data (Dinas
 Fitur ini memungkinkan **Dinas/OPD** dan **Admin BPS** saling berdiskusi, memberikan catatan penjelasan, atau bertanya tentang angka data tertentu:
 
 1. **Tombol "Catatan" di Header Toolbar:**
-   * Tampil di halaman lihat data ([`tabel/index.blade.php`](file:///d:/WEB/bps/simonda-bukittinggi/resources/views/tabel/index.blade.php)) dan halaman edit ([`tabel/edit.blade.php`](file:///d:/WEB/bps/simonda-bukittinggi/resources/views/tabel/edit.blade.php)).
+   * Tampil di halaman lihat data ([`tabel/index.blade.php`](file:///d:/WEB/bps/sibingka-bukittinggi/resources/views/tabel/index.blade.php)) dan halaman edit ([`tabel/edit.blade.php`](file:///d:/WEB/bps/sibingka-bukittinggi/resources/views/tabel/edit.blade.php)).
    * Memiliki badge counter: `Catatan (X)` yang menunjukkan total komentar aktif pada tabel tersebut.
 2. **Indikator pada Sel Tabel (Visual & Interaktif):**
    * Sel yang memiliki catatan akan diberi **tanda pin oranye di sudut kanan atas** (`corner pin`) dan **badge oranye hidup `[💬 X]`** berisi jumlah komentar.
@@ -72,7 +72,7 @@ Fitur ini memungkinkan **Dinas/OPD** dan **Admin BPS** saling berdiskusi, member
 ## 📂 Struktur Direktori Penting
 
 ```text
-simonda-bukittinggi/
+sibingka-bukittinggi/
 ├── app/
 │   └── Http/
 │       └── Controllers/
@@ -84,7 +84,7 @@ simonda-bukittinggi/
 │   ├── js/
 │   │   ├── dinas-catalog.js                 # JS interaktif: pop-up, live search, paginasi
 │   │   └── monitoring.js                    # JS monitoring: filter, ganti tahap, export Excel
-│   ├── simonda-catalogs.js                  # Master katalog daftar tabel DDA (OPD, Instansi, BPS)
+│   ├── sibingka-catalogs.js                  # Master katalog daftar tabel DDA (OPD, Instansi, BPS)
 │   └── images/                              # Logo BPS, watermark pita Sensus Ekonomi, avatar
 │
 ├── resources/
@@ -109,7 +109,7 @@ simonda-bukittinggi/
 │       │   └── edit.blade.php               # Form edit data tabel
 │       │
 │       └── partials/
-│           └── navbar.blade.php             # Header atas (Logo BPS, Judul SiAngka)
+│           └── navbar.blade.php             # Header atas (Logo BPS, Judul SiBingka)
 │
 └── routes/
     └── web.php                              # Daftar semua alamat URL website
@@ -135,7 +135,7 @@ $allOpds = [
 ---
 
 ### 2. Cara Menambah Judul Tabel Baru di Katalog Master
-Buka file **`public/simonda-catalogs.js`**, cari kode OPD yang bersangkutan:
+Buka file **`public/sibingka-catalogs.js`**, cari kode OPD yang bersangkutan:
 ```javascript
 const opdTablesCatalog = {
     '01': [

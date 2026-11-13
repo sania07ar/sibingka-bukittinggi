@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Internal BPS - SiAngka Kota Bukittinggi</title>
+    <title>Data Internal BPS - SiBingka Kota Bukittinggi</title>
     
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -25,7 +25,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <!-- Master Tables Catalog (OPD, Instansi, & BPS) -->
-    <script src="{{ asset('simonda-catalogs.js') }}"></script>
+    <script src="{{ asset('sibingka-catalogs.js') }}"></script>
 
     <style>
         body {
@@ -54,9 +54,9 @@
 </head>
 <body class="min-h-screen lg:h-screen lg:overflow-hidden text-slate-800 antialiased flex flex-col justify-between selection:bg-orange-500 selection:text-white bg-[#f0f2f5] relative overflow-x-hidden">
 
-    <!-- Background SiAngka Jam Gadang Watermark -->
+    <!-- Background SiBingka Jam Gadang Watermark -->
     <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden flex items-center justify-center opacity-20 select-none">
-        <img src="{{ asset('images/siangka-watermark-jamgadang.jpg') }}" alt="Watermark SiAngka Jam Gadang" class="w-[850px] sm:w-[1100px] lg:w-[1300px] max-w-none transform -translate-x-16 sm:-translate-x-28 -translate-y-6 object-contain mix-blend-multiply">
+        <img src="{{ asset('images/sibingka-watermark-jamgadang.jpg') }}" alt="Watermark SiBingka Jam Gadang" class="w-[850px] sm:w-[1100px] lg:w-[1300px] max-w-none transform -translate-x-16 sm:-translate-x-28 -translate-y-6 object-contain mix-blend-multiply">
     </div>
 
     <!-- MAIN WRAPPER -->

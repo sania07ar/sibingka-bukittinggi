@@ -1,5 +1,5 @@
 /**
- * SiAngka Kota Bukittinggi - Export & Spreadsheet Modal Suite
+ * SiBingka Kota Bukittinggi - Export & Spreadsheet Modal Suite
  * Digunakan untuk export XLSX, PDF, Print Landscape, dan Tampilan Salin Spreadsheet
  */
 
@@ -59,7 +59,7 @@ function exportToPDF() {
         doc.setFontSize(9.5);
         doc.setTextColor(71, 85, 105);
         doc.setFont('helvetica', 'normal');
-        doc.text('Sistem Informasi Data Daerah dalam Angka (SiAngka) Kota Bukittinggi', 14, 19.5);
+        doc.text('Sistem Informasi Bukittinggi dalam Angka (SiBingka) Kota Bukittinggi', 14, 19.5);
 
         doc.setDrawColor(226, 232, 240);
         doc.setLineWidth(0.4);
@@ -126,7 +126,7 @@ function exportToPDF() {
 
         doc.setFontSize(7.5);
         doc.setTextColor(148, 163, 184);
-        doc.text(`Dokumen resmi statistik sektoral diexport melalui SiAngka Kota Bukittinggi pada ${new Date().toLocaleString('id-ID')}`, 14, 198);
+        doc.text(`Dokumen resmi statistik sektoral diexport melalui SiBingka Kota Bukittinggi pada ${new Date().toLocaleString('id-ID')}`, 14, 198);
 
         const safeOpd = opdName.substring(0, 20).replace(/[^a-zA-Z0-9]/g, '_');
         const fileName = `Tabel_${currentTableCode.replace(/\./g, '_')}_${safeOpd}_${currentYear}.pdf`;

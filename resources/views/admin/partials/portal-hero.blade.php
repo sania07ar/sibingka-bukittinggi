@@ -5,6 +5,6 @@
     </h1>
 
     <p class="text-[11px] sm:text-xs text-slate-600 font-medium leading-snug sm:leading-relaxed max-w-xl mx-auto">
-        Halo, <strong class="text-slate-900">{{ session('user.displayName', 'Administrator BPS') }}</strong>! Silakan pilih untuk mengelola akun admin atau langsung masuk ke halaman SiAngka.
+        Halo, <strong class="text-slate-900">{{ session('user.displayName', 'Administrator BPS') }}</strong>! Silakan pilih untuk mengelola akun admin atau langsung masuk ke halaman SiBingka.
     </p>
 </div>

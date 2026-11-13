@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SiAngka Kota Bukittinggi - BPS Kota Bukittinggi</title>
+    <title>SiBingka Kota Bukittinggi - BPS Kota Bukittinggi</title>
     
     <!-- Favicon Logo BPS -->
     <link rel="icon" type="image/png" href="{{ asset('images/bps-symbol.png') }}">
@@ -207,7 +207,7 @@
                         </div>
                     </div>
 
-                    <form action="{{ route('logout') }}" method="POST" class="inline m-0 p-0" onsubmit="return confirm('Apakah Anda yakin ingin keluar dari SiAngka Kota Bukittinggi?');">
+                    <form action="{{ route('logout') }}" method="POST" class="inline m-0 p-0" onsubmit="return confirm('Apakah Anda yakin ingin keluar dari SiBingka Kota Bukittinggi?');">
                         @csrf
                         <button type="submit" 
                                 class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-200 hover:border-red-600 flex items-center justify-center text-xs transition-colors cursor-pointer"
@@ -253,17 +253,17 @@
                     Selamat Datang, <span class="text-[#f95a00] font-extrabold">{{ $dinasName }}</span>
                 </p>
 
-                <!-- Main Title: SiAngka Digital Application Style -->
+                <!-- Main Title: SiBingka Digital Application Style -->
                 <div class="space-y-1 mb-2">
                     <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-800 tracking-tight leading-none flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                        <span class="text-slate-900 font-bold">SiAngka</span>
+                        <span class="text-slate-900 font-bold">SiBingka</span>
                         <span class="text-xl sm:text-2xl lg:text-3xl font-bold text-[#f95a00] font-sans tracking-tight">Kota Bukittinggi</span>
                     </h1>
                 </div>
 
                 <!-- Formal Subtitle -->
                 <p class="text-sm sm:text-base lg:text-lg font-bold text-slate-700 mt-2 tracking-normal leading-snug">
-                    Sistem Informasi Data Daerah dalam Angka Bukittinggi
+                    Sistem Informasi Bukittinggi dalam Angka
                 </p>
 
                 <!-- Concise Description -->
@@ -328,7 +328,7 @@
         </div>
 
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-500 font-medium">
-            <p>&copy; 2026 Badan Pusat Statistik Kota Bukittinggi. Sistem Informasi Data Daerah dalam Angka Bukittinggi (SiAngka).</p>
+            <p>&copy; 2026 Badan Pusat Statistik Kota Bukittinggi. Sistem Informasi Bukittinggi dalam Angka (SiBingka).</p>
         </div>
     </footer>
 
@@ -343,12 +343,12 @@
             <div class="flex items-center gap-3 mb-4">
                 <img src="{{ asset('images/bps-symbol.png') }}" alt="Logo BPS" class="h-8 w-auto">
                 <div>
-                    <h3 class="font-bold text-slate-800 text-lg">Tentang SiAngka</h3>
+                    <h3 class="font-bold text-slate-800 text-lg">Tentang SiBingka</h3>
                     <p class="text-xs text-slate-600 font-semibold">Badan Pusat Statistik Kota Bukittinggi</p>
                 </div>
             </div>
             <p class="text-slate-600 text-xs sm:text-sm leading-relaxed">
-                <strong>SiAngka (Sistem Informasi Data Daerah dalam Angka Bukittinggi)</strong> adalah platform terintegrasi yang dikembangkan oleh BPS Kota Bukittinggi untuk memudahkan Organisasi Perangkat Daerah (OPD) dan Instansi Vertikal dalam mengunggah, mengelola, serta memantau progres kelengkapan data sektoral secara real-time.
+                <strong>SiBingka (Sistem Informasi Bukittinggi dalam Angka)</strong> adalah platform terintegrasi yang dikembangkan oleh BPS Kota Bukittinggi untuk memudahkan Organisasi Perangkat Daerah (OPD) dan Instansi Vertikal dalam mengunggah, mengelola, serta memantau progres kelengkapan data sektoral secara real-time.
             </p>
             <div class="mt-6 flex justify-end">
                 <button onclick="closeAboutModal()" class="px-5 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs">

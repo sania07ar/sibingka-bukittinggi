@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Monitoring Progress Pengumpulan Data BPS - SiAngka Kota Bukittinggi</title>
+    <title>Monitoring Progress Pengumpulan Data BPS - SiBingka Kota Bukittinggi</title>
     
     <!-- Favicon Logo BPS -->
     <link rel="icon" type="image/png" href="{{ asset('images/bps-symbol.png') }}">
@@ -23,7 +23,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <!-- Master Catalog Tables (OPD & Instansi) -->
-    <script src="{{ asset('simonda-catalogs.js') }}"></script>
+    <script src="{{ asset('sibingka-catalogs.js') }}"></script>
 
     <!-- SheetJS with Styles (xlsx-js-style) -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
@@ -50,9 +50,9 @@
 </head>
 <body class="min-h-screen text-slate-800 antialiased flex flex-col justify-between selection:bg-orange-500 selection:text-white bg-[#f0f3f8] relative overflow-x-hidden">
 
-    <!-- Background SiAngka Jam Gadang Watermark -->
+    <!-- Background SiBingka Jam Gadang Watermark -->
     <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden flex items-center justify-center opacity-20 select-none">
-        <img src="{{ asset('images/siangka-watermark-jamgadang.jpg') }}" alt="Watermark SiAngka Jam Gadang" class="w-[950px] sm:w-[1250px] lg:w-[1550px] max-w-none transform -translate-x-12 sm:-translate-x-20 -translate-y-4 object-contain mix-blend-multiply">
+        <img src="{{ asset('images/sibingka-watermark-jamgadang.jpg') }}" alt="Watermark SiBingka Jam Gadang" class="w-[950px] sm:w-[1250px] lg:w-[1550px] max-w-none transform -translate-x-12 sm:-translate-x-20 -translate-y-4 object-contain mix-blend-multiply">
     </div>
 
     <!-- MAIN WRAPPER -->

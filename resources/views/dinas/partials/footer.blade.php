@@ -25,7 +25,7 @@
 
             <div class="h-3 w-px bg-slate-300"></div>
 
-            <form action="{{ route('logout') }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin keluar dari SiAngka Kota Bukittinggi?');">
+            <form action="{{ route('logout') }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin keluar dari SiBingka Kota Bukittinggi?');">
                 @csrf
                 <button type="submit" 
                         title="Keluar dari sistem"

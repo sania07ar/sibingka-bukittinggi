@@ -64,7 +64,7 @@ class TabelMetadata extends Model
                 $tds = $tdMatches[1];
                 if (empty($tds)) continue;
 
-                // Pada struktur tabel statistik SiAngka:
+                // Pada struktur tabel statistik SiBingka:
                 // Kolom index 0 biasanya adalah nama indikator/kecamatan/kategori (label baris).
                 // Kolom index >= 1 adalah sel data angka.
                 // Jika hanya ada 1 kolom, maka kolom tersebut diperiksa.

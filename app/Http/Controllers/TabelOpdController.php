@@ -64,7 +64,7 @@ class TabelOpdController extends Controller
     }
 
     /**
-     * Normalisasi instansi/OPD dan tipe data tabel resmi SiAngka
+     * Normalisasi instansi/OPD dan tipe data tabel resmi SiBingka
      */
     public function normalizeAgency(string $tableCode, string $opdCode, string $type): array
     {
@@ -964,7 +964,7 @@ class TabelOpdController extends Controller
         }
 
         // Khusus tabel-tabel sekolah (Dinas Pendidikan - 4.1.1, 4.1.3 s.d. 4.1.17):
-        // Di SiAngka, tahun ajaran terkininya adalah Tahun + 1 (misal tahun 2025 memuat 2023/2024, 2024/2025, 2025/2026 dengan judul berakhiran 2025/2026)
+        // Di SiBingka, tahun ajaran terkininya adalah Tahun + 1 (misal tahun 2025 memuat 2023/2024, 2024/2025, 2025/2026 dengan judul berakhiran 2025/2026)
         // Col 1: (year-2)/(year-1), Col 2: (year-1)/year, Col 3: year/(year+1), Judul: year/(year+1)
         $schoolCodes = ['4.1.1', '4.1.3', '4.1.4', '4.1.5', '4.1.6', '4.1.7', '4.1.8', '4.1.9', '4.1.10', '4.1.11', '4.1.12', '4.1.13', '4.1.14', '4.1.15', '4.1.16', '4.1.17'];
         if (in_array($tableCode, $schoolCodes)) {

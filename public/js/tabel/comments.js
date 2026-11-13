@@ -1,5 +1,5 @@
 /**
- * SiAngka Kota Bukittinggi - Cell Comments & Discussions Suite
+ * SiBingka Kota Bukittinggi - Cell Comments & Discussions Suite
  * Digunakan bersama oleh index.blade.php dan edit.blade.php
  */
 

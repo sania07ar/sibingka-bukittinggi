@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tabel Data Statistik Sektoral - SiAngka Kota Bukittinggi</title>
+    <title>Tabel Data Statistik Sektoral - SiBingka Kota Bukittinggi</title>
     
     <!-- Favicon Logo BPS -->
     <link rel="icon" type="image/png" href="{{ asset('images/bps-symbol.png') }}">
@@ -25,7 +25,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
     <!-- Master Tables Catalog (All OPD & Instansi) -->
-    <script src="{{ asset('simonda-catalogs.js') }}"></script>
+    <script src="{{ asset('sibingka-catalogs.js') }}"></script>
     <!-- Table Helpers & Schemas -->
     <script src="{{ asset('js/tabel/helpers.js') }}?v={{ time() }}"></script>
     <script src="{{ asset('js/tabel/schemas-display.js') }}?v={{ time() }}"></script>
@@ -322,9 +322,9 @@
     <!-- Decorative Top Background Glow -->
     <div class="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-64 bg-gradient-to-b from-orange-100/40 via-orange-50/20 to-transparent pointer-events-none -z-10"></div>
 
-    <!-- Background SiAngka Jam Gadang Watermark -->
+    <!-- Background SiBingka Jam Gadang Watermark -->
     <div class="fixed inset-0 pointer-events-none -z-10 overflow-hidden flex items-center justify-center opacity-15 select-none">
-        <img src="{{ asset('images/siangka-watermark-jamgadang.jpg') }}" alt="Watermark SiAngka Jam Gadang" class="w-[850px] sm:w-[1100px] lg:w-[1300px] max-w-none transform -translate-x-16 sm:-translate-x-28 -translate-y-6 object-contain mix-blend-multiply">
+        <img src="{{ asset('images/sibingka-watermark-jamgadang.jpg') }}" alt="Watermark SiBingka Jam Gadang" class="w-[850px] sm:w-[1100px] lg:w-[1300px] max-w-none transform -translate-x-16 sm:-translate-x-28 -translate-y-6 object-contain mix-blend-multiply">
     </div>
 
     <!-- MAIN WRAPPER -->
@@ -348,7 +348,7 @@
                                     BADAN PUSAT STATISTIK KOTA BUKITTINGGI
                                 </h1>
                                 <p class="text-[10px] font-bold text-[#f95a00] uppercase tracking-wide leading-tight">
-                                    Sistem Informasi Data Daerah dalam Angka (SiAngka)
+                                    Sistem Informasi Bukittinggi dalam Angka (SiBingka)
                                 </p>
                                 <p class="text-[9.5px] text-slate-600 font-medium" id="printOpdSubheading">
                                     {{ ($currentType ?? 'opd') === 'instansi' ? 'Instansi' : 'OPD' }} Penyelenggara Data: DINAS PEKERJAAN UMUM DAN PENATAAN RUANG
@@ -415,9 +415,9 @@
     @include('tabel.partials.comments-drawer')
     @include('tabel.partials.spreadsheet-modal')
 
-    <!-- 1. GLOBAL SIANGKA CONFIGURATION & STATE (HARUS PERTAMA SEBELUM MODUL JS LAINNYA) -->
+    <!-- 1. GLOBAL SIBINGKA CONFIGURATION & STATE (HARUS PERTAMA SEBELUM MODUL JS LAINNYA) -->
     <script>
-        window.SiAngkaConfig = {
+        window.SiBingkaConfig = {
             csrfToken: '{{ csrf_token() }}',
             currentOpdCode: '{{ $currentOpdCode ?? "01" }}',
             currentTableCode: '{{ $currentTableCode ?? "1.1.6" }}',
@@ -440,15 +440,15 @@
         };
 
         // Sinkronisasi variabel ke global window agar kompatibel 100%
-        window.currentOpdCode = window.SiAngkaConfig.currentOpdCode;
-        window.currentTableCode = window.SiAngkaConfig.currentTableCode;
-        window.currentYear = window.SiAngkaConfig.currentYear;
-        window.currentType = window.SiAngkaConfig.currentType;
-        window.csrfToken = window.SiAngkaConfig.csrfToken;
-        window.serverDbDataStore = window.SiAngkaConfig.serverDbDataStore;
-        window.serverDbMetadata = window.SiAngkaConfig.serverDbMetadata;
-        window.serverDbFallbackMetadata = window.SiAngkaConfig.serverDbFallbackMetadata;
-        window.currentUserData = window.SiAngkaConfig.currentUserData;
+        window.currentOpdCode = window.SiBingkaConfig.currentOpdCode;
+        window.currentTableCode = window.SiBingkaConfig.currentTableCode;
+        window.currentYear = window.SiBingkaConfig.currentYear;
+        window.currentType = window.SiBingkaConfig.currentType;
+        window.csrfToken = window.SiBingkaConfig.csrfToken;
+        window.serverDbDataStore = window.SiBingkaConfig.serverDbDataStore;
+        window.serverDbMetadata = window.SiBingkaConfig.serverDbMetadata;
+        window.serverDbFallbackMetadata = window.SiBingkaConfig.serverDbFallbackMetadata;
+        window.currentUserData = window.SiBingkaConfig.currentUserData;
         window.tableSchemas = window.tableSchemas || {};
         window.isEditMode = false;
     </script>

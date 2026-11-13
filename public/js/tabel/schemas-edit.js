@@ -1,5 +1,5 @@
 /**
- * SiAngka Kota Bukittinggi - Table Editable Form Schemas
+ * SiBingka Kota Bukittinggi - Table Editable Form Schemas
  * Dikelola secara modular untuk edit.blade.php
  */
 
@@ -3514,7 +3514,7 @@ window.tableSchemas = {
                     const p = get5YearPeriod(yr);
                     const years = p.yearsAsc;
 
-                    // Data historis resmi dari database MySQL SiMonDa Bukittinggi:
+                    // Data historis resmi dari database MySQL SiBingka Bukittinggi:
                     const dataStore = {
                         2019: { negara: '-', provinsi: '-', kota: '-', total: '-' },
                         2020: { negara: '11,75', provinsi: '-', kota: '180,17', total: '191,92' },
@@ -4139,7 +4139,7 @@ window.tableSchemas = {
                     const p = get5YearPeriod(yr);
                     const years = p.yearsAsc;
 
-                    // Data historis resmi dari database MySQL SiMonDa Bukittinggi:
+                    // Data historis resmi dari database MySQL SiBingka Bukittinggi:
                     const dataStore = {
                         2021: { peraturan_daerah: '12', keputusan_dprd: '45', keputusan_pimpinan: '–', pernyataan: '–', pernyataan_pendapat: '–', resolusi: '–', dengar_pendapat: '–', paripurna_terbuka: '28', paripurna_istimewa: '9', panitia_musyawarah: '23', badan_kehormatan: '3', badan_anggaran: '75', panitia_khusus: '60', gabungan_komisi: '25', rapat_komisi: '70', turun_lapangan: '6', keluar_daerah: '–', rapat_kerja: '–', penyampaian_aspirasi: '5', study_banding: '12', reses: '3', kunker_komisi: '3', total: '379' },
                         2022: { peraturan_daerah: '8', keputusan_dprd: '44', keputusan_pimpinan: '1', pernyataan: '–', pernyataan_pendapat: '–', resolusi: '–', dengar_pendapat: '3', paripurna_terbuka: '20', paripurna_istimewa: '5', panitia_musyawarah: '22', badan_kehormatan: '4', badan_anggaran: '36', panitia_khusus: '56', gabungan_komisi: '27', rapat_komisi: '26', turun_lapangan: '1', keluar_daerah: '8', rapat_kerja: '9', penyampaian_aspirasi: '21', study_banding: '5', reses: '3', kunker_komisi: '3', total: '322' },

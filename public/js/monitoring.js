@@ -1,5 +1,5 @@
 /**
- * SiMonDa Bukittinggi - Monitoring Progress Module (OPD & Instansi Vertikal)
+ * SiBingka Bukittinggi - Monitoring Progress Module (OPD & Instansi Vertikal)
  * Badan Pusat Statistik Kota Bukittinggi
  */
 

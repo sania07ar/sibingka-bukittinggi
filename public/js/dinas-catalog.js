@@ -1,5 +1,5 @@
 /**
- * SiAngka Kota Bukittinggi - Dinas & Catalog Interactions
+ * SiBingka Kota Bukittinggi - Dinas & Catalog Interactions
  * Digunakan untuk: Halaman OPD (isi-opd), Instansi Vertikal (isi-instansi), dan Data Internal BPS (data-bps).
  */
 
@@ -106,7 +106,7 @@
         const cfg = getConfig();
         const catalog = getCatalog();
         const cleanCode = code ? code.toString().padStart(2, '0') : '';
-        const storageKey = `simonda_custom_${cfg.type}_tables_${code}`;
+        const storageKey = `sibingka_custom_${cfg.type}_tables_${code}`;
 
         // 1. Gabungkan langsung dari window.serverDbCustomTables jika di-inject oleh backend
         if (typeof window !== 'undefined' && Array.isArray(window.serverDbCustomTables)) {
@@ -141,7 +141,7 @@
             console.warn('Gagal membaca custom tables dari localStorage:', e);
         }
 
-        // Sync dari Database SiMonDa
+        // Sync dari Database SiBingka
         const fetchUrl = `${cfg.customCatalogUrl}?type=${encodeURIComponent(cfg.type)}&opd=${encodeURIComponent(code)}`;
         fetch(fetchUrl)
             .then(res => res.json())
@@ -618,7 +618,7 @@
 
         // Simpan ke localStorage
         const cfg = getConfig();
-        const storageKey = `simonda_custom_${cfg.type}_tables_${currentAgencyCode}`;
+        const storageKey = `sibingka_custom_${cfg.type}_tables_${currentAgencyCode}`;
         try {
             let stored = JSON.parse(localStorage.getItem(storageKey) || '[]');
             if (!Array.isArray(stored)) stored = [];
@@ -672,7 +672,7 @@
         }
 
         const cfg = getConfig();
-        const storageKey = `simonda_custom_${cfg.type}_tables_${currentAgencyCode}`;
+        const storageKey = `sibingka_custom_${cfg.type}_tables_${currentAgencyCode}`;
         try {
             let stored = JSON.parse(localStorage.getItem(storageKey) || '[]');
             stored = stored.filter(t => t.code !== code);

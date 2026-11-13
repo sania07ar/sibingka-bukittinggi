@@ -21,7 +21,7 @@
                     {{ session('user.displayName', 'Admin BPS Bukittinggi') }}
                 </h3>
                 <p class="text-xs font-bold text-[#f95a00] mt-0.5">
-                    Administrator Utama SiAngka
+                    Administrator Utama SiBingka
                 </p>
                 <p class="text-[11px] text-slate-500 mt-1">
                     BPS Kota Bukittinggi • IPDS
@@ -130,7 +130,7 @@
                     </div>
 
                     <div class="flex justify-end pt-2">
-                        <button type="submit" class="btn-simonda text-xs">
+                        <button type="submit" class="btn-sibingka text-xs">
                             <i class="fa-solid fa-floppy-disk mr-1.5"></i>
                             <span>Simpan Profil</span>
                         </button>
@@ -199,7 +199,7 @@
                             <i class="fa-solid fa-circle-info text-orange-500 mr-1"></i>
                             Perubahan langsung aktif untuk login berikutnya.
                         </span>
-                        <button type="submit" class="btn-simonda text-xs">
+                        <button type="submit" class="btn-sibingka text-xs">
                             <i class="fa-solid fa-lock mr-1.5"></i>
                             <span>Perbarui Kata Sandi</span>
                         </button>

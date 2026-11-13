@@ -28,7 +28,7 @@
 
         <!-- Copyright -->
         <p class="text-[9.5px] sm:text-[11px] text-slate-500 text-center sm:text-right">
-            © <span id="currentYear"></span> <strong>Badan Pusat Statistik Kota Bukittinggi</strong>. SiAngka Kota Bukittinggi - Sistem Informasi Data Daerah dalam Angka.
+            © <span id="currentYear"></span> <strong>Badan Pusat Statistik Kota Bukittinggi</strong>. SiBingka Kota Bukittinggi - Sistem Informasi Bukittinggi dalam Angka.
         </p>
 
     </div>

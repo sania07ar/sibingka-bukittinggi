@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    @include('partials.head', ['title' => 'Kelola Akun Dinas & Instansi Vertikal - SiAngka Kota Bukittinggi | BPS Kota Bukittinggi'])
+    @include('partials.head', ['title' => 'Kelola Akun Dinas & Instansi Vertikal - SiBingka Kota Bukittinggi | BPS Kota Bukittinggi'])
     @include('admin.partials.styles')
 </head>
 <body class="min-h-screen text-slate-800 antialiased flex flex-col relative selection:bg-orange-500 selection:text-white bg-[#f1f4f9] overflow-x-hidden">

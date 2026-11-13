@@ -1,5 +1,5 @@
 /**
- * SiAngka Kota Bukittinggi - Table Templates Generator
+ * SiBingka Kota Bukittinggi - Table Templates Generator
  * Membangun struktur template kosong dari data tahun sebelumnya
  */
 

@@ -13,7 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'simonda.auth' => \App\Http\Middleware\CheckSimondaAuth::class,
+            'sibingka.auth' => \App\Http\Middleware\CheckSibingkaAuth::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

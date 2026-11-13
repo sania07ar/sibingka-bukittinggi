@@ -16,8 +16,8 @@
         transition: all 0.5s ease;
     }
 
-    /* SiMonDa Standard Orange Button */
-    .btn-simonda {
+    /* SiBingka Standard Orange Button */
+    .btn-sibingka {
         background: linear-gradient(135deg, #f95a00 0%, #eb5200 100%);
         color: #ffffff;
         font-weight: 700;
@@ -35,7 +35,7 @@
         cursor: pointer;
     }
 
-    .btn-simonda:hover {
+    .btn-sibingka:hover {
         background: linear-gradient(135deg, #ea5200 0%, #db4500 100%);
         transform: translateY(-1px);
         box-shadow: 0 6px 18px rgba(249, 90, 0, 0.32);

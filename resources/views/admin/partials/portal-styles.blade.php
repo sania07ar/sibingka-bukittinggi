@@ -33,8 +33,8 @@
         transition: all 0.5s ease;
     }
 
-    /* SiMonDa Standard Orange Button */
-    .btn-simonda {
+    /* SiBingka Standard Orange Button */
+    .btn-sibingka {
         background: linear-gradient(135deg, #f95a00 0%, #eb5200 100%);
         color: #ffffff;
         font-weight: 700;
@@ -52,13 +52,13 @@
         cursor: pointer;
     }
 
-    .btn-simonda:hover, .portal-card:hover .btn-simonda {
+    .btn-sibingka:hover, .portal-card:hover .btn-sibingka {
         background: linear-gradient(135deg, #ea5200 0%, #db4500 100%);
         transform: translateY(-2px);
         box-shadow: 0 6px 18px rgba(249, 90, 0, 0.35);
     }
 
-    .btn-simonda:active, .portal-card:active .btn-simonda {
+    .btn-sibingka:active, .portal-card:active .btn-sibingka {
         transform: translateY(0) scale(0.98);
     }
 
@@ -92,7 +92,7 @@
     }
 
     /* Shimmer effect on buttons */
-    .btn-simonda::after, .btn-account::after {
+    .btn-sibingka::after, .btn-account::after {
         content: '';
         position: absolute;
         top: -50%;
@@ -109,8 +109,8 @@
         transition: all 0.65s ease;
     }
 
-    .btn-simonda:hover::after, .btn-account:hover::after,
-    .portal-card:hover .btn-simonda::after, .portal-card:hover .btn-account::after {
+    .btn-sibingka:hover::after, .btn-account:hover::after,
+    .portal-card:hover .btn-sibingka::after, .portal-card:hover .btn-account::after {
         left: 130%;
     }
 

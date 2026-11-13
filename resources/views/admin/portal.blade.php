@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    @include('partials.head', ['title' => 'Pilih Layanan - SiAngka Kota Bukittinggi | BPS Kota Bukittinggi'])
+    @include('partials.head', ['title' => 'Pilih Layanan - SiBingka Kota Bukittinggi | BPS Kota Bukittinggi'])
     @include('admin.partials.portal-styles')
 </head>
 <body class="min-h-screen w-full bg-[#f1f4f9] text-slate-800 antialiased flex flex-col justify-between relative selection:bg-orange-500 selection:text-white overflow-x-hidden overflow-y-auto">
@@ -63,12 +63,12 @@
                 Pilih Menu Yang Ingin Dituju
             </h1>
             <p class="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed max-w-xl mx-auto">
-                Halo, <strong class="text-slate-900">{{ session('user.displayName', 'Administrator BPS') }}</strong>! Silakan pilih untuk mengelola akun dinas atau langsung masuk ke lembar kerja SiAngka.
+                Halo, <strong class="text-slate-900">{{ session('user.displayName', 'Administrator BPS') }}</strong>! Silakan pilih untuk mengelola akun dinas atau langsung masuk ke lembar kerja SiBingka.
             </p>
         </div>
 
         <!-- ========================================================================= -->
-        <!-- 2. PILIHAN KARTU LAYANAN: KELOLA AKUN vs MASUK SiAngka                    -->
+        <!-- 2. PILIHAN KARTU LAYANAN: KELOLA AKUN vs MASUK SiBingka                    -->
         <!-- ========================================================================= -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 w-full max-w-4xl">
             
@@ -120,9 +120,9 @@
                 </div>
             </a>
 
-            <!-- KARTU 2: MASUK KE HALAMAN UTAMA SiAngka -->
+            <!-- KARTU 2: MASUK KE HALAMAN UTAMA SiBingka -->
             <a href="{{ route('home') }}" 
-               id="card-masuk-simonda"
+               id="card-masuk-sibingka"
                class="portal-card block h-full bg-white/95 backdrop-blur-md rounded-2xl p-5 sm:p-6 border border-slate-200/90 shadow-lg shadow-slate-900/5 relative overflow-hidden flex flex-col justify-between group hover:border-[#f95a00]/40 hover:shadow-orange-900/10 active:border-[#f95a00] no-underline text-inherit cursor-pointer">
                 <div>
                     <!-- Header Icon -->
@@ -134,11 +134,11 @@
 
                     <!-- Title & Description -->
                     <h2 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight mb-1 group-hover:text-[#f95a00] transition-colors">
-                        Masuk ke SiAngka
+                        Masuk ke SiBingka
                     </h2>
                     
                     <p class="text-xs text-slate-600 leading-relaxed mb-3 sm:mb-4">
-                        Buka portal utama SiAngka Kota Bukittinggi untuk mengakses pengisian data OPD, Instansi Vertikal, dan monitoring.
+                        Buka portal utama SiBingka Kota Bukittinggi untuk mengakses pengisian data OPD, Instansi Vertikal, dan monitoring.
                     </p>
 
                     <!-- Features Checklist -->
@@ -160,9 +160,9 @@
 
                 <!-- Action Button -->
                 <div>
-                    <div class="btn-simonda w-full text-xs py-2.5 px-3 uppercase tracking-wider space-x-2 group-hover:shadow-md transition-all font-bold"
-                         id="btn-pilih-masuk-simonda">
-                        <span>Masuk ke SiAngka</span>
+                    <div class="btn-sibingka w-full text-xs py-2.5 px-3 uppercase tracking-wider space-x-2 group-hover:shadow-md transition-all font-bold"
+                         id="btn-pilih-masuk-sibingka">
+                        <span>Masuk ke SiBingka</span>
                         <i class="fa-solid fa-arrow-right text-[11px] transition-transform group-hover:translate-x-1"></i>
                     </div>
                 </div>
@@ -177,7 +177,7 @@
         <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs">
             
             <div class="text-[11px] text-slate-600">
-                <span class="font-bold text-slate-800">SiAngka Kota Bukittinggi</span> — Sistem Informasi Data Daerah dalam Angka
+                <span class="font-bold text-slate-800">SiBingka Kota Bukittinggi</span> — Sistem Informasi Bukittinggi dalam Angka
             </div>
 
             <!-- Copyright & Alamat BPS Bukittinggi -->

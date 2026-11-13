@@ -1,10 +1,10 @@
 /**
- * SiMonDa Bukittinggi - Authentication & Session Management
+ * SiBingka Bukittinggi - Authentication & Session Management
  * Badan Pusat Statistik Kota Bukittinggi
  */
 
 (function () {
-    const AUTH_KEY = 'simonda_auth';
+    const AUTH_KEY = 'sibingka_auth';
 
     function getAuthData() {
         const stored = localStorage.getItem(AUTH_KEY) || sessionStorage.getItem(AUTH_KEY);
@@ -32,7 +32,7 @@
     }
 
     function logoutUser() {
-        if (confirm('Apakah Anda yakin ingin keluar dari SiMonDa Bukittinggi?')) {
+        if (confirm('Apakah Anda yakin ingin keluar dari SiBingka Bukittinggi?')) {
             localStorage.removeItem(AUTH_KEY);
             sessionStorage.removeItem(AUTH_KEY);
             window.location.href = '/login';
@@ -60,7 +60,7 @@
                             ${user.roleLabel || 'User'}
                         </span>
                     </div>
-                    <button onclick="SiMonDaAuth.logout()" 
+                    <button onclick="SiBingkaAuth.logout()" 
                             title="Keluar dari sistem"
                             class="flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-red-600/90 hover:bg-red-600 text-white font-bold transition-all text-[11px] cursor-pointer shadow">
                         <i class="fa-solid fa-right-from-bracket text-[10px]"></i>
@@ -71,7 +71,7 @@
         }
     }
 
-    window.SiMonDaAuth = {
+    window.SiBingkaAuth = {
         getAuth: getAuthData,
         requireAuth: requireAuth,
         logout: logoutUser,

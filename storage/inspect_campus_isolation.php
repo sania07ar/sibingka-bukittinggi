@@ -1,5 +1,5 @@
 <?php
-$cat = file_get_contents('public/simonda-catalogs.js');
+$cat = file_get_contents('public/sibingka-catalogs.js');
 $pos = strpos($cat, 'const instansiTablesCatalog = {');
 $posEnd = strpos($cat, '};', $pos);
 $section = substr($cat, $pos, $posEnd - $pos + 2);

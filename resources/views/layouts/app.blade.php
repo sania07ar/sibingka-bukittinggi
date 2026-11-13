@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', $title ?? 'SiAngka Kota Bukittinggi - BPS Kota Bukittinggi')</title>
-    <meta name="description" content="SiAngka Kota Bukittinggi - Sistem Informasi Data Daerah dalam Angka - Badan Pusat Statistik Kota Bukittinggi">
+    <title>@yield('title', $title ?? 'SiBingka Kota Bukittinggi - BPS Kota Bukittinggi')</title>
+    <meta name="description" content="SiBingka Kota Bukittinggi - Sistem Informasi Bukittinggi dalam Angka - Badan Pusat Statistik Kota Bukittinggi">
 
     <!-- Favicon Logo BPS -->
     <link rel="icon" type="image/png" href="{{ asset('images/bps-symbol.png') }}">
@@ -41,8 +41,8 @@
             transition: all 0.5s ease;
         }
 
-        /* Standard SiAngka Orange Gradient Button */
-        .btn-simonda {
+        /* Standard SiBingka Orange Gradient Button */
+        .btn-sibingka {
             background: linear-gradient(135deg, #f95a00 0%, #eb5200 100%);
             color: #ffffff;
             font-weight: 700;
@@ -60,18 +60,18 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
             cursor: pointer;
         }
-        .btn-simonda:hover {
+        .btn-sibingka:hover {
             background: linear-gradient(135deg, #ea5200 0%, #db4500 100%);
             transform: translateY(-1px);
             box-shadow: 0 6px 18px rgba(249, 90, 0, 0.35);
         }
-        .btn-simonda:active {
+        .btn-sibingka:active {
             transform: translateY(0.5px) scale(0.99);
             box-shadow: 0 2px 6px rgba(249, 90, 0, 0.2);
         }
 
         /* Shimmer Effect */
-        .btn-simonda::after {
+        .btn-sibingka::after {
             content: '';
             position: absolute;
             top: -50%;
@@ -82,7 +82,7 @@
             transform: rotate(25deg);
             transition: all 0.65s ease;
         }
-        .btn-simonda:hover::after {
+        .btn-sibingka:hover::after {
             left: 130%;
         }
 
@@ -114,9 +114,9 @@
     <div class="ambient-sphere w-96 h-96 bg-orange-200/40 top-[-60px] right-[-60px]"></div>
     <div class="ambient-sphere w-80 h-80 bg-blue-100/50 bottom-[-40px] left-[-40px]"></div>
 
-    <!-- Background SiAngka Jam Gadang Watermark -->
+    <!-- Background SiBingka Jam Gadang Watermark -->
     <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden flex items-center justify-center opacity-20 select-none">
-        <img src="{{ asset('images/siangka-watermark-jamgadang.jpg') }}" alt="Watermark SiAngka Jam Gadang" class="w-[950px] sm:w-[1250px] lg:w-[1450px] max-w-none transform -translate-x-10 object-contain mix-blend-multiply">
+        <img src="{{ asset('images/sibingka-watermark-jamgadang.jpg') }}" alt="Watermark SiBingka Jam Gadang" class="w-[950px] sm:w-[1250px] lg:w-[1450px] max-w-none transform -translate-x-10 object-contain mix-blend-multiply">
     </div>
 
     <!-- ========================================================================= -->
@@ -209,7 +209,7 @@
                 </div>
             @else
                 <div class="text-[11px] text-slate-600">
-                    <span class="font-bold text-slate-800">SiAngka Kota Bukittinggi</span> — Sistem Informasi Data Daerah dalam Angka
+                    <span class="font-bold text-slate-800">SiBingka Kota Bukittinggi</span> — Sistem Informasi Bukittinggi dalam Angka
                 </div>
             @endif
 
