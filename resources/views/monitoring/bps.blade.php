@@ -84,8 +84,8 @@
             // Ambil penyesuaian tahapan manual BPS jika ada
             $manualStagesBps = \App\Models\MonitoringStage::where('agency_type', 'bps')
                 ->where('year', $selectedYear)
-                ->pluck('stage', 'agency_code')
-                ->toArray();
+                ->get()
+                ->keyBy(function($r) { return str_pad($r->agency_code, 2, '0', STR_PAD_LEFT); });
 
             // Hitung status verifikasi riil per dataset BPS
             $submittedCountsBps = \App\Models\TabelMetadata::where('year', $selectedYear)
@@ -201,15 +201,30 @@
                 $ds['verified'] = $verifiedCountsBps[$code] ?? ($verifiedCountsBps['bps_' . $code] ?? 0);
                 $ds['revision'] = $revisionCountsBps[$code] ?? ($revisionCountsBps['bps_' . $code] ?? 0);
 
-                if ($ds['verified'] > 0 || $pct === 100) {
+                $stageRec = $manualStagesBps[$code] ?? ($manualStagesBps[ltrim($code, '0')] ?? null);
+
+                // Cek apakah Wali Data SUDAH memverifikasi data dataset BPS ini
+                $isVerifiedByWali = ($ds['verified'] > 0) || ($stageRec && ($stageRec->status_text === 'Terverifikasi Wali Data' || $stageRec->stage === 3));
+                // Cek apakah BPS SUDAH mengirimkan/meneruskan data ke Wali Data
+                $hasSubmitted = ($ds['submitted'] > 0) || ($ds['verified'] > 0) || ($stageRec && in_array($stageRec->status_text, ['Menunggu Verifikasi Wali Data', 'Terverifikasi Wali Data'])) || ($stageRec && $stageRec->stage >= 2);
+
+                $ds['is_verified_by_wali'] = $isVerifiedByWali;
+                $ds['has_submitted'] = $hasSubmitted;
+
+                if ($stageRec && $stageRec->stage === 3) {
                     $ds['step'] = 3;
                     $ds['step_label'] = 'Validasi BPS';
-                    $ds['status'] = 'Validasi BPS';
+                    $ds['status'] = 'Validasi BPS Selesai';
                     $ds['status_type'] = 'selesai';
-                } elseif ($ds['submitted'] > 0 || $pct >= 80) {
+                } elseif ($isVerifiedByWali) {
                     $ds['step'] = 2;
                     $ds['step_label'] = 'Verifikasi';
-                    $ds['status'] = 'Verifikasi Wali Data';
+                    $ds['status'] = 'Terverifikasi Wali Data';
+                    $ds['status_type'] = 'berjalan';
+                } elseif ($hasSubmitted) {
+                    $ds['step'] = 2;
+                    $ds['step_label'] = 'Verifikasi';
+                    $ds['status'] = 'Menunggu Verifikasi Wali Data';
                     $ds['status_type'] = 'berjalan';
                 } elseif ($pct > 0 || $stat['proses'] > 0 || $stat['lengkap'] > 0) {
                     $ds['step'] = 1;
@@ -221,15 +236,6 @@
                     $ds['step_label'] = 'Input Data';
                     $ds['status'] = 'Belum Mulai';
                     $ds['status_type'] = 'belum';
-                }
-
-                if (isset($manualStagesBps[$code])) {
-                    $st = (int) $manualStagesBps[$code];
-                    $info = \App\Models\MonitoringStage::getStageInfo($st);
-                    $ds['step'] = $st;
-                    $ds['step_label'] = $info['label'];
-                    $ds['status'] = $info['badge'];
-                    $ds['status_type'] = $info['type'];
                 }
 
                 if ($ds['step'] === 3) {

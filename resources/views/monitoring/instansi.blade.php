@@ -111,8 +111,8 @@
             // Ambil penyesuaian tahapan manual instansi jika ada
             $manualStagesInstansi = \App\Models\MonitoringStage::where('agency_type', 'instansi')
                 ->where('year', $selectedYear)
-                ->pluck('stage', 'agency_code')
-                ->toArray();
+                ->get()
+                ->keyBy(function($r) { return str_pad($r->agency_code, 2, '0', STR_PAD_LEFT); });
 
             // Hitung status verifikasi riil (Menunggu ACC, Di-ACC, Revisi) per Instansi
             $submittedCountsInstansi = \App\Models\TabelMetadata::where('year', $selectedYear)
@@ -192,15 +192,30 @@
                 $inst['verified'] = $verifiedCountsInstansi[$code] ?? ($verifiedCountsInstansi[ltrim($code, '0')] ?? 0);
                 $inst['revision'] = $revisionCountsInstansi[$code] ?? ($revisionCountsInstansi[ltrim($code, '0')] ?? 0);
 
-                if ($inst['verified'] > 0) {
+                $stageRec = $manualStagesInstansi[$code] ?? ($manualStagesInstansi[ltrim($code, '0')] ?? null);
+
+                // Cek apakah Wali Data SUDAH memverifikasi data instansi ini
+                $isVerifiedByWali = ($inst['verified'] > 0) || ($stageRec && ($stageRec->status_text === 'Terverifikasi Wali Data' || $stageRec->stage === 3));
+                // Cek apakah instansi SUDAH mengirimkan/meneruskan data ke Wali Data
+                $hasSubmitted = ($inst['submitted'] > 0) || ($inst['verified'] > 0) || ($stageRec && in_array($stageRec->status_text, ['Menunggu Verifikasi Wali Data', 'Terverifikasi Wali Data'])) || ($stageRec && $stageRec->stage >= 2);
+
+                $inst['is_verified_by_wali'] = $isVerifiedByWali;
+                $inst['has_submitted'] = $hasSubmitted;
+
+                if ($stageRec && $stageRec->stage === 3) {
                     $inst['step'] = 3;
                     $inst['step_label'] = 'Validasi BPS';
-                    $inst['status'] = 'Validasi BPS';
+                    $inst['status'] = 'Validasi BPS Selesai';
                     $inst['status_type'] = 'selesai';
-                } elseif ($inst['submitted'] > 0 || $pct >= 80) {
+                } elseif ($isVerifiedByWali) {
                     $inst['step'] = 2;
                     $inst['step_label'] = 'Verifikasi';
-                    $inst['status'] = 'Verifikasi Wali Data';
+                    $inst['status'] = 'Terverifikasi Wali Data';
+                    $inst['status_type'] = 'berjalan';
+                } elseif ($hasSubmitted) {
+                    $inst['step'] = 2;
+                    $inst['step_label'] = 'Verifikasi';
+                    $inst['status'] = 'Menunggu Verifikasi Wali Data';
                     $inst['status_type'] = 'berjalan';
                 } elseif ($pct > 0) {
                     $inst['step'] = 1;
@@ -212,15 +227,6 @@
                     $inst['step_label'] = 'Input Data';
                     $inst['status'] = 'Belum Mulai';
                     $inst['status_type'] = 'belum';
-                }
-
-                if (isset($manualStagesInstansi[$code])) {
-                    $st = (int) $manualStagesInstansi[$code];
-                    $info = \App\Models\MonitoringStage::getStageInfo($st);
-                    $inst['step'] = $st;
-                    $inst['step_label'] = $info['label'];
-                    $inst['status'] = $info['badge'];
-                    $inst['status_type'] = $info['type'];
                 }
 
                 if ($inst['step'] === 3) {

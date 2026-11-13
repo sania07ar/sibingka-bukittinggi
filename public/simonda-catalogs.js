@@ -478,6 +478,18 @@ function getAgencyInfoForTable(tableCode, defaultOpd = '01', defaultType = 'opd'
     if (!tableCode) return { opdCode: defaultOpd, type: defaultType };
     const cleanCode = tableCode.toString().trim().replace(/\.+$/, '');
     
+    // Khusus tabel kampus Perguruan Tinggi 4.1.18 & 4.1.19: SELALU INSTANSI VERTIKAL!
+    if (['4.1.18', '4.1.19'].includes(cleanCode)) {
+        const cleanDefaultOpd = defaultOpd ? defaultOpd.toString().padStart(2, '0') : null;
+        if (cleanDefaultOpd) {
+            const opdNum = parseInt(cleanDefaultOpd, 10);
+            if (opdNum >= 5 && opdNum <= 23) {
+                return { opdCode: cleanDefaultOpd, type: 'instansi' };
+            }
+        }
+        return { opdCode: '05', type: 'instansi' };
+    }
+
     // JIKA dipanggil dari Data BPS, TETAP DI BPS (JANGAN PERNAH dialihkan ke OPD atau Instansi)
     if (defaultType === 'bps') {
         if (typeof bpsTablesCatalog !== 'undefined') {
@@ -505,15 +517,7 @@ function getAgencyInfoForTable(tableCode, defaultOpd = '01', defaultType = 'opd'
                     return { opdCode: cleanDefaultOpd, type: 'instansi' };
                 }
             }
-            // Khusus tabel kampus 4.1.18 & 4.1.19: jika instansi vertikal 05 s.d. 23 sedang aktif, TETAP PERTAHANKAN OPD INI!
-            if (['4.1.18', '4.1.19'].includes(cleanCode) && cleanDefaultOpd) {
-                const opdNum = parseInt(cleanDefaultOpd, 10);
-                if (opdNum >= 5 && opdNum <= 23) {
-                    return { opdCode: cleanDefaultOpd, type: 'instansi' };
-                }
-            }
             for (const inst in instansiTablesCatalog) {
-                if (['4.1.18', '4.1.19'].includes(cleanCode)) continue; // JANGAN switch kampus 05-23 ke kampus pertama!
                 if (instansiTablesCatalog[inst].some(t => t.code.toString().trim().replace(/\.+$/, '') === cleanCode)) {
                     return { opdCode: inst, type: 'instansi' };
                 }

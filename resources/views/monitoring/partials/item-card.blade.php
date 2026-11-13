@@ -148,8 +148,13 @@
 
         <div class="flex items-center space-x-2 shrink-0">
             @php
-                $isAdmin = (session('user.role') === 'admin');
+                $userRole = session('user.role');
+                $isAdmin = ($userRole === 'admin');
+                $isWali = ($userRole === 'walidata');
+                $step = (int) ($item['step'] ?? 1);
                 $isValidated = ($step === 3);
+                $isVerifiedByWali = (bool) ($item['is_verified_by_wali'] ?? false);
+                $hasSubmitted = (bool) ($item['has_submitted'] ?? false);
             @endphp
 
             @if($isAdmin)
@@ -164,32 +169,80 @@
                         <span class="group-hover:hidden">Tervalidasi BPS</span>
                         <span class="hidden group-hover:inline">Batal Validasi</span>
                     </button>
-                @else
+                @elseif($isVerifiedByWali)
+                    <!-- Wali Data SUDAH verifikasi: Admin BPS BISA validasi (tombol aktif) -->
                     <button type="button" 
                             onclick="toggleBpsValidation('{{ $agencyType }}', '{{ $item['code'] }}', 3)"
-                            title="Klik untuk menyetujui Validasi BPS"
-                            class="no-print inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-slate-200 hover:border-emerald-500 bg-white hover:bg-emerald-600 hover:text-white text-slate-700 text-xs font-bold transition-all shadow-2xs cursor-pointer">
-                        <i class="fa-solid fa-check-double text-slate-400 group-hover:text-white text-xs"></i>
+                            title="Wali Data telah memverifikasi. Klik untuk menyetujui Validasi BPS (ACC)"
+                            class="no-print inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-emerald-400 bg-emerald-50 hover:bg-emerald-600 hover:text-white text-emerald-800 text-xs font-bold transition-all shadow-2xs cursor-pointer">
+                        <i class="fa-solid fa-check-double text-emerald-600 group-hover:text-white text-xs"></i>
                         <span>Validasi BPS</span>
                     </button>
+                @else
+                    <!-- Wali Data BELUM verifikasi: Admin BPS TIDAK BISA validasi (tombol terkunci/disabled) -->
+                    <button type="button" 
+                            disabled
+                            title="Validasi BPS hanya dapat divalidasi ketika Wali Data sudah memverifikasi data ini"
+                            class="no-print inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-amber-200 bg-amber-50/70 text-amber-800 text-xs font-bold transition-all shadow-2xs cursor-not-allowed opacity-90">
+                        <i class="fa-solid fa-lock text-amber-600 text-xs"></i>
+                        <span>Menunggu Verifikasi Wali Data</span>
+                    </button>
+                @endif
+            @elseif($isWali)
+                <!-- Wali Data (Diskominfo): Verifikasi Data -->
+                @if($isValidated)
+                    <span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold" title="Telah tervalidasi penuh oleh BPS">
+                        <i class="fa-solid fa-check-double text-xs"></i>
+                        <span>Tervalidasi BPS</span>
+                    </span>
+                @elseif($isVerifiedByWali)
+                    <span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold" title="Data telah diverifikasi oleh Wali Data">
+                        <i class="fa-solid fa-circle-check text-xs text-emerald-600"></i>
+                        <span>Terverifikasi Wali Data</span>
+                    </span>
+                @elseif($hasSubmitted)
+                    <!-- Dinas/Instansi/BPS sudah mengirim data: Wali Data BISA verifikasi -->
+                    <button type="button" 
+                            onclick="toggleWaliVerification('{{ $agencyType }}', '{{ $item['code'] }}', 2)"
+                            title="Data telah diteruskan oleh instansi. Klik untuk memverifikasi data sebagai Wali Data"
+                            class="no-print inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-[#f95a00] bg-orange-50 hover:bg-[#f95a00] hover:text-white text-[#f95a00] text-xs font-bold transition-all shadow-2xs cursor-pointer">
+                        <i class="fa-solid fa-check text-xs"></i>
+                        <span>Verifikasi Wali Data</span>
+                    </button>
+                @else
+                    <!-- Dinas/Instansi/BPS belum mengirim data: Wali Data BELUM BISA verifikasi -->
+                    <span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-slate-100 text-slate-500 border border-slate-200 text-xs font-semibold" title="Menunggu instansi mengirim/meneruskan data">
+                        <i class="fa-solid fa-hourglass-start text-xs text-slate-400"></i>
+                        <span>Menunggu Kiriman Data</span>
+                    </span>
                 @endif
             @else
-                <!-- Non-Admin (Wali Data / OPD): Tampilan Status Validasi BPS -->
+                <!-- Produsen Data (OPD / Instansi / BPS) / Guest: Tampilan Status -->
                 @if($isValidated)
                     <span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold">
                         <i class="fa-solid fa-circle-check text-xs"></i>
                         <span>Tervalidasi BPS</span>
                     </span>
+                @elseif($isVerifiedByWali)
+                    <span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold">
+                        <i class="fa-solid fa-check text-xs"></i>
+                        <span>Terverifikasi Wali Data</span>
+                    </span>
+                @elseif($hasSubmitted)
+                    <span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 text-xs font-bold">
+                        <i class="fa-solid fa-clock text-xs text-amber-500"></i>
+                        <span>Diteruskan ke Wali Data</span>
+                    </span>
                 @else
                     <span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-slate-50 text-slate-600 border border-slate-200 text-xs font-semibold">
-                        <i class="fa-solid fa-clock text-xs text-slate-400"></i>
-                        <span>Belum Validasi</span>
+                        <i class="fa-solid fa-pen-to-square text-xs text-slate-400"></i>
+                        <span>Input Data</span>
                     </span>
                 @endif
             @endif
 
             <button type="button" 
-                    onclick="openAgencyDetailModal('{{ $agencyType }}', '{{ $item['code'] }}', '{{ addslashes($item['short']) }}', '{{ addslashes($item['full']) }}', {{ $pct }}, '{{ $item['status'] }}', '{{ $item['step_label'] }}', {{ $step }}, '{{ addslashes($item['tables'] ?? '') }}')"
+                    onclick="openAgencyDetailModal('{{ $agencyType }}', '{{ $item['code'] }}', '{{ addslashes($item['short']) }}', '{{ addslashes($item['full']) }}', {{ $pct }}, '{{ $item['status'] }}', '{{ $item['step_label'] }}', {{ $step }}, '{{ addslashes($item['tables'] ?? '') }}', {{ $isVerifiedByWali ? 'true' : 'false' }}, {{ $hasSubmitted ? 'true' : 'false' }})"
                     class="no-print px-3.5 py-1.5 rounded-xl border border-slate-200 hover:border-slate-400 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all shadow-2xs hover:shadow-xs flex items-center space-x-1 cursor-pointer shrink-0">
                 <span>Detail</span>
                 <i class="fa-solid fa-arrow-right text-[10px]"></i>

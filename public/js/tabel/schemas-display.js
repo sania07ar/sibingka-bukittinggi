@@ -813,7 +813,106 @@ window.tableSchemas = {
                     `;
                 }
             },
-                        '4.1.3': {
+                                    '4.1.2': {
+                titleId: 'Jumlah Sekolah, Guru, dan Murid Raudatul Athfal (RA) di Bawah Kementerian Agama Menurut Kecamatan di Kota Bukittinggi',
+                titleEn: 'Number of Schools, Teachers, and Pupils in Kindergarten Under The Ministry of Religious Affairs by District in Bukittinggi Municipality',
+                source: 'Kementerian Agama, EMIS, Data Semester Ganjil / <span class="italic text-slate-500">Ministry of Religious Affairs, EMIS, Odd Semester Data</span>',
+                note: 'Seluruh Raudatul Athfal (RA) berstatus swasta / <span class="italic text-slate-500">All Raudatul Athfal (RA) are private</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const y1 = `${yr - 1}/${yr}`;
+                    const y2 = `${yr}/${yr + 1}`;
+                    const officialData = {
+                        2025: {
+                            guguk_panjang: ['2', '2', '5', '5', '31', '33'],
+                            mandiangin: ['3', '3', '25', '18', '149', '145'],
+                            aur_birugo: ['1', '1', '3', '3', '24', '19'],
+                            bukittinggi: ['6', '6', '33', '26', '204', '197']
+                        }
+                    };
+                    const yrData = officialData[yr] || {};
+                    const getVal = (rowKey, colIdx) => {
+                        if (yrData[rowKey] && yrData[rowKey][colIdx] !== undefined) {
+                            return yrData[rowKey][colIdx];
+                        }
+                        return '-';
+                    };
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="2">
+                                    <div>Sekolah</div><div class="italic font-normal text-[11px] sm:text-xs">Schools</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="2">
+                                    <div>Guru</div><div class="italic font-normal text-[11px] sm:text-xs">Teachers</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="2">
+                                    <div>Murid</div><div class="italic font-normal text-[11px] sm:text-xs">Students</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>${y1}</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>${y2}</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>${y1}</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>${y2}</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>${y1}</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>${y2}</div></th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700">(8)</th>
+                                <th class="py-1 px-3 border border-slate-700">(9)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">01. Guguk Panjang</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${getVal('guguk_panjang', 0)}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${getVal('guguk_panjang', 1)}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${getVal('guguk_panjang', 2)}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${getVal('guguk_panjang', 3)}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${getVal('guguk_panjang', 4)}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${getVal('guguk_panjang', 5)}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">02. Mandiangin Koto Selayan</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${getVal('mandiangin', 0)}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${getVal('mandiangin', 1)}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${getVal('mandiangin', 2)}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${getVal('mandiangin', 3)}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${getVal('mandiangin', 4)}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${getVal('mandiangin', 5)}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">03. Aur Birugo Tigo Baleh</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${getVal('aur_birugo', 0)}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${getVal('aur_birugo', 1)}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${getVal('aur_birugo', 2)}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${getVal('aur_birugo', 3)}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${getVal('aur_birugo', 4)}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${getVal('aur_birugo', 5)}</td>
+                            </tr>
+                            <tr class="hover:bg-amber-100/60 transition-colors bg-[#fed7aa] font-bold">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">Bukittinggi</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${getVal('bukittinggi', 0)}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${getVal('bukittinggi', 1)}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${getVal('bukittinggi', 2)}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${getVal('bukittinggi', 3)}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${getVal('bukittinggi', 4)}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${getVal('bukittinggi', 5)}</td>
+                            </tr>
+                        </tbody>
+                    `;
+                }
+            },
+            '4.1.3': {
                 titleId: 'Jumlah Sekolah, Guru, dan Murid Sekolah Dasar (SD) di Bawah Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi Menurut Kecamatan di Kota Bukittinggi',
                 titleEn: 'Number of Schools, Teachers, and Pupils in Primary Schools Under The Ministry of Education, Culture, Research, and Technology by District in Bukittinggi Municipality',
                 source: 'Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi, Data Semester Ganjil / <span class=\"italic text-slate-500\">Ministry of Education, Culture, Research, and Technology, Odd Semester Report Data</span>',
@@ -3249,6 +3348,98 @@ window.tableSchemas = {
                         </thead>
                         <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
                             ${bodyRows}
+                        </tbody>
+                    `;
+                }
+            },
+                        '2.2.2': {
+                titleId: 'Jumlah Anggota Dewan Perwakilan Rakyat Menurut Partai Politik dan Tingkat Pendidikan di Kota Bukittinggi',
+                titleEn: 'Number of Regional House of Representative’s Member by Political and Education in Bukittinggi Municipality',
+                source: 'Komisi Pemilihan Umum Kota Bukittinggi / <span class="italic text-slate-500">General Election Commission of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2024;
+                    const officialData = [
+                        { name: '1. Partai Kebangkitan Bangsa', v: ['0', '1', '1', '0', '2'] },
+                        { name: '2. Partai Gerindra', v: ['0', '0', '4', '0', '4'] },
+                        { name: '3. PDI Perjuangan', v: ['0', '0', '0', '0', '0'] },
+                        { name: '4. Partai Golkar', v: ['0', '0', '3', '0', '3'] },
+                        { name: '5. Partai Nasdem', v: ['1', '1', '1', '1', '4'] },
+                        { name: '6. Partai Buruh', v: ['0', '0', '0', '0', '0'] },
+                        { name: '7. Partai Gelombang Rakyat Indonesia', v: ['0', '0', '0', '0', '0'] },
+                        { name: '8. Partai Keadilan Sejahtera', v: ['0', '0', '4', '1', '5'] },
+                        { name: '9. Partai Kebangkitan Nusantara', v: ['0', '0', '0', '0', '0'] },
+                        { name: '10. Partai Hati Nurani Rakyat', v: ['0', '0', '0', '0', '0'] },
+                        { name: '11. Partai Garda Perubahan Indonesia', v: ['0', '0', '0', '0', '0'] },
+                        { name: '12. Partai Amanat Nasional', v: ['1', '0', '2', '0', '3'] },
+                        { name: '13. Partai Bulan Bintang', v: ['0', '0', '0', '0', '0'] },
+                        { name: '14. Partai Demokrat', v: ['0', '0', '2', '1', '3'] },
+                        { name: '15. Partai Solidaritas Indonesia', v: ['0', '0', '0', '0', '0'] },
+                        { name: '16. Partai Perindo', v: ['0', '0', '0', '0', '0'] },
+                        { name: '17. Partai Persatuan Pembangunan', v: ['1', '0', '1', '0', '2'] },
+                        { name: '18. Partai Ummat', v: ['0', '0', '0', '0', '0'] }
+                    ];
+                    let totSMU = 0, totD3 = 0, totS1 = 0, totS2 = 0, totAll = 0;
+                    const rowsHtml = officialData.map(p => {
+                        const smu = p.v[0] || '-';
+                        const d3 = p.v[1] || '-';
+                        const s1 = p.v[2] || '-';
+                        const s2 = p.v[3] || '-';
+                        const tot = p.v[4] || '-';
+                        totSMU += parseInt(smu) || 0;
+                        totD3 += parseInt(d3) || 0;
+                        totS1 += parseInt(s1) || 0;
+                        totS2 += parseInt(s2) || 0;
+                        totAll += parseInt(tot) || 0;
+                        return `
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${p.name}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${smu}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${d3}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${s1}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${s2}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-bold">${tot}</td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+                                    <div>Partai</div><div class="italic font-normal text-[11px] sm:text-xs">Party</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="4">
+                                    <div>Pendidikan</div><div class="italic font-normal text-[11px] sm:text-xs">Education</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>SMU</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>DIII</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>DIV</div><div class="italic font-normal text-[11px] sm:text-xs">S1</div></th>
+                                <th class="py-3 px-4 font-bold border border-slate-700"><div>S2/S3</div></th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700">(6)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                            <tr class="hover:bg-amber-100/60 transition-colors bg-[#fed7aa] font-bold">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">Jumlah / Total</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-bold">${totSMU || 3}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-bold">${totD3 || 2}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-bold">${totS1 || 17}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-bold">${totS2 || 3}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top font-extrabold">${totAll || 25}</td>
+                            </tr>
                         </tbody>
                     `;
                 }

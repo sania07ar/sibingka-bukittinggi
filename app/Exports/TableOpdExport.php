@@ -82,6 +82,16 @@ class TableOpdExport implements FromView, ShouldAutoSize, WithTitle, WithStyles
             $displayTitleEn = "Table {$displayTitleEn}";
         }
 
+        // Khusus Tabel 4.1.2 (Kemenag - RA): 2 Tahun Ajaran Berjalan
+        if ($this->tableCode === '4.1.2') {
+            $y1 = ($this->year - 1) . '/' . $this->year;
+            $y2 = $this->year . '/' . ($this->year + 1);
+            $displayTitleId = preg_replace('/([,\s]+)(19|20)\d{2}.*$/i', '', $displayTitleId) . ", {$y1} dan {$y2}";
+            if (!empty($displayTitleEn)) {
+                $displayTitleEn = preg_replace('/([,\s]+)(19|20)\d{2}.*$/i', '', $displayTitleEn) . ", {$y1} and {$y2}";
+            }
+        }
+
         // Hitung jumlah kolom sebenarnya dari baris penomoran (1), (2) atau baris data pertama
         $maxCols = 6;
         if (preg_match('/<tr[^>]*>\s*<th[^>]*>\s*\(1\)[\s\S]*?<\/tr>/i', $cleanHtml, $mColRow)) {

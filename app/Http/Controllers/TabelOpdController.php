@@ -63,6 +63,147 @@ class TabelOpdController extends Controller
         };
     }
 
+    /**
+     * Normalisasi instansi/OPD dan tipe data tabel resmi SiAngka
+     */
+    public function normalizeAgency(string $tableCode, string $opdCode, string $type): array
+    {
+        $cleanCode = trim(rtrim($tableCode, '.'));
+        $cleanOpd = str_pad($opdCode, 2, '0', STR_PAD_LEFT);
+
+        // 1. Khusus tabel kampus Perguruan Tinggi 4.1.18 & 4.1.19 (SELALU INSTANSI VERTIKAL!)
+        if (in_array($cleanCode, ['4.1.18', '4.1.19'])) {
+            $type = 'instansi';
+            $num = (int) $opdCode;
+            if ($num < 5 || $num > 23) {
+                $opdCode = '05'; // Default: Fakultas PGSD UNP Belakang Balok
+            } else {
+                $opdCode = $cleanOpd;
+            }
+            return [$opdCode, $type];
+        }
+
+        // 2. Khusus tabel instansi vertikal lainnya
+        if (in_array($cleanCode, ['4.1.21', '4.1.22', '4.1.23'])) return ['24', 'instansi']; // UPT Perpustakaan Bung Hatta
+        if (in_array($cleanCode, ['4.2.11', '4.2.12', '4.2.13'])) return ['25', 'instansi']; // PMI
+        if ($cleanCode === '2.1.2') return ['27', 'instansi']; // Pengadilan Negeri
+        if ($cleanCode === '2.1.3') return ['28', 'instansi']; // Kejaksaan Negeri
+        if ($cleanCode === '2.1.4') return ['29', 'instansi']; // Pengadilan Agama
+        if ($cleanCode === '2.1.1') return ['30', 'instansi']; // Polres
+        if ($cleanCode === '8.1.10') return ['33', 'instansi']; // Samsat
+        if (in_array($cleanCode, ['8.1.11', '8.1.12'])) return ['34', 'instansi']; // Pos
+        if (in_array($cleanCode, ['1.1.7', '1.1.8', '1.1.9'])) return ['01', 'instansi']; // BPN
+        if ($cleanCode === '2.2.1') return ['02', 'instansi']; // KPU
+        if (in_array($cleanCode, ['4.1.3', '4.1.4', '4.1.5', '4.2.14', '4.4.1', '4.4.2', '4.4.3', '4.4.4', '4.4.5', '4.4.6', '4.4.7', '4.4.8'])) {
+            return ['03', 'instansi']; // Kemenag
+        }
+
+        // 3. Jika bukan instansi khusus dan bukan bps, arahkan ke OPD resmi
+        if ($type !== 'bps' && $type !== 'instansi') {
+            $opdCode = $this->normalizeOpdCode($cleanCode, $opdCode);
+            $type = 'opd';
+        }
+
+        return [str_pad($opdCode, 2, '0', STR_PAD_LEFT), $type];
+    }
+
+    /**
+     * Dapatkan nama instansi / OPD berdasarkan kode dan tipenya
+     */
+    public function getAgencyName(string $code, string $type): string
+    {
+        $code = str_pad($code, 2, '0', STR_PAD_LEFT);
+        if ($type === 'bps') {
+            $bpsNames = [
+                '01' => 'PODES (Potensi Desa / Kelurahan)',
+                '02' => 'PENDUDUK (Statistik Kependudukan & Proyeksi)',
+                '03' => 'SUSENAS (Survei Sosial Ekonomi Nasional)',
+                '04' => 'SAKERNAS (Survei Angkatan Kerja Nasional)',
+                '05' => 'HORTI (Statistik Pertanian & Hortikultura)',
+                '06' => 'IMK (Industri Mikro dan Kecil)',
+                '07' => 'HOTEL (Statistik Perhotelan & Pariwisata)',
+                '08' => 'IHK & INFLASI (Indeks Harga Konsumen)',
+                '09' => 'PDRB LAPUS (PDRB Menurut Lapangan Usaha)',
+                '10' => 'PDRB PENGELUARAN (PDRB Menurut Pengeluaran)',
+            ];
+            return $bpsNames[$code] ?? 'BADAN PUSAT STATISTIK KOTA BUKITTINGGI';
+        }
+
+        if ($type === 'instansi') {
+            $instansiNames = [
+                '01' => 'KANTOR PERTANAHAN KOTA BUKITTINGGI (BPN)',
+                '02' => 'KOMISI PEMILIHAN UMUM DAERAH KOTA BUKITTINGGI',
+                '03' => 'KEMENTERIAN AGAMA KOTA BUKITTINGGI',
+                '04' => 'CABANG DINAS PENDIDIKAN WILAYAH I PROV. SUMBAR',
+                '05' => 'PROGRAM STUDI PGSD UNIVERSITAS NEGERI PADANG',
+                '06' => 'DEPARTEMEN PSIKOLOGI UNP KAMPUS BUKITTINGGI',
+                '07' => 'FAKULTAS KEDOKTERAN UNP KAMPUS BUKITTINGGI',
+                '08' => 'AKADEMI KEBIDANAN BUKITTINGGI (AKBID)',
+                '09' => 'JURUSAN KEPERAWATAN GIGI POLTEKKES BUKITTINGGI',
+                '10' => 'STKIP AL-HUSSUNAH BUKITTINGGI',
+                '11' => 'STIT AL-HUSSUNAH BUKITTINGGI',
+                '12' => 'STIKES PERINTIS BUKITTINGGI',
+                '13' => 'STIKES PRIMA NUSANTARA BUKITTINGGI',
+                '14' => 'UNIVERSITAS MOHAMMAD NATSIR YARSI BUKITTINGGI',
+                '15' => 'INSTITUT TEKNOLOGI DAN BISNIS HAJI AGUS SALIM',
+                '16' => 'FAKULTAS TEKNIK UNIVERSITAS MUHAMMADIYAH SUMBAR',
+                '17' => 'FAKULTAS HUKUM UNIVERSITAS MUHAMMADIYAH SUMBAR',
+                '18' => 'FAKULTAS PARIWISATA UNIVERSITAS MUHAMMADIYAH SUMBAR',
+                '19' => 'FAKULTAS KESEHATAN UNIVERSITAS MUHAMMADIYAH SUMBAR',
+                '20' => 'AKADEMI FARMASI IMAM BONJOL BUKITTINGGI',
+                '21' => 'UNIVERSITAS FORT DE KOCK BUKITTINGGI',
+                '22' => 'AKADEMI FARMASI DWI FARMA BUKITTINGGI',
+                '23' => 'AKADEMI AKUNTANSI PARAMITA BUKITTINGGI',
+                '24' => 'UPT PERPUSTAKAAN PROKLAMATOR BUNG HATTA',
+                '25' => 'PALANG MERAH INDONESIA KOTA BUKITTINGGI',
+                '26' => 'BPJS KESEHATAN & KETENAGAKERJAAN BUKITTINGGI',
+                '27' => 'PENGADILAN NEGERI KOTA BUKITTINGGI',
+                '28' => 'KEJAKSAAN NEGERI KOTA BUKITTINGGI',
+                '29' => 'PENGADILAN AGAMA KOTA BUKITTINGGI',
+                '30' => 'KEPOLISIAN RESOR KOTA BUKITTINGGI',
+                '31' => 'PT PLN (PERSERO) ULP BUKITTINGGI',
+                '32' => 'PERUMDA AIR MINUM TIRTA JAM GADANG',
+                '33' => 'UPTD SAMSAT / PENDAPATAN DAERAH BUKITTINGGI',
+                '34' => 'PT POS INDONESIA (PERSERO) KANTOR POS BUKITTINGGI',
+                '35' => 'LPP RADIO REPUBLIK INDONESIA BUKITTINGGI',
+                '36' => 'PT TASPEN (PERSERO) KANTOR CABANG BUKITTINGGI',
+                '37' => 'PERUM BULOG KANTOR CABANG BUKITTINGGI',
+            ];
+            return $instansiNames[$code] ?? 'INSTANSI VERTIKAL PENYELENGGARA DATA';
+        }
+
+        $opdNames = [
+            '01' => 'DINAS PEKERJAAN UMUM DAN PENATAAN RUANG',
+            '02' => 'DINAS PENANAMAN MODAL DAN PELAYANAN TERPADU SATU PINTU',
+            '03' => 'SEKRETARIAT DPRD KOTA BUKITTINGGI',
+            '04' => 'BADAN KEPEGAWAIAN DAN PENGEMBANGAN SUMBER DAYA MANUSIA',
+            '05' => 'BADAN KEUANGAN DAERAH KOTA BUKITTINGGI',
+            '06' => 'DINAS KEPENDUDUKAN DAN PENCATATAN SIPIL',
+            '07' => 'DINAS KOPERASI, UKM DAN TENAGA KERJA',
+            '08' => 'DINAS PENDIDIKAN DAN KEBUDAYAAN',
+            '09' => 'BADAN PENANGGULANGAN BENCANA DAERAH',
+            '10' => 'DINAS KEPEMUDAAN DAN OLAHRAGA',
+            '11' => 'DINAS PERPUSTAKAAN DAN KEARSIPAN',
+            '12' => 'DINAS LINGKUNGAN HIDUP',
+            '13' => 'DINAS KESEHATAN KOTA BUKITTINGGI',
+            '14' => 'DINAS P3APPKB KOTA BUKITTINGGI',
+            '15' => 'DINAS PEMADAM KEBAKARAN DAN PENYELAMATAN',
+            '16' => 'SATUAN POLISI PAMONG PRAJA',
+            '17' => 'DINAS PERTANIAN DAN PANGAN',
+            '18' => 'DINAS PERDAGANGAN DAN PERINDUSTRIAN',
+            '19' => 'DINAS PARIWISATA',
+            '20' => 'DINAS PERHUBUNGAN KOTA BUKITTINGGI',
+            '21' => 'DINAS KOMUNIKASI DAN INFORMATIKA',
+            '22' => 'DINAS SOSIAL KOTA BUKITTINGGI',
+            '23' => 'BADAN PERENCANAAN, PENELITIAN DAN PENGEMBANGAN KOTA BUKITTINGGI',
+            '24' => 'INSPEKTORAT DAERAH KOTA BUKITTINGGI',
+            '25' => 'KECAMATAN GUGUK PANJANG',
+            '26' => 'KECAMATAN MANDIANGIN KOTO SELAYAN',
+            '27' => 'KECAMATAN AUR BIRUGO TIGO BALEH',
+        ];
+        return $opdNames[$code] ?? 'ORGANISASI PERANGKAT DAERAH (OPD)';
+    }
+
     public function index(Request $request)
     {
         $tableCode = $request->query('code', $request->query('table', '8.1.1'));
@@ -70,11 +211,10 @@ class TabelOpdController extends Controller
         $year = (int) $request->query('year', 2025);
         $type = $request->query('type', 'opd');
 
-        if ($type !== 'bps' && $type !== 'instansi') {
-            $opdCode = $this->normalizeOpdCode($tableCode, $opdCode);
-        }
+        [$opdCode, $type] = $this->normalizeAgency($tableCode, $opdCode, $type);
 
         $cleanOpd = str_pad($opdCode, 2, '0', STR_PAD_LEFT);
+        $opdName = $this->getAgencyName($opdCode, $type);
         $dbDataStore = $this->loadDbDataStore($tableCode, $opdCode);
         $dbMetadata = $this->getOrCreateMetadata($tableCode, $opdCode, $year, $type);
 
@@ -118,6 +258,7 @@ class TabelOpdController extends Controller
             'currentOpdCode' => $opdCode,
             'currentYear' => $year,
             'currentType' => $type,
+            'opdName' => $opdName,
             'dbDataStore' => $dbDataStore,
             'dbMetadata' => $dbMetadata,
             'dbFallbackMetadata' => $dbFallbackMetadata,
@@ -135,11 +276,10 @@ class TabelOpdController extends Controller
         $year = (int) $request->query('year', 2025);
         $type = $request->query('type', 'opd');
 
-        if ($type !== 'bps' && $type !== 'instansi') {
-            $opdCode = $this->normalizeOpdCode($tableCode, $opdCode);
-        }
+        [$opdCode, $type] = $this->normalizeAgency($tableCode, $opdCode, $type);
 
         $cleanOpd = str_pad($opdCode, 2, '0', STR_PAD_LEFT);
+        $opdName = $this->getAgencyName($opdCode, $type);
         $dbDataStore = $this->loadDbDataStore($tableCode, $opdCode);
         $dbMetadata = $this->getOrCreateMetadata($tableCode, $opdCode, $year, $type);
 
@@ -183,6 +323,7 @@ class TabelOpdController extends Controller
             'currentOpdCode' => $opdCode,
             'currentYear' => $year,
             'currentType' => $type,
+            'opdName' => $opdName,
             'dbDataStore' => $dbDataStore,
             'dbMetadata' => $dbMetadata,
             'dbFallbackMetadata' => $dbFallbackMetadata,
@@ -1585,9 +1726,7 @@ class TabelOpdController extends Controller
         $tableCode = $request->input('table_code', '8.1.1');
         $opdCode = $request->input('opd_code', '01');
         $type = $request->input('type', 'opd');
-        if ($type !== 'bps' && $type !== 'instansi') {
-            $opdCode = $this->normalizeOpdCode($tableCode, $opdCode);
-        }
+        [$opdCode, $type] = $this->normalizeAgency($tableCode, $opdCode, $type);
         $year = (int) $request->input('year', 2025);
         $tableHtml = $request->input('table_html');
         $titleId = $request->input('title_id');
@@ -4580,7 +4719,7 @@ class TabelOpdController extends Controller
         }
 
         // Sinkronisasi otomatis ke Tahap 2 (Verifikasi oleh Wali Data Kominfo) di Monitoring
-        if (in_array($type, ['opd', 'instansi'])) {
+        if (in_array($type, ['opd', 'instansi', 'bps'])) {
             \App\Models\MonitoringStage::updateOrCreate(
                 [
                     'agency_type' => $type,
@@ -4589,21 +4728,21 @@ class TabelOpdController extends Controller
                 ],
                 [
                     'stage' => 2,
-                    'status_text' => 'Verifikasi',
-                    'notes' => 'Tabel ' . $tableCode . ' diajukan oleh dinas untuk diverifikasi oleh Wali Data Kominfo.',
+                    'status_text' => 'Menunggu Verifikasi Wali Data',
+                    'notes' => 'Tabel ' . $tableCode . ' diajukan/diteruskan oleh instansi untuk diverifikasi oleh Wali Data Kominfo.',
                 ]
             );
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'Data tabel berhasil diajukan! Status kini "Menunggu Verifikasi Wali Data (Diskominfo)".',
+            'message' => 'Data tabel berhasil dikirim/diteruskan ke Wali Data (Diskominfo) untuk diverifikasi.',
             'status' => 'submitted',
         ]);
     }
 
     /**
-     * Workflow Verifikasi: Wali Data (Kominfo) atau Admin BPS Menyetujui (ACC / Verifikasi / Validasi) Data Tabel
+     * Workflow Verifikasi: Wali Data (Kominfo) Memverifikasi atau Admin BPS Memvalidasi (ACC) Data Tabel
      */
     public function apiApproveVerification(Request $request)
     {
@@ -4624,51 +4763,96 @@ class TabelOpdController extends Controller
             ->first();
 
         if (!$meta) {
-            $meta = $this->getOrCreateMetadata($tableCode, $opdCode, $year);
+            $meta = $this->getOrCreateMetadata($tableCode, $opdCode, $year, $type);
         }
 
-        $isWali = ($userRole === 'walidata');
-        $actorTitle = $isWali ? 'Wali Data Kominfo' : 'Admin BPS';
-        $userName = session('user.displayName', $actorTitle);
-        $verifiedSignature = $userName . ' (' . $actorTitle . ')';
+        // Syarat 1: Jika yang verifikasi adalah Wali Data, produsen data (OPD/Instansi/BPS) harus SUDAH mengirim data (submitted)
+        if ($userRole === 'walidata') {
+            if ($meta->verification_status !== 'submitted') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data tabel belum dapat diverifikasi karena dinas OPD/instansi/BPS belum mengirim/meneruskan data ke Wali Data.'
+                ], 422);
+            }
 
-        if ($meta) {
+            $userName = session('user.displayName', 'Wali Data Kominfo');
+            $verifiedSignature = $userName . ' (Wali Data)';
+
             $meta->verification_status = 'verified';
             $meta->is_locked = true;
             $meta->verified_at = now();
             $meta->verified_by = $verifiedSignature;
             $meta->rejection_notes = null;
             $meta->save();
+
+            // Sinkronisasi status stage ke Monitoring: Stage 2 Terverifikasi Wali Data
+            if (in_array($type, ['opd', 'instansi', 'bps'])) {
+                \App\Models\MonitoringStage::updateOrCreate(
+                    [
+                        'agency_type' => $type,
+                        'agency_code' => $cleanOpd,
+                        'year' => $year,
+                    ],
+                    [
+                        'stage' => 2,
+                        'status_text' => 'Terverifikasi Wali Data',
+                        'notes' => 'Tabel ' . $tableCode . ' telah diverifikasi oleh Wali Data (' . $userName . '). Menunggu Validasi BPS.',
+                    ]
+                );
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data tabel berhasil diverifikasi oleh Wali Data (Diskominfo)! Menunggu Validasi BPS.',
+                'status' => 'verified',
+                'verified_by' => $verifiedSignature,
+                'verified_at' => now()->translatedFormat('d F Y H:i'),
+            ]);
         }
 
-        // Sinkronisasi otomatis ke Monitoring:
-        // Jika Wali Data yang verifikasi -> Tahap 2 (Verifikasi Selesai)
-        // Jika Admin BPS yang validasi -> Tahap 3 (Validasi BPS Selesai)
-        $targetStage = $isWali ? 2 : 3;
-        $targetStatusText = $isWali ? 'Terverifikasi Wali Data' : 'Validasi BPS';
+        // Syarat 2: Jika yang validasi adalah Admin BPS, data HARUS SUDAH diverifikasi oleh Wali Data!
+        if ($userRole === 'admin') {
+            if ($meta->verification_status !== 'verified') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validasi BPS hanya dapat dilakukan ketika Wali Data sudah memverifikasi data dari dinas OPD, instansi, atau BPS.'
+                ], 422);
+            }
 
-        if (in_array($type, ['opd', 'instansi'])) {
-            \App\Models\MonitoringStage::updateOrCreate(
-                [
-                    'agency_type' => $type,
-                    'agency_code' => $cleanOpd,
-                    'year' => $year,
-                ],
-                [
-                    'stage' => $targetStage,
-                    'status_text' => $targetStatusText,
-                    'notes' => 'Tabel ' . $tableCode . ' telah ' . ($isWali ? 'diverifikasi oleh ' : 'divalidasi oleh ') . $verifiedSignature . '.',
-                ]
-            );
+            $userName = session('user.displayName', 'Admin BPS Bukittinggi');
+            $validatedSignature = $userName . ' (Admin BPS)';
+
+            $meta->verification_status = 'validated';
+            $meta->is_locked = true;
+            $meta->verified_at = now();
+            $meta->verified_by = ($meta->verified_by ? $meta->verified_by . ' & ' : '') . $validatedSignature;
+            $meta->rejection_notes = null;
+            $meta->save();
+
+            // Sinkronisasi status stage ke Monitoring: Stage 3 Validasi BPS Selesai
+            if (in_array($type, ['opd', 'instansi', 'bps'])) {
+                \App\Models\MonitoringStage::updateOrCreate(
+                    [
+                        'agency_type' => $type,
+                        'agency_code' => $cleanOpd,
+                        'year' => $year,
+                    ],
+                    [
+                        'stage' => 3,
+                        'status_text' => 'Validasi BPS Selesai',
+                        'notes' => 'Tabel ' . $tableCode . ' telah divalidasi oleh Admin BPS (' . $userName . ').',
+                    ]
+                );
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data tabel berhasil divalidasi oleh Admin BPS (ACC Final Selesai)!',
+                'status' => 'validated',
+                'verified_by' => $meta->verified_by,
+                'verified_at' => now()->translatedFormat('d F Y H:i'),
+            ]);
         }
-
-        return response()->json([
-            'success' => true,
-            'message' => $isWali ? 'Data tabel berhasil diverifikasi oleh Wali Data (Diskominfo)!' : 'Data tabel berhasil divalidasi oleh Admin BPS!',
-            'status' => 'verified',
-            'verified_by' => $verifiedSignature,
-            'verified_at' => now()->translatedFormat('d F Y H:i'),
-        ]);
     }
 
     /**
@@ -4685,17 +4869,17 @@ class TabelOpdController extends Controller
         $opdCode = $request->input('opd_code');
         $year = (int) $request->input('year', 2025);
         $type = $request->input('type', 'opd');
-        $notes = $request->input('notes', 'Mohon periksa kembali kelengkapan dan kewajaran angka pada tabel ini.');
+        $notes = $request->input('notes', 'Mohon periksa kembali kelengkapan dan kewajaran data.');
+
+        if ($type !== 'bps' && $type !== 'instansi') {
+            $opdCode = $this->normalizeOpdCode($tableCode, $opdCode ?: '');
+        }
 
         $cleanOpd = str_pad($opdCode, 2, '0', STR_PAD_LEFT);
         $meta = TabelMetadata::where('table_code', $tableCode)
             ->whereIn('opd_code', array_unique([$opdCode, $cleanOpd]))
             ->where('year', $year)
             ->first();
-
-        if (!$meta) {
-            $meta = $this->getOrCreateMetadata($tableCode, $opdCode, $year);
-        }
 
         if ($meta) {
             $meta->verification_status = 'revision';
@@ -4705,7 +4889,7 @@ class TabelOpdController extends Controller
         }
 
         // Sinkronisasi otomatis ke Tahap 1 (Input Data / Perlu Revisi) di Monitoring
-        if (in_array($type, ['opd', 'instansi'])) {
+        if (in_array($type, ['opd', 'instansi', 'bps'])) {
             \App\Models\MonitoringStage::updateOrCreate(
                 [
                     'agency_type' => $type,
@@ -4724,7 +4908,6 @@ class TabelOpdController extends Controller
             'success' => true,
             'message' => 'Catatan revisi berhasil dikirim ke dinas pengisi data!',
             'status' => 'revision',
-            'rejection_notes' => $notes,
         ]);
     }
 

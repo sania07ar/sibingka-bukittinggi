@@ -31,15 +31,17 @@
             </div>
         </div>
 
-        <!-- Modal Action: Status Validasi BPS (Khusus Admin Pembina Data) -->
+        <!-- Modal Action: Status Validasi BPS & Verifikasi Wali Data -->
         @php
-            $isAdmin = (session('user.role') === 'admin');
+            $userRole = session('user.role');
+            $isAdmin = ($userRole === 'admin');
+            $isWali = ($userRole === 'walidata');
         @endphp
         <div class="my-3.5 p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
             <div class="flex items-center justify-between mb-2.5">
                 <div>
-                    <span class="text-xs font-bold text-slate-800">Status Validasi BPS:</span>
-                    <p class="text-[10px] text-slate-500">Tahap akhir validasi data statistik sektoral oleh Pembina Data (BPS Bukittinggi)</p>
+                    <span class="text-xs font-bold text-slate-800">Status Validasi & Verifikasi:</span>
+                    <p class="text-[10px] text-slate-500">Alur: Input Data &rarr; Verifikasi Wali Data (Diskominfo) &rarr; Validasi BPS (Admin BPS)</p>
                 </div>
                 <span id="modalCurrentStageBadge" class="px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-orange-100 text-[#f95a00]">Verifikasi</span>
             </div>
@@ -54,8 +56,27 @@
                         <span>Batalkan Validasi BPS</span>
                     </button>
                 </div>
+                <div id="modalBpsNotice" class="hidden mt-2 p-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs text-center font-medium">
+                    <i class="fa-solid fa-lock text-amber-600 mr-1"></i>
+                    <span>Validasi BPS hanya dapat dilakukan ketika Wali Data sudah memverifikasi data ini.</span>
+                </div>
+            @elseif($isWali)
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-center">
+                    <button type="button" onclick="changeModalValidasiBps(2)" id="modalWaliValidateBtn" class="px-3 py-2 rounded-xl text-xs font-bold border border-[#f95a00] bg-orange-50 hover:bg-[#f95a00] hover:text-white text-[#f95a00] transition-all cursor-pointer flex items-center justify-center space-x-1.5 shadow-2xs">
+                        <i class="fa-solid fa-check"></i>
+                        <span>Verifikasi Data (Wali Data)</span>
+                    </button>
+                    <button type="button" onclick="changeModalValidasiBps(1)" id="modalWaliRejectBtn" class="px-3 py-2 rounded-xl text-xs font-bold border border-slate-200 bg-white hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300 text-slate-600 transition-all cursor-pointer flex items-center justify-center space-x-1.5 shadow-2xs">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span>Minta Perbaikan ke Dinas</span>
+                    </button>
+                </div>
+                <div id="modalWaliNotice" class="hidden mt-2 p-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-600 text-xs text-center font-medium">
+                    <i class="fa-solid fa-hourglass-start text-slate-500 mr-1"></i>
+                    <span>Data belum dapat diverifikasi karena dinas/instansi/BPS belum mengirim/meneruskan data ke Wali Data.</span>
+                </div>
             @else
-                <p class="text-[11px] font-medium text-slate-500 italic">Status validasi hanya dapat diubah oleh Administrator BPS Kota Bukittinggi.</p>
+                <p class="text-[11px] font-medium text-slate-500 italic">Status validasi hanya dapat diubah oleh Administrator BPS dan Wali Data Kota Bukittinggi.</p>
             @endif
         </div>
 

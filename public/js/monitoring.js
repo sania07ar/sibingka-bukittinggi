@@ -133,8 +133,8 @@ function getAgencyLogs(code, shortName) {
 }
 
 // Open Unified Detail Modal
-function openAgencyDetailModal(type, code, short, full, pct, status, stepLabel, step = 1, tables = '') {
-    currentModalAgency = { type, code, short, full, pct, status, stepLabel, step, tables };
+function openAgencyDetailModal(type, code, short, full, pct, status, stepLabel, step = 1, tables = '', isVerifiedByWali = false, hasSubmitted = false) {
+    currentModalAgency = { type, code, short, full, pct, status, stepLabel, step, tables, isVerifiedByWali, hasSubmitted };
 
     const cleanShort = short.replace(/^\d+\.\s*/, '');
     const nameEl = document.getElementById('modalAgencyShortName');
@@ -162,7 +162,7 @@ function openAgencyDetailModal(type, code, short, full, pct, status, stepLabel, 
         linkText.innerText = btnText;
     }
 
-    highlightModalStageButtons(step);
+    highlightModalStageButtons(step, isVerifiedByWali, hasSubmitted);
 
     const logs = getAgencyLogs(code, short);
     const container = document.getElementById('modalTimelineContainer');
@@ -233,14 +233,17 @@ const stageNames = {
     3: 'Validasi BPS'
 };
 
-function highlightModalStageButtons(activeStep) {
+function highlightModalStageButtons(activeStep, isVerifiedByWali = false, hasSubmitted = false) {
     const badge = document.getElementById('modalCurrentStageBadge');
     if (badge) {
         if (activeStep === 3) {
             badge.innerText = 'Tervalidasi BPS';
             badge.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-700';
-        } else if (activeStep === 2) {
-            badge.innerText = 'Verifikasi Wali Data';
+        } else if (isVerifiedByWali || activeStep === 2) {
+            badge.innerText = 'Terverifikasi Wali Data';
+            badge.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800';
+        } else if (hasSubmitted) {
+            badge.innerText = 'Diteruskan ke Wali Data';
             badge.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-orange-100 text-[#f95a00]';
         } else {
             badge.innerText = 'Input Data (Pengisian)';
@@ -248,19 +251,68 @@ function highlightModalStageButtons(activeStep) {
         }
     }
 
+    // Admin BPS Buttons
     const validateBtn = document.getElementById('modalBpsValidateBtn');
     const unvalidateBtn = document.getElementById('modalBpsUnvalidateBtn');
+    const bpsNotice = document.getElementById('modalBpsNotice');
+
     if (validateBtn && unvalidateBtn) {
         if (activeStep === 3) {
             validateBtn.className = 'px-3 py-2 rounded-xl text-xs font-bold border-2 border-emerald-600 bg-emerald-600 text-white shadow-2xs transition-all cursor-default flex items-center justify-center space-x-1.5 pointer-events-none opacity-90';
             validateBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i><span>Sudah Tervalidasi BPS</span>';
+            validateBtn.disabled = true;
             unvalidateBtn.className = 'px-3 py-2 rounded-xl text-xs font-bold border border-slate-200 bg-white hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300 text-slate-600 transition-all cursor-pointer flex items-center justify-center space-x-1.5 shadow-2xs';
-        } else {
+            unvalidateBtn.disabled = false;
+            if (bpsNotice) bpsNotice.classList.add('hidden');
+        } else if (isVerifiedByWali) {
             validateBtn.className = 'px-3 py-2 rounded-xl text-xs font-bold border border-emerald-400 bg-emerald-50 hover:bg-emerald-600 hover:text-white text-emerald-800 transition-all cursor-pointer flex items-center justify-center space-x-1.5 shadow-2xs';
-            validateBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i><span>Beri Validasi BPS (ACC Selesai)</span>';
+            validateBtn.innerHTML = '<i class="fa-solid fa-check-double"></i><span>Beri Validasi BPS (ACC Selesai)</span>';
+            validateBtn.disabled = false;
             unvalidateBtn.className = 'px-3 py-2 rounded-xl text-xs font-bold border border-slate-200 bg-slate-100 text-slate-400 transition-all cursor-not-allowed pointer-events-none flex items-center justify-center space-x-1.5';
+            unvalidateBtn.disabled = true;
+            if (bpsNotice) bpsNotice.classList.add('hidden');
+        } else {
+            // Wali Data belum verifikasi: Admin BPS TIDAK BISA validasi
+            validateBtn.className = 'px-3 py-2 rounded-xl text-xs font-bold border border-amber-200 bg-amber-50/70 text-amber-800 transition-all cursor-not-allowed flex items-center justify-center space-x-1.5 opacity-90';
+            validateBtn.innerHTML = '<i class="fa-solid fa-lock text-amber-600"></i><span>Menunggu Verifikasi Wali Data</span>';
+            validateBtn.disabled = true;
+            unvalidateBtn.className = 'px-3 py-2 rounded-xl text-xs font-bold border border-slate-200 bg-slate-100 text-slate-400 transition-all cursor-not-allowed pointer-events-none flex items-center justify-center space-x-1.5';
+            unvalidateBtn.disabled = true;
+            if (bpsNotice) bpsNotice.classList.remove('hidden');
         }
     }
+
+    // Wali Data Buttons
+    const waliValidateBtn = document.getElementById('modalWaliValidateBtn');
+    const waliRejectBtn = document.getElementById('modalWaliRejectBtn');
+    const waliNotice = document.getElementById('modalWaliNotice');
+
+    if (waliValidateBtn && waliRejectBtn) {
+        if (isVerifiedByWali || activeStep === 3) {
+            waliValidateBtn.className = 'px-3 py-2 rounded-xl text-xs font-bold border-2 border-emerald-600 bg-emerald-600 text-white shadow-2xs transition-all cursor-default flex items-center justify-center space-x-1.5 pointer-events-none opacity-90';
+            waliValidateBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i><span>Sudah Terverifikasi Wali Data</span>';
+            waliValidateBtn.disabled = true;
+            waliRejectBtn.className = 'px-3 py-2 rounded-xl text-xs font-bold border border-slate-200 bg-white hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300 text-slate-600 transition-all cursor-pointer flex items-center justify-center space-x-1.5 shadow-2xs';
+            if (waliNotice) waliNotice.classList.add('hidden');
+        } else if (hasSubmitted) {
+            waliValidateBtn.className = 'px-3 py-2 rounded-xl text-xs font-bold border border-[#f95a00] bg-orange-50 hover:bg-[#f95a00] hover:text-white text-[#f95a00] transition-all cursor-pointer flex items-center justify-center space-x-1.5 shadow-2xs';
+            waliValidateBtn.innerHTML = '<i class="fa-solid fa-check"></i><span>Verifikasi Data (Wali Data)</span>';
+            waliValidateBtn.disabled = false;
+            waliRejectBtn.className = 'px-3 py-2 rounded-xl text-xs font-bold border border-slate-200 bg-white hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300 text-slate-600 transition-all cursor-pointer flex items-center justify-center space-x-1.5 shadow-2xs';
+            if (waliNotice) waliNotice.classList.add('hidden');
+        } else {
+            waliValidateBtn.className = 'px-3 py-2 rounded-xl text-xs font-bold border border-slate-200 bg-slate-100 text-slate-400 transition-all cursor-not-allowed flex items-center justify-center space-x-1.5';
+            waliValidateBtn.innerHTML = '<i class="fa-solid fa-hourglass-start"></i><span>Menunggu Pengiriman Data</span>';
+            waliValidateBtn.disabled = true;
+            waliRejectBtn.className = 'px-3 py-2 rounded-xl text-xs font-bold border border-slate-200 bg-slate-100 text-slate-400 transition-all cursor-not-allowed pointer-events-none flex items-center justify-center space-x-1.5';
+            if (waliNotice) waliNotice.classList.remove('hidden');
+        }
+    }
+}
+
+function toggleWaliVerification(agencyType, agencyCode, targetStage = 2) {
+    if (!confirm('Apakah Anda yakin ingin memverifikasi data instansi ini sebagai Wali Data (Diskominfo)?')) return;
+    updateStageQuick(agencyType, agencyCode, targetStage);
 }
 
 function changeModalValidasiBps(targetStage) {
