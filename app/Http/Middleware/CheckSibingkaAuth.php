@@ -13,10 +13,33 @@ class CheckSibingkaAuth
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
+    /**
+     * Permintaan dari JavaScript (fetch/AJAX) tidak boleh dialihkan ke halaman HTML,
+     * karena tombol di halaman akan gagal membaca jawabannya. Untuk itu dikirim JSON.
+     */
+    protected function wantsJson(Request $request): bool
+    {
+        return $request->expectsJson()
+            || $request->ajax()
+            || $request->is('api/*')
+            || $request->is('monitoring/update-stage')
+            || $request->is('tabel-opd/import-excel');
+    }
+
+    protected function deny(Request $request, string $message, int $status, string $route, bool $flash = true): Response
+    {
+        if ($this->wantsJson($request)) {
+            return response()->json(['success' => false, 'message' => $message], $status);
+        }
+
+        $redirect = redirect()->route($route);
+        return $flash ? $redirect->with('error', $message) : $redirect;
+    }
+
     public function handle(Request $request, Closure $next): Response
     {
         if (!session()->has('user')) {
-            return redirect()->route('login');
+            return $this->deny($request, 'Sesi Anda telah berakhir. Silakan masuk kembali.', 401, 'login', false);
         }
 
         $user = session('user');
@@ -26,7 +49,7 @@ class CheckSibingkaAuth
             session()->forget('user');
             $request->session()->invalidate();
             $request->session()->regenerateToken();
-            return redirect()->route('login')->with('error', 'Akun Anda sedang dinonaktifkan oleh Administrator BPS.');
+            return $this->deny($request, 'Akun Anda sedang dinonaktifkan oleh Administrator BPS.', 401, 'login');
         }
 
         $routeName = $request->route() ? $request->route()->getName() : null;
@@ -35,7 +58,7 @@ class CheckSibingkaAuth
         // 1. Only Administrator BPS can access Kelola Akun
         if (str_starts_with($routeName ?? '', 'kelola-akun')) {
             if ($role !== 'admin') {
-                return redirect()->route('home')->with('error', 'Akses ditolak: Hanya Administrator BPS yang memiliki wewenang untuk mengelola akun.');
+                return $this->deny($request, 'Akses ditolak: Hanya Administrator BPS yang memiliki wewenang untuk mengelola akun.', 403, 'home');
             }
         }
 
@@ -83,7 +106,7 @@ class CheckSibingkaAuth
 
             if (!in_array($routeName, $allowedPages, true)) {
                 $dinasName = $user['dinas_name'] ?? 'Dinas';
-                return redirect()->route('home')->with('error', "Akses Ditolak: Akun {$dinasName} tidak memiliki hak akses untuk membuka halaman ini.");
+                return $this->deny($request, "Akses Ditolak: Akun {$dinasName} tidak memiliki hak akses untuk membuka halaman ini.", 403, 'home');
             }
         }
 

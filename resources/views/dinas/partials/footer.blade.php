@@ -20,7 +20,7 @@
                         <i class="fa-solid {{ $userIcon }}"></i>
                     </div>
                 @endif
-                <span class="font-bold text-slate-800 text-xs">{{ $displayName }}</span>
+                <span class="font-bold text-slate-800 text-xs max-w-[140px] sm:max-w-xs truncate" title="{{ $displayName }}">{{ $displayName }}</span>
             </div>
 
             <div class="h-3 w-px bg-slate-300"></div>

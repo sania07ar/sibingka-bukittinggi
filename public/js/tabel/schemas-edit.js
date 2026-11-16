@@ -10,7 +10,11 @@ window.tableSchemas = {
                 isMultiYear: true,
                 render: function(year) {
                     const yrInt = parseInt(year) || 2025;
-                    const years = [yrInt - 4, yrInt - 3, yrInt - 2, yrInt - 1, yrInt];
+                    const cOpd = (typeof currentOpdCode !== 'undefined') ? String(currentOpdCode).padStart(2, '0') : '';
+                    const is3Year = (cOpd === '07');
+                    const years = is3Year 
+                        ? [yrInt - 2, yrInt - 1, yrInt] 
+                        : [yrInt - 4, yrInt - 3, yrInt - 2, yrInt - 1, yrInt];
                     let rowsHtml = '';
                     years.forEach(y => {
                         rowsHtml += `
@@ -61,7 +65,11 @@ window.tableSchemas = {
                 isMultiYear: true,
                 render: function(year) {
                     const yrInt = parseInt(year) || 2025;
-                    const years = [yrInt - 4, yrInt - 3, yrInt - 2, yrInt - 1, yrInt];
+                    const cOpd = (typeof currentOpdCode !== 'undefined') ? String(currentOpdCode).padStart(2, '0') : '';
+                    const is3Year = (cOpd === '07');
+                    const years = is3Year 
+                        ? [yrInt - 2, yrInt - 1, yrInt] 
+                        : [yrInt - 4, yrInt - 3, yrInt - 2, yrInt - 1, yrInt];
                     let rowsHtml = '';
                     years.forEach(y => {
                         rowsHtml += `
@@ -260,6 +268,7 @@ window.tableSchemas = {
                 titleId: 'Jumlah Pencatatan Peralihan Hak Menurut Jenis Kepemilikan di Kota Bukittinggi',
                 titleEn: 'Number of Title Transfer Registrations by Type of Ownership in Bukittinggi Municipality',
                 source: 'Kantor Pertanahan Kota Bukittinggi (BPN) / <span class="italic text-slate-500">Land Office of Bukittinggi Municipality</span>',
+                isMultiYear: true,
                 render: function(year) {
                     const yrKey = year ? year.toString() : '2025';
                     const d = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[yrKey]) ? serverDbDataStore[yrKey] : {};

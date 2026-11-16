@@ -165,9 +165,10 @@ var isEditMode = false;
 
             const params = new URLSearchParams(window.location.search);
             currentType = params.get('type') || currentType || 'opd';
-            currentOpdCode = params.get('opd') || '01';
-            currentTableCode = params.get('code') || params.get('table') || '1.1.6';
-            currentYear = params.get('year') || '2025';
+            currentOpdCode = params.get('opd') || currentOpdCode || (cfg && cfg.currentOpdCode) || (window.SiBingkaConfig && window.SiBingkaConfig.currentOpdCode) || '01';
+            currentTableCode = params.get('code') || params.get('table') || currentTableCode || (cfg && cfg.currentTableCode) || (window.SiBingkaConfig && window.SiBingkaConfig.currentTableCode) || '1.1.6';
+            currentYear = params.get('year') || currentYear || (cfg && cfg.currentYear) || (window.SiBingkaConfig && window.SiBingkaConfig.currentYear) || '2025';
+            currentOpdCode = currentOpdCode.toString().padStart(2, '0');
 
             // Selaraskan instansi jika tabel saat ini milik instansi/OPD lain
             if (typeof getAgencyInfoForTable === 'function') {
@@ -176,10 +177,12 @@ var isEditMode = false;
                     currentOpdCode = autoAgency.opdCode;
                     if (autoAgency.type) currentType = autoAgency.type;
                     if (window.history && window.history.replaceState) {
-                        const syncUrl = new URL(window.location.href);
-                        syncUrl.searchParams.set('opd', currentOpdCode);
-                        if (currentType) syncUrl.searchParams.set('type', currentType);
-                        window.history.replaceState({}, '', syncUrl.toString());
+                        try {
+                            const syncUrl = new URL(window.location.href);
+                            syncUrl.searchParams.set('opd', currentOpdCode);
+                            if (currentType) syncUrl.searchParams.set('type', currentType);
+                            window.history.replaceState({}, '', syncUrl.toString());
+                        } catch(e) {}
                     }
                 }
             }
@@ -191,9 +194,11 @@ var isEditMode = false;
             // Check if returned with saved data confirmation
             if (params.get('saved') === '1') {
                 showToast('✅ Perubahan data tabel berhasil disimpan ke SiBingka!');
-                const cleanUrl = new URL(window.location);
-                cleanUrl.searchParams.delete('saved');
-                window.history.replaceState({}, '', cleanUrl);
+                try {
+                    const cleanUrl = new URL(window.location.href);
+                    cleanUrl.searchParams.delete('saved');
+                    window.history.replaceState({}, '', cleanUrl.toString());
+                } catch(e) {}
             }
 
 
@@ -284,14 +289,14 @@ var isEditMode = false;
             };
 
             // Jika schema title masih generik namun ada info katalog resmi, gunakan judul resmi katalog
-            if (catInfo && catInfo.title && (!schema.titleId || schema.titleId.startsWith('Tabel Data Statistik Sektoral'))) {
+            if (catInfo && catInfo.title && (!schema.titleId || schema.titleId.startsWith('Tabel Data Statistik Sektoral') || schema.titleId.includes('Perguruan Tinggi'))) {
                 schema.titleId = catInfo.title;
                 schema.titleEn = catInfo.titleEn || catInfo.title;
             }
 
             const yr = parseInt(currentYear) || 2025;
             const is822 = (currentTableCode === '8.2.2');
-            const p = getTablePeriod(yr, currentTableCode);
+            const p = getTablePeriod(yr, currentTableCode, currentOpdCode);
             const yearLabel = schema.isExcludeSelectedYear ? `${yr - 5}–${yr - 1}` : ((schema.isMultiYear || is822) ? p.label : `${yr}`);
             document.getElementById('pageMainHeading').innerText = (schema.isMultiYear || schema.isExcludeSelectedYear || is822) ? `Tabel ${currentTableCode} Tahun ${yearLabel}` : `Tabel ${currentTableCode} Tahun ${currentYear}`;
             
@@ -468,8 +473,15 @@ var isEditMode = false;
 
             // Ensure title always contains the appropriate year or year range label
             function formatTitleWithYear(title, defaultTitle, yLabel) {
+                // Khusus Tabel Pertanahan 1.1.8 & 1.1.9 (7 tahun) & Perguruan Tinggi 4.1.18 & 4.1.19: Multi-tahun
+                if (typeof currentTableCode === 'string' && (currentTableCode === '1.1.8' || currentTableCode === '1.1.9' || currentTableCode === '4.1.18' || currentTableCode === '4.1.19')) {
+                    let raw = (title && !title.includes('Perguruan Tinggi') ? title : defaultTitle || title || '').trim();
+                    const cleanBase = raw.replace(/([,\s]+)(?:19|20)\d{2}(?:\s*[\/–\-]\s*(?:19|20)\d{2})?.*$/i, '').trim();
+                    return `${cleanBase}, ${yLabel}`;
+                }
+
                 // Khusus tabel pendidikan 4.1.x (OPD 08): tahun ajaran SiBingka Bukittinggi = Tahun + 1 (misal 2025 -> 2025/2026, 2026 -> 2026/2027)
-                if (typeof currentTableCode === 'string' && (currentOpdCode === '08' || currentTableCode.startsWith('4.1')) && currentTableCode !== '4.1.20' && currentTableCode !== '4.1.24') {
+                if (typeof currentTableCode === 'string' && (currentOpdCode === '08' || currentTableCode.startsWith('4.1')) && currentTableCode !== '4.1.18' && currentTableCode !== '4.1.19' && currentTableCode !== '4.1.20' && currentTableCode !== '4.1.21' && currentTableCode !== '4.1.22' && currentTableCode !== '4.1.23' && currentTableCode !== '4.1.24') {
                     const yrInt = parseInt(yLabel) || 2025;
                     const acadYr = `${yrInt}/${yrInt + 1}`;
                     let raw = (defaultTitle || title || '').trim();
@@ -609,8 +621,14 @@ var isEditMode = false;
                 savedHtml = (serverDbMetadata && serverDbMetadata.table_html) ? serverDbMetadata.table_html : null;
             }
 
-            // Sanity check: jika savedHtml adalah starter dummy placeholder ("Indikator 1" / "Indicator Details" / "Belum ada data")
-            if (savedHtml && (savedHtml.includes('Indicator Details') || (savedHtml.includes('Indikator 1') && savedHtml.includes('Rincian Indikator')) || savedHtml.includes('Belum ada data untuk tabel ini'))) {
+            // Sanity check: jika savedHtml adalah starter dummy placeholder ("Indikator 1" / "Indicator Details" / "Rincian Indikator" / "Data Statistik Sektoral" / "Belum ada data")
+            if (savedHtml && (
+                savedHtml.includes('Indicator Details') || 
+                savedHtml.includes('Rincian Indikator') || 
+                savedHtml.includes('Data Statistik Sektoral') || 
+                savedHtml.includes('Capaian Nilai Tahun') || 
+                savedHtml.includes('Belum ada data untuk tabel ini')
+            ) && currentTableCode !== 'custom') {
                 removeScopedLocalStorageItem('sibingka_table_html');
                 removeScopedLocalStorageItem('sibingka_table_is_saved');
                 savedHtml = null;
@@ -984,7 +1002,7 @@ var isEditMode = false;
             const isMultiYearTable = Boolean(schema && (schema.isMultiYear || schema.isExcludeSelectedYear)) || 
                                      ['8.1.1', '8.1.2', '8.1.3', '8.1.4', '8.1.5', '8.1.6', '8.2.2', '2.2.5', '1.1.10', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2', '5.2.1', '5.2.2'].includes(currentTableCode);
 
-            const isRowBasedYearTable = ['4.1.18', '4.1.19', '8.1.4', '8.1.5', '8.1.6', '1.1.10', '4.2.4', '4.2.5', '4.2.7', '4.2.9', '4.2.10', '4.2.13', '4.2.15', '4.2.16'].includes(currentTableCode);
+            const isRowBasedYearTable = ['1.1.8', '4.1.18', '4.1.19', '8.1.4', '8.1.5', '8.1.6', '1.1.10', '4.2.4', '4.2.5', '4.2.7', '4.2.9', '4.2.10', '4.2.13', '4.2.15', '4.2.16'].includes(currentTableCode);
 
             if (!serverDbMetadata && !isLocallySaved && isMultiYearTable && savedHtml && !isRowBasedYearTable) {
                 const tempDiv = document.createElement('table');
@@ -1183,7 +1201,20 @@ var isEditMode = false;
                 const hasCorruptYears = savedHtml.includes('2023/2026') || savedHtml.includes('2026/2025') || savedHtml.includes('2023/2025');
                 const hasExpectedLatest = savedHtml.includes(expectedY3);
 
-                if (hasCorruptYears || !hasExpectedLatest) {
+                // Periksa apakah subheader tabel 3-in-1 rusak
+                const hasBrokenSubheaders = !savedHtml.includes('subtable-header-numbering') ||
+                                           !savedHtml.includes('colspan="6"') ||
+                                           savedHtml.includes('GuruTeachers') ||
+                                           savedHtml.includes('MuridStudents') ||
+                                           savedHtml.includes('row_5_col_1') ||
+                                           savedHtml.includes('row_5_col_2');
+
+                if (hasBrokenSubheaders) {
+                    localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_source_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_is_saved_${currentTableCode}_${currentYear}`);
+                    savedHtml = null;
+                } else if (hasCorruptYears || !hasExpectedLatest) {
                     if (/\b\d{4}\s*\/\s*\d{4}\b/.test(savedHtml)) {
                         let scIdx = 0;
                         savedHtml = savedHtml.replace(/\b\d{4}\s*\/\s*\d{4}\b/g, () => {
@@ -1302,6 +1333,19 @@ var isEditMode = false;
 
             cleanGhostColumns(tableEl);
             cleanGhostRows(tableEl);
+
+            // Sinkronisasi rentang tahun aktual dari baris tabel nyata di <tbody> (misal Kedokteran 3 tahun 2022-2024, atau instansi lain)
+            if (schema.isMultiYear || is822) {
+                const actualP = (typeof getActualTablePeriod === 'function') ? getActualTablePeriod(tableEl, p) : p;
+                if (actualP && actualP.label && actualP.label !== yearLabel) {
+                    yearLabel = actualP.label;
+                    const hHeading = document.getElementById('pageMainHeading');
+                    if (hHeading) hHeading.innerText = `Tabel ${currentTableCode} Tahun ${yearLabel}`;
+                    if (mTitleId) mTitleId.innerText = formatTitleWithYear(customTitleId, schema.titleId, yearLabel);
+                    if (mTitleEn) mTitleEn.innerText = formatTitleWithYear(customTitleEn, schema.titleEn, yearLabel);
+                    updateYearSwitcher(true, Boolean(schema.isExcludeSelectedYear));
+                }
+            }
 
             // Jaminan header 2.2.2: Kolom ke-5 adalah S2/S3 (bukan Kolom 6)
             if (currentTableCode === '2.2.2' || (tableEl && (tableEl.innerText.includes('Partai') || tableEl.innerText.includes('Pendidikan')))) {
@@ -1634,6 +1678,11 @@ var isEditMode = false;
             if (typeof fetchTableComments === 'function') {
                 if (typeof loadTableComments === 'function') loadTableComments(); else if (typeof fetchTableComments === 'function') fetchTableComments();
             }
+
+            // Inisialisasi petunjuk geser tabel di layar HP (hanya jika tabel meluap & hilang saat digeser)
+            if (typeof initMobileScrollHint === 'function') {
+                initMobileScrollHint();
+            }
         }
 
         function cleanGhostColumns(table) {
@@ -1699,13 +1748,41 @@ var isEditMode = false;
 
         function cleanGhostRows(table) {
             if (!table) return;
-            // JANGAN PERNAH hapus baris data resmi pada tabel Dishub (8.1.x, OPD 20), BPN (1.1.x), BKPSDM (2.3.x), Pendidikan (4.1.x, 08), KPU/DPRD (2.2.2, 02, 03), atau Pertanian (5.1.x, 5.2.x, 9.11)
-            if (currentTableCode === '2.2.2' || currentTableCode.startsWith('1.1.') || currentTableCode.startsWith('2.3.') || currentTableCode.startsWith('4.1') || currentTableCode.startsWith('5.1.') || currentTableCode.startsWith('5.2.') || currentTableCode.startsWith('8.1.') || currentTableCode.startsWith('8.2.') || currentTableCode === '9.11' || currentOpdCode === '02' || currentOpdCode === '03' || currentOpdCode === '08' || currentOpdCode === '04' || currentOpdCode === '20' || currentOpdCode === '17') return;
             const tbody = table.querySelector('tbody');
             if (!tbody) return;
             const rows = tbody.querySelectorAll('tr');
             let removedAny = false;
+
+            // 1. Bersihkan BARIS HANTU PASTI di semua tabel (duplikasi header, nomor kolom -1, (1), dsb)
+            const isYearTable = (typeof currentTableCode === 'string' && (currentTableCode === '4.1.18' || currentTableCode === '4.1.19'));
             rows.forEach(tr => {
+                const tds = Array.from(tr.querySelectorAll('td'));
+                if (tds.length === 0) return;
+                const labelText = tds[0].innerText.trim();
+
+                const isHeaderDuplicate = /^(?:Perguruan\s+Tinggi|College|Mahasiswa|Student|Lulusan|Graduate|Dosen|Lecturer)/i.test(labelText);
+                const isColNumberGhost = /^(?:-1|\(1\)|-2|\(2\)|-3|\(3\))$/.test(labelText) || (labelText === '-1' || labelText === '(1)');
+                const isInvalidYearRow = isYearTable && !/^(?:19|20)\d{2}$/.test(labelText) && !/^(?:Jumlah|Total)/i.test(labelText);
+
+                if (isHeaderDuplicate || isColNumberGhost || isInvalidYearRow) {
+                    tr.remove();
+                    removedAny = true;
+                }
+            });
+
+            // 2. Baris kosong tanpa data untuk tabel biasa (lewati tabel resmi terlindung)
+            if (currentTableCode === '2.2.2' || currentTableCode.startsWith('1.1.') || currentTableCode.startsWith('2.3.') || (currentTableCode.startsWith('4.1') && currentTableCode !== '4.1.18' && currentTableCode !== '4.1.19') || currentTableCode.startsWith('5.1.') || currentTableCode.startsWith('5.2.') || currentTableCode.startsWith('8.1.') || currentTableCode.startsWith('8.2.') || currentTableCode === '9.11' || currentOpdCode === '02' || currentOpdCode === '03' || currentOpdCode === '08' || currentOpdCode === '04' || currentOpdCode === '20' || currentOpdCode === '17') {
+                if (removedAny) {
+                    const savedKey = `sibingka_table_html_${currentTableCode}_${currentYear}`;
+                    if (localStorage.getItem(savedKey)) {
+                        safeSetLocalStorage(savedKey, table.innerHTML);
+                    }
+                }
+                return;
+            }
+
+            const remainingRows = tbody.querySelectorAll('tr');
+            remainingRows.forEach(tr => {
                 const tds = Array.from(tr.querySelectorAll('td'));
                 if (tds.length === 0) return;
                 // Baris yang memiliki label teks kategori/indikator di kolom pertama BUKAN baris hantu
@@ -1806,9 +1883,11 @@ var isEditMode = false;
 
         async function changeTableYear(newYear) {
             currentYear = newYear.toString();
-            const newUrl = new URL(window.location);
-            newUrl.searchParams.set('year', currentYear);
-            window.history.pushState({}, '', newUrl);
+            try {
+                const newUrl = new URL(window.location.href);
+                newUrl.searchParams.set('year', currentYear);
+                window.history.pushState({}, '', newUrl.toString());
+            } catch(e) {}
 
             const selectYearEl = document.getElementById('yearSwitcher');
             if (selectYearEl) selectYearEl.value = currentYear;
@@ -2071,15 +2150,19 @@ var isEditMode = false;
         }
 
         // EXPORT DROPDOWN TOGGLE HANDLERS
+        var toastTimeout = null;
         function showToast(message) {
             const toast = document.getElementById('toastNotification');
             const msgEl = document.getElementById('toastMessage');
+            if (!toast || !msgEl) return;
             msgEl.innerText = message;
 
             toast.classList.remove('translate-y-20', 'opacity-0');
             toast.classList.add('translate-y-0', 'opacity-100');
 
-            clearTimeout(toastTimeout);
+            if (toastTimeout) {
+                clearTimeout(toastTimeout);
+            }
             toastTimeout = setTimeout(() => {
                 toast.classList.remove('translate-y-0', 'opacity-100');
                 toast.classList.add('translate-y-20', 'opacity-0');

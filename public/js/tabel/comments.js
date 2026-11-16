@@ -67,7 +67,7 @@ function getHeaderTitleForCol(colIdx) {
 
 async function loadTableComments() {
     try {
-        const apiUrl = window.commentsApiUrl || '/api/tabel-opd/comments';
+        const apiUrl = window.commentsApiUrl || sbUrl('/api/tabel-opd/comments');
         const res = await fetch(`${apiUrl}?table_code=${encodeURIComponent(currentTableCode)}&opd_code=${encodeURIComponent(currentOpdCode)}&year=${encodeURIComponent(currentYear)}`);
         if (!res.ok) return;
         const json = await res.json();
@@ -294,7 +294,7 @@ async function handleSendComment(e) {
     if (btn) btn.disabled = true;
 
     try {
-        const saveUrl = window.saveCommentApiUrl || '/api/tabel-opd/comments';
+        const saveUrl = window.saveCommentApiUrl || sbUrl('/api/tabel-opd/comments');
         const csrfToken = window.csrfToken || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
         const res = await fetch(saveUrl, {
             method: 'POST',
@@ -338,7 +338,7 @@ async function deleteCommentItem(id) {
     if (!confirm('Hapus catatan ini?')) return;
     try {
         const csrfToken = window.csrfToken || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        const res = await fetch(`/api/tabel-opd/comments/${id}`, {
+        const res = await fetch(sbUrl(`/api/tabel-opd/comments/${id}`), {
             method: 'DELETE',
             headers: {
                 'X-CSRF-TOKEN': csrfToken

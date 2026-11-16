@@ -17,21 +17,21 @@
                     </div>
                 </div>
 
-                <div class="flex items-center flex-wrap gap-2">
+                <div class="flex items-center flex-wrap gap-1.5 sm:gap-2">
                     <!-- Tombol Salin Lengkap -->
                     <button onclick="copyTableForSpreadsheet(false)" 
-                            class="px-3.5 py-1.5 rounded-xl bg-[#0F9D58] hover:bg-[#0B8043] text-white text-xs font-bold shadow-xs hover:shadow-md transition-all flex items-center space-x-1.5 cursor-pointer"
+                            class="px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-[#0F9D58] hover:bg-[#0B8043] text-white text-xs font-bold shadow-xs hover:shadow-md transition-all flex items-center space-x-1 sm:space-x-1.5 cursor-pointer"
                             title="Salin judul, tabel lengkap, dan sumber ke clipboard">
                         <i class="fa-solid fa-copy text-xs"></i>
-                        <span>Salin Seluruh Tabel</span>
+                        <span>Salin<span class="hidden sm:inline"> Seluruh</span> Tabel</span>
                     </button>
 
                     <!-- Tombol Salin Data Saja -->
                     <button onclick="copyTableForSpreadsheet(true)" 
-                            class="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 hover:text-slate-900 text-xs font-bold shadow-2xs transition-all flex items-center space-x-1.5 cursor-pointer"
+                            class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 hover:text-slate-900 text-xs font-bold shadow-2xs transition-all flex items-center space-x-1 sm:space-x-1.5 cursor-pointer"
                             title="Hanya salin baris rincian data dan total tanpa judul & header">
                         <i class="fa-solid fa-table-cells text-xs text-slate-500"></i>
-                        <span>Salin Angka Saja</span>
+                        <span>Salin Angka<span class="hidden sm:inline"> Saja</span></span>
                     </button>
 
                     <!-- Tombol Unduh XLSX -->

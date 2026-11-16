@@ -2,6 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    @include('partials.base-url')
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Isi Data Instansi Vertikal dan Lainnya - SiBingka Kota Bukittinggi</title>
     
@@ -25,7 +26,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <!-- Master Catalog Tables (OPD, Instansi & BPS) -->
-    <script src="{{ asset('sibingka-catalogs.js') }}"></script>
+    <script src="{{ asset('sibingka-catalogs.js') }}?v={{ @filemtime(public_path('sibingka-catalogs.js')) }}"></script>
 
     <style>
         body {
@@ -203,7 +204,7 @@
 
                         <div class="flex items-center space-x-2">
                             <!-- Search Input Box -->
-                            <div class="relative w-44 sm:w-60 flex items-center">
+                            <div class="relative w-36 xs:w-44 sm:w-60 flex items-center">
                                 <input type="text"
                                        id="instansiSearchInput"
                                        oninput="handleSearchInstansi(this.value)"
@@ -334,6 +335,6 @@
         };
         window.serverDbCustomTables = @json($customTables ?? []);
     </script>
-    <script src="{{ asset('js/dinas-catalog.js') }}"></script>
+    <script src="{{ asset('js/dinas-catalog.js') }}?v={{ @filemtime(public_path('js/dinas-catalog.js')) }}"></script>
 </body>
 </html>

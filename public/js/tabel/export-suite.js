@@ -27,7 +27,7 @@ function closeAllExportDropdowns() {
 }
 
 function exportToExcel() {
-    const url = `/tabel-opd/export-excel?code=${encodeURIComponent(currentTableCode)}&opd=${encodeURIComponent(currentOpdCode)}&year=${encodeURIComponent(currentYear)}&type=${encodeURIComponent(currentType)}`;
+    const url = sbUrl(`/tabel-opd/export-excel?code=${encodeURIComponent(currentTableCode)}&opd=${encodeURIComponent(currentOpdCode)}&year=${encodeURIComponent(currentYear)}&type=${encodeURIComponent(currentType)}`);
     window.location.href = url;
     if (typeof showToast === 'function') {
         showToast(`📥 Mengunduh berkas Excel Tabel ${currentTableCode} Tahun ${currentYear}...`);

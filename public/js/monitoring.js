@@ -150,7 +150,7 @@ function openAgencyDetailModal(type, code, short, full, pct, status, stepLabel, 
         } else if (type === 'bps') {
             routeName = 'data-bps';
         }
-        link.href = `/${routeName}?${type}=${code}&year=${selectedYear}`;
+        link.href = sbUrl(`/${routeName}?${type}=${code}&year=${selectedYear}`);
     }
     if (linkText) {
         let btnText = 'Buka Halaman Input Data OPD';
@@ -341,7 +341,7 @@ async function updateStageQuick(agencyType, agencyCode, newStage) {
     try {
         const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
         const selectedYear = window.monitoringSelectedYear || 2025;
-        const res = await fetch('/monitoring/update-stage', {
+        const res = await fetch(sbUrl('/monitoring/update-stage'), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -79,14 +79,16 @@
             '10': 'PDRB PENGELUARAN (PDRB Menurut Pengeluaran)'
         };
 
-        function getAgencyName(code) {
-            if (currentType === 'bps') {
-                return bpsNames[code] || 'BADAN PUSAT STATISTIK KOTA BUKITTINGGI';
+        function getAgencyName(code, type = null) {
+            const cleanCode = code ? code.toString().padStart(2, '0') : '01';
+            const activeType = type || (typeof currentType !== 'undefined' && currentType ? currentType : (window.currentType || (window.SiBingkaConfig && window.SiBingkaConfig.currentType) || 'opd'));
+            if (activeType === 'bps') {
+                return bpsNames[cleanCode] || bpsNames[code] || 'BADAN PUSAT STATISTIK KOTA BUKITTINGGI';
             }
-            if (currentType === 'instansi') {
-                return instansiNames[code] || 'KANTOR PERTANAHAN KOTA BUKITTINGGI (BPN)';
+            if (activeType === 'instansi') {
+                return instansiNames[cleanCode] || instansiNames[code] || 'KANTOR PERTANAHAN KOTA BUKITTINGGI (BPN)';
             }
-            return opdNames[code] || 'DINAS PEKERJAAN UMUM DAN PENATAAN RUANG';
+            return opdNames[cleanCode] || opdNames[code] || 'DINAS PEKERJAAN UMUM DAN PENATAAN RUANG';
         }
 
 
@@ -264,7 +266,29 @@
             };
         }
 
-        function getTablePeriod(year, tableCode) {
+        function get3YearPeriod(year) {
+            const yr = parseInt(year) || 2025;
+            const start = yr - 2;
+            const end = yr;
+            return {
+                start: start,
+                end: end,
+                yearsAsc: [start, yr - 1, end],
+                yearsDesc: [end, yr - 1, start],
+                label: `${start}–${end}`
+            };
+        }
+
+        function getTablePeriod(year, tableCode, opdCode) {
+            const cOpd = opdCode ? String(opdCode).padStart(2, '0') : (typeof currentOpdCode !== 'undefined' ? String(currentOpdCode).padStart(2, '0') : '');
+            // Khusus Kantor Pertanahan (Instansi 01): tabel 1.1.8 dan 1.1.9 rentang 7 tahun terakhir (misal 2019–2025 untuk 2025)
+            if (tableCode === '1.1.8' || tableCode === '1.1.9') {
+                return get7YearPeriod(year);
+            }
+            // Khusus Fakultas Kedokteran UNP (OPD 07): data tabel 4.1.18 memiliki rentang 3 tahun (misal 2022-2024 untuk 2024)
+            if (tableCode === '4.1.18' && cOpd === '07') {
+                return get3YearPeriod(year);
+            }
             if (tableCode === '5.2.1' || tableCode === '5.2.2') {
                 return get2YearPeriod(year);
             }
@@ -275,6 +299,46 @@
                 return get7YearPeriod(year);
             }
             return get5YearPeriod(year);
+        }
+
+        function getActualTablePeriod(tableEl, fallbackPeriod) {
+            if (!tableEl) return fallbackPeriod;
+            const years = [];
+            const tbody = tableEl.querySelector('tbody');
+            if (tbody) {
+                const yearTds = Array.from(tbody.querySelectorAll('tr > td:first-child'));
+                yearTds.forEach(td => {
+                    const txt = td.innerText.trim();
+                    const m = txt.match(/^(?:19|20)\d{2}$/);
+                    if (m) years.push(parseInt(m[0]));
+                });
+            }
+            if (years.length < 2) {
+                const thead = tableEl.querySelector('thead');
+                if (thead) {
+                    const ths = Array.from(thead.querySelectorAll('th'));
+                    ths.forEach(th => {
+                        const txt = th.innerText.trim();
+                        const m = txt.match(/^(?:19|20)\d{2}$/);
+                        if (m) years.push(parseInt(m[0]));
+                    });
+                }
+            }
+            if (years.length >= 2) {
+                const minY = Math.min(...years);
+                const maxY = Math.max(...years);
+                if (minY !== maxY) {
+                    const uniqueYears = Array.from(new Set(years));
+                    return {
+                        start: minY,
+                        end: maxY,
+                        yearsAsc: uniqueYears.slice().sort((a, b) => a - b),
+                        yearsDesc: uniqueYears.slice().sort((a, b) => b - a),
+                        label: `${minY}–${maxY}`
+                    };
+                }
+            }
+            return fallbackPeriod;
         }
 
 
@@ -402,4 +466,55 @@ function safeEscapeHtml(str) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+}
+
+/**
+ * Mobile Horizontal Scroll Hint:
+ * Hanya muncul otomatis jika tabel meluap (overflow > clientWidth) di layar HP (< 640px)
+ * dan otomatis menghilang saat digeser oleh pengguna.
+ */
+function initMobileScrollHint() {
+    const hint = document.getElementById('mobileScrollHint');
+    const container = document.getElementById('printableTableSection');
+    if (!hint || !container) return;
+
+    function checkOverflow() {
+        if (window.innerWidth >= 640) {
+            hint.classList.add('hidden');
+            return;
+        }
+        if (container.scrollWidth > container.clientWidth + 5) {
+            hint.classList.remove('hidden');
+        } else {
+            hint.classList.add('hidden');
+        }
+    }
+
+    checkOverflow();
+    setTimeout(checkOverflow, 150);
+    setTimeout(checkOverflow, 500);
+    window.addEventListener('resize', checkOverflow);
+
+    let dismissed = false;
+    container.addEventListener('scroll', () => {
+        if (!dismissed && container.scrollLeft > 15) {
+            dismissed = true;
+            dismissMobileScrollHint();
+        }
+    }, { passive: true });
+}
+
+function dismissMobileScrollHint() {
+    const hint = document.getElementById('mobileScrollHint');
+    if (!hint) return;
+    hint.style.transition = 'opacity 0.25s ease, max-height 0.25s ease, margin 0.25s ease, padding 0.25s ease';
+    hint.style.opacity = '0';
+    hint.style.maxHeight = '0px';
+    hint.style.marginBottom = '0px';
+    hint.style.paddingTop = '0px';
+    hint.style.paddingBottom = '0px';
+    hint.style.overflow = 'hidden';
+    setTimeout(() => {
+        hint.classList.add('hidden');
+    }, 280);
 }

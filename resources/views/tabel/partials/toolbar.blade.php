@@ -19,23 +19,25 @@
     </div>
 
     <!-- Right Header Actions: Table Switcher + Year Switcher + Edit + Unggah Excel + Export Dropdown Menu -->
-    <div id="actionHeaderRight" class="flex items-center flex-wrap gap-2">
+    <div id="actionHeaderRight" class="flex items-center flex-wrap gap-1.5 sm:gap-2">
         <!-- Table Switcher Selector -->
-        <div class="relative flex items-center space-x-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200/90 rounded-lg px-2.5 py-1.5 transition-colors shadow-2xs cursor-pointer group" title="Ganti tabel dalam instansi ini">
+        <div class="relative flex items-center space-x-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200/90 rounded-lg px-2 sm:px-2.5 py-1.5 transition-colors shadow-2xs cursor-pointer group" title="Ganti tabel dalam instansi ini">
             <i class="fa-solid fa-table-list text-slate-400 text-xs shrink-0 pointer-events-none group-hover:text-[#f95a00] transition-colors"></i>
-            <span id="tableSwitcherLabel" class="text-xs font-bold text-slate-700 pointer-events-none select-none">Tabel {{ $currentTableCode ?? '1.1.6' }}</span>
+            <span id="tableSwitcherLabel" class="text-xs font-bold text-slate-700 pointer-events-none select-none max-w-[95px] sm:max-w-none truncate">Tabel {{ $currentTableCode ?? '1.1.6' }}</span>
             <i class="fa-solid fa-chevron-down text-[8px] text-slate-400 pointer-events-none"></i>
             <select id="tableSwitcher" onchange="changeTableCode(this.value)" 
-                    class="absolute inset-0 w-full h-full opacity-0 cursor-pointer text-xs">
-                <!-- Populated dynamically based on current OPD / Instansi -->
+                    onfocus="if (this.options.length <= 1 && typeof updateTableSwitcher === 'function') updateTableSwitcher();"
+                    onmousedown="if (this.options.length <= 1 && typeof updateTableSwitcher === 'function') updateTableSwitcher();"
+                    class="absolute inset-0 w-full h-full opacity-0 cursor-pointer text-xs z-10">
+                <option value="{{ $currentTableCode ?? '1.1.6' }}" selected>Tabel {{ $currentTableCode ?? '1.1.6' }}</option>
             </select>
         </div>
 
         <!-- Year Switcher Selector -->
-        <div class="flex items-center space-x-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200/90 rounded-lg px-2.5 py-1.5 transition-colors shadow-2xs">
+        <div class="flex items-center space-x-1 sm:space-x-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200/90 rounded-lg px-2 sm:px-2.5 py-1.5 transition-colors shadow-2xs">
             <i class="fa-solid fa-calendar-days text-slate-400 text-xs"></i>
             <select id="yearSwitcher" onchange="changeTableYear(this.value)" 
-                    class="bg-transparent text-xs font-bold text-slate-700 focus:outline-none cursor-pointer">
+                    class="bg-transparent text-xs font-bold text-slate-700 focus:outline-none cursor-pointer max-w-[125px] sm:max-w-none">
                 @php
                     $selYr = (int) ($currentYear ?? date('Y'));
                 @endphp
@@ -48,7 +50,7 @@
         <!-- Button: Form Import Excel -->
         <button onclick="toggleExcelUploadForm()" 
                 id="btnToggleExcelUpload"
-                class="px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-[#0F9D58] border border-emerald-300 font-bold text-xs flex items-center space-x-1.5 shadow-2xs transition-all cursor-pointer"
+                class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-[#0F9D58] border border-emerald-300 font-bold text-xs flex items-center space-x-1 sm:space-x-1.5 shadow-2xs transition-all cursor-pointer"
                 title="Import Data Tabel dari Berkas Excel">
             <i class="fa-solid fa-file-import text-xs"></i>
             <span>Import</span>
@@ -63,33 +65,33 @@
         <!-- Edit Button (Buka Halaman Editor Data) -->
         @if($isLocked && !$isAdmin)
             <button disabled 
-                    class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-400 border border-slate-200 font-bold text-xs flex items-center space-x-1.5 cursor-not-allowed opacity-75"
+                    class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-100 text-slate-400 border border-slate-200 font-bold text-xs flex items-center space-x-1 sm:space-x-1.5 cursor-not-allowed opacity-75"
                     title="Tabel sudah di-ACC & terkunci. Hubungi BPS jika perlu perubahan data.">
                 <i class="fa-solid fa-lock text-[11px]"></i>
                 <span>Terkunci</span>
             </button>
         @else
             <button id="editTableBtn" onclick="goToEditPage()" 
-                    class="px-3 py-1.5 rounded-lg bg-[#fff8e6] hover:bg-[#ffefc2] text-[#d97706] border border-[#fde68a] font-bold text-xs flex items-center space-x-1.5 shadow-2xs transition-all cursor-pointer"
+                    class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-[#fff8e6] hover:bg-[#ffefc2] text-[#d97706] border border-[#fde68a] font-bold text-xs flex items-center space-x-1 sm:space-x-1.5 shadow-2xs transition-all cursor-pointer"
                     title="Buka Halaman Pengeditan Data Tabel">
                 <i class="fa-solid fa-pen-to-square text-[11px]"></i>
-                <span>Edit Tabel</span>
+                <span>Edit<span class="hidden sm:inline"> Tabel</span></span>
             </button>
         @endif
 
         <!-- Button: Tampilan Google Spreadsheet (Publikasi Pusat) -->
         <button onclick="openSpreadsheetModal()" 
                 id="btnOpenSpreadsheetView"
-                class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center space-x-1.5 shadow-2xs transition-all cursor-pointer"
+                class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center space-x-1 sm:space-x-1.5 shadow-2xs transition-all cursor-pointer"
                 title="Buka Tampilan Google Spreadsheet & Salin Langsung untuk Publikasi Pusat">
             <i class="fa-solid fa-table-cells text-xs"></i>
-            <span>Tampilan Spreadsheet</span>
+            <span><span class="hidden sm:inline">Tampilan </span>Spreadsheet</span>
         </button>
 
         <!-- Unified Export Dropdown Menu (Green Button) -->
         <div class="relative inline-block text-left" id="exportDropdownContainerTop">
             <button id="exportDropdownBtnTop" onclick="toggleExportDropdown('Top')" 
-                    class="px-3.5 py-1.5 rounded-lg bg-[#0F9D58] hover:bg-[#0B8043] text-white font-bold text-xs flex items-center space-x-1.5 shadow-2xs transition-all cursor-pointer"
+                    class="px-3 sm:px-3.5 py-1.5 rounded-lg bg-[#0F9D58] hover:bg-[#0B8043] text-white font-bold text-xs flex items-center space-x-1 sm:space-x-1.5 shadow-2xs transition-all cursor-pointer"
                     title="Pilih Format Ekspor Data (Excel, PDF)">
                 <i class="fa-solid fa-file-export text-xs"></i>
                 <span>Export</span>

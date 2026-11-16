@@ -20,8 +20,8 @@
             <a href="{{ route('home') }}" class="flex items-center justify-center gap-2.5 sm:gap-3 transition-transform hover:scale-[1.02] no-underline shrink-0" title="SiBingka - Sistem Informasi Bukittinggi dalam Angka">
                 <img src="{{ asset('images/sibingka-logo.png') }}" alt="Logo SiBingka" class="h-10 sm:h-12 md:h-14 w-auto object-contain drop-shadow-sm">
                 <div class="hidden lg:flex flex-col justify-center leading-tight text-left">
-                    <span class="text-xl font-black tracking-tight text-slate-900">SiBingka</span>
-                    <span class="text-[11px] font-medium text-slate-500">Sistem Informasi Bukittinggi dalam Angka</span>
+                    <span class="text-[11px] sm:text-xs md:text-sm font-black text-slate-900 tracking-tight font-sans">SiBingka</span>
+                    <span class="text-[10px] sm:text-[11px] md:text-xs font-semibold text-slate-600 tracking-tight font-sans">Sistem Informasi Bukittinggi dalam Angka</span>
                 </div>
             </a>
         </div>

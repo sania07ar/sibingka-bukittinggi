@@ -2,6 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    @include('partials.base-url')
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Monitoring Progress Pengumpulan Data OPD - SiBingka Kota Bukittinggi</title>
@@ -23,7 +24,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <!-- Master Catalog Tables (OPD & Instansi) -->
-    <script src="{{ asset('sibingka-catalogs.js') }}"></script>
+    <script src="{{ asset('sibingka-catalogs.js') }}?v={{ @filemtime(public_path('sibingka-catalogs.js')) }}"></script>
 
     <!-- SheetJS with Styles (xlsx-js-style) -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
@@ -369,6 +370,6 @@
             });
         }
     </script>
-    <script src="{{ asset('js/monitoring.js') }}"></script>
+    <script src="{{ asset('js/monitoring.js') }}?v={{ @filemtime(public_path('js/monitoring.js')) }}"></script>
 </body>
 </html>

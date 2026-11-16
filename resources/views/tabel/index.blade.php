@@ -2,6 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    @include('partials.base-url')
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tabel Data Statistik Sektoral - SiBingka Kota Bukittinggi</title>
     
@@ -25,297 +26,16 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
     <!-- Master Tables Catalog (All OPD & Instansi) -->
-    <script src="{{ asset('sibingka-catalogs.js') }}"></script>
+    <script src="{{ asset('sibingka-catalogs.js') }}?v={{ @filemtime(public_path('sibingka-catalogs.js')) }}"></script>
     <!-- Table Helpers & Schemas -->
-    <script src="{{ asset('js/tabel/helpers.js') }}?v={{ time() }}"></script>
-    <script src="{{ asset('js/tabel/schemas-display.js') }}?v={{ time() }}"></script>
+    <script src="{{ asset('js/tabel/helpers.js') }}?v={{ @filemtime(public_path('js/tabel/helpers.js')) }}"></script>
+    @include('partials.script-group', ['dir' => 'js/tabel/schemas-display'])
 
     <!-- Tailwind CSS (CDN + Vite) -->
     <script src="https://cdn.tailwindcss.com"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <style>
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f0f2f5;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-
-        .table-custom-border td, .table-custom-border th {
-            border: 1px solid #334155;
-        }
-
-        /* phpMyAdmin Style Editable Form Inputs */
-        .pma-edit-cell {
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            gap: 6px;
-            width: 100%;
-            padding: 2px;
-        }
-
-        .pma-textarea {
-            background-color: #f58220;
-            color: #0f172a;
-            font-weight: 700;
-            font-size: 13px;
-            font-family: inherit;
-            border-radius: 6px;
-            border: 1px solid #d9680c;
-            padding: 5px 8px;
-            width: 100%;
-            min-width: 60px;
-            height: 34px;
-            min-height: 32px;
-            max-height: 75px;
-            resize: both;
-            box-shadow: inset 0 1px 2px rgba(0,0,0,0.15);
-            outline: none;
-            line-height: 1.35;
-            transition: background-color 0.15s, border-color 0.15s, box-shadow 0.15s;
-        }
-
-        .pma-textarea:focus {
-            background-color: #fa933b;
-            border-color: #9a3412;
-            box-shadow: 0 0 0 2px rgba(245, 130, 32, 0.45);
-        }
-
-        .pma-select {
-            background-color: #f58220;
-            color: #0f172a;
-            font-weight: 700;
-            font-size: 11px;
-            border-radius: 6px;
-            border: 1px solid #d9680c;
-            padding: 5px 6px;
-            height: 34px;
-            min-width: 44px;
-            cursor: pointer;
-            outline: none;
-            box-shadow: inset 0 1px 2px rgba(0,0,0,0.15);
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%230f172a'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 6px center;
-            background-size: 11px;
-            padding-right: 20px;
-            transition: background-color 0.15s;
-            shrink: 0;
-        }
-
-        .pma-select:focus {
-            background-color: #fa933b;
-            border-color: #9a3412;
-        }
-
-        /* BPS Official Table Border Rules: Hilangkan garis hitam di ujung tepi luar */
-        .table-custom-border {
-            border-left: none !important;
-            border-right: none !important;
-        }
-
-        .table-custom-border th:first-child,
-        .table-custom-border td:first-child {
-            border-left: none !important;
-        }
-
-        .table-custom-border th:last-child,
-        .table-custom-border td:last-child {
-            border-right: none !important;
-        }
-
-        .table-custom-border thead tr:first-child th {
-            border-top: none !important;
-        }
-
-        /* ==========================================================================
-           PRINT STYLING (A4 LANDSCAPE - EXCEL SPREADSHEET STYLE)
-           ========================================================================== */
-        .print-only {
-            display: none !important;
-        }
-
-        @page {
-            size: A4 landscape;
-            margin: 8mm 12mm 10mm 12mm;
-        }
-
-        @media print {
-            /* Force exact background colors and borders in print */
-            *, *::before, *::after {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                color-adjust: exact !important;
-            }
-
-            html, body {
-                width: 100% !important;
-                height: auto !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                background: #ffffff !important;
-                color: #0f172a !important;
-                font-size: 11px !important;
-            }
-
-            /* Show elements intended only for print */
-            .print-only {
-                display: block !important;
-            }
-
-            /* Hide all interactive/screen-only UI elements */
-            header,
-            footer,
-            #breadcrumbBar,
-            #actionHeaderRight,
-            #editModeAlert,
-            #bottomActionBar,
-            #toastNotification,
-            #excelUploadSection,
-            #yearStatusAlert,
-            .top-card-header,
-            .fixed,
-            .no-print,
-            button,
-            select {
-                display: none !important;
-            }
-
-            /* Flatten containers for full-width landscape printing */
-            main {
-                max-width: 100% !important;
-                width: 100% !important;
-                margin: 0 !important;
-                padding: 0 !important;
-            }
-
-            main > div {
-                border: none !important;
-                box-shadow: none !important;
-                border-radius: 0 !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                background: transparent !important;
-            }
-
-            /* Table Metadata Section (Table Number + Title) */
-            #tableMetadataSection {
-                display: flex !important;
-                align-items: flex-start !important;
-                gap: 16px !important;
-                margin-bottom: 8px !important;
-                page-break-after: avoid !important;
-            }
-
-            #tableMetadataSection .font-bold {
-                font-size: 12px !important;
-            }
-
-            /* Printable Table Wrapper */
-            #printableTableSection {
-                overflow: visible !important;
-                width: 100% !important;
-                margin: 0 0 8px 0 !important;
-                padding: 0 !important;
-            }
-
-            /* Table styled like Excel Spreadsheet */
-            #dataDisplayTable {
-                width: 100% !important;
-                border-collapse: collapse !important;
-                table-layout: auto !important;
-                font-size: 10.5px !important;
-                background-color: #ffffff !important;
-                border: 1.5px solid #000000 !important;
-            }
-
-            #dataDisplayTable thead {
-                display: table-header-group !important;
-            }
-
-            #dataDisplayTable thead th {
-                border: 1px solid #000000 !important;
-                padding: 5px 6px !important;
-                line-height: 1.25 !important;
-                text-align: center !important;
-                vertical-align: middle !important;
-            }
-
-            /* Top level header (Orange) */
-            #dataDisplayTable thead tr:first-child th {
-                background-color: #f95a00 !important;
-                color: #ffffff !important;
-                font-weight: 800 !important;
-            }
-
-            /* Subheader level (Amber/Light Orange for column numbers (1), (2), (3)...) */
-            #dataDisplayTable thead tr:nth-child(2) th {
-                background-color: #fed7aa !important;
-                color: #1e293b !important;
-                font-weight: 700 !important;
-                font-size: 10px !important;
-            }
-
-            #dataDisplayTable tbody {
-                display: table-row-group !important;
-            }
-
-            #dataDisplayTable tbody tr {
-                page-break-inside: avoid !important;
-                break-inside: avoid !important;
-            }
-
-            #dataDisplayTable tbody tr:nth-child(even) {
-                background-color: #f8fafc !important;
-            }
-
-            #dataDisplayTable tbody td {
-                border: 1px solid #334155 !important;
-                padding: 4px 6px !important;
-                font-size: 10px !important;
-                line-height: 1.3 !important;
-                color: #0f172a !important;
-            }
-
-            /* Table Footnotes: Catatan & Sumber */
-            .table-footer-notes {
-                font-size: 9.5px !important;
-                page-break-inside: avoid !important;
-                break-inside: avoid !important;
-                margin-top: 6px !important;
-                line-height: 1.35 !important;
-            }
-
-            .print-footer-info {
-                display: flex !important;
-                justify-content: space-between !important;
-                margin-top: 10px !important;
-                padding-top: 5px !important;
-                border-top: 1px dashed #94a3b8 !important;
-                font-size: 8.5px !important;
-                color: #475569 !important;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="{{ asset('css/tabel-index.css') }}?v={{ @filemtime(public_path('css/tabel-index.css')) }}">
 </head>
 <body class="min-h-screen flex flex-col justify-between text-slate-800 antialiased selection:bg-orange-500 selection:text-white relative bg-[#f4f6f8]">
 
@@ -333,10 +53,10 @@
     @include('tabel.partials.header-bar')
 
         <!-- MAIN TABLE DETAIL CONTAINER -->
-        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-3 sm:py-5 flex-1 w-full">
+        <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-10 py-2 sm:py-5 flex-1 w-full">
             
             <!-- TABLE CARD -->
-            <div class="bg-white rounded-2xl p-4 sm:p-7 md:p-8 shadow-sm border border-slate-200/90 relative transition-all">
+            <div class="bg-white rounded-2xl p-3 sm:p-7 md:p-8 shadow-sm border border-slate-200/90 relative transition-all">
                 
                 <!-- OFFICIAL BPS LANDSCAPE PRINT HEADER (EXCEL-STYLE PRINTOUT) -->
                 <div class="print-only mb-4 pb-3 border-b-2 border-slate-900">
@@ -352,7 +72,7 @@
                                     Sistem Informasi Bukittinggi dalam Angka (SiBingka)
                                 </p>
                                 <p class="text-[9.5px] text-slate-600 font-medium" id="printOpdSubheading">
-                                    {{ ($currentType ?? 'opd') === 'instansi' ? 'Instansi' : 'OPD' }} Penyelenggara Data: DINAS PEKERJAAN UMUM DAN PENATAAN RUANG
+                                    {{ ($currentType ?? 'opd') === 'instansi' ? 'Instansi' : 'OPD' }} Penyelenggara Data: {{ $currentOpdCode }}. {{ $opdName }}
                                 </p>
                             </div>
                         </div>
@@ -372,6 +92,20 @@
                 @include('tabel.partials.metadata-section')
 
                 @include('tabel.partials.excel-modal')
+
+                <!-- Mobile Horizontal Scroll Hint (Hanya muncul jika tabel meluap & hilang saat digeser) -->
+                <div id="mobileScrollHint" class="hidden sm:hidden flex items-center justify-between text-[11px] text-slate-500 bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-1.5 mb-3 select-none transition-all duration-300">
+                    <span class="flex items-center gap-1.5 font-medium min-w-0 truncate">
+                        <i class="fa-solid fa-arrows-left-right text-[#f95a00] text-xs shrink-0"></i>
+                        <span class="truncate">Geser tabel ke samping untuk melihat data lengkap</span>
+                    </span>
+                    <div class="flex items-center space-x-2 shrink-0 ml-2">
+                        <i class="fa-solid fa-hand-pointer text-slate-400 text-xs animate-pulse"></i>
+                        <button type="button" onclick="dismissMobileScrollHint()" class="text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer" title="Tutup">
+                            <i class="fa-solid fa-xmark text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
 
                 <!-- TABLE DISPLAY CONTAINER (SCROLLABLE ON MOBILE) -->
                 <div class="overflow-x-auto mb-5" id="printableTableSection">
@@ -432,6 +166,7 @@
                 dataBps: '{{ route("data-bps") }}',
                 isiDataInstansi: '{{ route("isi-data-instansi") }}',
                 isiDataOpd: '{{ route("isi-data-opd") }}',
+                tabelOpd: '{{ route("tabel-opd") }}',
                 apiData: '{{ route("tabel-opd.api.data") }}',
                 editTabel: '{{ route("edit-tabel-opd") }}',
                 apiDelete: '{{ route("tabel-opd.api.delete") }}',
@@ -455,10 +190,10 @@
     </script>
 
     <!-- 2. MODULAR JAVASCRIPT SUITE -->
-    <script src="{{ asset('js/tabel/templates.js') }}?v={{ time() }}"></script>
-    <script src="{{ asset('js/tabel/navigation.js') }}?v={{ time() }}"></script>
-    <script src="{{ asset('js/tabel/comments.js') }}?v={{ time() }}"></script>
-    <script src="{{ asset('js/tabel/export-suite.js') }}?v={{ time() }}"></script>
-    <script src="{{ asset('js/tabel/table-index.js') }}?v={{ time() }}"></script>
+    <script src="{{ asset('js/tabel/templates.js') }}?v={{ @filemtime(public_path('js/tabel/templates.js')) }}"></script>
+    <script src="{{ asset('js/tabel/navigation.js') }}?v={{ @filemtime(public_path('js/tabel/navigation.js')) }}"></script>
+    <script src="{{ asset('js/tabel/comments.js') }}?v={{ @filemtime(public_path('js/tabel/comments.js')) }}"></script>
+    <script src="{{ asset('js/tabel/export-suite.js') }}?v={{ @filemtime(public_path('js/tabel/export-suite.js')) }}"></script>
+    @include('partials.script-group', ['dir' => 'js/tabel/table-index'])
 </body>
 </html>

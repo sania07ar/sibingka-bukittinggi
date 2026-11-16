@@ -24,10 +24,10 @@
         return window.DinasCatalogConfig || {
             type: 'opd',
             isAdmin: false,
-            saveUrl: '/api/tabel-opd/save-custom-catalog',
-            deleteUrl: '/api/tabel-opd/delete-custom-catalog',
-            customCatalogUrl: '/api/tabel-opd/custom-catalog',
-            tabelOpdUrl: '/tabel-opd',
+            saveUrl: sbUrl('/api/tabel-opd/save-custom-catalog'),
+            deleteUrl: sbUrl('/api/tabel-opd/delete-custom-catalog'),
+            customCatalogUrl: sbUrl('/api/tabel-opd/custom-catalog'),
+            tabelOpdUrl: sbUrl('/tabel-opd'),
             csrfToken: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
         };
     }
@@ -146,21 +146,39 @@
         fetch(fetchUrl)
             .then(res => res.json())
             .then(data => {
-                if (data && data.success && Array.isArray(data.tables)) {
+                if (data && data.success) {
                     let hasNew = false;
                     if (!catalog[code]) catalog[code] = [];
-                    data.tables.forEach(dbTable => {
-                        const exists = catalog[code].some(t => t.code.trim() === dbTable.code.trim());
-                        if (!exists) {
-                            catalog[code].push({
-                                code: dbTable.code,
-                                title: dbTable.title,
-                                titleEn: dbTable.titleEn || dbTable.title,
-                                isCustom: true
-                            });
-                            hasNew = true;
-                        }
-                    });
+
+                    // 1. Sinkronisasi tabel yang telah dihapus di database
+                    if (Array.isArray(data.deleted_tables) && data.deleted_tables.length > 0) {
+                        const dKey = `sibingka_deleted_${cfg.type}_tables_${code}`;
+                        let curDel = JSON.parse(localStorage.getItem(dKey) || '[]');
+                        data.deleted_tables.forEach(dt => {
+                            if (!curDel.includes(dt)) curDel.push(dt);
+                        });
+                        localStorage.setItem(dKey, JSON.stringify(curDel));
+
+                        catalog[code] = catalog[code].filter(t => !curDel.includes(t.code.trim()));
+                        hasNew = true;
+                    }
+
+                    // 2. Tambahkan tabel kustom baru jika ada
+                    if (Array.isArray(data.tables)) {
+                        data.tables.forEach(dbTable => {
+                            const exists = catalog[code].some(t => t.code.trim() === dbTable.code.trim());
+                            if (!exists) {
+                                catalog[code].push({
+                                    code: dbTable.code,
+                                    title: dbTable.title,
+                                    titleEn: dbTable.titleEn || dbTable.title,
+                                    isCustom: true
+                                });
+                                hasNew = true;
+                            }
+                        });
+                    }
+
                     if (hasNew && currentAgencyCode === code) {
                         currentTablesList = catalog[code];
                         filteredTablesList = [...currentTablesList];
@@ -199,9 +217,29 @@
         // Catalog load
         const catalog = getCatalog();
         const isBps = getConfig().type === 'bps';
-        currentTablesList = catalog[code] || (isBps ? [] : [
+        const cleanCode = code ? code.toString().padStart(2, '0') : '';
+        const deletedStorageKey = `sibingka_deleted_${getConfig().type}_tables_${code}`;
+        const deletedStorageKeyClean = `sibingka_deleted_${getConfig().type}_tables_${cleanCode}`;
+        
+        let deletedList = [];
+        try {
+            deletedList = [
+                ...JSON.parse(localStorage.getItem(deletedStorageKey) || '[]'),
+                ...JSON.parse(localStorage.getItem(deletedStorageKeyClean) || '[]')
+            ];
+        } catch(e) {}
+
+        let rawList = catalog[code] || (cleanCode && catalog[cleanCode]) || (isBps ? [] : [
             { code: '1.1.1', title: `Tabel Statistik Utama - ${shortTitle}`, titleEn: `Main Statistics Table - ${shortTitle}` }
         ]);
+
+        if (deletedList.length > 0) {
+            rawList = rawList.filter(t => !deletedList.includes(t.code.trim()));
+            if (catalog[code]) catalog[code] = catalog[code].filter(t => !deletedList.includes(t.code.trim()));
+            if (cleanCode && catalog[cleanCode]) catalog[cleanCode] = catalog[cleanCode].filter(t => !deletedList.includes(t.code.trim()));
+        }
+
+        currentTablesList = rawList;
         filteredTablesList = [...currentTablesList];
 
         // Reset search input
@@ -328,9 +366,9 @@
                             <i class="fa-solid fa-pen-to-square text-[10px]"></i>
                             <span>Input Data</span>
                         </button>
-                        ${tbl.isCustom && isAdmin ? `
+                        ${isAdmin ? `
                             <button onclick="event.stopPropagation(); deleteCustomTable('${tbl.code}')"
-                                    title="Hapus tabel kustom [${tbl.code}]"
+                                    title="Hapus tabel [${tbl.code}]"
                                     class="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer">
                                 <i class="fa-solid fa-trash-can text-xs"></i>
                             </button>
@@ -605,6 +643,20 @@
             return;
         }
 
+        // Hapus dari daftar tabel terhapus jika sebelumnya pernah dihapus
+        const cleanAgencyCode = currentAgencyCode ? currentAgencyCode.toString().padStart(2, '0') : '';
+        const deletedKeys = [
+            `sibingka_deleted_${cfg.type}_tables_${currentAgencyCode}`,
+            `sibingka_deleted_${cfg.type}_tables_${cleanAgencyCode}`
+        ];
+        deletedKeys.forEach(dKey => {
+            try {
+                let deletedList = JSON.parse(localStorage.getItem(dKey) || '[]');
+                deletedList = deletedList.filter(c => c.trim().toLowerCase() !== code.toLowerCase());
+                localStorage.setItem(dKey, JSON.stringify(deletedList));
+            } catch (e) {}
+        });
+
         const newTable = {
             code: code,
             title: title,
@@ -660,25 +712,60 @@
     };
 
     window.deleteCustomTable = function (code) {
-        if (!confirm(`Apakah Anda yakin ingin menghapus tabel kustom [${code}]?`)) {
+        if (!confirm(`Apakah Anda yakin ingin menghapus tabel [${code}]?`)) {
             return;
         }
 
-        const catalog = getCatalog();
-        if (catalog[currentAgencyCode]) {
-            catalog[currentAgencyCode] = catalog[currentAgencyCode].filter(t => t.code !== code);
-            currentTablesList = catalog[currentAgencyCode];
-            filteredTablesList = [...currentTablesList];
-        }
-
         const cfg = getConfig();
-        const storageKey = `sibingka_custom_${cfg.type}_tables_${currentAgencyCode}`;
+        const catalog = getCatalog();
+        const cleanAgency = currentAgencyCode ? currentAgencyCode.toString().padStart(2, '0') : '';
+
+        // 1. Hapus dari catalog di memori
+        if (catalog[currentAgencyCode]) {
+            catalog[currentAgencyCode] = catalog[currentAgencyCode].filter(t => t.code.trim() !== code.trim());
+        }
+        if (cleanAgency && catalog[cleanAgency] && cleanAgency !== currentAgencyCode) {
+            catalog[cleanAgency] = catalog[cleanAgency].filter(t => t.code.trim() !== code.trim());
+        }
+        currentTablesList = (catalog[currentAgencyCode] || []).filter(t => t.code.trim() !== code.trim());
+        filteredTablesList = [...currentTablesList];
+
+        // 2. Bersihkan dari custom tables localStorage jika ada
+        const customStorageKey = `sibingka_custom_${cfg.type}_tables_${currentAgencyCode}`;
         try {
-            let stored = JSON.parse(localStorage.getItem(storageKey) || '[]');
-            stored = stored.filter(t => t.code !== code);
-            localStorage.setItem(storageKey, JSON.stringify(stored));
+            let stored = JSON.parse(localStorage.getItem(customStorageKey) || '[]');
+            stored = stored.filter(t => t.code.trim() !== code.trim());
+            localStorage.setItem(customStorageKey, JSON.stringify(stored));
         } catch (e) {}
 
+        // 3. Catat di deleted tables localStorage agar tabel codingan/katalog tidak muncul lagi saat reload
+        const deletedKeys = [
+            `sibingka_deleted_${cfg.type}_tables_${currentAgencyCode}`,
+            `sibingka_deleted_${cfg.type}_tables_${cleanAgency}`
+        ];
+        deletedKeys.forEach(dKey => {
+            try {
+                let deletedList = JSON.parse(localStorage.getItem(dKey) || '[]');
+                if (!deletedList.includes(code.trim())) {
+                    deletedList.push(code.trim());
+                    localStorage.setItem(dKey, JSON.stringify(deletedList));
+                }
+            } catch (e) {}
+        });
+
+        // 4. Bersihkan cache data tabel di localStorage untuk semua tahun
+        try {
+            const years = [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030];
+            years.forEach(y => {
+                localStorage.removeItem(`sibingka_table_html_${code}_${y}`);
+                localStorage.removeItem(`sibingka_table_is_saved_${code}_${y}`);
+                localStorage.removeItem(`sibingka_table_source_${code}_${y}`);
+                localStorage.removeItem(`sibingka_table_title_id_${code}_${y}`);
+                localStorage.removeItem(`sibingka_table_title_en_${code}_${y}`);
+            });
+        } catch (e) {}
+
+        // 5. Kirim permintaan hapus ke backend
         fetch(cfg.deleteUrl, {
             method: 'POST',
             headers: {

@@ -192,6 +192,7 @@ var isEditMode = true;
             window.currentYear = currentYear;
 
             renderEditTablePage();
+            if (typeof initMobileScrollHint === 'function') initMobileScrollHint();
             if (typeof loadTableComments === 'function') loadTableComments(); else if (typeof fetchTableComments === 'function') fetchTableComments();
             window.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
@@ -466,15 +467,15 @@ var isEditMode = true;
             };
 
             // Jika schema title masih generik namun ada info katalog resmi, gunakan judul resmi katalog
-            if (catInfo && catInfo.title && (!schema.titleId || schema.titleId.startsWith('Tabel Data Statistik Sektoral'))) {
+            if (catInfo && catInfo.title && (!schema.titleId || schema.titleId.startsWith('Tabel Data Statistik Sektoral') || schema.titleId.includes('Perguruan Tinggi'))) {
                 schema.titleId = catInfo.title;
                 schema.titleEn = catInfo.titleEn || catInfo.title;
             }
 
             const yr = parseInt(currentYear) || 2025;
-            const p = getTablePeriod(yr, currentTableCode);
+            const p = getTablePeriod(yr, currentTableCode, currentOpdCode);
             const isRangeTable = (schema.isMultiYear || schema.isExcludeSelectedYear || currentTableCode === '8.2.2') && currentTableCode !== '9.3' && currentTableCode !== '9.4';
-            const yearLabel = schema.isExcludeSelectedYear ? `${yr - 5}–${yr - 1}` : (isRangeTable ? p.label : `${yr}`);
+            let yearLabel = schema.isExcludeSelectedYear ? `${yr - 5}–${yr - 1}` : (isRangeTable ? p.label : `${yr}`);
             document.getElementById('pageMainHeading').innerText = isRangeTable ? `Edit Data Tabel ${currentTableCode} (${yearLabel})` : `Edit Data Tabel ${currentTableCode} Tahun ${currentYear}`;
 
             // Check for custom titles/source saved from Database, Fallback Structure, or Excel
@@ -635,8 +636,15 @@ var isEditMode = true;
 
             // Ensure title always contains the appropriate year or year range label
             function formatTitleWithYear(title, defaultTitle, yLabel) {
+                // Khusus Tabel Pertanahan 1.1.8 & 1.1.9 (7 tahun) & Perguruan Tinggi 4.1.18 & 4.1.19: Multi-tahun
+                if (typeof currentTableCode === 'string' && (currentTableCode === '1.1.8' || currentTableCode === '1.1.9' || currentTableCode === '4.1.18' || currentTableCode === '4.1.19')) {
+                    let raw = (title && !title.includes('Perguruan Tinggi') ? title : defaultTitle || title || '').trim();
+                    const cleanBase = raw.replace(/([,\s]+)(?:19|20)\d{2}(?:\s*[\/–\-]\s*(?:19|20)\d{2})?.*$/i, '').trim();
+                    return `${cleanBase}, ${yLabel}`;
+                }
+
                 // Khusus tabel pendidikan 4.1.x: tahun ajaran SiBingka Bukittinggi = Tahun + 1 (misal 2025 -> 2025/2026)
-                if (typeof currentTableCode === 'string' && currentTableCode.startsWith('4.1') && currentTableCode !== '4.1.20' && currentTableCode !== '4.1.24') {
+                if (typeof currentTableCode === 'string' && (currentOpdCode === '08' || currentTableCode.startsWith('4.1')) && currentTableCode !== '4.1.2' && currentTableCode !== '4.1.18' && currentTableCode !== '4.1.19' && currentTableCode !== '4.1.20' && currentTableCode !== '4.1.21' && currentTableCode !== '4.1.22' && currentTableCode !== '4.1.23' && currentTableCode !== '4.1.24') {
                     const yrInt = parseInt(yLabel) || 2025;
                     const acadYr = `${yrInt}/${yrInt + 1}`;
                     let raw = (defaultTitle || title || '').trim();
@@ -832,7 +840,7 @@ var isEditMode = true;
                 const minCols = (currentTableCode === '4.1.20') ? 5 : 6;
                 const isMissingCells = firstRowTds.length > 0 && firstRowTds.length < minCols;
 
-                const isRowBasedYearTable = ['4.1.18', '4.1.19', '8.1.4', '8.1.5', '8.1.6', '1.1.10'].includes(currentTableCode);
+                const isRowBasedYearTable = ['1.1.8', '4.1.18', '4.1.19', '8.1.4', '8.1.5', '8.1.6', '1.1.10'].includes(currentTableCode);
 
                 if (!serverDbMetadata && !isLocallySaved && (!hasStartYearInHeader || !hasEndYearInHeader || isMissingCells) && !isRowBasedYearTable) {
                     localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
@@ -1347,8 +1355,14 @@ var isEditMode = true;
                 }
             }
 
-            // Sanity check: jika savedHtml adalah starter dummy placeholder ("Indikator 1" / "Indicator Details" / "Belum ada data")
-            if (savedHtml && (savedHtml.includes('Indicator Details') || (savedHtml.includes('Indikator 1') && savedHtml.includes('Rincian Indikator')) || savedHtml.includes('Belum ada data untuk tabel ini'))) {
+            // Sanity check: jika savedHtml adalah starter dummy placeholder ("Indikator 1" / "Indicator Details" / "Rincian Indikator" / "Data Statistik Sektoral" / "Belum ada data")
+            if (savedHtml && (
+                savedHtml.includes('Indicator Details') || 
+                savedHtml.includes('Rincian Indikator') || 
+                savedHtml.includes('Data Statistik Sektoral') || 
+                savedHtml.includes('Capaian Nilai Tahun') || 
+                savedHtml.includes('Belum ada data untuk tabel ini')
+            ) && currentTableCode !== 'custom') {
                 localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
                 localStorage.removeItem(`sibingka_table_is_saved_${currentTableCode}_${currentYear}`);
                 savedHtml = null;
@@ -1395,6 +1409,21 @@ var isEditMode = true;
 
             cleanGhostColumns(tableEl);
             cleanGhostRows(tableEl);
+
+            // Sinkronisasi rentang tahun aktual dari baris tabel di editor (misal Kedokteran 3 tahun 2022-2024, atau instansi lain)
+            if (isRangeTable) {
+                const actualP = (typeof getActualTablePeriod === 'function') ? getActualTablePeriod(tableEl, p) : p;
+                if (actualP && actualP.label && actualP.label !== yearLabel) {
+                    yearLabel = actualP.label;
+                    const hHeading = document.getElementById('pageMainHeading');
+                    if (hHeading) hHeading.innerText = `Edit Data Tabel ${currentTableCode} (${yearLabel})`;
+                    const mTitle = document.getElementById('editorTableTitle');
+                    if (mTitle) mTitle.value = formatTitleWithYear(customTitleId, schema.titleId, yearLabel);
+                    const mTitleEn = document.getElementById('editorTableTitleEn');
+                    if (mTitleEn) mTitleEn.value = formatTitleWithYear(customTitleEn, schema.titleEn, yearLabel);
+                    updateYearSwitcher(true, Boolean(schema.isExcludeSelectedYear));
+                }
+            }
 
             // Jaminan header 2.2.2: Kolom ke-5 adalah S2/S3 (bukan Kolom 6)
             if (currentTableCode === '2.2.2' || (tableEl && (tableEl.innerText.includes('Partai') || tableEl.innerText.includes('Pendidikan')))) {
@@ -2019,13 +2048,39 @@ var isEditMode = true;
 
         function cleanGhostRows(table) {
             if (!table) return;
-            // JANGAN PERNAH hapus baris data resmi pada tabel Dishub (8.1.x, OPD 20), BPN (1.1.x), BKPSDM (2.3.x), Pendidikan (4.1.x, 08), KPU/DPRD (2.2.2, 02, 03), atau Pertanian (5.1.x, 5.2.x, 9.11)
-            if (currentTableCode === '2.2.2' || currentTableCode.startsWith('1.1.') || currentTableCode.startsWith('2.3.') || currentTableCode.startsWith('4.1') || currentTableCode.startsWith('5.1.') || currentTableCode.startsWith('5.2.') || currentTableCode.startsWith('8.1.') || currentTableCode.startsWith('8.2.') || currentTableCode === '9.11' || currentOpdCode === '02' || currentOpdCode === '03' || currentOpdCode === '08' || currentOpdCode === '04' || currentOpdCode === '20' || currentOpdCode === '17') return;
             const tbody = table.querySelector('tbody');
             if (!tbody) return;
             const rows = tbody.querySelectorAll('tr');
             let removedAny = false;
+
+            // 1. Bersihkan BARIS HANTU PASTI di semua tabel (duplikasi header, nomor kolom -1, (1), dsb)
+            const isYearTable = (typeof currentTableCode === 'string' && (currentTableCode === '4.1.18' || currentTableCode === '4.1.19'));
             rows.forEach(tr => {
+                const tds = Array.from(tr.querySelectorAll('td')).filter(td => !td.classList.contains('col-edit-action'));
+                if (tds.length === 0) return;
+                const input0 = tds[0].querySelector('.table-edit-input');
+                const labelText = (input0 ? input0.value : tds[0].innerText).trim();
+
+                const isHeaderDuplicate = /^(?:Perguruan\s+Tinggi|College|Mahasiswa|Student|Lulusan|Graduate|Dosen|Lecturer)/i.test(labelText);
+                const isColNumberGhost = /^(?:-1|\(1\)|-2|\(2\)|-3|\(3\))$/.test(labelText) || (labelText === '-1' || labelText === '(1)');
+                const isInvalidYearRow = isYearTable && !/^(?:19|20)\d{2}$/.test(labelText) && !/^(?:Jumlah|Total)/i.test(labelText);
+
+                if (isHeaderDuplicate || isColNumberGhost || isInvalidYearRow) {
+                    tr.remove();
+                    removedAny = true;
+                }
+            });
+
+            // 2. Baris kosong tanpa data untuk tabel biasa (lewati tabel resmi terlindung)
+            if (currentTableCode === '2.2.2' || currentTableCode.startsWith('1.1.') || currentTableCode.startsWith('2.3.') || (currentTableCode.startsWith('4.1') && currentTableCode !== '4.1.18' && currentTableCode !== '4.1.19') || currentTableCode.startsWith('5.1.') || currentTableCode.startsWith('5.2.') || currentTableCode.startsWith('8.1.') || currentTableCode.startsWith('8.2.') || currentTableCode === '9.11' || currentOpdCode === '02' || currentOpdCode === '03' || currentOpdCode === '08' || currentOpdCode === '04' || currentOpdCode === '20' || currentOpdCode === '17') {
+                if (removedAny) {
+                    window._hasUnsavedEdits = true;
+                }
+                return;
+            }
+
+            const remainingRows = tbody.querySelectorAll('tr');
+            remainingRows.forEach(tr => {
                 const tds = Array.from(tr.querySelectorAll('td')).filter(td => !td.classList.contains('col-edit-action'));
                 if (tds.length === 0) return;
                 // Baris yang memiliki label teks kategori/indikator di kolom pertama BUKAN baris hantu
@@ -2141,9 +2196,11 @@ var isEditMode = true;
 
         async function changeTableYear(newYear) {
             currentYear = newYear.toString();
-            const newUrl = new URL(window.location);
-            newUrl.searchParams.set('year', currentYear);
-            window.history.pushState({}, '', newUrl);
+            try {
+                const newUrl = new URL(window.location.href);
+                newUrl.searchParams.set('year', currentYear);
+                window.history.pushState({}, '', newUrl.toString());
+            } catch(e) {}
 
             const selectYearEl = document.getElementById('yearSwitcher');
             if (selectYearEl) selectYearEl.value = currentYear;

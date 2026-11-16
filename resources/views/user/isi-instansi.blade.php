@@ -203,7 +203,7 @@
 
                         <div class="flex items-center space-x-2">
                             <!-- Search Input Box -->
-                            <div class="relative w-44 sm:w-60 flex items-center">
+                            <div class="relative w-36 xs:w-44 sm:w-60 flex items-center">
                                 <input type="text"
                                        id="instansiSearchInput"
                                        oninput="handleSearchInstansi(this.value)"

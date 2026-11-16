@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    @include('partials.base-url')
     @include('partials.head', ['title' => 'Kelola Akun Dinas & Instansi Vertikal - SiBingka Kota Bukittinggi | BPS Kota Bukittinggi'])
     @include('admin.partials.styles')
 </head>

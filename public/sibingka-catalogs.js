@@ -370,6 +370,22 @@ function getAgencyTables(opdCode, type) {
         });
     }
 
+    // Filter out tabel yang telah dihapus
+    if (typeof window !== 'undefined' && window.localStorage) {
+        try {
+            const deletedStorageKey = 'sibingka_deleted_' + (currentType || 'opd') + '_tables_' + cleanOpd;
+            const rawOpd = opdCode ? opdCode.toString() : '';
+            const deletedStorageKeyRaw = 'sibingka_deleted_' + (currentType || 'opd') + '_tables_' + rawOpd;
+            const deletedList = [
+                ...JSON.parse(window.localStorage.getItem(deletedStorageKey) || '[]'),
+                ...JSON.parse(window.localStorage.getItem(deletedStorageKeyRaw) || '[]')
+            ];
+            if (deletedList.length > 0) {
+                list = list.filter(t => !deletedList.includes(t.code.toString().trim()));
+            }
+        } catch(e) {}
+    }
+
     return list;
 }
 

@@ -141,7 +141,7 @@
     function openEditModal(userData) {
         currentEditingUser = userData;
         document.getElementById('editModalTitle').innerText = 'Edit Akun: ' + (userData.dinas_name || userData.name);
-        document.getElementById('formEditDinas').action = `/kelola-akun/dinas/${userData.id}/update`;
+        document.getElementById('formEditDinas').action = sbUrl(`/kelola-akun/dinas/${userData.id}/update`);
 
         const isWali = (userData.role === 'walidata');
         const isBps = (userData.role === 'bps');
@@ -220,7 +220,7 @@
 
     // Single Account Delete Modal
     function openDeleteModal(id, dinasName, username, role) {
-        document.getElementById('formDeleteDinas').action = `/kelola-akun/dinas/${id}/delete`;
+        document.getElementById('formDeleteDinas').action = sbUrl(`/kelola-akun/dinas/${id}/delete`);
         document.getElementById('deleteModalDinasName').innerText = dinasName;
         document.getElementById('deleteModalUsername').innerText = '@' + username;
         

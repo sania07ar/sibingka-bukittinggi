@@ -14,6 +14,7 @@ function updateYearSwitcher(isMultiYear, isExcludeSelectedYear) {
     if (!selectYearEl) return;
     const curYr = window.currentYear || currentYear || new Date().getFullYear().toString();
     const curCode = window.currentTableCode || currentTableCode || '1.1.6';
+    const curOpd = window.currentOpdCode || (typeof currentOpdCode !== 'undefined' ? currentOpdCode : '');
     const currentVal = curYr.toString();
     const nowYear = new Date().getFullYear();
     const endYear = Math.max(2036, nowYear + 10);
@@ -21,7 +22,7 @@ function updateYearSwitcher(isMultiYear, isExcludeSelectedYear) {
     for (let y = endYear; y >= 2018; y--) {
         const opt = document.createElement('option');
         opt.value = y.toString();
-        const p = (typeof getTablePeriod === 'function') ? getTablePeriod(y, curCode) : { label: `${y - 4}–${y}` };
+        const p = (typeof getTablePeriod === 'function') ? getTablePeriod(y, curCode, curOpd) : { label: `${y - 4}–${y}` };
         if (isExcludeSelectedYear) {
             opt.textContent = `Tahun ${y} (${y - 5}–${y - 1})`;
         } else if (isMultiYear && p && p.label) {
@@ -38,7 +39,7 @@ function updateYearSwitcher(isMultiYear, isExcludeSelectedYear) {
         const customOpt = document.createElement('option');
         customOpt.value = currentVal;
         const cNum = parseInt(currentVal);
-        const p = (typeof getTablePeriod === 'function') ? getTablePeriod(cNum, curCode) : { label: `${cNum - 4}–${cNum}` };
+        const p = (typeof getTablePeriod === 'function') ? getTablePeriod(cNum, curCode, curOpd) : { label: `${cNum - 4}–${cNum}` };
         if (isExcludeSelectedYear && !isNaN(cNum)) {
             customOpt.textContent = `Tahun ${currentVal} (${cNum - 5}–${cNum - 1})`;
         } else if (isMultiYear && !isNaN(cNum) && p && p.label) {
@@ -56,10 +57,17 @@ function updateTableSwitcher() {
     const tableSelect = document.getElementById('tableSwitcher');
     if (!tableSelect) return;
 
+    // Sinkronisasi ulang variabel aktif dari window.current* atau config
+    const cfg = window.SiBingkaConfig || {};
+    currentTableCode = (window.currentTableCode || currentTableCode || cfg.currentTableCode || '1.1.6').toString().trim().replace(/\.+$/, '');
+    currentOpdCode = (window.currentOpdCode || currentOpdCode || cfg.currentOpdCode || '01').toString().trim().padStart(2, '0');
+    currentType = (window.currentType || currentType || cfg.currentType || 'opd').toString().trim();
+    currentYear = (window.currentYear || currentYear || cfg.currentYear || new Date().getFullYear().toString()).toString().trim();
+
     if (typeof getAgencyInfoForTable === 'function') {
         const verified = getAgencyInfoForTable(currentTableCode, currentOpdCode, currentType);
         if (verified && verified.opdCode && (verified.opdCode !== currentOpdCode || (verified.type && verified.type !== currentType))) {
-            currentOpdCode = verified.opdCode;
+            currentOpdCode = verified.opdCode.toString().padStart(2, '0');
             if (verified.type) currentType = verified.type;
             window.currentOpdCode = currentOpdCode;
             window.currentType = currentType;
@@ -83,11 +91,12 @@ function updateTableSwitcher() {
     let currentInList = false;
     if (tables && tables.length > 0) {
         tables.forEach(t => {
+            const tCode = (t.code || '').toString().trim().replace(/\.+$/, '');
             const opt = document.createElement('option');
-            opt.value = t.code;
-            opt.textContent = `Tabel ${t.code} - ${t.title || ''}${t.isCustom ? ' [Tabel Baru]' : ''}`;
-            opt.title = `Tabel ${t.code}: ${t.title || ''}`;
-            if (t.code === currentTableCode) {
+            opt.value = tCode;
+            opt.textContent = `Tabel ${tCode} - ${t.title || ''}${t.isCustom ? ' [Tabel Baru]' : ''}`;
+            opt.title = `Tabel ${tCode}: ${t.title || ''}`;
+            if (tCode === currentTableCode) {
                 opt.selected = true;
                 currentInList = true;
             }
@@ -114,7 +123,7 @@ function updateTableSwitcher() {
     const nextBtn = document.getElementById('btnNextTable');
     if (prevBtn && nextBtn) {
         if (tables && tables.length > 0) {
-            const curIdx = tables.findIndex(t => t.code === currentTableCode);
+            const curIdx = tables.findIndex(t => (t.code || '').toString().trim().replace(/\.+$/, '') === currentTableCode);
             prevBtn.disabled = curIdx <= 0;
             nextBtn.disabled = curIdx === -1 || curIdx >= tables.length - 1;
         } else {
@@ -125,20 +134,40 @@ function updateTableSwitcher() {
 }
 
 function changeTableCode(newCode) {
-    if (!newCode || newCode === currentTableCode) return;
+    if (!newCode) return;
+
+    // Sinkronisasi ulang variabel aktif dari window.current* atau config
+    const cfg = window.SiBingkaConfig || {};
+    currentTableCode = (window.currentTableCode || currentTableCode || cfg.currentTableCode || '1.1.6').toString().trim().replace(/\.+$/, '');
+    currentOpdCode = (window.currentOpdCode || currentOpdCode || cfg.currentOpdCode || '01').toString().trim().padStart(2, '0');
+    currentType = (window.currentType || currentType || cfg.currentType || 'opd').toString().trim();
+    currentYear = (window.currentYear || currentYear || cfg.currentYear || new Date().getFullYear().toString()).toString().trim();
+
+    const cleanNewCode = newCode.toString().trim().replace(/\.+$/, '');
+    if (!cleanNewCode || cleanNewCode === currentTableCode) return;
 
     let targetOpd = currentOpdCode;
     let targetType = currentType || 'opd';
     if (typeof getAgencyInfoForTable === 'function') {
-        const info = getAgencyInfoForTable(newCode, currentOpdCode, currentType);
+        const info = getAgencyInfoForTable(cleanNewCode, currentOpdCode, currentType);
         if (info && info.opdCode) {
-            targetOpd = info.opdCode;
+            targetOpd = info.opdCode.toString().padStart(2, '0');
             targetType = info.type || targetType;
         }
     }
 
-    const newUrl = new URL(window.location.origin + window.location.pathname);
-    newUrl.searchParams.set('code', newCode);
+    // Tentukan URL target (prioritaskan route resmi SiBingkaConfig agar aman di semua environment)
+    let baseUrl = window.location.origin + window.location.pathname;
+    if (window.SiBingkaConfig && window.SiBingkaConfig.routes) {
+        if (window.isEditMode && window.SiBingkaConfig.routes.editTabel) {
+            baseUrl = window.SiBingkaConfig.routes.editTabel;
+        } else if (window.SiBingkaConfig.routes.tabelOpd) {
+            baseUrl = window.SiBingkaConfig.routes.tabelOpd;
+        }
+    }
+
+    const newUrl = new URL(baseUrl, window.location.origin);
+    newUrl.searchParams.set('code', cleanNewCode);
     newUrl.searchParams.set('opd', targetOpd);
     newUrl.searchParams.set('year', currentYear);
     if (targetType) {
@@ -149,7 +178,7 @@ function changeTableCode(newCode) {
     newUrl.searchParams.delete('titleEn');
     newUrl.searchParams.delete('saved');
     if (typeof getCatalogTableInfo === 'function') {
-        const info = getCatalogTableInfo(newCode, targetOpd, targetType);
+        const info = getCatalogTableInfo(cleanNewCode, targetOpd, targetType);
         if (info && info.title) {
             newUrl.searchParams.set('title', info.title);
         }
@@ -193,8 +222,15 @@ function formatTitleWithYear(title, defaultTitle, yLabel) {
         return isEn ? `${cleanBase}, ${y1} and ${y2}` : `${cleanBase}, ${y1} dan ${y2}`;
     }
 
+    // Khusus Tabel Pertanahan 1.1.8 & 1.1.9 (7 tahun) & Perguruan Tinggi 4.1.18 & 4.1.19
+    if (typeof currentTableCode !== 'undefined' && (currentTableCode === '1.1.8' || currentTableCode === '1.1.9' || currentTableCode === '4.1.18' || currentTableCode === '4.1.19')) {
+        let raw = (defaultTitle || title || '').trim();
+        const cleanBase = raw.replace(/([,\s]+)(?:19|20)\d{2}(?:\s*[\/–\-]\s*(?:19|20)\d{2})?.*$/i, '').trim();
+        return `${cleanBase}, ${yLabel}`;
+    }
+
     // Khusus tabel pendidikan 4.1.x (OPD 08): tahun ajaran SiBingka Bukittinggi = Tahun + 1 (misal 2025 -> 2025/2026)
-    if (typeof currentTableCode === 'string' && (currentOpdCode === '08' || currentTableCode.startsWith('4.1')) && currentTableCode !== '4.1.2' && currentTableCode !== '4.1.20' && currentTableCode !== '4.1.24') {
+    if (typeof currentTableCode === 'string' && (currentOpdCode === '08' || currentTableCode.startsWith('4.1')) && currentTableCode !== '4.1.2' && currentTableCode !== '4.1.18' && currentTableCode !== '4.1.19' && currentTableCode !== '4.1.20' && currentTableCode !== '4.1.21' && currentTableCode !== '4.1.22' && currentTableCode !== '4.1.23' && currentTableCode !== '4.1.24') {
         const yrInt = parseInt(yLabel) || 2025;
         const acadYr = `${yrInt}/${yrInt + 1}`;
         let raw = (defaultTitle || title || '').trim();

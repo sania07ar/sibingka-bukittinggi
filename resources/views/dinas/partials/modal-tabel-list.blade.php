@@ -16,8 +16,8 @@
 @endphp
 
 <!-- MODAL DAFTAR TABEL STATISTIK -->
-<div id="{{ $modalId }}" style="z-index: 70;" class="fixed inset-0 z-50 hidden items-center justify-center p-3 sm:p-4 md:p-6 bg-slate-900/60 backdrop-blur-xs transition-opacity duration-300">
-    <div class="bg-white rounded-2xl sm:rounded-3xl max-w-4xl lg:max-w-5xl w-full p-4 sm:p-6 md:p-7 shadow-2xl transform transition-all scale-95 opacity-0 duration-300 border border-slate-100 relative overflow-hidden" id="{{ $cardId }}">
+<div id="{{ $modalId }}" style="z-index: 70;" class="fixed inset-0 z-50 hidden items-center justify-center p-2.5 sm:p-4 md:p-6 bg-slate-900/60 backdrop-blur-xs transition-opacity duration-300">
+    <div class="bg-white rounded-2xl sm:rounded-3xl max-w-4xl lg:max-w-5xl w-full p-3.5 sm:p-6 md:p-7 shadow-2xl transform transition-all scale-95 opacity-0 duration-300 border border-slate-100 relative overflow-hidden" id="{{ $cardId }}">
         
         <!-- Modal Header -->
         <div class="flex items-center justify-between border-b border-slate-100 pb-3.5 mb-4 sm:mb-5">
