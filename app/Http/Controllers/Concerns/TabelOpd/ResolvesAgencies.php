@@ -93,8 +93,7 @@ trait ResolvesAgencies
         if ($cleanCode === '2.1.2') return ['27', 'instansi']; // Pengadilan Negeri
         if ($cleanCode === '2.1.3') return ['28', 'instansi']; // Kejaksaan Negeri
         if ($cleanCode === '2.1.4') return ['29', 'instansi']; // Pengadilan Agama
-        if ($cleanCode === '2.1.1') return ['30', 'instansi']; // Polres
-        if ($cleanCode === '8.1.10') return ['33', 'instansi']; // Samsat
+        if (in_array($cleanCode, ['2.1.1', '4.5.6', '8.1.10'])) return ['30', 'instansi']; // Polres
         if (in_array($cleanCode, ['8.1.11', '8.1.12'])) return ['34', 'instansi']; // Pos
         if (in_array($cleanCode, ['1.1.7', '1.1.8', '1.1.9'])) return ['01', 'instansi']; // BPN
         if ($cleanCode === '2.2.1') return ['02', 'instansi']; // KPU

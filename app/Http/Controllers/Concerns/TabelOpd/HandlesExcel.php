@@ -27,9 +27,7 @@ trait HandlesExcel
         $type = $request->query('type', 'opd');
         $isTemplate = (bool) $request->query('template', 0);
 
-        if ($type !== 'bps' && $type !== 'instansi') {
-            $opdCode = $this->normalizeOpdCode($tableCode, $opdCode);
-        }
+        [$opdCode, $type] = $this->normalizeAgency($tableCode, $opdCode, $type);
 
         $meta = $this->getOrCreateMetadata($tableCode, $opdCode, $year, $type);
         if (!$meta || empty($meta->table_html) || str_contains($meta->table_html, 'Indicator Details')) {
@@ -82,9 +80,7 @@ trait HandlesExcel
         $year = (int) $request->input('year', 2025);
         $type = $request->input('type', 'opd');
 
-        if ($type !== 'bps' && $type !== 'instansi') {
-            $opdCode = $this->normalizeOpdCode($tableCode, $opdCode);
-        }
+        [$opdCode, $type] = $this->normalizeAgency($tableCode, $opdCode, $type);
 
         $cleanOpd = str_pad($opdCode, 2, '0', STR_PAD_LEFT);
         $opdList = array_unique([$opdCode, $cleanOpd]);
@@ -143,7 +139,50 @@ trait HandlesExcel
         try {
             $import = new TableOpdImport();
             $sheets = Excel::toArray($import, $file);
-            $rows = $sheets[0] ?? [];
+
+            if (empty($sheets)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Berkas Excel kosong atau tidak terbaca.',
+                ], 400);
+            }
+
+            // 1. Temukan Sheet yang paling sesuai dengan $tableCode
+            $targetSheet = null;
+            $cleanCode = str_replace(' ', '', strtolower($tableCode));
+
+            foreach ($sheets as $sRows) {
+                if (!is_array($sRows)) continue;
+                foreach ($sRows as $r) {
+                    if (!is_array($r)) continue;
+                    $rText = str_replace([' ', '_', '-'], '', strtolower(implode(' ', array_filter($r, fn($c) => $c !== null && $c !== ''))));
+                    if (str_contains($rText, 'tabel' . $cleanCode) || str_contains($rText, 'table' . $cleanCode)) {
+                        $targetSheet = $sRows;
+                        break 2;
+                    }
+                }
+            }
+
+            if ($targetSheet === null) {
+                foreach ($sheets as $sRows) {
+                    if (!is_array($sRows)) continue;
+                    foreach ($sRows as $r) {
+                        if (!is_array($r)) continue;
+                        foreach ($r as $c) {
+                            $cClean = str_replace([' ', '_', '-'], '', strtolower((string)$c));
+                            if ($cClean === $cleanCode || $cClean === 'tabel' . $cleanCode || $cClean === 'table' . $cleanCode) {
+                                $targetSheet = $sRows;
+                                break 3;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if ($targetSheet === null) {
+                $targetSheet = $sheets[0] ?? [];
+            }
+            $rows = $targetSheet;
 
             if (empty($rows)) {
                 return response()->json([
@@ -152,21 +191,55 @@ trait HandlesExcel
                 ], 400);
             }
 
+            // 2. Isolasi blok tabel jika dalam 1 sheet terdapat banyak tabel tersusun vertikal (seperti Tabel 8.1.10 mulai di baris 27)
+            $startSliceIdx = null;
+            foreach ($rows as $rIdx => $r) {
+                if (!is_array($r)) continue;
+                $rText = str_replace([' ', '_', '-'], '', strtolower(implode(' ', array_filter($r, fn($c) => $c !== null && $c !== ''))));
+                if (str_contains($rText, 'tabel' . $cleanCode) || str_contains($rText, 'table' . $cleanCode)) {
+                    $startSliceIdx = $rIdx;
+                    break;
+                }
+            }
+
+            if ($startSliceIdx !== null && $startSliceIdx > 0) {
+                $endSliceIdx = count($rows);
+                for ($r = $startSliceIdx + 1; $r < count($rows); $r++) {
+                    $rArr = $rows[$r] ?? [];
+                    if (!is_array($rArr)) continue;
+                    $rText = str_replace([' ', '_', '-'], '', strtolower(implode(' ', array_filter($rArr, fn($c) => $c !== null && $c !== ''))));
+                    if (preg_match('/^tabel\d+\.\d+/i', $rText) && !str_contains($rText, 'tabel' . $cleanCode)) {
+                        $endSliceIdx = $r;
+                        break;
+                    }
+                }
+                $rows = array_values(array_slice($rows, $startSliceIdx, $endSliceIdx - $startSliceIdx));
+            }
+
             // Ekstrak Title & Source / Note dari berkas Excel jika tersedia
             $excelTitleId = '';
             $excelTitleEn = '';
             $excelSource = '';
             $excelNote = '';
 
-            for ($r = 0; $r < min(count($rows), 5); $r++) {
+            for ($r = 0; $r < min(count($rows), 6); $r++) {
                 $rCells = array_values(array_filter(array_map('trim', $rows[$r] ?? []), fn($c) => $c !== ''));
-                if (count($rCells) === 1) {
-                    $cText = $rCells[0];
-                    if (preg_match('/^Tabel\b/i', $cText) || (preg_match('/\b(Jumlah|Banyaknya|Panjang|Luas|Rata-rata|Realisasi|Persentase)\b/i', $cText) && !$excelTitleId)) {
-                        $excelTitleId = preg_replace('/^Tabel\s*[\d\.]*\s*/i', '', $cText);
-                    } elseif (preg_match('/^Table\b/i', $cText) || (preg_match('/\b(Number|Length|Wide|Average|Percentage|Total)\b/i', $cText) && !$excelTitleEn)) {
-                        $excelTitleEn = preg_replace('/^Table\s*[\d\.]*\s*/i', '', $cText);
+                if (empty($rCells)) continue;
+
+                foreach ($rCells as $cell) {
+                    if (!$excelTitleId && preg_match('/\b(Jumlah|Banyaknya|Panjang|Luas|Rata-rata|Realisasi|Persentase|Data|Kejadian|Kecelakaan|Tabrakan)\b/i', $cell)) {
+                        $excelTitleId = trim(preg_replace('/^Tabel\s*[\d\.]*\s*/i', '', $cell));
+                    } elseif (!$excelTitleEn && preg_match('/\b(Number|Length|Wide|Average|Percentage|Total|Accident|Traffic)\b/i', $cell)) {
+                        $excelTitleEn = trim(preg_replace('/^Table\s*[\d\.]*\s*/i', '', $cell));
                     }
+                }
+
+                $fullRowText = implode(' ', $rCells);
+                if (!$excelTitleId && preg_match('/^Tabel\b/i', $fullRowText)) {
+                    $excelTitleId = trim(preg_replace('/^Tabel\s*[\d\.]*\s*/i', '', $fullRowText));
+                }
+                if (!$excelTitleEn && preg_match('/^Table\b/i', $fullRowText)) {
+                    $excelTitleEn = trim(preg_replace('/^Table\s*[\d\.]*\s*/i', '', $fullRowText));
                 }
             }
 
@@ -186,7 +259,12 @@ trait HandlesExcel
 
             // 3. Terapkan data Excel ke struktur tabel:
             // Jika tabel sudah memiliki template BPS yang rapi, petakan baris Excel ke dalam struktur tersebut ("sesuaikan isian yang ada")
-            if (!empty($meta->table_html) && !$this->isDummyOrPlaceholderTable($meta->table_html)) {
+            $hasValidStructure = !empty($meta->table_html) && !$this->isDummyOrPlaceholderTable($meta->table_html);
+            if ($hasValidStructure && $tableCode === '8.1.10' && !str_contains($meta->table_html, 'Januari')) {
+                $hasValidStructure = false;
+            }
+
+            if ($hasValidStructure) {
                 $updatedHtml = $this->applyExcelRowsToTableHtml($meta->table_html, $rows, $tableCode);
             } else {
                 // Jika sama sekali tidak ada template di database, bangun dari baris Excel
@@ -525,6 +603,11 @@ trait HandlesExcel
                 $fullHtml
             );
         }
+        if ($tableCode === '8.1.10' || (stripos($fullHtml, 'Tabrakan') !== false && stripos($fullHtml, 'Kecelakaan') !== false)) {
+            $fullHtml = preg_replace('/Taksi[^\/<\n]*Kerugi[^\/<\n]*(?:\([^\)]*\))?/i', 'Taksiran Kerugian Material (Rp)', $fullHtml);
+            $fullHtml = preg_replace('/Sligly/i', 'Slightly', $fullHtml);
+            $fullHtml = preg_replace('/Severly/i', 'Severely', $fullHtml);
+        }
 
         return $fullHtml;
     }
@@ -597,13 +680,18 @@ trait HandlesExcel
                 $tableHtml
             );
         }
+        if ($tableCode === '8.1.10' || (stripos($tableHtml, 'Tabrakan') !== false && stripos($tableHtml, 'Kecelakaan') !== false)) {
+            $tableHtml = preg_replace('/Taksi[^\/<\n]*Kerugi[^\/<\n]*(?:\([^\)]*\))?/i', 'Taksiran Kerugian Material (Rp)', $tableHtml);
+            $tableHtml = preg_replace('/Sligly/i', 'Slightly', $tableHtml);
+            $tableHtml = preg_replace('/Severly/i', 'Severely', $tableHtml);
+        }
 
         // 2. Parse baris data dari Excel hasil bacaan Laravel Excel
         $foundColNumberRow = false;
         $excelDataRows = [];
 
-        // Deteksi apakah tabel ini berbasis baris tahun (misal: 4.1.18, 4.1.19, 8.1.4, 8.1.5, 8.1.6, 1.1.10)
-        $isYearRowTable = in_array($tableCode, ['4.1.18', '4.1.19']) || str_starts_with($tableCode, '8.1.') || in_array($tableCode, ['1.1.10']);
+        // Deteksi apakah tabel ini berbasis baris tahun (misal: 4.1.18, 4.1.19, 8.1.1, 8.1.2, 8.1.3, 8.1.6, 8.1.7, 8.1.8, 1.1.10)
+        $isYearRowTable = in_array($tableCode, ['4.1.18', '4.1.19', '8.1.1', '8.1.2', '8.1.3', '8.1.6', '8.1.7', '8.1.8', '1.1.10', '8.2.2', '2.2.5', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2']);
 
         foreach ($excelRows as $row) {
             if (!is_array($row)) continue;
@@ -662,6 +750,14 @@ trait HandlesExcel
             }
 
             if (!empty($label)) {
+                // Khusus tabel 8.1.10: Bersihkan pergeseran kolom akibat kolom A dan B yang di-merge di Excel
+                if ($tableCode === '8.1.10') {
+                    $isMonth = (bool) preg_match('/(?:Januari|Februari|Maret|April|Mei|Juni|Juli|Agustus|September|Oktober|November|Desember|January|February|March|April|May|June|July|August|September|October|November|December)/i', $label);
+                    if ($isMonth && count($vals) === 6 && ($vals[0] === '-' || $vals[0] === '' || $vals[0] === null)) {
+                        array_shift($vals);
+                    }
+                }
+
                 // Untuk tabel baris tahun: abaikan jika bukan tahun 4 digit dan bukan Total
                 if ($isYearRowTable) {
                     if (!preg_match('/^(?:19|20)\d{2}$/', $label) && !preg_match('/(?:Jumlah|Total|Rata-rata|Average|BUKITTINGGI)/i', $label)) {
@@ -833,8 +929,15 @@ trait HandlesExcel
                         $attr = trim($tdMatch[1]);
 
                         if ($cellIndex === 1) {
-                            // Pertahankan label sel pertama dengan border slate rapi
-                            return "<td class=\"py-2.5 px-4 border border-slate-700 text-left font-semibold align-top\">{$tdMatch[2]}</td>";
+                            // Pertahankan label sel pertama dengan border slate rapi dan pertahankan colspan/rowspan jika ada
+                            $spans = '';
+                            if (preg_match('/\bcolspan=["\']?(\d+)["\']?/i', $attr, $cm)) {
+                                $spans .= ' colspan="' . $cm[1] . '"';
+                            }
+                            if (preg_match('/\browspan=["\']?(\d+)["\']?/i', $attr, $rm)) {
+                                $spans .= ' rowspan="' . $rm[1] . '"';
+                            }
+                            return "<td class=\"py-2.5 px-4 border border-slate-700 text-left font-semibold align-top\"{$spans}>{$tdMatch[2]}</td>";
                         }
 
                         if (isset($dataValues[$valIndex])) {

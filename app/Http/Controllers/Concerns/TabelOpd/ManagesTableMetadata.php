@@ -450,6 +450,35 @@ trait ManagesTableMetadata
             }
         }
 
+        // Khusus tabel 8.1.10 (Polres - Kecelakaan Lalu Lintas), rapikan header dan pergeseran kolom
+        if ($tableCode === '8.1.10' && $dbMetadata && !empty($dbMetadata->table_html)) {
+            $h8110 = $dbMetadata->table_html;
+            $needs8110Save = false;
+
+            if (str_contains($h8110, 'Severly') || str_contains($h8110, 'Sligly') || str_contains($h8110, '<div>Taksiran Kerugian</div>')) {
+                $h8110 = preg_replace('/Severly/i', 'Severely', $h8110);
+                $h8110 = preg_replace('/Sligly/i', 'Slightly', $h8110);
+                $h8110 = preg_replace('/<div>Taksiran Kerugian<\/div>/i', '<div>Taksiran Kerugian Material (Rp)</div>', $h8110);
+                $needs8110Save = true;
+            }
+
+            if (preg_match('/<td[^>]*>[^<]*Januari[^<]*<\/td>\s*<td[^>]*>\s*(?:<span[^>]*>)?-(?:<\/span>)?\s*<\/td>/i', $h8110)) {
+                $masterHtml = TabelMetadata::where('table_code', '8.1.10')
+                    ->where('year', $year)
+                    ->where('opd_code', '01')
+                    ->value('table_html');
+                if (!empty($masterHtml)) {
+                    $h8110 = $masterHtml;
+                    $needs8110Save = true;
+                }
+            }
+
+            if ($needs8110Save) {
+                $dbMetadata->table_html = $h8110;
+                $dbMetadata->save();
+            }
+        }
+
         // Khusus tabel 11.2 (Dinas PMPTSP - NIB menurut sektor), pastikan rentang tahun Jumlah valid [year, year-1, ..., year-5]
         if ($tableCode === '11.2') {
             if ($dbMetadata && !empty($dbMetadata->table_html)) {
@@ -1059,8 +1088,8 @@ trait ManagesTableMetadata
         }
 
         if ($dbMetadata && !empty($dbMetadata->table_html) && !$isStarterDummy) {
-            // Untuk tabel multi-tahun (4.1.18, 4.1.19, 8.1.x, 8.2.2, 2.2.5, 1.1.10, 9.1, 9.3, 2.4.3, 2.4.1, 2.4.2), pastikan table_html memuat tahun awal dan tahun akhir rentang
-            $isMultiYear = in_array($tableCode, ['4.1.18', '4.1.19']) || str_starts_with($tableCode, '8.1.') || in_array($tableCode, ['8.2.2', '2.2.5', '1.1.10', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2']);
+            // Untuk tabel multi-tahun (4.1.18, 4.1.19, 8.1.1-8.1.8, 8.2.2, 2.2.5, 1.1.10, 9.1, 9.3, 2.4.3, 2.4.1, 2.4.2), pastikan table_html memuat tahun awal dan tahun akhir rentang
+            $isMultiYear = in_array($tableCode, ['4.1.18', '4.1.19', '8.1.1', '8.1.2', '8.1.3', '8.1.6', '8.1.7', '8.1.8', '8.2.2', '2.2.5', '1.1.10', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2']);
             if ($isMultiYear) {
                 $span = ($tableCode === '9.3') ? 6 : (($tableCode === '2.4.1' || $tableCode === '2.4.2') ? 3 : ((in_array($tableCode, ['4.1.18', '4.1.19']) && $opdCode === '07') ? 2 : 4));
                 $startYr = (string)($year - $span);
@@ -1258,9 +1287,38 @@ trait ManagesTableMetadata
             }
         }
 
-        // Tabel multi-tahun (4.1.18, 4.1.19, 8.1.1, 8.1.2, 8.1.3, 8.1.4, 8.1.5, 8.2.2, 2.2.5, 1.1.10, 9.1, 9.3, 2.4.3, 2.4.1, 2.4.2) membangun rentang secara dinamis.
+        // Khusus tabel 8.1.10 (Polres - Kecelakaan Lalu Lintas), rapikan header dan pergeseran kolom
+        if ($tableCode === '8.1.10' && $dbMetadata && !empty($dbMetadata->table_html)) {
+            $h8110 = $dbMetadata->table_html;
+            $needs8110Save = false;
+
+            if (str_contains($h8110, 'Severly') || str_contains($h8110, 'Sligly') || str_contains($h8110, '<div>Taksiran Kerugian</div>')) {
+                $h8110 = preg_replace('/Severly/i', 'Severely', $h8110);
+                $h8110 = preg_replace('/Sligly/i', 'Slightly', $h8110);
+                $h8110 = preg_replace('/<div>Taksiran Kerugian<\/div>/i', '<div>Taksiran Kerugian Material (Rp)</div>', $h8110);
+                $needs8110Save = true;
+            }
+
+            if (preg_match('/<td[^>]*>[^<]*Januari[^<]*<\/td>\s*<td[^>]*>\s*(?:<span[^>]*>)?-(?:<\/span>)?\s*<\/td>/i', $h8110)) {
+                $masterHtml = TabelMetadata::where('table_code', '8.1.10')
+                    ->where('year', $year)
+                    ->where('opd_code', '01')
+                    ->value('table_html');
+                if (!empty($masterHtml)) {
+                    $h8110 = $masterHtml;
+                    $needs8110Save = true;
+                }
+            }
+
+            if ($needs8110Save) {
+                $dbMetadata->table_html = $h8110;
+                $dbMetadata->save();
+            }
+        }
+
+        // Tabel multi-tahun (4.1.18, 4.1.19, 8.1.1, 8.1.2, 8.1.3, 8.1.6, 8.1.7, 8.1.8, 8.2.2, 2.2.5, 1.1.10, 9.1, 9.3, 2.4.3, 2.4.1, 2.4.2) membangun rentang secara dinamis.
         // Jangan pernah meminjam metadata/HTML dari tahun lain karena kolom tahunnya akan keliru.
-        if (in_array($tableCode, ['4.1.18', '4.1.19']) || str_starts_with($tableCode, '8.1.') || in_array($tableCode, ['8.2.2', '2.2.5', '1.1.10', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2'])) {
+        if (in_array($tableCode, ['4.1.18', '4.1.19', '8.1.1', '8.1.2', '8.1.3', '8.1.6', '8.1.7', '8.1.8', '8.2.2', '2.2.5', '1.1.10', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2'])) {
             return $dbMetadata;
         }
 
