@@ -297,6 +297,65 @@ trait ManagesTableMetadata
             }
         }
 
+        // Khusus tabel 4.2.11 (PMI - Donatur Darah), rapikan tahun ganda dan urutan tahun historis setelah Jumlah
+        if ($tableCode === '4.2.11' && $dbMetadata && !empty($dbMetadata->table_html)) {
+            $html = $dbMetadata->table_html;
+            if (preg_match('/<tbody([^>]*)>(.*?)<\/tbody>/is', $html, $mTb)) {
+                $tbodyAttr = $mTb[1];
+                $tbodyHtml = $mTb[2];
+                preg_match_all('/<tr[^>]*>(.*?)<\/tr>/is', $tbodyHtml, $trs);
+                $monthRows = [];
+                $totalRow = null;
+                $historyRows = [];
+                $needsPmiClean = false;
+
+                foreach ($trs[0] as $tr) {
+                    if (preg_match('/<td[^>]*>(.*?)<\/td>/is', $tr, $firstTd)) {
+                        $txt = trim(strip_tags($firstTd[1]));
+                        if (preg_match('/(?:Jumlah|Total)/i', $txt)) {
+                            $totalRow = $tr;
+                            continue;
+                        }
+                        if (preg_match('/^(?:19|20)\d{2}$/', $txt)) {
+                            $rowYr = (int)$txt;
+                            if ($rowYr === $year) {
+                                $needsPmiClean = true;
+                                continue;
+                            }
+                            if ($totalRow === null) {
+                                $needsPmiClean = true;
+                            }
+                            $historyRows[$rowYr] = $tr;
+                            continue;
+                        }
+                        $monthRows[] = $tr;
+                    }
+                }
+
+                if ($totalRow !== null && $needsPmiClean) {
+                    $newRows = $monthRows;
+                    $newRows[] = $totalRow;
+                    for ($prevY = $year - 1; $prevY >= $year - 5; $prevY--) {
+                        if (isset($historyRows[$prevY])) {
+                            $newRows[] = $historyRows[$prevY];
+                        } else {
+                            $newRows[] = '<tr class="hover:bg-amber-100/60 transition-colors bg-[#fef9c3] text-slate-900 font-medium">' . "\n" .
+                                '    <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle">' . $prevY . '</td>' . "\n" .
+                                '    <td class="py-2.5 px-3 border border-slate-700 text-center align-middle font-medium"><span class="text-slate-400 font-normal">-</span></td>' . "\n" .
+                                '    <td class="py-2.5 px-3 border border-slate-700 text-center align-middle font-medium"><span class="text-slate-400 font-normal">-</span></td>' . "\n" .
+                                '    <td class="py-2.5 px-3 border border-slate-700 text-center align-middle font-medium"><span class="text-slate-400 font-normal">-</span></td>' . "\n" .
+                                '    <td class="py-2.5 px-3 border border-slate-700 text-center align-middle font-medium"><span class="text-slate-400 font-normal">-</span></td>' . "\n" .
+                                '    <td class="py-2.5 px-3 border border-slate-700 text-center align-middle font-bold"><span class="text-slate-400 font-normal">-</span></td>' . "\n" .
+                                '</tr>';
+                        }
+                    }
+                    $newTbodyHtml = "<tbody{$tbodyAttr}>\n" . implode("\n", $newRows) . "\n</tbody>";
+                    $dbMetadata->table_html = preg_replace('/<tbody[^>]*>.*?<\/tbody>/is', $newTbodyHtml, $html);
+                    $dbMetadata->save();
+                }
+            }
+        }
+
         // Khusus tabel 11.2 (Dinas PMPTSP - NIB menurut sektor), pastikan rentang tahun Jumlah valid [year, year-1, ..., year-5]
         if ($tableCode === '11.2') {
             if ($dbMetadata && !empty($dbMetadata->table_html)) {
@@ -949,6 +1008,65 @@ trait ManagesTableMetadata
                     $dbMetadata->table_html
                 );
                 $dbMetadata->save();
+            }
+        }
+
+        // Khusus tabel 4.2.11 (PMI - Donatur Darah), rapikan tahun ganda dan urutan tahun historis setelah Jumlah
+        if ($tableCode === '4.2.11' && $dbMetadata && !empty($dbMetadata->table_html)) {
+            $html = $dbMetadata->table_html;
+            if (preg_match('/<tbody([^>]*)>(.*?)<\/tbody>/is', $html, $mTb)) {
+                $tbodyAttr = $mTb[1];
+                $tbodyHtml = $mTb[2];
+                preg_match_all('/<tr[^>]*>(.*?)<\/tr>/is', $tbodyHtml, $trs);
+                $monthRows = [];
+                $totalRow = null;
+                $historyRows = [];
+                $needsPmiClean = false;
+
+                foreach ($trs[0] as $tr) {
+                    if (preg_match('/<td[^>]*>(.*?)<\/td>/is', $tr, $firstTd)) {
+                        $txt = trim(strip_tags($firstTd[1]));
+                        if (preg_match('/(?:Jumlah|Total)/i', $txt)) {
+                            $totalRow = $tr;
+                            continue;
+                        }
+                        if (preg_match('/^(?:19|20)\d{2}$/', $txt)) {
+                            $rowYr = (int)$txt;
+                            if ($rowYr === $year) {
+                                $needsPmiClean = true;
+                                continue;
+                            }
+                            if ($totalRow === null) {
+                                $needsPmiClean = true;
+                            }
+                            $historyRows[$rowYr] = $tr;
+                            continue;
+                        }
+                        $monthRows[] = $tr;
+                    }
+                }
+
+                if ($totalRow !== null && $needsPmiClean) {
+                    $newRows = $monthRows;
+                    $newRows[] = $totalRow;
+                    for ($prevY = $year - 1; $prevY >= $year - 5; $prevY--) {
+                        if (isset($historyRows[$prevY])) {
+                            $newRows[] = $historyRows[$prevY];
+                        } else {
+                            $newRows[] = '<tr class="hover:bg-amber-100/60 transition-colors bg-[#fef9c3] text-slate-900 font-medium">' . "\n" .
+                                '    <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle">' . $prevY . '</td>' . "\n" .
+                                '    <td class="py-2.5 px-3 border border-slate-700 text-center align-middle font-medium"><span class="text-slate-400 font-normal">-</span></td>' . "\n" .
+                                '    <td class="py-2.5 px-3 border border-slate-700 text-center align-middle font-medium"><span class="text-slate-400 font-normal">-</span></td>' . "\n" .
+                                '    <td class="py-2.5 px-3 border border-slate-700 text-center align-middle font-medium"><span class="text-slate-400 font-normal">-</span></td>' . "\n" .
+                                '    <td class="py-2.5 px-3 border border-slate-700 text-center align-middle font-medium"><span class="text-slate-400 font-normal">-</span></td>' . "\n" .
+                                '    <td class="py-2.5 px-3 border border-slate-700 text-center align-middle font-bold"><span class="text-slate-400 font-normal">-</span></td>' . "\n" .
+                                '</tr>';
+                        }
+                    }
+                    $newTbodyHtml = "<tbody{$tbodyAttr}>\n" . implode("\n", $newRows) . "\n</tbody>";
+                    $dbMetadata->table_html = preg_replace('/<tbody[^>]*>.*?<\/tbody>/is', $newTbodyHtml, $html);
+                    $dbMetadata->save();
+                }
             }
         }
 
