@@ -207,10 +207,10 @@ trait ManagesTableMetadata
         // Col 1: (year-2)/(year-1), Col 2: (year-1)/year, Col 3: year/(year+1), Judul: year/(year+1)
         $schoolCodes = ['4.1.1', '4.1.3', '4.1.4', '4.1.5', '4.1.6', '4.1.7', '4.1.8', '4.1.9', '4.1.10', '4.1.11', '4.1.12', '4.1.13', '4.1.14', '4.1.15', '4.1.16', '4.1.17'];
         if (in_array($tableCode, $schoolCodes)) {
-            $expectedY1 = ($year - 2) . '/' . ($year - 1);
-            $expectedY2 = ($year - 1) . '/' . ($year);
-            $expectedY3 = ($year) . '/' . ($year + 1);
-            $expectedTitleEnd = ($year) . '/' . ($year + 1);
+            $expectedY1 = ($year - 3) . '/' . ($year - 2);
+            $expectedY2 = ($year - 2) . '/' . ($year - 1);
+            $expectedY3 = ($year - 1) . '/' . ($year);
+            $expectedTitleEnd = ($year - 1) . '/' . ($year);
 
             if ($dbMetadata && !empty($dbMetadata->table_html)) {
                 $needsUpdate = false;

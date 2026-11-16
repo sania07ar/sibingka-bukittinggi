@@ -86,26 +86,58 @@ trait HandlesExcel
             $opdCode = $this->normalizeOpdCode($tableCode, $opdCode);
         }
 
-        $meta = $this->getOrCreateMetadata($tableCode, $opdCode, $year, $type);
-        if (!$meta || empty($meta->table_html)) {
+        $cleanOpd = str_pad($opdCode, 2, '0', STR_PAD_LEFT);
+        $opdList = array_unique([$opdCode, $cleanOpd]);
+
+        // 1. Ambil atau inisialisasi metadata untuk tahun dan OPD yang sedang dibuka
+        $meta = TabelMetadata::where('table_code', $tableCode)
+            ->whereIn('opd_code', $opdList)
+            ->where('year', $year)
+            ->first();
+
+        if (!$meta) {
+            $meta = $this->getOrCreateMetadata($tableCode, $opdCode, $year, $type);
+        }
+
+        if (!$meta) {
+            $meta = new TabelMetadata();
+            $meta->table_code = $tableCode;
+            $meta->opd_code = $cleanOpd;
+            $meta->year = $year;
+            $meta->source_type = ($type === 'bps' ? 'custom_bps' : 'custom_instansi');
+        }
+
+        // 2. Jika struktur HTML tabel masih kosong atau berupa starter dummy, pinjam template struktur dari tahun terdekat
+        if (empty($meta->table_html) || $this->isDummyOrPlaceholderTable($meta->table_html)) {
             $fallback = TabelMetadata::where('table_code', $tableCode)
+                ->whereIn('opd_code', $opdList)
                 ->whereNotNull('table_html')
                 ->where('table_html', '!=', '')
                 ->where('table_html', 'not like', '%Indicator Details%')
+                ->where('table_html', 'not like', '%Rincian Indikator%')
+                ->where('table_html', 'not like', '%Data Statistik Sektoral%')
+                ->where('year', '!=', $year)
                 ->orderByRaw("ABS(year - {$year}) ASC")
                 ->first();
-            if ($fallback) {
-                $meta = $fallback;
-                $meta->year = $year;
-                $meta->opd_code = $opdCode;
-            }
-        }
 
-        if (!$meta || empty($meta->table_html)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Struktur tabel tidak ditemukan di database.',
-            ], 404);
+            if (!$fallback) {
+                $fallback = TabelMetadata::where('table_code', $tableCode)
+                    ->whereNotNull('table_html')
+                    ->where('table_html', '!=', '')
+                    ->where('table_html', 'not like', '%Indicator Details%')
+                    ->where('table_html', 'not like', '%Rincian Indikator%')
+                    ->where('table_html', 'not like', '%Data Statistik Sektoral%')
+                    ->orderByRaw("ABS(year - {$year}) ASC")
+                    ->first();
+            }
+
+            if ($fallback && !empty($fallback->table_html)) {
+                $meta->table_html = $this->adjustYearInHtml($fallback->table_html, (int)$fallback->year, $year);
+                if (empty($meta->title_id)) $meta->title_id = $fallback->title_id;
+                if (empty($meta->title_en)) $meta->title_en = $fallback->title_en;
+                if (empty($meta->source)) $meta->source = $fallback->source;
+                if (empty($meta->note)) $meta->note = $fallback->note;
+            }
         }
 
         try {
@@ -152,31 +184,14 @@ trait HandlesExcel
             if (!empty($excelSource)) $meta->source = $excelSource;
             if (!empty($excelNote)) $meta->note = $excelNote;
 
-            // Deteksi apakah struktur tabel database saat ini kosong atau berupa dummy/placeholder
-            $isDummyTable = false;
-            if (empty($meta->table_html)) {
-                $isDummyTable = true;
-            } else {
-                $htmlLower = strtolower($meta->table_html);
-                if (str_contains($htmlLower, 'indicator details') || 
-                    str_contains($htmlLower, 'rincian indikator') || 
-                    str_contains($htmlLower, 'data statistik sektoral') || 
-                    str_contains($htmlLower, 'capaian nilai tahun') || 
-                    str_contains($htmlLower, 'belum ada data untuk tabel ini')) {
-                    $isDummyTable = true;
-                }
-            }
-
-            // Bangun struktur tabel utuh langsung dari baris berkas Excel
-            // Ini mencegah penumpukan/himpitan baris Excel ke atas tabel lama atau tabel placeholder
-            $generatedHtml = $this->buildTableHtmlFromExcelRows($rows, $tableCode, $year);
-
-            if (!empty($generatedHtml)) {
-                $updatedHtml = $generatedHtml;
-            } elseif (!$isDummyTable && !empty($meta->table_html)) {
+            // 3. Terapkan data Excel ke struktur tabel:
+            // Jika tabel sudah memiliki template BPS yang rapi, petakan baris Excel ke dalam struktur tersebut ("sesuaikan isian yang ada")
+            if (!empty($meta->table_html) && !$this->isDummyOrPlaceholderTable($meta->table_html)) {
                 $updatedHtml = $this->applyExcelRowsToTableHtml($meta->table_html, $rows, $tableCode);
             } else {
-                $updatedHtml = $meta->table_html;
+                // Jika sama sekali tidak ada template di database, bangun dari baris Excel
+                $generatedHtml = $this->buildTableHtmlFromExcelRows($rows, $tableCode, $year);
+                $updatedHtml = !empty($generatedHtml) ? $generatedHtml : ($meta->table_html ?? '');
             }
 
             $schoolCodes = ['4.1.1', '4.1.3', '4.1.4', '4.1.5', '4.1.6', '4.1.7', '4.1.8', '4.1.9', '4.1.10', '4.1.11', '4.1.12', '4.1.13', '4.1.14', '4.1.15', '4.1.16', '4.1.17'];
@@ -219,6 +234,25 @@ trait HandlesExcel
     }
 
     /**
+     * Cek apakah table_html masih berupa template dummy/placeholder bawaan atau rusak
+     */
+    protected function isDummyOrPlaceholderTable(?string $html): bool
+    {
+        if (empty($html)) return true;
+        if (str_contains($html, 'Rincian Indikator') || str_contains($html, 'Indicator Details')) return true;
+        if (str_contains($html, 'Data Statistik Sektoral')) return true;
+        if (str_contains($html, 'Belum ada data untuk tabel ini')) return true;
+        if (!str_contains($html, '<tbody')) return true;
+
+        // Cek jika tabel memiliki header kolom dummy seperti 3+ kolom berurutan berisi '-'
+        if (preg_match_all('/<th[^>]*>\s*(?:<div>\s*)?-\s*(?:<\/div>\s*)?<\/th>/i', $html, $mDummyTh)) {
+            if (count($mDummyTh[0]) >= 3) return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Normalisasi label baris untuk perbandingan nama/kategori yang akurat
      */
     protected function normalizeRowLabel(string $str): string
@@ -240,13 +274,16 @@ trait HandlesExcel
         // 1. Temukan baris penomoran (1), (2), (3)... atau -1, -2, -3...
         $numRowIdx = null;
         $rawNumRow = [];
+        $minPhysicalCol = 0;
+
         foreach ($excelRows as $rIdx => $row) {
             if (!is_array($row)) continue;
-            foreach ($row as $c) {
+            foreach ($row as $cIdx => $c) {
                 $cStr = trim((string)$c);
                 if ($cStr === '(1)' || $cStr === '-1' || (preg_match('/^\(1\)/', $cStr) && (in_array('(2)', array_map('trim', $row)) || in_array('-2', array_map('trim', $row))))) {
                     $numRowIdx = $rIdx;
                     $rawNumRow = $row;
+                    $minPhysicalCol = $cIdx;
                     break 2;
                 }
             }
@@ -267,15 +304,15 @@ trait HandlesExcel
             }
         }
 
-        if ($maxPhysicalCols <= 0) {
+        if ($maxPhysicalCols <= $minPhysicalCol) {
             return '';
         }
 
-        // Deteksi apakah kolom 0 memiliki colspan 2 (misal Col 0 terisi, Col 1 null/kosong pada penomoran dan header)
+        // Deteksi apakah kolom awal memiliki colspan 2 (misal Col 0 terisi, Col 1 null/kosong pada penomoran dan header)
         $firstColColspan2 = false;
-        if ($maxPhysicalCols >= 2) {
-            $numCol0 = trim((string)($rawNumRow[0] ?? ''));
-            $numCol1 = trim((string)($rawNumRow[1] ?? ''));
+        if (($maxPhysicalCols - $minPhysicalCol) >= 2) {
+            $numCol0 = trim((string)($rawNumRow[$minPhysicalCol] ?? ''));
+            $numCol1 = trim((string)($rawNumRow[$minPhysicalCol + 1] ?? ''));
             if (($numCol0 === '(1)' || $numCol0 === '-1') && ($numCol1 === '' || $numCol1 === null)) {
                 $firstColColspan2 = true;
             }
@@ -297,10 +334,10 @@ trait HandlesExcel
         $theadHtml = "<thead>\n";
         foreach ($headerRows as $hRow) {
             $theadHtml .= "    <tr class=\"bg-[#f95a00] text-white text-center font-bold\">\n";
-            $cIdx = 0;
+            $cIdx = $minPhysicalCol;
             while ($cIdx < $maxPhysicalCols) {
                 $cellVal = trim((string)($hRow[$cIdx] ?? ''));
-                $isCol0Colspan = ($cIdx === 0 && $firstColColspan2);
+                $isCol0Colspan = ($cIdx === $minPhysicalCol && $firstColColspan2);
                 $colspanAttr = $isCol0Colspan ? ' colspan="2"' : '';
 
                 if (str_contains($cellVal, '/')) {
@@ -318,10 +355,10 @@ trait HandlesExcel
 
         // Baris penomoran (1), (2), (3)...
         $theadHtml .= "    <tr class=\"bg-[#fed7aa] text-slate-900 text-center font-bold text-xs\">\n";
-        $cIdx = 0;
+        $cIdx = $minPhysicalCol;
         $numCounter = 1;
         while ($cIdx < $maxPhysicalCols) {
-            $isCol0Colspan = ($cIdx === 0 && $firstColColspan2);
+            $isCol0Colspan = ($cIdx === $minPhysicalCol && $firstColColspan2);
             $colspanAttr = $isCol0Colspan ? ' colspan="2"' : '';
             $theadHtml .= "        <th class=\"py-1 px-3 border border-slate-700\"{$colspanAttr}>({$numCounter})</th>\n";
             $numCounter++;
@@ -352,14 +389,14 @@ trait HandlesExcel
         $historicalTotalSpan = 0;
         $historicalTotalStartIdx = null;
         foreach ($bodyRows as $bIdx => $bRow) {
-            $c0 = trim((string)($bRow[0] ?? ''));
-            $c1 = trim((string)($bRow[1] ?? ''));
+            $c0 = trim((string)($bRow[$minPhysicalCol] ?? ''));
+            $c1 = trim((string)($bRow[$minPhysicalCol + 1] ?? ''));
             if (preg_match('/(?:Jumlah|Total)/i', $c0) && preg_match('/^(?:19|20)\d{2}$/', $c1)) {
                 $historicalTotalStartIdx = $bIdx;
                 $historicalTotalSpan = 1;
                 for ($k = $bIdx + 1; $k < count($bodyRows); $k++) {
-                    $subC0 = trim((string)($bodyRows[$k][0] ?? ''));
-                    $subC1 = trim((string)($bodyRows[$k][1] ?? ''));
+                    $subC0 = trim((string)($bodyRows[$k][$minPhysicalCol] ?? ''));
+                    $subC1 = trim((string)($bodyRows[$k][$minPhysicalCol + 1] ?? ''));
                     if (($subC0 === '' || $subC0 === null) && preg_match('/^(?:19|20)\d{2}$/', $subC1)) {
                         $historicalTotalSpan++;
                     } else {
@@ -371,8 +408,8 @@ trait HandlesExcel
         }
 
         foreach ($bodyRows as $bIdx => $bRow) {
-            $c0 = trim((string)($bRow[0] ?? ''));
-            $c1 = trim((string)($bRow[1] ?? ''));
+            $c0 = trim((string)($bRow[$minPhysicalCol] ?? ''));
+            $c1 = trim((string)($bRow[$minPhysicalCol + 1] ?? ''));
             $rowText = implode(' ', array_filter(array_map('trim', $bRow), fn($x) => $x !== ''));
 
             $isTotalRow = (bool) preg_match('/(?:Jumlah|Total|Rata-rata|Average|BUKITTINGGI)/i', $rowText);
@@ -393,7 +430,7 @@ trait HandlesExcel
                 $labelHtml = 'Jumlah / <span class="italic font-bold">Total</span>';
                 $tbodyHtml .= "        <td class=\"py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle font-bold\" rowspan=\"{$historicalTotalSpan}\">{$labelHtml}</td>\n";
                 $tbodyHtml .= "        <td class=\"py-2.5 px-3 border border-slate-700 text-center align-middle font-bold\">" . htmlspecialchars($c1) . "</td>\n";
-                for ($c = 2; $c < $maxPhysicalCols; $c++) {
+                for ($c = $minPhysicalCol + 2; $c < $maxPhysicalCols; $c++) {
                     $val = trim((string)($bRow[$c] ?? ''));
                     $valDisplay = ($val === '' || $val === '-' || $val === '–' || $val === '—') ? '<span class="text-slate-400 font-normal">-</span>' : htmlspecialchars($val);
                     $tbodyHtml .= "        <td class=\"py-2.5 px-3 border border-slate-700 text-center align-middle font-bold\">{$valDisplay}</td>\n";
@@ -401,7 +438,7 @@ trait HandlesExcel
             } elseif ($isHistoricalSubYear) {
                 // Baris sub-tahun dalam historical total (Col 0 dilewati karena kena rowspan)
                 $tbodyHtml .= "        <td class=\"py-2.5 px-3 border border-slate-700 text-center align-middle font-bold\">" . htmlspecialchars($c1) . "</td>\n";
-                for ($c = 2; $c < $maxPhysicalCols; $c++) {
+                for ($c = $minPhysicalCol + 2; $c < $maxPhysicalCols; $c++) {
                     $val = trim((string)($bRow[$c] ?? ''));
                     $valDisplay = ($val === '' || $val === '-' || $val === '–' || $val === '—') ? '<span class="text-slate-400 font-normal">-</span>' : htmlspecialchars($val);
                     $tbodyHtml .= "        <td class=\"py-2.5 px-3 border border-slate-700 text-center align-middle font-bold\">{$valDisplay}</td>\n";
@@ -411,16 +448,16 @@ trait HandlesExcel
                 if ($firstColColspan2) {
                     $label = $c0 !== '' ? $c0 : $c1;
                     $tbodyHtml .= "        <td class=\"py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle{$boldClass}\" colspan=\"2\">" . htmlspecialchars($label) . "</td>\n";
-                    for ($c = 2; $c < $maxPhysicalCols; $c++) {
+                    for ($c = $minPhysicalCol + 2; $c < $maxPhysicalCols; $c++) {
                         $val = trim((string)($bRow[$c] ?? ''));
                         $valDisplay = ($val === '' || $val === '-' || $val === '–' || $val === '—') ? '<span class="text-slate-400 font-normal">-</span>' : htmlspecialchars($val);
                         $tbodyHtml .= "        <td class=\"py-2.5 px-3 border border-slate-700 text-center align-middle{$boldClass}\">{$valDisplay}</td>\n";
                     }
                 } else {
-                    for ($c = 0; $c < $maxPhysicalCols; $c++) {
+                    for ($c = $minPhysicalCol; $c < $maxPhysicalCols; $c++) {
                         $val = trim((string)($bRow[$c] ?? ''));
                         $valDisplay = ($val === '' || $val === '-' || $val === '–' || $val === '—') ? '<span class="text-slate-400 font-normal">-</span>' : htmlspecialchars($val);
-                        $align = ($c === 0) ? 'text-left font-semibold' : 'text-center';
+                        $align = ($c === $minPhysicalCol) ? 'text-left font-semibold' : 'text-center';
                         $tbodyHtml .= "        <td class=\"py-2.5 px-4 border border-slate-700 {$align} align-middle{$boldClass}\">{$valDisplay}</td>\n";
                     }
                 }
@@ -689,8 +726,9 @@ trait HandlesExcel
                     }
                 }
 
-                // Prioritas 3: Sequential fallback
-                if ($matchedIdx === null) {
+                // Prioritas 3: Sequential fallback (HANYA jika bukan baris tahun / bukan tabel baris tahun)
+                $isYearRow = (bool) preg_match('/^(?:19|20)\d{2}$/', $rawRowLabel);
+                if ($matchedIdx === null && !$isYearRow && !$isYearRowTable) {
                     while (isset($usedExcelIndices[$excelCursor]) && $excelCursor < count($excelDataRows)) {
                         $excelCursor++;
                     }
@@ -746,26 +784,30 @@ trait HandlesExcel
             }, $tbodyHtml);
 
             // 4. Masukkan baris baru dari Excel yang belum ada di HTML (misal 18 partai Pemilu 2024)
+            // Khusus tabel berurutan tahun atau tabel tetap per kecamatan: jangan menumpuk baris ekstra ke bawah
+            $isDistrictTable = (bool) preg_match('/(?:Kecamatan|District|Guguk Panjang|Mandiangin)/i', $tbodyHtml);
             $extraRowsHtml = '';
-            foreach ($excelDataRows as $idx => $eRow) {
-                if (!isset($usedExcelIndices[$idx]) && !$eRow['isTotal']) {
-                    $lbl = trim($eRow['label']);
-                    // Jangan pernah memasukkan header atau nomor kolom Excel sebagai baris baru
-                    if (preg_match('/^(?:-?\d+|\(\d+\))$/', $lbl) && (int)$lbl < 100) continue;
-                    if (preg_match('/(?:Perguruan\s+Tinggi|College|Mahasiswa|Lulusan|Dosen|Lecturer)/i', $lbl)) continue;
-                    if ($isYearRowTable && !preg_match('/^(?:19|20)\d{2}$/', $lbl)) continue;
+            if (!$isYearRowTable && !$isDistrictTable) {
+                foreach ($excelDataRows as $idx => $eRow) {
+                    if (!isset($usedExcelIndices[$idx]) && !$eRow['isTotal']) {
+                        $lbl = trim($eRow['label']);
+                        // Jangan pernah memasukkan header atau nomor kolom Excel sebagai baris baru
+                        if (preg_match('/^(?:-?\d+|\(\d+\))$/', $lbl) && (int)$lbl < 100) continue;
+                        if (preg_match('/(?:Perguruan\s+Tinggi|College|Mahasiswa|Lulusan|Dosen|Lecturer)/i', $lbl)) continue;
+                        if ($isYearRowTable && !preg_match('/^(?:19|20)\d{2}$/', $lbl)) continue;
 
-                    $rowClass = 'hover:bg-amber-100/60 transition-colors';
-                    $rowContent = "<td class=\"py-2.5 px-4 border border-slate-700 text-left font-semibold align-top\">" . htmlspecialchars($eRow['label']) . "</td>";
-                    foreach ($eRow['values'] as $v) {
-                        $vStr = is_numeric($v) ? ((float)$v == (int)$v ? (string)(int)$v : (string)$v) : trim($v);
-                        if ($vStr === '' || $vStr === '-' || $vStr === '–' || $vStr === '—' || $vStr === '...') {
-                            $rowContent .= "<td class=\"py-2.5 px-4 border border-slate-700 text-center align-middle\"><span class=\"text-slate-400 font-normal\">-</span></td>";
-                        } else {
-                            $rowContent .= "<td class=\"py-2.5 px-4 border border-slate-700 text-center align-middle font-medium\">" . htmlspecialchars($vStr) . "</td>";
+                        $rowClass = 'hover:bg-amber-100/60 transition-colors';
+                        $rowContent = "<td class=\"py-2.5 px-4 border border-slate-700 text-left font-semibold align-top\">" . htmlspecialchars($eRow['label']) . "</td>";
+                        foreach ($eRow['values'] as $v) {
+                            $vStr = is_numeric($v) ? ((float)$v == (int)$v ? (string)(int)$v : (string)$v) : trim($v);
+                            if ($vStr === '' || $vStr === '-' || $vStr === '–' || $vStr === '—' || $vStr === '...') {
+                                $rowContent .= "<td class=\"py-2.5 px-4 border border-slate-700 text-center align-middle\"><span class=\"text-slate-400 font-normal\">-</span></td>";
+                            } else {
+                                $rowContent .= "<td class=\"py-2.5 px-4 border border-slate-700 text-center align-middle font-medium\">" . htmlspecialchars($vStr) . "</td>";
+                            }
                         }
+                        $extraRowsHtml .= "<tr class=\"{$rowClass}\">{$rowContent}</tr>\n";
                     }
-                    $extraRowsHtml .= "<tr class=\"{$rowClass}\">{$rowContent}</tr>\n";
                 }
             }
 

@@ -1021,9 +1021,9 @@ trait BuildsBab4Templates
      */
     public function build3in1EducationHtml(int $year, ?string $existingHtml = null): string
     {
-        $y1 = ($year - 2) . '/' . ($year - 1);
-        $y2 = ($year - 1) . '/' . ($year);
-        $y3 = ($year) . '/' . ($year + 1);
+        $y1 = ($year - 3) . '/' . ($year - 2);
+        $y2 = ($year - 2) . '/' . ($year - 1);
+        $y3 = ($year - 1) . '/' . ($year);
 
         $districts = [
             '01. Guguk Panjang',
@@ -1052,6 +1052,10 @@ trait BuildsBab4Templates
 
             preg_match_all('/<tr[^>]*>(.*?)<\/tr>/is', $tbHtml, $trs);
             foreach ($trs[1] as $tr) {
+                // Lewati baris subheader di dalam tbody
+                if (preg_match('/(?:Guru|Teachers|Murid|Students|Sekolah|Schools|Negeri|Public|Swasta|Private|subtable-)/i', $tr)) {
+                    continue;
+                }
                 preg_match_all('/<(?:td|th)[^>]*>(.*?)<\/(?:td|th)>/is', $tr, $cells);
                 if (empty($cells[1])) continue;
                 $texts = array_map(function($c) { return trim(strip_tags($c)); }, $cells[1]);
@@ -1059,6 +1063,21 @@ trait BuildsBab4Templates
 
                 if (preg_match('/^\s*0?\d\./', $first) || str_starts_with($first, 'Bukittinggi')) {
                     $vals = array_slice($texts, 1);
+                    // Jika data Excel hanya 6 kolom (Negeri 3, Swasta 3), hitung otomatis 3 kolom Jumlah (Negeri + Swasta)
+                    if (count($vals) >= 6 && count($vals) < 9) {
+                        for ($k = 0; $k < 3; $k++) {
+                            $cleanN = str_replace(['.', ','], '', trim($vals[$k] ?? ''));
+                            $cleanS = str_replace(['.', ','], '', trim($vals[$k + 3] ?? ''));
+                            $hasN = is_numeric($cleanN);
+                            $hasS = is_numeric($cleanS);
+                            if (!$hasN && !$hasS) {
+                                $vals[6 + $k] = '-';
+                            } else {
+                                $sum = ($hasN ? (int)$cleanN : 0) + ($hasS ? (int)$cleanS : 0);
+                                $vals[6 + $k] = number_format($sum, 0, ',', '.');
+                            }
+                        }
+                    }
                     // Pastikan panjang nilai minimal 9 kolom
                     while (count($vals) < 9) {
                         $vals[] = '-';
@@ -1135,40 +1154,40 @@ trait BuildsBab4Templates
 
                 // Subheader Judul Bagian (Guru / Murid)
                 $html .= "    <tr class=\"bg-[#f95a00] text-white text-center font-bold subtable-header-title\">\n";
-                $html .= "        <td class=\"py-3 px-4 font-bold border border-slate-700 text-center align-middle\" rowspan=\"3\">\n";
+                $html .= "        <th class=\"py-3 px-4 font-bold border border-slate-700 text-center align-middle\" rowspan=\"3\">\n";
                 $html .= "            <div>Kecamatan</div><div class=\"italic font-normal text-[11px] sm:text-xs\">District</div>\n";
-                $html .= "        </td>\n";
-                $html .= "        <td class=\"py-3 px-4 font-bold border border-slate-700 text-center align-middle\" colspan=\"6\">\n";
+                $html .= "        </th>\n";
+                $html .= "        <th class=\"py-3 px-4 font-bold border border-slate-700 text-center align-middle\" colspan=\"6\">\n";
                 $html .= "            <div>{$sectionTitle}</div><div class=\"italic font-normal text-[11px] sm:text-xs\">{$sectionTitleEn}</div>\n";
-                $html .= "        </td>\n";
-                $html .= "        <td class=\"py-3 px-4 font-bold border border-slate-700 text-center align-middle\" rowspan=\"2\" colspan=\"3\">\n";
+                $html .= "        </th>\n";
+                $html .= "        <th class=\"py-3 px-4 font-bold border border-slate-700 text-center align-middle\" rowspan=\"2\" colspan=\"3\">\n";
                 $html .= "            <div>Jumlah</div><div class=\"italic font-normal text-[11px] sm:text-xs\">Total</div>\n";
-                $html .= "        </td>\n";
+                $html .= "        </th>\n";
                 $html .= "    </tr>\n";
 
                 // Subheader Status (Negeri / Swasta)
                 $html .= "    <tr class=\"bg-[#f95a00] text-white text-center font-bold subtable-header-subtitle\">\n";
-                $html .= "        <td class=\"py-2.5 px-4 font-bold border border-slate-700 text-center align-middle\" colspan=\"3\">\n";
+                $html .= "        <th class=\"py-2.5 px-4 font-bold border border-slate-700 text-center align-middle\" colspan=\"3\">\n";
                 $html .= "            <div>Negeri</div><div class=\"italic font-normal text-[11px] sm:text-xs\">Public</div>\n";
-                $html .= "        </td>\n";
-                $html .= "        <td class=\"py-2.5 px-4 font-bold border border-slate-700 text-center align-middle\" colspan=\"3\">\n";
+                $html .= "        </th>\n";
+                $html .= "        <th class=\"py-2.5 px-4 font-bold border border-slate-700 text-center align-middle\" colspan=\"3\">\n";
                 $html .= "            <div>Swasta</div><div class=\"italic font-normal text-[11px] sm:text-xs\">Private</div>\n";
-                $html .= "        </td>\n";
+                $html .= "        </th>\n";
                 $html .= "    </tr>\n";
 
                 // Subheader Tahun Ajaran (3 kolom x 3)
                 $html .= "    <tr class=\"bg-[#f95a00] text-white text-center font-bold text-xs subtable-header-years\">\n";
                 for ($i = 0; $i < 3; $i++) {
-                    $html .= "        <td class=\"py-2 px-3 font-bold border border-slate-700 text-center align-middle text-xs\"><div>{$y1}</div></td>\n";
-                    $html .= "        <td class=\"py-2 px-3 font-bold border border-slate-700 text-center align-middle text-xs\"><div>{$y2}</div></td>\n";
-                    $html .= "        <td class=\"py-2 px-3 font-bold border border-slate-700 text-center align-middle text-xs\"><div>{$y3}</div></td>\n";
+                    $html .= "        <th class=\"py-2 px-3 font-bold border border-slate-700 text-center align-middle text-xs\"><div>{$y1}</div></th>\n";
+                    $html .= "        <th class=\"py-2 px-3 font-bold border border-slate-700 text-center align-middle text-xs\"><div>{$y2}</div></th>\n";
+                    $html .= "        <th class=\"py-2 px-3 font-bold border border-slate-700 text-center align-middle text-xs\"><div>{$y3}</div></th>\n";
                 }
                 $html .= "    </tr>\n";
 
                 // Subheader Penomoran Kolom (1) s.d. (10)
                 $html .= "    <tr class=\"bg-[#fed7aa] text-slate-900 text-center font-bold text-xs subtable-header-numbering\">\n";
                 for ($i = 1; $i <= 10; $i++) {
-                    $html .= "        <td class=\"py-1 px-3 border border-slate-700 text-center font-bold text-xs\">({$i})</td>\n";
+                    $html .= "        <th class=\"py-1 px-3 border border-slate-700 text-center font-bold text-xs\">({$i})</th>\n";
                 }
                 $html .= "    </tr>\n";
             }
