@@ -33,7 +33,7 @@ trait ResolvesAgencies
         if (in_array($tableCode, ['8.1.6', '8.1.7', '8.1.8', '8.1.9'])) {
             return '20'; // Dinas Perhubungan
         }
-        if (str_starts_with($tableCode, '8.1.') || str_starts_with($tableCode, '8.2.')) {
+        if (str_starts_with($tableCode, '8.1.') || (str_starts_with($tableCode, '8.2.') && $tableCode !== '8.2.7')) {
             return '01'; // Dinas PUPR
         }
         if (str_starts_with($tableCode, '2.2.')) {
@@ -96,6 +96,7 @@ trait ResolvesAgencies
         if (in_array($cleanCode, ['2.1.1', '4.5.6', '8.1.10'])) return ['30', 'instansi']; // Polres
         if (in_array($cleanCode, ['8.1.11', '8.1.12'])) return ['33', 'instansi']; // Samsat
         if (in_array($cleanCode, ['8.1.13', '8.1.14', '8.1.15'])) return ['34', 'instansi']; // Pos
+        if ($cleanCode === '8.2.7') return ['35', 'instansi']; // RRI
         if (in_array($cleanCode, ['1.1.7', '1.1.8', '1.1.9'])) return ['01', 'instansi']; // BPN
         if ($cleanCode === '2.2.1') return ['02', 'instansi']; // KPU
         if (in_array($cleanCode, ['4.1.3', '4.1.4', '4.1.5', '4.2.14', '4.4.1', '4.4.2', '4.4.3', '4.4.4', '4.4.5', '4.4.6', '4.4.7', '4.4.8'])) {

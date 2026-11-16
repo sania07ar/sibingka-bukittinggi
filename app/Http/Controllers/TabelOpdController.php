@@ -50,7 +50,7 @@ class TabelOpdController extends Controller
         $dbMetadata = $this->getOrCreateMetadata($tableCode, $opdCode, $year, $type);
 
         $dbFallbackMetadata = null;
-        if (!$dbMetadata || empty($dbMetadata->table_html) || str_contains($dbMetadata->table_html, 'Indicator Details')) {
+        if ((!$dbMetadata || empty($dbMetadata->table_html) || str_contains($dbMetadata->table_html, 'Indicator Details')) && $opdCode !== '35' && $tableCode !== '8.2.7') {
             $fallbackQuery = TabelMetadata::where('table_code', $tableCode)
                 ->whereNotNull('table_html')
                 ->where('table_html', '!=', '')
@@ -115,7 +115,7 @@ class TabelOpdController extends Controller
         $dbMetadata = $this->getOrCreateMetadata($tableCode, $opdCode, $year, $type);
 
         $dbFallbackMetadata = null;
-        if (!$dbMetadata || empty($dbMetadata->table_html) || str_contains($dbMetadata->table_html, 'Indicator Details')) {
+        if ((!$dbMetadata || empty($dbMetadata->table_html) || str_contains($dbMetadata->table_html, 'Indicator Details')) && $opdCode !== '35' && $tableCode !== '8.2.7') {
             $fallbackQuery = TabelMetadata::where('table_code', $tableCode)
                 ->whereNotNull('table_html')
                 ->where('table_html', '!=', '')
@@ -180,7 +180,7 @@ class TabelOpdController extends Controller
 
         $cleanOpd = str_pad($opdCode, 2, '0', STR_PAD_LEFT);
         $dbFallbackMetadata = null;
-        if (!$dbMetadata || empty($dbMetadata->table_html) || str_contains($dbMetadata->table_html, 'Indicator Details')) {
+        if ((!$dbMetadata || empty($dbMetadata->table_html) || str_contains($dbMetadata->table_html, 'Indicator Details')) && $opdCode !== '35' && $tableCode !== '8.2.7') {
             $fallbackQuery = TabelMetadata::where('table_code', $tableCode)
                 ->whereNotNull('table_html')
                 ->where('table_html', '!=', '')
@@ -397,8 +397,8 @@ class TabelOpdController extends Controller
                 ], fn($v) => $v !== null)
             );
 
-            // Otomatis sinkronkan template kosong ke tahun-tahun lain agar saat pengguna berpindah tahun, format tabel langsung menyesuaikan
-            if (!empty($tableHtml)) {
+            // Otomatis sinkronkan template kosong ke tahun-tahun lain agar saat pengguna berpindah tahun, format tabel langsung menyesuaikan (kecuali RRI 8.2.7 yang strukturnya unik tiap tahun)
+            if (!empty($tableHtml) && $opdCode !== '35' && $tableCode !== '8.2.7') {
                 $this->syncTemplateToOtherYears(
                     $tableCode,
                     $opdCode,

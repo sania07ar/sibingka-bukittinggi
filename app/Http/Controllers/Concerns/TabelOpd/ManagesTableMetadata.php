@@ -1388,9 +1388,9 @@ trait ManagesTableMetadata
             }
         }
 
-        // Tabel multi-tahun (4.1.18, 4.1.19, 8.1.1, 8.1.2, 8.1.3, 8.1.6, 8.1.7, 8.1.8, 8.2.2, 2.2.5, 1.1.10, 9.1, 9.3, 2.4.3, 2.4.1, 2.4.2) membangun rentang secara dinamis.
-        // Jangan pernah meminjam metadata/HTML dari tahun lain karena kolom tahunnya akan keliru.
-        if (in_array($tableCode, ['4.1.18', '4.1.19', '8.1.1', '8.1.2', '8.1.3', '8.1.6', '8.1.7', '8.1.8', '8.2.2', '2.2.5', '1.1.10', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2'])) {
+        // Tabel multi-tahun dan instansi dengan format tahunan unik seperti RRI (8.2.7 / OPD 35).
+        // Jangan pernah meminjam metadata/HTML dari tahun lain karena setiap tahun isian/strukturnya berbeda.
+        if ($opdCode === '35' || $tableCode === '8.2.7' || in_array($tableCode, ['4.1.18', '4.1.19', '8.1.1', '8.1.2', '8.1.3', '8.1.6', '8.1.7', '8.1.8', '8.2.2', '2.2.5', '1.1.10', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2'])) {
             return $dbMetadata;
         }
 

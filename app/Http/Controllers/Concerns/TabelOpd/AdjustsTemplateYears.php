@@ -21,6 +21,11 @@ trait AdjustsTemplateYears
      */
     private function syncTemplateToOtherYears(string $tableCode, string $opdCode, int $sourceYear, string $html, ?string $titleId, ?string $titleEn, ?string $source, ?string $note, string $sourceType = 'template', string $type = 'opd'): void
     {
+        // Khusus instansi RRI (tabel 8.2.7 / OPD 35), isian dan struktur tabel berbeda setiap tahun dan diisi via import Excel per tahun. Jangan sinkronkan template ke tahun lain.
+        if ($opdCode === '35' || $tableCode === '8.2.7') {
+            return;
+        }
+
         if ($source) {
             $source = preg_replace('/^\s*(?:sumber\s*[\/:]\s*source|sumber\s*[\/:]|source\s*[\/:]|sumber|source)\s*:\s*/i', '', $source);
             $source = trim($source);
