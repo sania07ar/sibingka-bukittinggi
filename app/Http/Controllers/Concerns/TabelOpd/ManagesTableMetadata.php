@@ -479,6 +479,42 @@ trait ManagesTableMetadata
             }
         }
 
+        // Khusus tabel 8.1.11 (Samsat - Kendaraan Bermotor), rapikan header bertingkat jika ada broken rowspan/colspan
+        if ($tableCode === '8.1.11' && $dbMetadata && !empty($dbMetadata->table_html)) {
+            if ((str_contains($dbMetadata->table_html, '<div>-</div>') || !str_contains($dbMetadata->table_html, 'rowspan="2"')) && str_contains($dbMetadata->table_html, 'Mendaftar Ulang')) {
+                $cleanThead = '<thead>
+                    <tr class="bg-[#f95a00] text-white text-center font-bold">
+                        <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2"><div>Jenis Kendaraan</div><div class="italic font-normal text-[11px] sm:text-xs">Kind of Car</div></th>
+                        <th class="py-3 px-4 font-bold border border-slate-700" colspan="4"><div>Mendaftar Ulang (Plat)</div><div class="italic font-normal text-[11px] sm:text-xs">Registered Jenis (Unit)</div></th>
+                        <th class="py-3 px-4 font-bold border border-slate-700" colspan="4"><div>Balik Nama (Plat)</div><div class="italic font-normal text-[11px] sm:text-xs">Name Return (Unit)</div></th>
+                    </tr>
+                    <tr class="bg-[#f95a00] text-white text-center font-bold">
+                        <th class="py-3 px-4 font-bold border border-slate-700"><div>Hitam</div><div class="italic font-normal text-[11px] sm:text-xs">Black</div></th>
+                        <th class="py-3 px-4 font-bold border border-slate-700"><div>Kuning</div><div class="italic font-normal text-[11px] sm:text-xs">Yellow</div></th>
+                        <th class="py-3 px-4 font-bold border border-slate-700"><div>Merah</div><div class="italic font-normal text-[11px] sm:text-xs">Red</div></th>
+                        <th class="py-3 px-4 font-bold border border-slate-700"><div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div></th>
+                        <th class="py-3 px-4 font-bold border border-slate-700"><div>Hitam</div><div class="italic font-normal text-[11px] sm:text-xs">Black</div></th>
+                        <th class="py-3 px-4 font-bold border border-slate-700"><div>Kuning</div><div class="italic font-normal text-[11px] sm:text-xs">Yellow</div></th>
+                        <th class="py-3 px-4 font-bold border border-slate-700"><div>Merah</div><div class="italic font-normal text-[11px] sm:text-xs">Red</div></th>
+                        <th class="py-3 px-4 font-bold border border-slate-700"><div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div></th>
+                    </tr>
+                    <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                        <th class="py-1 px-3 border border-slate-700">(1)</th>
+                        <th class="py-1 px-3 border border-slate-700">(2)</th>
+                        <th class="py-1 px-3 border border-slate-700">(3)</th>
+                        <th class="py-1 px-3 border border-slate-700">(4)</th>
+                        <th class="py-1 px-3 border border-slate-700">(5)</th>
+                        <th class="py-1 px-3 border border-slate-700">(6)</th>
+                        <th class="py-1 px-3 border border-slate-700">(7)</th>
+                        <th class="py-1 px-3 border border-slate-700">(8)</th>
+                        <th class="py-1 px-3 border border-slate-700">(9)</th>
+                    </tr>
+                </thead>';
+                $dbMetadata->table_html = preg_replace('/<thead>.*?<\/thead>/is', $cleanThead, $dbMetadata->table_html);
+                $dbMetadata->save();
+            }
+        }
+
         // Khusus tabel 11.2 (Dinas PMPTSP - NIB menurut sektor), pastikan rentang tahun Jumlah valid [year, year-1, ..., year-5]
         if ($tableCode === '11.2') {
             if ($dbMetadata && !empty($dbMetadata->table_html)) {
@@ -1312,6 +1348,42 @@ trait ManagesTableMetadata
 
             if ($needs8110Save) {
                 $dbMetadata->table_html = $h8110;
+                $dbMetadata->save();
+            }
+        }
+
+        // Khusus tabel 8.1.11 (Samsat - Kendaraan Bermotor), rapikan header bertingkat jika ada broken rowspan/colspan
+        if ($tableCode === '8.1.11' && $dbMetadata && !empty($dbMetadata->table_html)) {
+            if ((str_contains($dbMetadata->table_html, '<div>-</div>') || !str_contains($dbMetadata->table_html, 'rowspan="2"')) && str_contains($dbMetadata->table_html, 'Mendaftar Ulang')) {
+                $cleanThead = '<thead>
+                    <tr class="bg-[#f95a00] text-white text-center font-bold">
+                        <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2"><div>Jenis Kendaraan</div><div class="italic font-normal text-[11px] sm:text-xs">Kind of Car</div></th>
+                        <th class="py-3 px-4 font-bold border border-slate-700" colspan="4"><div>Mendaftar Ulang (Plat)</div><div class="italic font-normal text-[11px] sm:text-xs">Registered Jenis (Unit)</div></th>
+                        <th class="py-3 px-4 font-bold border border-slate-700" colspan="4"><div>Balik Nama (Plat)</div><div class="italic font-normal text-[11px] sm:text-xs">Name Return (Unit)</div></th>
+                    </tr>
+                    <tr class="bg-[#f95a00] text-white text-center font-bold">
+                        <th class="py-3 px-4 font-bold border border-slate-700"><div>Hitam</div><div class="italic font-normal text-[11px] sm:text-xs">Black</div></th>
+                        <th class="py-3 px-4 font-bold border border-slate-700"><div>Kuning</div><div class="italic font-normal text-[11px] sm:text-xs">Yellow</div></th>
+                        <th class="py-3 px-4 font-bold border border-slate-700"><div>Merah</div><div class="italic font-normal text-[11px] sm:text-xs">Red</div></th>
+                        <th class="py-3 px-4 font-bold border border-slate-700"><div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div></th>
+                        <th class="py-3 px-4 font-bold border border-slate-700"><div>Hitam</div><div class="italic font-normal text-[11px] sm:text-xs">Black</div></th>
+                        <th class="py-3 px-4 font-bold border border-slate-700"><div>Kuning</div><div class="italic font-normal text-[11px] sm:text-xs">Yellow</div></th>
+                        <th class="py-3 px-4 font-bold border border-slate-700"><div>Merah</div><div class="italic font-normal text-[11px] sm:text-xs">Red</div></th>
+                        <th class="py-3 px-4 font-bold border border-slate-700"><div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div></th>
+                    </tr>
+                    <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                        <th class="py-1 px-3 border border-slate-700">(1)</th>
+                        <th class="py-1 px-3 border border-slate-700">(2)</th>
+                        <th class="py-1 px-3 border border-slate-700">(3)</th>
+                        <th class="py-1 px-3 border border-slate-700">(4)</th>
+                        <th class="py-1 px-3 border border-slate-700">(5)</th>
+                        <th class="py-1 px-3 border border-slate-700">(6)</th>
+                        <th class="py-1 px-3 border border-slate-700">(7)</th>
+                        <th class="py-1 px-3 border border-slate-700">(8)</th>
+                        <th class="py-1 px-3 border border-slate-700">(9)</th>
+                    </tr>
+                </thead>';
+                $dbMetadata->table_html = preg_replace('/<thead>.*?<\/thead>/is', $cleanThead, $dbMetadata->table_html);
                 $dbMetadata->save();
             }
         }

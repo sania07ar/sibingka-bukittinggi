@@ -116,7 +116,8 @@ trait HandlesExcel
                 ->orderByRaw("ABS(year - {$year}) ASC")
                 ->first();
 
-            if (!$fallback) {
+            // Hanya fallback lintas OPD jika BUKAN instansi vertikal
+            if (!$fallback && $type !== 'instansi') {
                 $fallback = TabelMetadata::where('table_code', $tableCode)
                     ->whereNotNull('table_html')
                     ->where('table_html', '!=', '')
@@ -258,18 +259,25 @@ trait HandlesExcel
             if (!empty($excelNote)) $meta->note = $excelNote;
 
             // 3. Terapkan data Excel ke struktur tabel:
-            // Jika tabel sudah memiliki template BPS yang rapi, petakan baris Excel ke dalam struktur tersebut ("sesuaikan isian yang ada")
+            // Coba bangun tabel langsung dari baris Excel (Deteksi Otomatis Instan)
+            $generatedHtml = $this->buildTableHtmlFromExcelRows($rows, $tableCode, $year);
+
             $hasValidStructure = !empty($meta->table_html) && !$this->isDummyOrPlaceholderTable($meta->table_html);
             if ($hasValidStructure && $tableCode === '8.1.10' && !str_contains($meta->table_html, 'Januari')) {
                 $hasValidStructure = false;
             }
 
-            if ($hasValidStructure) {
+            if (!empty($generatedHtml)) {
+                if (!$hasValidStructure) {
+                    $updatedHtml = $generatedHtml;
+                } else {
+                    $appliedHtml = $this->applyExcelRowsToTableHtml($meta->table_html, $rows, $tableCode);
+                    $updatedHtml = !empty($appliedHtml) ? $appliedHtml : $generatedHtml;
+                }
+            } elseif ($hasValidStructure) {
                 $updatedHtml = $this->applyExcelRowsToTableHtml($meta->table_html, $rows, $tableCode);
             } else {
-                // Jika sama sekali tidak ada template di database, bangun dari baris Excel
-                $generatedHtml = $this->buildTableHtmlFromExcelRows($rows, $tableCode, $year);
-                $updatedHtml = !empty($generatedHtml) ? $generatedHtml : ($meta->table_html ?? '');
+                $updatedHtml = $meta->table_html ?? '';
             }
 
             $schoolCodes = ['4.1.1', '4.1.3', '4.1.4', '4.1.5', '4.1.6', '4.1.7', '4.1.8', '4.1.9', '4.1.10', '4.1.11', '4.1.12', '4.1.13', '4.1.14', '4.1.15', '4.1.16', '4.1.17'];
@@ -344,15 +352,32 @@ trait HandlesExcel
     }
 
     /**
+     * Format isi teks sel header menjadi dua baris (Indonesia dan Inggris jika ada '/')
+     */
+    protected function formatHeaderCellText(string $val): string
+    {
+        $val = trim($val);
+        if ($val === '' || $val === '-') {
+            return '<div>-</div>';
+        }
+        if (str_contains($val, '/')) {
+            $parts = explode('/', $val, 2);
+            return '<div>' . htmlspecialchars(trim($parts[0])) . '</div><div class="italic font-normal text-[11px] sm:text-xs">' . htmlspecialchars(trim($parts[1])) . '</div>';
+        }
+        return '<div>' . htmlspecialchars($val) . '</div>';
+    }
+
+    /**
      * Membangun struktur table_html lengkap (thead dan tbody) langsung dari baris Excel
      * Mencegah himpitan/tumpukan data Excel ke struktur tabel lama atau placeholder
      */
     public function buildTableHtmlFromExcelRows(array $excelRows, string $tableCode = '', int $year = 2025): string
     {
-        // 1. Temukan baris penomoran (1), (2), (3)... atau -1, -2, -3...
+        // 1. Temukan baris penomoran (1), (2), (3)... atau -1, -2, -3... atau 1, 2, 3...
         $numRowIdx = null;
         $rawNumRow = [];
         $minPhysicalCol = 0;
+        $hasExplicitNumRow = false;
 
         foreach ($excelRows as $rIdx => $row) {
             if (!is_array($row)) continue;
@@ -362,7 +387,79 @@ trait HandlesExcel
                     $numRowIdx = $rIdx;
                     $rawNumRow = $row;
                     $minPhysicalCol = $cIdx;
+                    $hasExplicitNumRow = true;
                     break 2;
+                }
+            }
+        }
+
+        // Jika belum ketemu, cari baris penomoran angka biasa 1, 2, 3...
+        if ($numRowIdx === null) {
+            foreach ($excelRows as $rIdx => $row) {
+                if (!is_array($row)) continue;
+                $nonEmpty = array_values(array_filter(array_map('trim', $row), fn($x) => $x !== ''));
+                if (count($nonEmpty) >= 2) {
+                    $isSeq = true;
+                    $expected = 1;
+                    foreach ($nonEmpty as $val) {
+                        if (preg_match('/^\(?(\d+)\)?$/', $val, $nm) && (int)$nm[1] === $expected) {
+                            $expected++;
+                        } else {
+                            $isSeq = false;
+                            break;
+                        }
+                    }
+                    if ($isSeq && $expected >= 3) {
+                        $numRowIdx = $rIdx;
+                        $rawNumRow = $row;
+                        $hasExplicitNumRow = true;
+                        foreach ($row as $cIdx => $c) {
+                            if (trim((string)$c) !== '') {
+                                $minPhysicalCol = $cIdx;
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Jika masih belum ada baris penomoran eksplisit: Deteksi baris header dan baris data secara otomatis!
+        if ($numRowIdx === null) {
+            $firstDataIdx = null;
+            foreach ($excelRows as $rIdx => $row) {
+                if (!is_array($row)) continue;
+                $cells = array_map(fn($c) => $c !== null ? trim((string)$c) : '', $row);
+                $nonEmpty = array_values(array_filter($cells, fn($x) => $x !== ''));
+                if (count($nonEmpty) < 2) continue;
+
+                $firstCell = $nonEmpty[0];
+                if (preg_match('/^(?:Tabel|Table|Sumber|Source|Catatan|Note)\b/i', $firstCell)) continue;
+
+                // Cek apakah sel-sel berikutnya dominan angka atau tanda '-' (indikasi kuat baris data)
+                $numericCount = 0;
+                for ($k = 1; $k < count($nonEmpty); $k++) {
+                    $valClean = str_replace(['.', ',', ' ', '%'], '', $nonEmpty[$k]);
+                    if (is_numeric($valClean) || $nonEmpty[$k] === '-' || $nonEmpty[$k] === '–' || $nonEmpty[$k] === '—' || $nonEmpty[$k] === '...') {
+                        $numericCount++;
+                    }
+                }
+
+                if ($numericCount >= 1 && ($numericCount / (count($nonEmpty) - 1)) >= 0.4) {
+                    $firstDataIdx = $rIdx;
+                    break;
+                }
+            }
+
+            if ($firstDataIdx !== null && $firstDataIdx > 0) {
+                $numRowIdx = $firstDataIdx - 1;
+                $hasExplicitNumRow = false;
+                foreach ($excelRows[$firstDataIdx] as $cIdx => $c) {
+                    if (trim((string)$c) !== '') {
+                        $minPhysicalCol = $cIdx;
+                        break;
+                    }
                 }
             }
         }
@@ -386,9 +483,9 @@ trait HandlesExcel
             return '';
         }
 
-        // Deteksi apakah kolom awal memiliki colspan 2 (misal Col 0 terisi, Col 1 null/kosong pada penomoran dan header)
+        // Deteksi apakah kolom awal memiliki colspan 2 (hanya jika ada penomoran eksplisit dengan kolom kedua kosong)
         $firstColColspan2 = false;
-        if (($maxPhysicalCols - $minPhysicalCol) >= 2) {
+        if ($hasExplicitNumRow && ($maxPhysicalCols - $minPhysicalCol) >= 2) {
             $numCol0 = trim((string)($rawNumRow[$minPhysicalCol] ?? ''));
             $numCol1 = trim((string)($rawNumRow[$minPhysicalCol + 1] ?? ''));
             if (($numCol0 === '(1)' || $numCol0 === '-1') && ($numCol1 === '' || $numCol1 === null)) {
@@ -396,9 +493,10 @@ trait HandlesExcel
             }
         }
 
-        // 2. Ambil baris-baris header sebelum baris penomoran
+        // 2. Ambil baris-baris header
         $headerRows = [];
-        for ($r = 0; $r < $numRowIdx; $r++) {
+        $headerLimitIdx = $hasExplicitNumRow ? $numRowIdx : ($numRowIdx + 1);
+        for ($r = 0; $r < $headerLimitIdx; $r++) {
             $row = $excelRows[$r] ?? [];
             if (!is_array($row)) continue;
             $cells = array_map(fn($c) => $c !== null ? trim((string)$c) : '', $row);
@@ -409,26 +507,98 @@ trait HandlesExcel
             $headerRows[] = $row;
         }
 
+        if (empty($headerRows) && isset($excelRows[$numRowIdx])) {
+            $headerRows[] = $excelRows[$numRowIdx];
+        }
+
         $theadHtml = "<thead>\n";
-        foreach ($headerRows as $hRow) {
-            $theadHtml .= "    <tr class=\"bg-[#f95a00] text-white text-center font-bold\">\n";
-            $cIdx = $minPhysicalCol;
-            while ($cIdx < $maxPhysicalCols) {
-                $cellVal = trim((string)($hRow[$cIdx] ?? ''));
-                $isCol0Colspan = ($cIdx === $minPhysicalCol && $firstColColspan2);
-                $colspanAttr = $isCol0Colspan ? ' colspan="2"' : '';
+        if (count($headerRows) === 2) {
+            $h0 = $headerRows[0];
+            $h1 = $headerRows[1];
 
-                if (str_contains($cellVal, '/')) {
-                    $parts = explode('/', $cellVal, 2);
-                    $cellInner = '<div>' . htmlspecialchars(trim($parts[0])) . '</div><div class="italic font-normal text-[11px] sm:text-xs">' . htmlspecialchars(trim($parts[1])) . '</div>';
+            $colspans0 = [];
+            $rowspans0 = [];
+            $c = $minPhysicalCol;
+            while ($c < $maxPhysicalCols) {
+                $v0 = trim((string)($h0[$c] ?? ''));
+                $v1 = trim((string)($h1[$c] ?? ''));
+
+                if ($v0 !== '' && $v1 === '') {
+                    $span = 1;
+                    $k = $c + 1;
+                    while ($k < $maxPhysicalCols && trim((string)($h0[$k] ?? '')) === '' && trim((string)($h1[$k] ?? '')) !== '') {
+                        $span++;
+                        $k++;
+                    }
+                    if ($span > 1) {
+                        $colspans0[$c] = $span;
+                        $c += $span;
+                    } else {
+                        $rowspans0[$c] = 2;
+                        $c++;
+                    }
+                } elseif ($v0 !== '') {
+                    $span = 1;
+                    $k = $c + 1;
+                    while ($k < $maxPhysicalCols && trim((string)($h0[$k] ?? '')) === '' && trim((string)($h1[$k] ?? '')) !== '') {
+                        $span++;
+                        $k++;
+                    }
+                    $colspans0[$c] = $span;
+                    $c += $span;
                 } else {
-                    $cellInner = '<div>' . htmlspecialchars($cellVal ?: '-') . '</div>';
+                    $c++;
                 }
+            }
 
-                $theadHtml .= "        <th class=\"py-3 px-4 font-bold border border-slate-700\"{$colspanAttr}>{$cellInner}</th>\n";
-                $cIdx += $isCol0Colspan ? 2 : 1;
+            // Header baris 1
+            $theadHtml .= "    <tr class=\"bg-[#f95a00] text-white text-center font-bold\">\n";
+            $c = $minPhysicalCol;
+            while ($c < $maxPhysicalCols) {
+                if (isset($rowspans0[$c])) {
+                    $v0 = trim((string)($h0[$c] ?? ''));
+                    $cellInner = $this->formatHeaderCellText($v0);
+                    $theadHtml .= "        <th class=\"py-3 px-4 font-bold border border-slate-700\" rowspan=\"2\">{$cellInner}</th>\n";
+                    $c++;
+                } elseif (isset($colspans0[$c])) {
+                    $span = $colspans0[$c];
+                    $v0 = trim((string)($h0[$c] ?? ''));
+                    $cellInner = $this->formatHeaderCellText($v0);
+                    $colspanAttr = $span > 1 ? " colspan=\"{$span}\"" : '';
+                    $theadHtml .= "        <th class=\"py-3 px-4 font-bold border border-slate-700\"{$colspanAttr}>{$cellInner}</th>\n";
+                    $c += $span;
+                } else {
+                    $c++;
+                }
             }
             $theadHtml .= "    </tr>\n";
+
+            // Header baris 2
+            $theadHtml .= "    <tr class=\"bg-[#f95a00] text-white text-center font-bold\">\n";
+            for ($c = $minPhysicalCol; $c < $maxPhysicalCols; $c++) {
+                if (isset($rowspans0[$c])) {
+                    continue; // Dilewati karena sudah di-rowspan dari baris 1
+                }
+                $v1 = trim((string)($h1[$c] ?? ''));
+                $cellInner = $this->formatHeaderCellText($v1);
+                $theadHtml .= "        <th class=\"py-3 px-4 font-bold border border-slate-700\">{$cellInner}</th>\n";
+            }
+            $theadHtml .= "    </tr>\n";
+        } else {
+            foreach ($headerRows as $hRow) {
+                $theadHtml .= "    <tr class=\"bg-[#f95a00] text-white text-center font-bold\">\n";
+                $cIdx = $minPhysicalCol;
+                while ($cIdx < $maxPhysicalCols) {
+                    $cellVal = trim((string)($hRow[$cIdx] ?? ''));
+                    $isCol0Colspan = ($cIdx === $minPhysicalCol && $firstColColspan2);
+                    $colspanAttr = $isCol0Colspan ? ' colspan="2"' : '';
+                    $cellInner = $this->formatHeaderCellText($cellVal);
+
+                    $theadHtml .= "        <th class=\"py-3 px-4 font-bold border border-slate-700\"{$colspanAttr}>{$cellInner}</th>\n";
+                    $cIdx += $isCol0Colspan ? 2 : 1;
+                }
+                $theadHtml .= "    </tr>\n";
+            }
         }
 
         // Baris penomoran (1), (2), (3)...
@@ -851,7 +1021,7 @@ trait HandlesExcel
             $usedExcelIndices = [];
 
             // Ganti nilai sel pada baris data yang sudah ada di HTML
-            $newTbody = preg_replace_callback('/<tr([^>]*)>(.*?)<\/tr>/is', function($trMatch) use (&$excelCursor, &$usedExcelIndices, $excelDataRows) {
+            $newTbody = preg_replace_callback('/<tr([^>]*)>(.*?)<\/tr>/is', function($trMatch) use (&$excelCursor, &$usedExcelIndices, $excelDataRows, $isYearRowTable) {
                 $trAttr = trim($trMatch[1]);
                 $rowHtml = $trMatch[2];
 
