@@ -297,6 +297,40 @@ trait ManagesTableMetadata
             }
         }
 
+        // Khusus tabel 4.5.2 (Kejaksaan Negeri - Perkara Masuk), perbaiki sub-kolom Pidana 'Kolom 6' menjadi 'Ringan / Slightly'
+        if ($tableCode === '4.5.2' && $dbMetadata && !empty($dbMetadata->table_html)) {
+            if (str_contains($dbMetadata->table_html, 'Kolom 6')) {
+                $dbMetadata->table_html = preg_replace(
+                    '/<th([^>]*)colspan=["\']?\d+["\']?([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/i',
+                    '<th class="py-3 px-4 font-bold border border-slate-700"><div>Ringan</div><div class="italic font-normal text-[11px] sm:text-xs">Slightly</div></th>',
+                    $dbMetadata->table_html
+                );
+                $dbMetadata->table_html = preg_replace(
+                    '/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/i',
+                    '<th class="py-3 px-4 font-bold border border-slate-700"><div>Ringan</div><div class="italic font-normal text-[11px] sm:text-xs">Slightly</div></th>',
+                    $dbMetadata->table_html
+                );
+                $dbMetadata->save();
+            }
+        }
+
+        // Khusus tabel 4.5.4 (Kejaksaan Negeri - Perkara Pidana Diselesaikan), perbaiki sub-kolom Pidana 'Kolom 7' menjadi 'Ringan / Slightly'
+        if ($tableCode === '4.5.4' && $dbMetadata && !empty($dbMetadata->table_html)) {
+            if (str_contains($dbMetadata->table_html, 'Kolom 7')) {
+                $dbMetadata->table_html = preg_replace(
+                    '/<th([^>]*)colspan=["\']?\d+["\']?([^>]*)>\s*(?:<div>)?\s*Kolom\s*7\s*(?:<\/div>)?\s*<\/th>/i',
+                    '<th class="py-3 px-4 font-bold border border-slate-700"><div>Ringan</div><div class="italic font-normal text-[11px] sm:text-xs">Slightly</div></th>',
+                    $dbMetadata->table_html
+                );
+                $dbMetadata->table_html = preg_replace(
+                    '/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*7\s*(?:<\/div>)?\s*<\/th>/i',
+                    '<th class="py-3 px-4 font-bold border border-slate-700"><div>Ringan</div><div class="italic font-normal text-[11px] sm:text-xs">Slightly</div></th>',
+                    $dbMetadata->table_html
+                );
+                $dbMetadata->save();
+            }
+        }
+
         // Khusus tabel 4.2.11 (PMI - Donatur Darah), rapikan tahun ganda dan urutan tahun historis setelah Jumlah
         if ($tableCode === '4.2.11' && $dbMetadata && !empty($dbMetadata->table_html)) {
             $html = $dbMetadata->table_html;
@@ -352,6 +386,66 @@ trait ManagesTableMetadata
                     $newTbodyHtml = "<tbody{$tbodyAttr}>\n" . implode("\n", $newRows) . "\n</tbody>";
                     $dbMetadata->table_html = preg_replace('/<tbody[^>]*>.*?<\/tbody>/is', $newTbodyHtml, $html);
                     $dbMetadata->save();
+                }
+            }
+        }
+
+        // Khusus tabel 4.2.22 (BPJS - Peserta Aktif Menurut Jenis Kepesertaan), rapikan tahun ganda dan urutan tahun historis setelah Jumlah
+        if ($tableCode === '4.2.22' && $dbMetadata && !empty($dbMetadata->table_html)) {
+            $html = $dbMetadata->table_html;
+            if (preg_match('/<tbody([^>]*)>(.*?)<\/tbody>/is', $html, $mTb)) {
+                $tbodyAttr = $mTb[1];
+                $tbodyHtml = $mTb[2];
+                preg_match_all('/<tr[^>]*>(.*?)<\/tr>/is', $tbodyHtml, $trs);
+                $catRows = [];
+                $totalRow = null;
+                $historyRows = [];
+                $needsClean = false;
+
+                foreach ($trs[0] as $tr) {
+                    if (preg_match('/<td[^>]*>(.*?)<\/td>/is', $tr, $firstTd)) {
+                        $txt = trim(strip_tags($firstTd[1]));
+                        if (preg_match('/(?:Jumlah|Total)/i', $txt)) {
+                            $totalRow = $tr;
+                            continue;
+                        }
+                        if (preg_match('/^(?:19|20)\d{2}$/', $txt)) {
+                            $rowYr = (int)$txt;
+                            if ($rowYr === (int)$year) {
+                                $needsClean = true;
+                                continue;
+                            }
+                            if ($totalRow === null) {
+                                $needsClean = true;
+                            }
+                            $historyRows[$rowYr] = $tr;
+                            continue;
+                        }
+                        if ($totalRow === null) {
+                            $catRows[] = $tr;
+                        }
+                    }
+                }
+
+                if ($totalRow !== null && ($needsClean || count($historyRows) < 5)) {
+                    $newRows = $catRows;
+                    $newRows[] = $totalRow;
+                    for ($prevY = (int)$year - 1; $prevY >= (int)$year - 5; $prevY--) {
+                        if (isset($historyRows[$prevY])) {
+                            $newRows[] = $historyRows[$prevY];
+                        } else {
+                            $newRows[] = '<tr class="hover:bg-amber-100/60 transition-colors">' . "\n" .
+                                '    <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">' . $prevY . '</td>' . "\n" .
+                                '    <td class="py-2.5 px-4 border border-slate-700 text-center align-top text-center align-middle"><span class="text-slate-400 font-normal">-</span></td>' . "\n" .
+                                '</tr>';
+                            $needsClean = true;
+                        }
+                    }
+                    if ($needsClean) {
+                        $newTbodyHtml = "<tbody{$tbodyAttr}>\n" . implode("\n", $newRows) . "\n</tbody>";
+                        $dbMetadata->table_html = preg_replace('/<tbody[^>]*>.*?<\/tbody>/is', $newTbodyHtml, $html);
+                        $dbMetadata->save();
+                    }
                 }
             }
         }
@@ -1011,6 +1105,40 @@ trait ManagesTableMetadata
             }
         }
 
+        // Khusus tabel 4.5.2 (Kejaksaan Negeri - Perkara Masuk), perbaiki sub-kolom Pidana 'Kolom 6' menjadi 'Ringan / Slightly'
+        if ($tableCode === '4.5.2' && $dbMetadata && !empty($dbMetadata->table_html)) {
+            if (str_contains($dbMetadata->table_html, 'Kolom 6')) {
+                $dbMetadata->table_html = preg_replace(
+                    '/<th([^>]*)colspan=["\']?\d+["\']?([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/i',
+                    '<th class="py-3 px-4 font-bold border border-slate-700"><div>Ringan</div><div class="italic font-normal text-[11px] sm:text-xs">Slightly</div></th>',
+                    $dbMetadata->table_html
+                );
+                $dbMetadata->table_html = preg_replace(
+                    '/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/i',
+                    '<th class="py-3 px-4 font-bold border border-slate-700"><div>Ringan</div><div class="italic font-normal text-[11px] sm:text-xs">Slightly</div></th>',
+                    $dbMetadata->table_html
+                );
+                $dbMetadata->save();
+            }
+        }
+
+        // Khusus tabel 4.5.4 (Kejaksaan Negeri - Perkara Pidana Diselesaikan), perbaiki sub-kolom Pidana 'Kolom 7' menjadi 'Ringan / Slightly'
+        if ($tableCode === '4.5.4' && $dbMetadata && !empty($dbMetadata->table_html)) {
+            if (str_contains($dbMetadata->table_html, 'Kolom 7')) {
+                $dbMetadata->table_html = preg_replace(
+                    '/<th([^>]*)colspan=["\']?\d+["\']?([^>]*)>\s*(?:<div>)?\s*Kolom\s*7\s*(?:<\/div>)?\s*<\/th>/i',
+                    '<th class="py-3 px-4 font-bold border border-slate-700"><div>Ringan</div><div class="italic font-normal text-[11px] sm:text-xs">Slightly</div></th>',
+                    $dbMetadata->table_html
+                );
+                $dbMetadata->table_html = preg_replace(
+                    '/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*7\s*(?:<\/div>)?\s*<\/th>/i',
+                    '<th class="py-3 px-4 font-bold border border-slate-700"><div>Ringan</div><div class="italic font-normal text-[11px] sm:text-xs">Slightly</div></th>',
+                    $dbMetadata->table_html
+                );
+                $dbMetadata->save();
+            }
+        }
+
         // Khusus tabel 4.2.11 (PMI - Donatur Darah), rapikan tahun ganda dan urutan tahun historis setelah Jumlah
         if ($tableCode === '4.2.11' && $dbMetadata && !empty($dbMetadata->table_html)) {
             $html = $dbMetadata->table_html;
@@ -1066,6 +1194,66 @@ trait ManagesTableMetadata
                     $newTbodyHtml = "<tbody{$tbodyAttr}>\n" . implode("\n", $newRows) . "\n</tbody>";
                     $dbMetadata->table_html = preg_replace('/<tbody[^>]*>.*?<\/tbody>/is', $newTbodyHtml, $html);
                     $dbMetadata->save();
+                }
+            }
+        }
+
+        // Khusus tabel 4.2.22 (BPJS - Peserta Aktif Menurut Jenis Kepesertaan), rapikan tahun ganda dan urutan tahun historis setelah Jumlah
+        if ($tableCode === '4.2.22' && $dbMetadata && !empty($dbMetadata->table_html)) {
+            $html = $dbMetadata->table_html;
+            if (preg_match('/<tbody([^>]*)>(.*?)<\/tbody>/is', $html, $mTb)) {
+                $tbodyAttr = $mTb[1];
+                $tbodyHtml = $mTb[2];
+                preg_match_all('/<tr[^>]*>(.*?)<\/tr>/is', $tbodyHtml, $trs);
+                $catRows = [];
+                $totalRow = null;
+                $historyRows = [];
+                $needsClean = false;
+
+                foreach ($trs[0] as $tr) {
+                    if (preg_match('/<td[^>]*>(.*?)<\/td>/is', $tr, $firstTd)) {
+                        $txt = trim(strip_tags($firstTd[1]));
+                        if (preg_match('/(?:Jumlah|Total)/i', $txt)) {
+                            $totalRow = $tr;
+                            continue;
+                        }
+                        if (preg_match('/^(?:19|20)\d{2}$/', $txt)) {
+                            $rowYr = (int)$txt;
+                            if ($rowYr === (int)$year) {
+                                $needsClean = true;
+                                continue;
+                            }
+                            if ($totalRow === null) {
+                                $needsClean = true;
+                            }
+                            $historyRows[$rowYr] = $tr;
+                            continue;
+                        }
+                        if ($totalRow === null) {
+                            $catRows[] = $tr;
+                        }
+                    }
+                }
+
+                if ($totalRow !== null && ($needsClean || count($historyRows) < 5)) {
+                    $newRows = $catRows;
+                    $newRows[] = $totalRow;
+                    for ($prevY = (int)$year - 1; $prevY >= (int)$year - 5; $prevY--) {
+                        if (isset($historyRows[$prevY])) {
+                            $newRows[] = $historyRows[$prevY];
+                        } else {
+                            $newRows[] = '<tr class="hover:bg-amber-100/60 transition-colors">' . "\n" .
+                                '    <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">' . $prevY . '</td>' . "\n" .
+                                '    <td class="py-2.5 px-4 border border-slate-700 text-center align-top text-center align-middle"><span class="text-slate-400 font-normal">-</span></td>' . "\n" .
+                                '</tr>';
+                            $needsClean = true;
+                        }
+                    }
+                    if ($needsClean) {
+                        $newTbodyHtml = "<tbody{$tbodyAttr}>\n" . implode("\n", $newRows) . "\n</tbody>";
+                        $dbMetadata->table_html = preg_replace('/<tbody[^>]*>.*?<\/tbody>/is', $newTbodyHtml, $html);
+                        $dbMetadata->save();
+                    }
                 }
             }
         }

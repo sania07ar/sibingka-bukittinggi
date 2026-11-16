@@ -501,21 +501,27 @@ trait HandlesExcel
                 $fullHtml
             );
         }
-        if ($tableCode === '4.1.21' || stripos($fullHtml, 'Perpustakaan') !== false) {
-            $fullHtml = preg_replace('/<th([^>]*)colspan="2"([^>]*)>\s*(?:<div>)?\s*Kolom\s*10\s*(?:<\/div>)?\s*<\/th>/i', '<th class="py-3 px-4 font-bold border border-slate-700"><div>Lain-lain</div><div class="italic font-normal text-[11px] sm:text-xs">Others</div></th>', $fullHtml);
-            $fullHtml = preg_replace('/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*10\s*(?:<\/div>)?\s*<\/th>/i', '<th class="py-3 px-4 font-bold border border-slate-700"><div>Lain-lain</div><div class="italic font-normal text-[11px] sm:text-xs">Others</div></th>', $fullHtml);
-            $fullHtml = preg_replace('/>\s*Kolom\s*10\s*</i', '>Lain-lain<', $fullHtml);
-            $fullHtml = preg_replace('/Kolom\s*10/i', 'Lain-lain', $fullHtml);
-        }
-        if ($tableCode === '4.1.23' || (stripos($fullHtml, 'Penggolongan') !== false && stripos($fullHtml, '100') !== false)) {
+        if ($tableCode === '4.5.2' || (stripos($fullHtml, 'Pidana') !== false && stripos($fullHtml, 'Lalu Lintas') !== false && stripos($fullHtml, 'Perkara yang Masuk') !== false)) {
             $fullHtml = preg_replace(
-                '/<th([^>]*)colspan="2"([^>]*)>\s*(?:<div>)?\s*Kolom\s*2\s*(?:<\/div>)?\s*<\/th>/i',
-                '<th class="py-3 px-4 font-bold border border-slate-700"><div>Bulan</div><div class="italic font-normal text-[11px] sm:text-xs">Month</div></th>' . "\n" . '        <th class="py-3 px-4 font-bold border border-slate-700"><div>0</div></th>',
+                '/<th([^>]*)colspan=["\']?\d+["\']?([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/i',
+                '<th class="py-3 px-4 font-bold border border-slate-700"><div>Ringan</div><div class="italic font-normal text-[11px] sm:text-xs">Slightly</div></th>',
                 $fullHtml
             );
             $fullHtml = preg_replace(
-                '/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*2\s*(?:<\/div>)?\s*<\/th>/i',
-                '<th class="py-3 px-4 font-bold border border-slate-700"><div>Bulan</div><div class="italic font-normal text-[11px] sm:text-xs">Month</div></th>',
+                '/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/i',
+                '<th class="py-3 px-4 font-bold border border-slate-700"><div>Ringan</div><div class="italic font-normal text-[11px] sm:text-xs">Slightly</div></th>',
+                $fullHtml
+            );
+        }
+        if ($tableCode === '4.5.4' || (stripos($fullHtml, 'Pidana') !== false && stripos($fullHtml, 'SPDP') !== false)) {
+            $fullHtml = preg_replace(
+                '/<th([^>]*)colspan=["\']?\d+["\']?([^>]*)>\s*(?:<div>)?\s*Kolom\s*7\s*(?:<\/div>)?\s*<\/th>/i',
+                '<th class="py-3 px-4 font-bold border border-slate-700"><div>Ringan</div><div class="italic font-normal text-[11px] sm:text-xs">Slightly</div></th>',
+                $fullHtml
+            );
+            $fullHtml = preg_replace(
+                '/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*7\s*(?:<\/div>)?\s*<\/th>/i',
+                '<th class="py-3 px-4 font-bold border border-slate-700"><div>Ringan</div><div class="italic font-normal text-[11px] sm:text-xs">Slightly</div></th>',
                 $fullHtml
             );
         }
@@ -567,21 +573,27 @@ trait HandlesExcel
                 $tableHtml
             );
         }
-        if ($tableCode === '4.1.21' || stripos($tableHtml, 'Perpustakaan') !== false) {
-            $tableHtml = preg_replace('/<th([^>]*)colspan="2"([^>]*)>\s*(?:<div>)?\s*Kolom\s*10\s*(?:<\/div>)?\s*<\/th>/i', '<th class="py-3 px-4 font-bold border border-slate-700"><div>Lain-lain</div><div class="italic font-normal text-[11px] sm:text-xs">Others</div></th>', $tableHtml);
-            $tableHtml = preg_replace('/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*10\s*(?:<\/div>)?\s*<\/th>/i', '<th class="py-3 px-4 font-bold border border-slate-700"><div>Lain-lain</div><div class="italic font-normal text-[11px] sm:text-xs">Others</div></th>', $tableHtml);
-            $tableHtml = preg_replace('/>\s*Kolom\s*10\s*</i', '>Lain-lain<', $tableHtml);
-            $tableHtml = preg_replace('/Kolom\s*10/i', 'Lain-lain', $tableHtml);
-        }
-        if ($tableCode === '4.1.23' || (stripos($tableHtml, 'Penggolongan') !== false && stripos($tableHtml, '100') !== false)) {
+        if ($tableCode === '4.5.2' || (stripos($tableHtml, 'Pidana') !== false && stripos($tableHtml, 'Lalu Lintas') !== false && stripos($tableHtml, 'Perkara yang Masuk') !== false)) {
             $tableHtml = preg_replace(
-                '/<th([^>]*)colspan="2"([^>]*)>\s*(?:<div>)?\s*Kolom\s*2\s*(?:<\/div>)?\s*<\/th>/i',
-                '<th class="py-3 px-4 font-bold border border-slate-700"><div>Bulan</div><div class="italic font-normal text-[11px] sm:text-xs">Month</div></th>' . "\n" . '        <th class="py-3 px-4 font-bold border border-slate-700"><div>0</div></th>',
+                '/<th([^>]*)colspan=["\']?\d+["\']?([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/i',
+                '<th class="py-3 px-4 font-bold border border-slate-700"><div>Ringan</div><div class="italic font-normal text-[11px] sm:text-xs">Slightly</div></th>',
                 $tableHtml
             );
             $tableHtml = preg_replace(
-                '/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*2\s*(?:<\/div>)?\s*<\/th>/i',
-                '<th class="py-3 px-4 font-bold border border-slate-700"><div>Bulan</div><div class="italic font-normal text-[11px] sm:text-xs">Month</div></th>',
+                '/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/i',
+                '<th class="py-3 px-4 font-bold border border-slate-700"><div>Ringan</div><div class="italic font-normal text-[11px] sm:text-xs">Slightly</div></th>',
+                $tableHtml
+            );
+        }
+        if ($tableCode === '4.5.4' || (stripos($tableHtml, 'Pidana') !== false && stripos($tableHtml, 'SPDP') !== false)) {
+            $tableHtml = preg_replace(
+                '/<th([^>]*)colspan=["\']?\d+["\']?([^>]*)>\s*(?:<div>)?\s*Kolom\s*7\s*(?:<\/div>)?\s*<\/th>/i',
+                '<th class="py-3 px-4 font-bold border border-slate-700"><div>Ringan</div><div class="italic font-normal text-[11px] sm:text-xs">Slightly</div></th>',
+                $tableHtml
+            );
+            $tableHtml = preg_replace(
+                '/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*7\s*(?:<\/div>)?\s*<\/th>/i',
+                '<th class="py-3 px-4 font-bold border border-slate-700"><div>Ringan</div><div class="italic font-normal text-[11px] sm:text-xs">Slightly</div></th>',
                 $tableHtml
             );
         }
