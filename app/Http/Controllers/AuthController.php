@@ -340,11 +340,11 @@ class AuthController extends Controller
         // Auto-generate fallback email if not supplied
         $email = $request->filled('email') 
             ? trim($request->input('email')) 
-            : ($username . '@simonda.bukittinggikota.go.id');
+            : ($username . '@sibingka.bukittinggikota.go.id');
 
         $counter = 1;
         while (User::where('email', $email)->exists()) {
-            $email = $username . $counter . '@simonda.bukittinggikota.go.id';
+            $email = $username . $counter . '@sibingka.bukittinggikota.go.id';
             $counter++;
         }
 
@@ -404,7 +404,7 @@ class AuthController extends Controller
         if ($request->filled('email')) {
             $user->email = trim($request->input('email'));
         } elseif (empty($user->email)) {
-            $user->email = $user->username . '@simonda.bukittinggikota.go.id';
+            $user->email = $user->username . '@sibingka.bukittinggikota.go.id';
         }
 
         $user->nip = $request->input('nip');

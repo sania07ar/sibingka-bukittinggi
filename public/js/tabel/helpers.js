@@ -285,8 +285,8 @@
             if (tableCode === '1.1.8' || tableCode === '1.1.9') {
                 return get7YearPeriod(year);
             }
-            // Khusus Fakultas Kedokteran UNP (OPD 07): data tabel 4.1.18 memiliki rentang 3 tahun (misal 2022-2024 untuk 2024)
-            if (tableCode === '4.1.18' && cOpd === '07') {
+            // Khusus Fakultas Kedokteran UNP (OPD 07): data tabel 4.1.18 & 4.1.19 memiliki rentang 3 tahun (misal 2023–2025 untuk 2025)
+            if ((tableCode === '4.1.18' || tableCode === '4.1.19') && cOpd === '07') {
                 return get3YearPeriod(year);
             }
             if (tableCode === '5.2.1' || tableCode === '5.2.2') {

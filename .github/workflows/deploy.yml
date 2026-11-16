@@ -8,7 +8,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      APP_DIR: siangka-bukittinggi
+      APP_DIR: sibingka-bukittinggi
     steps:
       - uses: actions/checkout@v4
 

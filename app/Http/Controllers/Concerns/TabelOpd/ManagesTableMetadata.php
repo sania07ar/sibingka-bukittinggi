@@ -144,7 +144,7 @@ trait ManagesTableMetadata
 
         // Khusus tabel Perguruan Tinggi (4.1.18 & 4.1.19): Multi-tahun
         if (in_array($tableCode, ['4.1.18', '4.1.19'])) {
-            $span = ($opdCode === '07' && $tableCode === '4.1.18') ? 2 : 4;
+            $span = ($opdCode === '07' && in_array($tableCode, ['4.1.18', '4.1.19'])) ? 2 : 4;
             $expectedRange = ($year - $span) . '–' . $year;
 
             if ($dbMetadata && !empty($dbMetadata->table_html)) {
@@ -267,6 +267,33 @@ trait ManagesTableMetadata
                 }
 
                 return $dbMetadata;
+            }
+        }
+
+        // Khusus tabel 4.1.21 (UPT Perpustakaan Proklamator Bung Hatta), perbaiki header 'Kolom 10' menjadi 'Lain-lain' / 'Others'
+        if ($tableCode === '4.1.21' && $dbMetadata && !empty($dbMetadata->table_html)) {
+            if (str_contains($dbMetadata->table_html, 'Kolom 10')) {
+                $dbMetadata->table_html = preg_replace('/<th([^>]*)colspan="2"([^>]*)>\s*(?:<div>)?\s*Kolom\s*10\s*(?:<\/div>)?\s*<\/th>/i', '<th class="py-3 px-4 font-bold border border-slate-700"><div>Lain-lain</div><div class="italic font-normal text-[11px] sm:text-xs">Others</div></th>', $dbMetadata->table_html);
+                $dbMetadata->table_html = preg_replace('/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*10\s*(?:<\/div>)?\s*<\/th>/i', '<th class="py-3 px-4 font-bold border border-slate-700"><div>Lain-lain</div><div class="italic font-normal text-[11px] sm:text-xs">Others</div></th>', $dbMetadata->table_html);
+                $dbMetadata->table_html = str_replace(['<div>Kolom 10</div>', 'Kolom 10'], ['<div>Lain-lain</div><div class="italic font-normal text-[11px] sm:text-xs">Others</div>', 'Lain-lain'], $dbMetadata->table_html);
+                $dbMetadata->save();
+            }
+        }
+
+        // Khusus tabel 4.1.23 (Penggolongan Koleksi Buku), perbaiki header 'Kolom 2' menjadi 'Bulan / Month' dan '0'
+        if ($tableCode === '4.1.23' && $dbMetadata && !empty($dbMetadata->table_html)) {
+            if (str_contains($dbMetadata->table_html, 'Kolom 2')) {
+                $dbMetadata->table_html = preg_replace(
+                    '/<th([^>]*)colspan="2"([^>]*)>\s*(?:<div>)?\s*Kolom\s*2\s*(?:<\/div>)?\s*<\/th>/i',
+                    '<th class="py-3 px-4 font-bold border border-slate-700"><div>Bulan</div><div class="italic font-normal text-[11px] sm:text-xs">Month</div></th>' . "\n" . '        <th class="py-3 px-4 font-bold border border-slate-700"><div>0</div></th>',
+                    $dbMetadata->table_html
+                );
+                $dbMetadata->table_html = preg_replace(
+                    '/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*2\s*(?:<\/div>)?\s*<\/th>/i',
+                    '<th class="py-3 px-4 font-bold border border-slate-700"><div>Bulan</div><div class="italic font-normal text-[11px] sm:text-xs">Month</div></th>',
+                    $dbMetadata->table_html
+                );
+                $dbMetadata->save();
             }
         }
 
@@ -882,7 +909,7 @@ trait ManagesTableMetadata
             // Untuk tabel multi-tahun (4.1.18, 4.1.19, 8.1.x, 8.2.2, 2.2.5, 1.1.10, 9.1, 9.3, 2.4.3, 2.4.1, 2.4.2), pastikan table_html memuat tahun awal dan tahun akhir rentang
             $isMultiYear = in_array($tableCode, ['4.1.18', '4.1.19']) || str_starts_with($tableCode, '8.1.') || in_array($tableCode, ['8.2.2', '2.2.5', '1.1.10', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2']);
             if ($isMultiYear) {
-                $span = ($tableCode === '9.3') ? 6 : (($tableCode === '2.4.1' || $tableCode === '2.4.2') ? 3 : (($tableCode === '4.1.18' && $opdCode === '07') ? 2 : 4));
+                $span = ($tableCode === '9.3') ? 6 : (($tableCode === '2.4.1' || $tableCode === '2.4.2') ? 3 : ((in_array($tableCode, ['4.1.18', '4.1.19']) && $opdCode === '07') ? 2 : 4));
                 $startYr = (string)($year - $span);
                 $endYr = (string)$year;
                 if (!str_contains($dbMetadata->table_html, $startYr) || !str_contains($dbMetadata->table_html, $endYr)) {
@@ -895,6 +922,33 @@ trait ManagesTableMetadata
             }
             if ($dbMetadata) {
                 return $dbMetadata;
+            }
+        }
+
+        // Khusus tabel 4.1.21 (UPT Perpustakaan Proklamator Bung Hatta), perbaiki header 'Kolom 10' menjadi 'Lain-lain' / 'Others'
+        if ($tableCode === '4.1.21' && $dbMetadata && !empty($dbMetadata->table_html)) {
+            if (str_contains($dbMetadata->table_html, 'Kolom 10')) {
+                $dbMetadata->table_html = preg_replace('/<th([^>]*)colspan="2"([^>]*)>\s*(?:<div>)?\s*Kolom\s*10\s*(?:<\/div>)?\s*<\/th>/i', '<th class="py-3 px-4 font-bold border border-slate-700"><div>Lain-lain</div><div class="italic font-normal text-[11px] sm:text-xs">Others</div></th>', $dbMetadata->table_html);
+                $dbMetadata->table_html = preg_replace('/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*10\s*(?:<\/div>)?\s*<\/th>/i', '<th class="py-3 px-4 font-bold border border-slate-700"><div>Lain-lain</div><div class="italic font-normal text-[11px] sm:text-xs">Others</div></th>', $dbMetadata->table_html);
+                $dbMetadata->table_html = str_replace(['<div>Kolom 10</div>', 'Kolom 10'], ['<div>Lain-lain</div><div class="italic font-normal text-[11px] sm:text-xs">Others</div>', 'Lain-lain'], $dbMetadata->table_html);
+                $dbMetadata->save();
+            }
+        }
+
+        // Khusus tabel 4.1.23 (Penggolongan Koleksi Buku), perbaiki header 'Kolom 2' menjadi 'Bulan / Month' dan '0'
+        if ($tableCode === '4.1.23' && $dbMetadata && !empty($dbMetadata->table_html)) {
+            if (str_contains($dbMetadata->table_html, 'Kolom 2')) {
+                $dbMetadata->table_html = preg_replace(
+                    '/<th([^>]*)colspan="2"([^>]*)>\s*(?:<div>)?\s*Kolom\s*2\s*(?:<\/div>)?\s*<\/th>/i',
+                    '<th class="py-3 px-4 font-bold border border-slate-700"><div>Bulan</div><div class="italic font-normal text-[11px] sm:text-xs">Month</div></th>' . "\n" . '        <th class="py-3 px-4 font-bold border border-slate-700"><div>0</div></th>',
+                    $dbMetadata->table_html
+                );
+                $dbMetadata->table_html = preg_replace(
+                    '/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*2\s*(?:<\/div>)?\s*<\/th>/i',
+                    '<th class="py-3 px-4 font-bold border border-slate-700"><div>Bulan</div><div class="italic font-normal text-[11px] sm:text-xs">Month</div></th>',
+                    $dbMetadata->table_html
+                );
+                $dbMetadata->save();
             }
         }
 
