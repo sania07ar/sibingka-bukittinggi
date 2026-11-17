@@ -175,8 +175,11 @@
             $countBerjalan = 0;
             $countBelum = 0;
 
+            // Status verifikasi semua tabel pada tahun ini -> dasar 3 persentase (Input, Verifikasi Wali Data, Validasi BPS)
+            $progressMap = \App\Support\MonitoringProgress::load($selectedYear);
+
             foreach ($opdList as $code => $info) {
-                $totalCat = $opdCatalogCounts[$code] ?? 4;
+                $totalCat = count(\App\Support\MonitoringProgress::catalogTables('opd', $code)) ?: ($opdCatalogCounts[$code] ?? 4);
                 $stat = $opdNumericStats[$code] ?? ['lengkap' => 0, 'proses' => 0, 'belum' => 0];
                 $countLengkap = $stat['lengkap'];
                 $countProses = $stat['proses'];
@@ -267,10 +270,11 @@
                     'revision' => $revisionCounts[$code] ?? ($revisionCounts[ltrim($code, '0')] ?? 0),
                     'is_verified_by_wali' => $isVerifiedByWali,
                     'has_submitted' => $hasSubmitted,
-                ];
+                ] + \App\Support\MonitoringProgress::stats($progressMap, 'opd', $code);
             }
 
             $countTotal = count($allOpds);
+            $overall = \App\Support\MonitoringProgress::overall($allOpds);
 
             // Donut chart calculations
             $circ = 238.76;

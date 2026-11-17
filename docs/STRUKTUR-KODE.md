@@ -65,3 +65,29 @@ CSS ada di `public/css/` (`dashboard.css`, `tabel-index.css`, `tabel-edit.css`, 
 Jangan menulis alamat seperti `fetch('/api/...')` langsung. Pakai `sbUrl('/api/...')`.
 Web ini bisa dipasang di sub-folder (contoh `domain.go.id/sibingka-bukittinggi/`), dan alamat yang
 diawali `/` tanpa `sbUrl()` akan mengarah ke root domain, bukan ke aplikasi ini.
+
+## Alur Input -> Verifikasi -> Validasi dan 3 Persentase Monitoring
+
+1. **Input Data**: di halaman edit tabel, di bawah "Sumber" ada **Pernyataan Kebenaran Data**. Setelah dicentang,
+   tombol **Simpan & Kirim ke Wali Data** aktif. Data disimpan ke database, lalu dikirim (status `submitted`).
+   Pengirim dan waktu kirim dicatat (`submitted_by`, `submitted_at`, `data_declared`).
+2. **Verifikasi Wali Data**: status menjadi `verified`.
+3. **Validasi BPS**: Admin BPS memvalidasi, status menjadi `validated`.
+
+Monitoring menampilkan 3 persentase per instansi dan keseluruhan:
+
+| Persentase | Dihitung dari |
+|---|---|
+| Input Data | tabel berstatus submitted + verified + validated |
+| Verifikasi Wali Data | tabel berstatus verified + validated |
+| Validasi BPS | tabel berstatus validated |
+
+Pembagi adalah jumlah tabel resmi milik instansi (`config/sibingka_tables.php`). Untuk dataset BPS pembagi adalah jumlah tabel yang terdaftar.
+
+| Mau ubah | Buka file |
+|---|---|
+| Rumus persentase dan tahap Monitoring | `app/Support/MonitoringProgress.php` |
+| Alur kirim / verifikasi / validasi / tolak | `app/Http/Controllers/Concerns/TabelOpd/ManagesVerification.php` |
+| Kotak pernyataan dan tombol kirim | `resources/views/tabel/partials/edit/main.blade.php` dan `public/js/tabel/table-editor/06-pernyataan-kebenaran.js` |
+| Tampilan persentase di kartu, ringkasan, dan modal | `resources/views/monitoring/partials/` |
+| Daftar tabel resmi per instansi | ubah `public/sibingka-catalogs.js`, lalu jalankan `node tools/generate-table-catalog.cjs` |

@@ -515,6 +515,87 @@ trait ManagesTableMetadata
             }
         }
 
+        // Khusus tabel 8.1.1 (Dinas PUPR - Panjang Jalan Menurut Tingkat Kewenangan)
+        if ($tableCode === '8.1.1') {
+            $expectedRange = ($year - 4) . '–' . $year;
+            $titleId811 = "Panjang Jalan Menurut Tingkat Kewenangan Pemerintah di Kota Bukittinggi, {$expectedRange}";
+            $titleEn811 = "Length of Road by Level of Government Authority in Bukittinggi Municipality (Km), {$expectedRange}";
+            $source811 = 'Dinas Pekerjaan Umum dan Penataan Ruang Kota Bukittinggi / <span class="italic text-slate-500">Public Works and Spatial Planning Services of Bukittinggi Municipality</span>';
+            $note811 = '<div class="space-y-1"><div>1. Data tidak termasuk panjang jalan tol / <span class="italic text-slate-500">Excluding toll road</span></div><div>2. Data tahun 2023 berdasarkan Keputusan Menteri Pekerjaan Umum dan Perumahan Rakyat No. 1688/KPTS/M/2022 / <span class="italic text-slate-500">Data of 2023 based on Public Works and Public Housing Ministerial Decree No. 1688/KPTS/M/2022</span></div></div>';
+
+            $startYr = (string)($year - 4);
+            $endYr = (string)$year;
+            $hasValidHtml = $dbMetadata && !empty($dbMetadata->table_html) && str_contains($dbMetadata->table_html, $startYr) && str_contains($dbMetadata->table_html, $endYr);
+
+            if (!$hasValidHtml) {
+                $html811 = $this->buildTabel811Html($year);
+                return TabelMetadata::updateOrCreate(
+                    [
+                        'table_code' => $tableCode,
+                        'opd_code' => $opdCode,
+                        'year' => $year,
+                    ],
+                    [
+                        'title_id' => $titleId811,
+                        'title_en' => $titleEn811,
+                        'source' => $source811,
+                        'note' => $note811,
+                        'table_html' => $html811,
+                        'source_type' => 'database',
+                        'is_saved' => true,
+                    ]
+                );
+            }
+
+            if ($dbMetadata && ($dbMetadata->title_id !== $titleId811 || $dbMetadata->title_en !== $titleEn811)) {
+                $dbMetadata->title_id = $titleId811;
+                $dbMetadata->title_en = $titleEn811;
+                $dbMetadata->save();
+            }
+
+            return $dbMetadata;
+        }
+
+        // Khusus tabel 8.1.3 (Dinas PUPR - Panjang Jalan Menurut Kondisi Jalan)
+        if ($tableCode === '8.1.3') {
+            $expectedRange = ($year - 4) . '–' . $year;
+            $titleId813 = "Panjang Jalan Menurut Kondisi Jalan di Kota Bukittinggi (km), {$expectedRange}";
+            $titleEn813 = "Length of Road by Condition of Road in Bukittinggi Municipality (km), {$expectedRange}";
+            $source813 = 'Dinas Pekerjaan Umum dan Penataan Ruang Kota Bukittinggi / <span class="italic text-slate-500">Public Works and Spatial Planning Services of Bukittinggi Municipality</span>';
+
+            $startYr = (string)($year - 4);
+            $endYr = (string)$year;
+            $hasValidHtml = $dbMetadata && !empty($dbMetadata->table_html) && str_contains($dbMetadata->table_html, $startYr) && str_contains($dbMetadata->table_html, $endYr);
+
+            if (!$hasValidHtml) {
+                $html813 = $this->buildTabel813Html($year);
+                return TabelMetadata::updateOrCreate(
+                    [
+                        'table_code' => $tableCode,
+                        'opd_code' => $opdCode,
+                        'year' => $year,
+                    ],
+                    [
+                        'title_id' => $titleId813,
+                        'title_en' => $titleEn813,
+                        'source' => $source813,
+                        'note' => '',
+                        'table_html' => $html813,
+                        'source_type' => 'database',
+                        'is_saved' => true,
+                    ]
+                );
+            }
+
+            if ($dbMetadata && ($dbMetadata->title_id !== $titleId813 || $dbMetadata->title_en !== $titleEn813)) {
+                $dbMetadata->title_id = $titleId813;
+                $dbMetadata->title_en = $titleEn813;
+                $dbMetadata->save();
+            }
+
+            return $dbMetadata;
+        }
+
         // Khusus tabel 11.2 (Dinas PMPTSP - NIB menurut sektor), pastikan rentang tahun Jumlah valid [year, year-1, ..., year-5]
         if ($tableCode === '11.2') {
             if ($dbMetadata && !empty($dbMetadata->table_html)) {
@@ -1388,6 +1469,87 @@ trait ManagesTableMetadata
             }
         }
 
+        // Khusus tabel 8.1.1 (Dinas PUPR - Panjang Jalan Menurut Tingkat Kewenangan)
+        if ($tableCode === '8.1.1') {
+            $expectedRange = ($year - 4) . '–' . $year;
+            $titleId811 = "Panjang Jalan Menurut Tingkat Kewenangan Pemerintah di Kota Bukittinggi, {$expectedRange}";
+            $titleEn811 = "Length of Road by Level of Government Authority in Bukittinggi Municipality (Km), {$expectedRange}";
+            $source811 = 'Dinas Pekerjaan Umum dan Penataan Ruang Kota Bukittinggi / <span class="italic text-slate-500">Public Works and Spatial Planning Services of Bukittinggi Municipality</span>';
+            $note811 = '<div class="space-y-1"><div>1. Data tidak termasuk panjang jalan tol / <span class="italic text-slate-500">Excluding toll road</span></div><div>2. Data tahun 2023 berdasarkan Keputusan Menteri Pekerjaan Umum dan Perumahan Rakyat No. 1688/KPTS/M/2022 / <span class="italic text-slate-500">Data of 2023 based on Public Works and Public Housing Ministerial Decree No. 1688/KPTS/M/2022</span></div></div>';
+
+            $startYr = (string)($year - 4);
+            $endYr = (string)$year;
+            $hasValidHtml = $dbMetadata && !empty($dbMetadata->table_html) && str_contains($dbMetadata->table_html, $startYr) && str_contains($dbMetadata->table_html, $endYr);
+
+            if (!$hasValidHtml) {
+                $html811 = $this->buildTabel811Html($year);
+                return TabelMetadata::updateOrCreate(
+                    [
+                        'table_code' => $tableCode,
+                        'opd_code' => $opdCode,
+                        'year' => $year,
+                    ],
+                    [
+                        'title_id' => $titleId811,
+                        'title_en' => $titleEn811,
+                        'source' => $source811,
+                        'note' => $note811,
+                        'table_html' => $html811,
+                        'source_type' => 'database',
+                        'is_saved' => true,
+                    ]
+                );
+            }
+
+            if ($dbMetadata && ($dbMetadata->title_id !== $titleId811 || $dbMetadata->title_en !== $titleEn811)) {
+                $dbMetadata->title_id = $titleId811;
+                $dbMetadata->title_en = $titleEn811;
+                $dbMetadata->save();
+            }
+
+            return $dbMetadata;
+        }
+
+        // Khusus tabel 8.1.3 (Dinas PUPR - Panjang Jalan Menurut Kondisi Jalan)
+        if ($tableCode === '8.1.3') {
+            $expectedRange = ($year - 4) . '–' . $year;
+            $titleId813 = "Panjang Jalan Menurut Kondisi Jalan di Kota Bukittinggi (km), {$expectedRange}";
+            $titleEn813 = "Length of Road by Condition of Road in Bukittinggi Municipality (km), {$expectedRange}";
+            $source813 = 'Dinas Pekerjaan Umum dan Penataan Ruang Kota Bukittinggi / <span class="italic text-slate-500">Public Works and Spatial Planning Services of Bukittinggi Municipality</span>';
+
+            $startYr = (string)($year - 4);
+            $endYr = (string)$year;
+            $hasValidHtml = $dbMetadata && !empty($dbMetadata->table_html) && str_contains($dbMetadata->table_html, $startYr) && str_contains($dbMetadata->table_html, $endYr);
+
+            if (!$hasValidHtml) {
+                $html813 = $this->buildTabel813Html($year);
+                return TabelMetadata::updateOrCreate(
+                    [
+                        'table_code' => $tableCode,
+                        'opd_code' => $opdCode,
+                        'year' => $year,
+                    ],
+                    [
+                        'title_id' => $titleId813,
+                        'title_en' => $titleEn813,
+                        'source' => $source813,
+                        'note' => '',
+                        'table_html' => $html813,
+                        'source_type' => 'database',
+                        'is_saved' => true,
+                    ]
+                );
+            }
+
+            if ($dbMetadata && ($dbMetadata->title_id !== $titleId813 || $dbMetadata->title_en !== $titleEn813)) {
+                $dbMetadata->title_id = $titleId813;
+                $dbMetadata->title_en = $titleEn813;
+                $dbMetadata->save();
+            }
+
+            return $dbMetadata;
+        }
+
         // Tabel multi-tahun dan instansi dengan format tahunan unik seperti RRI (8.2.7 / OPD 35).
         // Jangan pernah meminjam metadata/HTML dari tahun lain karena setiap tahun isian/strukturnya berbeda.
         if ($opdCode === '35' || $tableCode === '8.2.7' || in_array($tableCode, ['4.1.18', '4.1.19', '8.1.1', '8.1.2', '8.1.3', '8.1.6', '8.1.7', '8.1.8', '8.2.2', '2.2.5', '1.1.10', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2'])) {
@@ -1497,6 +1659,230 @@ trait ManagesTableMetadata
                 'is_saved' => true,
             ]
         );
+    }
+
+    /**
+     * Membangun HTML tabel 8.1.1 (Panjang Jalan Menurut Tingkat Kewenangan) dengan rentang 5 tahun [year-4 .. year]
+     */
+    private function buildTabel811Html(int $year): string
+    {
+        $years = range($year - 4, $year);
+
+        // Nilai acuan historis (dari data resmi PUPR / database)
+        $knownData = [
+            2019 => ['negara' => '-',     'provinsi' => '-', 'kota' => '-',      'total' => '-'],
+            2020 => ['negara' => '11,75', 'provinsi' => '-', 'kota' => '180,17', 'total' => '191,92'],
+            2021 => ['negara' => '11,75', 'provinsi' => '-', 'kota' => '180,17', 'total' => '191,92'],
+            2022 => ['negara' => '11,75', 'provinsi' => '-', 'kota' => '180,17', 'total' => '191,92'],
+            2023 => ['negara' => '8,18',  'provinsi' => '-', 'kota' => '198,3',  'total' => '206,48'],
+            2024 => ['negara' => '8,18',  'provinsi' => '-', 'kota' => '198,3',  'total' => '206,48'],
+            2025 => ['negara' => '8,18',  'provinsi' => '-', 'kota' => '198,3',  'total' => '206,48'],
+        ];
+
+        // Ambil data aktual dari tabel_opd_data jika ada
+        $dbData = TabelData::where('table_code', '8.1.1')
+            ->whereIn('year', $years)
+            ->get();
+        $dbMap = [];
+        foreach ($dbData as $d) {
+            $lbl = strtolower($d->row_label ?? '');
+            $k = str_contains($lbl, 'negara') ? 'negara' : (str_contains($lbl, 'provinsi') ? 'provinsi' : (str_contains($lbl, 'kota') ? 'kota' : (str_contains($lbl, 'jumlah') ? 'total' : '')));
+            if ($k) {
+                $dbMap[$d->year][$k] = $d->value;
+            }
+        }
+
+        $getVal = function($y, $key) use ($dbMap, $knownData) {
+            if (isset($dbMap[$y][$key]) && $dbMap[$y][$key] !== '' && $dbMap[$y][$key] !== null) {
+                return $dbMap[$y][$key];
+            }
+            if (isset($knownData[$y][$key])) {
+                return $knownData[$y][$key];
+            }
+            return '-';
+        };
+
+        $thCols = '';
+        $thNum = '';
+        foreach ($years as $idx => $y) {
+            $isCurr = ($y === $year);
+            $activeClass = $isCurr ? 'bg-amber-600 font-extrabold ring-1 ring-white/30' : '';
+            $thCols .= "<th class=\"py-3 px-4 border border-slate-700 text-center {$activeClass}\">{$y}</th>";
+            $colNum = $idx + 2;
+            $thNum .= "<th class=\"py-1 px-3 border border-slate-700 text-center\">({$colNum})</th>";
+        }
+
+        $tdNegara = '';
+        $tdProv = '';
+        $tdKota = '';
+        $tdTotal = '';
+        foreach ($years as $y) {
+            $isCurr = ($y === $year);
+            $activeTd = $isCurr ? 'font-bold bg-amber-100/60' : '';
+            $vNegara = $getVal($y, 'negara');
+            $vProv = $getVal($y, 'provinsi');
+            $vKota = $getVal($y, 'kota');
+            $vTotal = $getVal($y, 'total');
+
+            $tdNegara .= "<td class=\"py-2.5 px-3 border border-slate-700 " . ($vNegara === '-' ? 'text-center align-middle font-medium' : 'text-right font-semibold') . " {$activeTd}\">{$vNegara}</td>";
+            $tdProv .= "<td class=\"py-2.5 px-3 border border-slate-700 text-center align-middle font-medium {$activeTd}\">{$vProv}</td>";
+            $tdKota .= "<td class=\"py-2.5 px-3 border border-slate-700 " . ($vKota === '-' ? 'text-center align-middle font-medium' : 'text-right font-semibold') . " {$activeTd}\">{$vKota}</td>";
+            $tdTotal .= "<td class=\"py-2.5 px-3 border border-slate-700 " . ($vTotal === '-' ? 'text-center align-middle' : 'text-right font-extrabold') . " " . ($isCurr ? 'bg-amber-200/80' : '') . "\">{$vTotal}</td>";
+        }
+
+        return "<thead>
+    <tr class=\"bg-[#f95a00] text-white text-center font-bold\">
+        <th class=\"py-3 px-4 font-bold border border-slate-700 text-left align-middle\">
+            <div>Tingkat Kewenangan Pemerintahan</div>
+            <div class=\"italic font-normal text-[11px] sm:text-xs\">Level of Government Authority</div>
+        </th>
+        {$thCols}
+    </tr>
+    <tr class=\"bg-[#fed7aa] text-slate-900 text-center font-bold text-xs\">
+        <th class=\"py-1 px-3 border border-slate-700 text-center\">(1)</th>
+        {$thNum}
+    </tr>
+</thead>
+<tbody class=\"bg-[#fef9c3] text-slate-900 font-medium\">
+    <tr>
+        <td class=\"py-2.5 px-4 font-semibold border border-slate-700 text-left\">
+            1. Negara / <span class=\"italic font-normal text-slate-700\">State</span>
+        </td>
+        {$tdNegara}
+    </tr>
+    <tr>
+        <td class=\"py-2.5 px-4 font-semibold border border-slate-700 text-left\">
+            2. Provinsi / <span class=\"italic font-normal text-slate-700\">Province</span>
+        </td>
+        {$tdProv}
+    </tr>
+    <tr>
+        <td class=\"py-2.5 px-4 font-semibold border border-slate-700 text-left\">
+            3. Kota / <span class=\"italic font-normal text-slate-700\">Municipality</span>
+        </td>
+        {$tdKota}
+    </tr>
+    <tr class=\"bg-[#fed7aa] font-bold\">
+        <td class=\"py-2.5 px-4 border border-slate-700 text-left font-bold text-slate-900\">
+            Jumlah / <span class=\"italic font-bold\">Total</span>
+        </td>
+        {$tdTotal}
+    </tr>
+</tbody>";
+    }
+
+    /**
+     * Membangun HTML tabel 8.1.3 (Panjang Jalan Menurut Kondisi Jalan) dengan rentang 5 tahun [year-4 .. year]
+     */
+    private function buildTabel813Html(int $year): string
+    {
+        $years = range($year - 4, $year);
+
+        // Nilai acuan historis (dari data resmi PUPR / database)
+        $knownData = [
+            2020 => ['baik' => '-',      'sedang' => '-',     'rusak' => '-',     'rusak_berat' => '-',    'total' => '180,17'],
+            2021 => ['baik' => '70,32',  'sedang' => '90,29', 'rusak' => '18,42', 'rusak_berat' => '1,14', 'total' => '180,17'],
+            2022 => ['baik' => '94,34',  'sedang' => '69,37', 'rusak' => '15,83', 'rusak_berat' => '0,63', 'total' => '180,17'],
+            2023 => ['baik' => '98,56',  'sedang' => '66,66', 'rusak' => '14,52', 'rusak_berat' => '0,43', 'total' => '198,3'],
+            2024 => ['baik' => '151,56', 'sedang' => '29,78', 'rusak' => '8,44',  'rusak_berat' => '8,52', 'total' => '198,3'],
+            2025 => ['baik' => '134,92', 'sedang' => '47,02', 'rusak' => '11,01', 'rusak_berat' => '5,35', 'total' => '198,3'],
+        ];
+
+        // Ambil data aktual dari tabel_opd_data jika ada
+        $dbData = TabelData::where('table_code', '8.1.3')
+            ->whereIn('year', $years)
+            ->get();
+        $dbMap = [];
+        foreach ($dbData as $d) {
+            $lbl = strtolower($d->row_label ?? '');
+            $k = str_contains($lbl, 'berat') ? 'rusak_berat' : (str_contains($lbl, 'rusak') ? 'rusak' : (str_contains($lbl, 'sedang') ? 'sedang' : (str_contains($lbl, 'baik') ? 'baik' : (str_contains($lbl, 'jumlah') ? 'total' : ''))));
+            if ($k) {
+                $dbMap[$d->year][$k] = $d->value;
+            }
+        }
+
+        $getVal = function($y, $key) use ($dbMap, $knownData) {
+            if (isset($dbMap[$y][$key]) && $dbMap[$y][$key] !== '' && $dbMap[$y][$key] !== null) {
+                return $dbMap[$y][$key];
+            }
+            if (isset($knownData[$y][$key])) {
+                return $knownData[$y][$key];
+            }
+            return '-';
+        };
+
+        $thCols = '';
+        $thNum = '';
+        foreach ($years as $idx => $y) {
+            $isCurr = ($y === $year);
+            $activeClass = $isCurr ? 'bg-amber-600 font-extrabold ring-1 ring-white/30' : '';
+            $thCols .= "<th class=\"py-2 px-3 border border-slate-700 text-center {$activeClass}\">{$y}</th>";
+            $colNum = $idx + 2;
+            $thNum .= "<th class=\"py-1 px-3 border border-slate-700 text-center\">({$colNum})</th>";
+        }
+
+        $tdBaik = '';
+        $tdSedang = '';
+        $tdRusak = '';
+        $tdRusakBerat = '';
+        $tdTotal = '';
+        foreach ($years as $y) {
+            $isCurr = ($y === $year);
+            $activeTd = $isCurr ? 'font-bold bg-amber-100/60' : '';
+            $vBaik = $getVal($y, 'baik');
+            $vSedang = $getVal($y, 'sedang');
+            $vRusak = $getVal($y, 'rusak');
+            $vRusakBerat = $getVal($y, 'rusak_berat');
+            $vTotal = $getVal($y, 'total');
+
+            $tdBaik .= "<td class=\"py-2.5 px-3 border border-slate-700 " . ($vBaik === '-' ? 'text-center align-middle font-medium' : 'text-right font-semibold') . " {$activeTd}\">{$vBaik}</td>";
+            $tdSedang .= "<td class=\"py-2.5 px-3 border border-slate-700 " . ($vSedang === '-' ? 'text-center align-middle font-medium' : 'text-right font-semibold') . " {$activeTd}\">{$vSedang}</td>";
+            $tdRusak .= "<td class=\"py-2.5 px-3 border border-slate-700 " . ($vRusak === '-' ? 'text-center align-middle font-medium' : 'text-right font-semibold') . " {$activeTd}\">{$vRusak}</td>";
+            $tdRusakBerat .= "<td class=\"py-2.5 px-3 border border-slate-700 " . ($vRusakBerat === '-' ? 'text-center align-middle font-medium' : 'text-right font-semibold') . " {$activeTd}\">{$vRusakBerat}</td>";
+            $tdTotal .= "<td class=\"py-2.5 px-3 border border-slate-700 " . ($vTotal === '-' ? 'text-center align-middle' : 'text-right font-extrabold') . " " . ($isCurr ? 'bg-amber-200/80' : '') . "\">{$vTotal}</td>";
+        }
+
+        return "<thead>
+    <tr class=\"bg-[#f95a00] text-white text-center font-bold\">
+        <th class=\"py-3 px-4 font-bold border border-slate-700\" rowspan=\"2\">
+            <div>Kondisi Jalan</div>
+            <div class=\"italic font-normal text-[11px] sm:text-xs\">Road Condition</div>
+        </th>
+        <th class=\"py-2 px-3 font-bold border border-slate-700\" colspan=\"5\">
+            <div>Tahun (km)</div>
+            <div class=\"italic font-normal text-[11px] sm:text-xs\">Year (km)</div>
+        </th>
+    </tr>
+    <tr class=\"bg-[#f95a00] text-white text-center font-bold text-xs sm:text-sm\">
+        {$thCols}
+    </tr>
+    <tr class=\"bg-[#fed7aa] text-slate-900 text-center font-bold text-xs\">
+        <th class=\"py-1 px-3 border border-slate-700\">(1)</th>
+        {$thNum}
+    </tr>
+</thead>
+<tbody class=\"bg-[#fef9c3] text-slate-900 font-medium\">
+    <tr>
+        <td class=\"py-2.5 px-4 font-semibold border border-slate-700\">1. Baik / <span class=\"italic font-normal text-slate-700\">Good</span></td>
+        {$tdBaik}
+    </tr>
+    <tr>
+        <td class=\"py-2.5 px-4 font-semibold border border-slate-700\">2. Sedang / <span class=\"italic font-normal text-slate-700\">Moderate</span></td>
+        {$tdSedang}
+    </tr>
+    <tr>
+        <td class=\"py-2.5 px-4 font-semibold border border-slate-700\">3. Rusak / <span class=\"italic font-normal text-slate-700\">Damage</span></td>
+        {$tdRusak}
+    </tr>
+    <tr>
+        <td class=\"py-2.5 px-4 font-semibold border border-slate-700\">4. Rusak Berat / <span class=\"italic font-normal text-slate-700\">Severely Damage</span></td>
+        {$tdRusakBerat}
+    </tr>
+    <tr class=\"bg-[#fed7aa] font-bold\">
+        <td class=\"py-2.5 px-4 border border-slate-700\">Jumlah / <span class=\"italic font-bold\">Total</span></td>
+        {$tdTotal}
+    </tr>
+</tbody>";
     }
 
     /**

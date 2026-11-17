@@ -104,31 +104,9 @@
          // key: cell_key -> [comments]
         
 
+        // Tombol kirim sekarang ada di bawah "Sumber" (06-pernyataan-kebenaran.js): wajib centang pernyataan kebenaran data.
         async function submitTableVerification() {
-            if (!confirm('Apakah Anda yakin ingin mengajukan data tabel ini ke Wali Data (Diskominfo) untuk diverifikasi?')) return;
-            try {
-                const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || csrfToken;
-                const res = await fetch(window.SiBingkaConfig.routes.apiSubmitVerification, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
-                    body: JSON.stringify({
-                        table_code: currentTableCode,
-                        opd_code: currentOpdCode,
-                        year: currentYear,
-                        type: 'opd'
-                    })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    alert(data.message);
-                    window.location.reload();
-                } else {
-                    alert('Gagal mengajukan verifikasi: ' + (data.message || ''));
-                }
-            } catch(e) {
-                console.error(e);
-                alert('Terjadi kesalahan jaringan.');
-            }
+            return saveAndSubmitForVerification();
         }
 
         async function approveTableVerification() {

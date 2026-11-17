@@ -132,9 +132,27 @@ function getAgencyLogs(code, shortName) {
     ];
 }
 
+// Isi 3 persentase (Input Data, Verifikasi Wali Data, Validasi BPS) pada modal detail
+function renderModalProgressBars(a) {
+    const rows = [
+        ['Input', a.pctInput, a.cntInput],
+        ['Verif', a.pctVerif, a.cntVerif],
+        ['Valid', a.pctValid, a.cntValid]
+    ];
+    rows.forEach(([key, pct, count]) => {
+        const pctEl = document.getElementById('modalPct' + key);
+        const barEl = document.getElementById('modalBar' + key);
+        const cntEl = document.getElementById('modalCnt' + key);
+        if (pctEl) pctEl.innerText = (pct || 0) + '%';
+        if (barEl) barEl.style.width = Math.min(100, pct || 0) + '%';
+        if (cntEl) cntEl.innerText = (count || 0) + ' dari ' + (a.cntTotal || 0) + ' tabel';
+    });
+}
+
 // Open Unified Detail Modal
-function openAgencyDetailModal(type, code, short, full, pct, status, stepLabel, step = 1, tables = '', isVerifiedByWali = false, hasSubmitted = false) {
-    currentModalAgency = { type, code, short, full, pct, status, stepLabel, step, tables, isVerifiedByWali, hasSubmitted };
+function openAgencyDetailModal(type, code, short, full, pct, status, stepLabel, step = 1, tables = '', isVerifiedByWali = false, hasSubmitted = false, pctInput = 0, pctVerif = 0, pctValid = 0, cntInput = 0, cntVerif = 0, cntValid = 0, cntTotal = 0) {
+    currentModalAgency = { type, code, short, full, pct, status, stepLabel, step, tables, isVerifiedByWali, hasSubmitted, pctInput, pctVerif, pctValid, cntInput, cntVerif, cntValid, cntTotal };
+    renderModalProgressBars(currentModalAgency);
 
     const cleanShort = short.replace(/^\d+\.\s*/, '');
     const nameEl = document.getElementById('modalAgencyShortName');
@@ -548,58 +566,68 @@ function exportMonitoringToExcel(options) {
 
     const ws = {};
     const totalRows = dataset.length;
-    const range = { s: { c: 0, r: 0 }, e: { c: 2, r: 4 + totalRows } };
+    const range = { s: { c: 0, r: 0 }, e: { c: 4, r: 4 + totalRows } };
 
     ws['A1'] = { t: 's', v: title, s: titleStyle };
     ws['B1'] = { t: 's', v: '', s: titleStyle };
     ws['C1'] = { t: 's', v: '', s: titleStyle };
+    ws['D1'] = { t: 's', v: '', s: titleStyle };
+    ws['E1'] = { t: 's', v: '', s: titleStyle };
 
     ws['A2'] = { t: 's', v: `Badan Pusat Statistik Kota Bukittinggi | Waktu Unduh: ${downloadDateHeader}`, s: subtitleStyle };
     ws['B2'] = { t: 's', v: '', s: subtitleStyle };
     ws['C2'] = { t: 's', v: '', s: subtitleStyle };
+    ws['D2'] = { t: 's', v: '', s: subtitleStyle };
+    ws['E2'] = { t: 's', v: '', s: subtitleStyle };
 
     ws['A3'] = { t: 's', v: '' };
     ws['B3'] = { t: 's', v: '' };
     ws['C3'] = { t: 's', v: '' };
+    ws['D3'] = { t: 's', v: '' };
+    ws['E3'] = { t: 's', v: '' };
 
     ws['A4'] = { t: 's', v: 'No', s: headerStyle };
     ws['B4'] = { t: 's', v: 'Instansi / OPD', s: headerStyle };
-    ws['C4'] = { t: 's', v: `STATUS MONITORING TAHUN ${tahunLaporan}`, s: headerStyle };
+    ws['C4'] = { t: 's', v: `PERSENTASE MONITORING TAHUN ${tahunLaporan}`, s: headerStyle };
+    ws['D4'] = { t: 's', v: '', s: headerStyle };
+    ws['E4'] = { t: 's', v: '', s: headerStyle };
 
     ws['A5'] = { t: 's', v: '', s: headerStyle };
     ws['B5'] = { t: 's', v: '', s: headerStyle };
-    ws['C5'] = { t: 's', v: `Waktu Unduh: ${downloadDateHeader}`, s: headerStyle };
+    ws['C5'] = { t: 's', v: 'Input Data', s: headerStyle };
+    ws['D5'] = { t: 's', v: 'Verifikasi Wali Data', s: headerStyle };
+    ws['E5'] = { t: 's', v: 'Validasi BPS', s: headerStyle };
 
+    // 3 persentase: Input Data, Verifikasi Wali Data, Validasi BPS (dari status tabel di database)
+    const pctStyle = (value) => (value >= 100 ? lengkapStyle : (value > 0 ? belumLengkapStyle : belumTerisiStyle));
     dataset.forEach((item, idx) => {
         const rowNum = idx + 6;
-        let statusLabel = 'Belum Terisi';
-        let statusStyle = belumTerisiStyle;
-
-        if (item.progress === 100) {
-            statusLabel = 'Lengkap (100%)';
-            statusStyle = lengkapStyle;
-        } else if (item.progress > 0) {
-            statusLabel = `Proses (${item.progress}%)`;
-            statusStyle = belumLengkapStyle;
-        }
+        const pctInput = Number(item.pct_input || 0);
+        const pctVerif = Number(item.pct_verif || 0);
+        const pctValid = Number(item.pct_valid || 0);
 
         ws['A' + rowNum] = { t: 'n', v: idx + 1, s: noStyle };
         ws['B' + rowNum] = { t: 's', v: item.full, s: instansiStyle };
-        ws['C' + rowNum] = { t: 's', v: statusLabel, s: statusStyle };
+        ws['C' + rowNum] = { t: 's', v: `${pctInput}%`, s: pctStyle(pctInput) };
+        ws['D' + rowNum] = { t: 's', v: `${pctVerif}%`, s: pctStyle(pctVerif) };
+        ws['E' + rowNum] = { t: 's', v: `${pctValid}%`, s: pctStyle(pctValid) };
     });
 
     ws['!ref'] = XLSX.utils.encode_range(range);
     ws['!merges'] = [
-        { s: { r: 0, c: 0 }, e: { r: 0, c: 2 } },
-        { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } },
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 4 } },
+        { s: { r: 1, c: 0 }, e: { r: 1, c: 4 } },
         { s: { r: 3, c: 0 }, e: { r: 4, c: 0 } },
-        { s: { r: 3, c: 1 }, e: { r: 4, c: 1 } }
+        { s: { r: 3, c: 1 }, e: { r: 4, c: 1 } },
+        { s: { r: 3, c: 2 }, e: { r: 3, c: 4 } }
     ];
 
     ws['!cols'] = [
         { wch: 6 },
         { wch: 55 },
-        { wch: 30 }
+        { wch: 18 },
+        { wch: 22 },
+        { wch: 18 }
     ];
 
     const rowHeights = [

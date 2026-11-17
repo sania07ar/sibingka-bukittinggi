@@ -1,17 +1,22 @@
 @php
     $step = $item['step'];
     $pct = $item['progress'];
+    // 3 persentase Monitoring: Input Data, Verifikasi Wali Data, Validasi BPS
+    $pctInput = (int) ($item['pct_input'] ?? 0);
+    $pctVerif = (int) ($item['pct_verif'] ?? 0);
+    $pctValid = (int) ($item['pct_valid'] ?? 0);
+    $pctTone = fn (int $v) => $v >= 100 ? 'text-emerald-600' : ($v > 0 ? 'text-[#f95a00]' : 'text-slate-400');
     
     // Color variables for Percentage and Subtitle
     $pctColor = match(true) {
-        $pct === 100 => 'text-emerald-600',
-        $pct === 0 => 'text-slate-900',
+        $pctInput === 100 => 'text-emerald-600',
+        $pctInput === 0 => 'text-slate-900',
         default => 'text-[#f95a00]',
     };
 
     $statusSubColor = match(true) {
-        $pct === 100 => 'text-emerald-600',
-        $pct === 0 => 'text-rose-600',
+        $pctInput === 100 => 'text-emerald-600',
+        $pctInput === 0 => 'text-rose-600',
         default => 'text-[#f95a00]',
     };
 
@@ -107,6 +112,7 @@
             <!-- Label 1: Input Data -->
             <div class="w-24 -ml-4 flex flex-col items-center">
                 <span class="text-[10px] sm:text-[11px] font-semibold text-slate-800 leading-tight">Input Data</span>
+                <span class="text-[11px] sm:text-xs font-black {{ $pctTone($pctInput) }} leading-tight mt-0.5" title="Tabel yang sudah dikirim instansi">{{ $pctInput }}%</span>
                 @if($step === 1)
                     <span class="text-[9px] font-bold {{ $pct > 0 ? 'text-[#f95a00]' : 'text-slate-500' }} leading-tight mt-0.5 whitespace-nowrap">
                         {{ $pct > 0 ? 'Pengisian' : 'Belum Mulai' }}
@@ -117,6 +123,7 @@
             <!-- Label 2: Verifikasi -->
             <div class="w-24 flex flex-col items-center">
                 <span class="text-[10px] sm:text-[11px] font-semibold text-slate-800 leading-tight">Verifikasi</span>
+                <span class="text-[11px] sm:text-xs font-black {{ $pctTone($pctVerif) }} leading-tight mt-0.5" title="Tabel yang sudah diverifikasi Wali Data">{{ $pctVerif }}%</span>
                 @if($step === 2)
                     <span class="text-[9px] font-bold text-[#f95a00] leading-tight mt-0.5 whitespace-nowrap">Wali Data</span>
                 @endif
@@ -125,6 +132,7 @@
             <!-- Label 3: Validasi BPS -->
             <div class="w-24 -mr-4 flex flex-col items-center">
                 <span class="text-[10px] sm:text-[11px] font-semibold text-slate-800 leading-tight whitespace-nowrap">Validasi BPS</span>
+                <span class="text-[11px] sm:text-xs font-black {{ $pctTone($pctValid) }} leading-tight mt-0.5" title="Tabel yang sudah divalidasi Admin BPS">{{ $pctValid }}%</span>
                 @if($step === 3)
                     <span class="text-[9px] font-bold text-emerald-600 leading-tight mt-0.5 whitespace-nowrap">Selesai (ACC)</span>
                 @endif
@@ -138,9 +146,10 @@
     <div class="flex items-center space-x-4 lg:space-x-5 w-full lg:w-auto justify-end shrink-0 border-t lg:border-t-0 pt-2.5 lg:pt-0 border-slate-100">
         
         <div class="text-center min-w-[65px] shrink-0">
-            <div class="text-base sm:text-lg font-black {{ $pctColor }} leading-none">
-                {{ $pct }}%
+            <div class="text-base sm:text-lg font-black {{ $pctColor }} leading-none" title="Tabel yang sudah dikirim dari seluruh tabel">
+                {{ $item['input_count'] ?? 0 }}/{{ $item['total'] ?? 0 }}
             </div>
+            <div class="text-[9px] font-semibold text-slate-400 leading-none mt-0.5">tabel terkirim</div>
             <div class="text-[10.5px] sm:text-[11px] font-bold {{ $statusSubColor }} mt-1 leading-none">
                 {{ $item['status'] }}
             </div>
@@ -242,7 +251,7 @@
             @endif
 
             <button type="button" 
-                    onclick="openAgencyDetailModal('{{ $agencyType }}', '{{ $item['code'] }}', '{{ addslashes($item['short']) }}', '{{ addslashes($item['full']) }}', {{ $pct }}, '{{ $item['status'] }}', '{{ $item['step_label'] }}', {{ $step }}, '{{ addslashes($item['tables'] ?? '') }}', {{ $isVerifiedByWali ? 'true' : 'false' }}, {{ $hasSubmitted ? 'true' : 'false' }})"
+                    onclick="openAgencyDetailModal('{{ $agencyType }}', '{{ $item['code'] }}', '{{ addslashes($item['short']) }}', '{{ addslashes($item['full']) }}', {{ $pct }}, '{{ $item['status'] }}', '{{ $item['step_label'] }}', {{ $step }}, '{{ addslashes($item['tables'] ?? '') }}', {{ $isVerifiedByWali ? 'true' : 'false' }}, {{ $hasSubmitted ? 'true' : 'false' }}, {{ $pctInput }}, {{ $pctVerif }}, {{ $pctValid }}, {{ (int) ($item['input_count'] ?? 0) }}, {{ (int) ($item['verified_count'] ?? 0) }}, {{ (int) ($item['validated_count'] ?? 0) }}, {{ (int) ($item['total'] ?? 0) }})"
                     class="no-print px-3.5 py-1.5 rounded-xl border border-slate-200 hover:border-slate-400 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all shadow-2xs hover:shadow-xs flex items-center space-x-1 cursor-pointer shrink-0">
                 <span>Detail</span>
                 <i class="fa-solid fa-arrow-right text-[10px]"></i>

@@ -378,6 +378,7 @@ class TabelOpdController extends Controller
         } catch (\Throwable $ex) {}
 
         // Simpan metadata dan data nilai sel ke Database MySQL
+        $dbSaved = true;
         try {
             // 1. Simpan metadata snapshot tabel untuk tahun aktif
             TabelMetadata::updateOrCreate(
@@ -423,9 +424,11 @@ class TabelOpdController extends Controller
                         if ((str_starts_with($tableCode, '8.1.') || in_array($tableCode, ['8.2.2', '2.2.5', '1.1.10', '9.1', '2.4.3', '2.4.1', '2.4.2'])) && $oTitleId) {
                             $span = ($tableCode === '9.3') ? 6 : (($tableCode === '2.4.1' || $tableCode === '2.4.2') ? 3 : 4);
                             $oRange = ($oYear - $span) . '–' . $oYear;
-                            $oTitleId = preg_replace('/(,\s*|\s+)(19|20)\d{2}(\s*[–\-]\s*(19|20)\d{2})?/', "$1{$oRange}", $titleId);
+                            $cleanId = preg_replace('/([,\s]*)(?:(?:19|20)\d{2}|\d{3,4})[\s–\-]*(?:19|20)\d{2}(?:[\s–\-]*(?:19|20)\d{2})*\s*$/u', '', $titleId);
+                            $oTitleId = rtrim(trim($cleanId), ',') . ", {$oRange}";
                             if ($oTitleEn) {
-                                $oTitleEn = preg_replace('/(,\s*|\s+)(19|20)\d{2}(\s*[–\-]\s*(19|20)\d{2})?/', "$1{$oRange}", $titleEn);
+                                $cleanEn = preg_replace('/([,\s]*)(?:(?:19|20)\d{2}|\d{3,4})[\s–\-]*(?:19|20)\d{2}(?:[\s–\-]*(?:19|20)\d{2})*\s*$/u', '', $titleEn);
+                                $oTitleEn = rtrim(trim($cleanEn), ',') . ", {$oRange}";
                             }
                         }
                         TabelMetadata::updateOrCreate(
@@ -552,12 +555,18 @@ class TabelOpdController extends Controller
                 }
             }
         } catch (\Throwable $e) {
+            $dbSaved = false;
             \Log::warning("Peringatan apiSaveData tabel {$tableCode} (database read-only atau error): " . $e->getMessage());
         }
 
+        // db_saved = false berarti data hanya tersimpan di cadangan file, belum masuk database.
+        // Tombol di halaman memakai nilai ini agar tidak menampilkan "berhasil" dan tidak mengirim data ke Monitoring.
         return response()->json([
             'success' => true,
-            'message' => "Data Tabel {$tableCode} Tahun {$year} berhasil disimpan permanen di database!",
+            'db_saved' => $dbSaved,
+            'message' => $dbSaved
+                ? "Data Tabel {$tableCode} Tahun {$year} berhasil disimpan permanen di database!"
+                : "Data Tabel {$tableCode} Tahun {$year} belum masuk database (hanya tersimpan di cadangan file). Hubungi administrator.",
         ]);
     }
 

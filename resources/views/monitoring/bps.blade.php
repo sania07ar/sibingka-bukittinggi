@@ -189,6 +189,9 @@
             $countBerjalan = 0;
             $countBelum = 0;
 
+            // Status verifikasi semua tabel pada tahun ini -> dasar 3 persentase (Input, Verifikasi Wali Data, Validasi BPS)
+            $progressMapBps = \App\Support\MonitoringProgress::load($selectedYear);
+
             foreach ($bpsDatasets as &$ds) {
                 $code = $ds['code'];
                 $stat = $bpsStats[$code] ?? ['total' => 0, 'lengkap' => 0, 'proses' => 0];
@@ -198,6 +201,7 @@
                 $pct = min(100, (int) round(($score / $totalTables) * 100));
 
                 $ds['progress'] = $pct;
+                $ds += \App\Support\MonitoringProgress::stats($progressMapBps, 'bps', $code);
                 $ds['submitted'] = $submittedCountsBps[$code] ?? ($submittedCountsBps['bps_' . $code] ?? 0);
                 $ds['verified'] = $verifiedCountsBps[$code] ?? ($verifiedCountsBps['bps_' . $code] ?? 0);
                 $ds['revision'] = $revisionCountsBps[$code] ?? ($revisionCountsBps['bps_' . $code] ?? 0);
@@ -250,6 +254,7 @@
             unset($ds);
 
             $countTotal = count($bpsDatasets);
+            $overall = \App\Support\MonitoringProgress::overall($bpsDatasets);
 
             // Donut chart calculations
             $circ = 238.76;

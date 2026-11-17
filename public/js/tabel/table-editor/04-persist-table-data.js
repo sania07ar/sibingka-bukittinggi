@@ -101,6 +101,8 @@
             safeSetLocalStorage(scopedSavedKey, '1');
 
             // Bersihkan legacy unscoped key agar tidak mencemari tabel kampus lain
+            let saveOk = true;      // diisi false bila server/database tidak menerima data
+            let saveMessage = '';
             try {
                 localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
                 localStorage.removeItem(`sibingka_table_is_saved_${currentTableCode}_${currentYear}`);
@@ -752,10 +754,11 @@
                         ? 'custom_bps' 
                         : ((typeof currentType !== 'undefined' && currentType === 'instansi') ? 'custom_instansi' : 'manual');
 
-                    await fetch(window.SiBingkaConfig.routes.apiSave, {
+                    const saveRes = await fetch(window.SiBingkaConfig.routes.apiSave, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
+                            'Accept': 'application/json',
                             'X-CSRF-TOKEN': csrfToken
                         },
                         body: JSON.stringify({
@@ -772,8 +775,27 @@
                             rows_data: rowsData
                         })
                     });
+
+                    // Periksa jawaban server: jangan menampilkan "berhasil" kalau server menolak / database gagal
+                    let saveData = null;
+                    try { saveData = await saveRes.json(); } catch (_) { /* jawaban bukan JSON */ }
+                    if (!saveRes.ok || (saveData && (saveData.success === false || saveData.db_saved === false))) {
+                        saveOk = false;
+                        saveMessage = (saveData && saveData.message)
+                            ? saveData.message
+                            : (saveRes.status === 419 ? 'Sesi halaman habis. Muat ulang halaman lalu simpan lagi.'
+                               : saveRes.status === 401 ? 'Sesi login habis. Silakan masuk kembali.'
+                               : 'Server menjawab kode ' + saveRes.status + '.');
+                    }
             } catch(e) {
                 console.warn('Gagal menyimpan ke database:', e);
+                saveOk = false;
+                saveMessage = 'Tidak dapat terhubung ke server. Periksa koneksi internet lalu coba lagi.';
+            }
+
+            if (!saveOk) {
+                showToast('❌ Gagal menyimpan: ' + saveMessage);
+                return false;
             }
 
             if (redirectAfter) {
@@ -786,4 +808,5 @@
             } else {
                 showToast('💾 Nilai data langsung tersimpan ke Database!');
             }
+            return true;
         }

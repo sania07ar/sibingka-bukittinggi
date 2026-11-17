@@ -59,5 +59,28 @@
             <span class="font-bold text-slate-900">{{ $countBelum }}</span>
         </div>
     </div>
+
+    @if(isset($overall))
+        <!-- 3 Persentase keseluruhan: Input Data, Verifikasi Wali Data, Validasi BPS -->
+        <div class="mt-5 pt-4 border-t border-slate-100">
+            <h3 class="text-[11px] font-extrabold text-slate-500 uppercase tracking-wide mb-3">Persentase Tabel ({{ $overall['total'] }} tabel)</h3>
+            @foreach ([
+                ['Input Data', $overall['pct_input'], $overall['input_count'], 'bg-slate-500', 'Tabel yang sudah dikirim instansi'],
+                ['Verifikasi Wali Data', $overall['pct_verif'], $overall['verified_count'], 'bg-[#f95a00]', 'Tabel yang sudah diverifikasi Wali Data'],
+                ['Validasi BPS', $overall['pct_valid'], $overall['validated_count'], 'bg-emerald-500', 'Tabel yang sudah divalidasi Admin BPS'],
+            ] as [$label, $value, $count, $barColor, $hint])
+                <div class="mb-3 last:mb-0" title="{{ $hint }}">
+                    <div class="flex items-center justify-between text-xs font-semibold text-slate-700 mb-1">
+                        <span>{{ $label }}</span>
+                        <span class="font-black text-slate-900">{{ $value }}%</span>
+                    </div>
+                    <div class="h-2 rounded-full bg-slate-100 overflow-hidden">
+                        <div class="h-full rounded-full {{ $barColor }}" style="width: {{ $value }}%"></div>
+                    </div>
+                    <div class="text-[10px] text-slate-400 mt-0.5">{{ $count }} dari {{ $overall['total'] }} tabel</div>
+                </div>
+            @endforeach
+        </div>
+    @endif
 </div>
 

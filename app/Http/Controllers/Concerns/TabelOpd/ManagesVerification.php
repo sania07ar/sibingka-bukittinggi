@@ -17,17 +17,27 @@ use Illuminate\Http\Request;
 trait ManagesVerification
 {
     /**
-     * Workflow Verifikasi: Dinas Mengajukan Data Tabel ke BPS
+     * Workflow Verifikasi: Dinas mengirim data tabel (dengan pernyataan kebenaran data).
+     * Setelah dikirim: Monitoring mencatat "Input Data", lalu Wali Data memverifikasi,
+     * lalu Admin BPS memvalidasi.
      */
     public function apiSubmitVerification(Request $request)
     {
         $tableCode = $request->input('table_code');
-        $opdCode = $request->input('opd_code');
+        $opdCode = (string) $request->input('opd_code', '');
         $year = (int) $request->input('year', 2025);
         $type = $request->input('type', 'opd');
 
+        // Pernyataan kebenaran data wajib dicentang sebelum data dikirim.
+        if (!filter_var($request->input('declaration'), FILTER_VALIDATE_BOOLEAN)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Centang pernyataan kebenaran data terlebih dahulu sebelum mengirim data.',
+            ], 422);
+        }
+
         if ($type !== 'bps' && $type !== 'instansi') {
-            $opdCode = $this->normalizeOpdCode($tableCode, $opdCode ?: '');
+            $opdCode = $this->normalizeOpdCode($tableCode, $opdCode);
         }
 
         $existingMetaQuery = TabelMetadata::where('table_code', $tableCode)->where('year', $year);
@@ -44,33 +54,47 @@ trait ManagesVerification
         $cleanOpd = str_pad($opdCode, 2, '0', STR_PAD_LEFT);
         $meta = $existingMeta ?: $this->getOrCreateMetadata($tableCode, $opdCode, $year, $type);
 
-        if ($meta) {
-            $meta->verification_status = 'submitted';
-            $meta->is_saved = true;
-            $meta->rejection_notes = null;
-            $meta->save();
+        if (!$meta) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data tabel belum tersimpan di database. Simpan data terlebih dahulu, lalu kirim.',
+            ], 422);
         }
 
-        // Sinkronisasi otomatis ke Tahap 2 (Verifikasi oleh Wali Data Kominfo) di Monitoring
-        if (in_array($type, ['opd', 'instansi', 'bps'])) {
-            \App\Models\MonitoringStage::updateOrCreate(
-                [
-                    'agency_type' => $type,
-                    'agency_code' => $cleanOpd,
-                    'year' => $year,
-                ],
-                [
-                    'stage' => 2,
-                    'status_text' => 'Menunggu Verifikasi Wali Data',
-                    'notes' => 'Tabel ' . $tableCode . ' diajukan/diteruskan oleh instansi untuk diverifikasi oleh Wali Data Kominfo.',
-                ]
-            );
+        // Tabel yang sudah diverifikasi / divalidasi tidak boleh dikirim ulang (kecuali dibuka Admin BPS).
+        if (in_array($meta->verification_status, ['verified', 'validated'], true)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tabel ini sudah diverifikasi/divalidasi dan tidak dapat dikirim ulang.',
+            ], 422);
         }
+
+        $sender = session('user.displayName', 'Pengguna');
+
+        $meta->verification_status = 'submitted';
+        $meta->is_saved = true;
+        $meta->rejection_notes = null;
+        if (\Illuminate\Support\Facades\Schema::hasColumn('tabel_opd_metadata', 'data_declared')) {
+            $meta->data_declared = true;
+            $meta->submitted_at = now();
+            $meta->submitted_by = $sender;
+        }
+        $meta->save();
+
+        // Samakan Monitoring: tahap Input Data selesai -> menunggu verifikasi Wali Data
+        \App\Support\MonitoringProgress::syncStage(
+            $type,
+            $cleanOpd,
+            $year,
+            'Tabel ' . $tableCode . ' dikirim oleh ' . $sender . ' dengan pernyataan kebenaran data. Menunggu verifikasi Wali Data.'
+        );
 
         return response()->json([
             'success' => true,
-            'message' => 'Data tabel berhasil dikirim/diteruskan ke Wali Data (Diskominfo) untuk diverifikasi.',
+            'message' => 'Data tabel berhasil dikirim. Data masuk Monitoring sebagai Input Data dan menunggu verifikasi Wali Data.',
             'status' => 'submitted',
+            'submitted_by' => $sender,
+            'submitted_at' => now()->translatedFormat('d F Y H:i'),
         ]);
     }
 
@@ -119,20 +143,7 @@ trait ManagesVerification
             $meta->save();
 
             // Sinkronisasi status stage ke Monitoring: Stage 2 Terverifikasi Wali Data
-            if (in_array($type, ['opd', 'instansi', 'bps'])) {
-                \App\Models\MonitoringStage::updateOrCreate(
-                    [
-                        'agency_type' => $type,
-                        'agency_code' => $cleanOpd,
-                        'year' => $year,
-                    ],
-                    [
-                        'stage' => 2,
-                        'status_text' => 'Terverifikasi Wali Data',
-                        'notes' => 'Tabel ' . $tableCode . ' telah diverifikasi oleh Wali Data (' . $userName . '). Menunggu Validasi BPS.',
-                    ]
-                );
-            }
+            \App\Support\MonitoringProgress::syncStage($type, $cleanOpd, $year, 'Tabel ' . $tableCode . ' telah diverifikasi oleh Wali Data (' . $userName . '). Menunggu Validasi BPS.');
 
             return response()->json([
                 'success' => true,
@@ -163,20 +174,7 @@ trait ManagesVerification
             $meta->save();
 
             // Sinkronisasi status stage ke Monitoring: Stage 3 Validasi BPS Selesai
-            if (in_array($type, ['opd', 'instansi', 'bps'])) {
-                \App\Models\MonitoringStage::updateOrCreate(
-                    [
-                        'agency_type' => $type,
-                        'agency_code' => $cleanOpd,
-                        'year' => $year,
-                    ],
-                    [
-                        'stage' => 3,
-                        'status_text' => 'Validasi BPS Selesai',
-                        'notes' => 'Tabel ' . $tableCode . ' telah divalidasi oleh Admin BPS (' . $userName . ').',
-                    ]
-                );
-            }
+            \App\Support\MonitoringProgress::syncStage($type, $cleanOpd, $year, 'Tabel ' . $tableCode . ' telah divalidasi oleh Admin BPS (' . $userName . ').');
 
             return response()->json([
                 'success' => true,
@@ -222,20 +220,7 @@ trait ManagesVerification
         }
 
         // Sinkronisasi otomatis ke Tahap 1 (Input Data / Perlu Revisi) di Monitoring
-        if (in_array($type, ['opd', 'instansi', 'bps'])) {
-            \App\Models\MonitoringStage::updateOrCreate(
-                [
-                    'agency_type' => $type,
-                    'agency_code' => $cleanOpd,
-                    'year' => $year,
-                ],
-                [
-                    'stage' => 1,
-                    'status_text' => 'Perlu Revisi',
-                    'notes' => $notes,
-                ]
-            );
-        }
+        \App\Support\MonitoringProgress::syncStage($type, $cleanOpd, $year, $notes);
 
         return response()->json([
             'success' => true,
@@ -260,6 +245,7 @@ trait ManagesVerification
         $tableCode = $request->input('table_code');
         $opdCode = $request->input('opd_code');
         $year = (int) $request->input('year', 2025);
+        $type = $request->input('type', 'opd');
 
         $cleanOpd = str_pad($opdCode, 2, '0', STR_PAD_LEFT);
         $meta = TabelMetadata::where('table_code', $tableCode)
@@ -271,6 +257,8 @@ trait ManagesVerification
             $meta->is_locked = false;
             $meta->verification_status = 'draft';
             $meta->save();
+
+            \App\Support\MonitoringProgress::syncStage($type, $cleanOpd, $year, 'Kunci tabel ' . $tableCode . ' dibuka oleh Admin BPS.');
         }
 
         return response()->json([

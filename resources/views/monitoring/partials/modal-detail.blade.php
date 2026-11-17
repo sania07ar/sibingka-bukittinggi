@@ -31,6 +31,25 @@
             </div>
         </div>
 
+        <!-- Persentase 3 tahap (diisi oleh monitoring.js saat modal dibuka) -->
+        <div id="modalProgressBars" class="my-3.5 grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200/80">
+                <div class="flex items-center justify-between text-[11px] font-bold text-slate-700"><span>Input Data</span><span id="modalPctInput" class="font-black text-slate-900">0%</span></div>
+                <div class="h-1.5 rounded-full bg-slate-200 mt-1.5 overflow-hidden"><div id="modalBarInput" class="h-full rounded-full bg-slate-500" style="width:0%"></div></div>
+                <div id="modalCntInput" class="text-[10px] text-slate-400 mt-1">0 dari 0 tabel</div>
+            </div>
+            <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200/80">
+                <div class="flex items-center justify-between text-[11px] font-bold text-slate-700"><span>Verifikasi Wali Data</span><span id="modalPctVerif" class="font-black text-slate-900">0%</span></div>
+                <div class="h-1.5 rounded-full bg-slate-200 mt-1.5 overflow-hidden"><div id="modalBarVerif" class="h-full rounded-full bg-[#f95a00]" style="width:0%"></div></div>
+                <div id="modalCntVerif" class="text-[10px] text-slate-400 mt-1">0 dari 0 tabel</div>
+            </div>
+            <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200/80">
+                <div class="flex items-center justify-between text-[11px] font-bold text-slate-700"><span>Validasi BPS</span><span id="modalPctValid" class="font-black text-slate-900">0%</span></div>
+                <div class="h-1.5 rounded-full bg-slate-200 mt-1.5 overflow-hidden"><div id="modalBarValid" class="h-full rounded-full bg-emerald-500" style="width:0%"></div></div>
+                <div id="modalCntValid" class="text-[10px] text-slate-400 mt-1">0 dari 0 tabel</div>
+            </div>
+        </div>
+
         <!-- Modal Action: Status Validasi BPS & Verifikasi Wali Data -->
         @php
             $userRole = session('user.role');

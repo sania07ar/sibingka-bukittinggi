@@ -27,12 +27,17 @@ class TabelMetadata extends Model
         'verified_by',
         'rejection_notes',
         'is_locked',
+        'data_declared',
+        'submitted_at',
+        'submitted_by',
     ];
 
     protected $casts = [
         'is_saved' => 'boolean',
         'is_locked' => 'boolean',
         'verified_at' => 'datetime',
+        'data_declared' => 'boolean',
+        'submitted_at' => 'datetime',
     ];
 
     /**

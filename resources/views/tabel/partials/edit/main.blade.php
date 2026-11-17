@@ -212,6 +212,49 @@
                     </div>
                 </div>
 
+                <!-- PERNYATAAN KEBENARAN DATA (di bawah Sumber) -->
+                @php
+                    $declStatus = $dbMetadata?->verification_status ?? 'draft';
+                    $declSent = in_array($declStatus, ['submitted', 'verified', 'validated'], true);
+                    $declCanSend = !$isWali && !($isLocked && !$isAdmin) && !in_array($declStatus, ['verified', 'validated'], true);
+                    $declBy = $dbMetadata?->submitted_by;
+                    $declAt = $dbMetadata?->submitted_at?->format('d M Y H:i');
+                @endphp
+                @if($declCanSend || $declSent || ($declStatus === 'revision' && !empty($dbMetadata?->rejection_notes)))
+                <div id="dataDeclarationBox" class="mb-6 rounded-2xl border border-orange-200 bg-orange-50/60 p-3.5 sm:p-4 text-xs text-slate-700 space-y-3">
+                    @if($declSent)
+                        <div class="rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 px-3.5 py-2.5 text-[11.5px] leading-relaxed">
+                            <i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i>
+                            @if($declStatus === 'validated')
+                                <strong>Sudah divalidasi Admin BPS.</strong> Tahap Input, Verifikasi, dan Validasi telah selesai.
+                            @elseif($declStatus === 'verified')
+                                <strong>Sudah diverifikasi Wali Data.</strong> Menunggu validasi Admin BPS.
+                            @else
+                                <strong>Data sudah dikirim.</strong> Menunggu verifikasi Wali Data.
+                            @endif
+                            @if($declBy)
+                                <span class="block text-emerald-800/80 mt-0.5">Dikirim oleh {{ $declBy }}@if($declAt) pada {{ $declAt }}@endif.</span>
+                            @endif
+                        </div>
+                    @elseif($declStatus === 'revision' && !empty($dbMetadata?->rejection_notes))
+                        <div class="rounded-xl bg-rose-50 border border-rose-200 text-rose-900 px-3.5 py-2.5 text-[11.5px] leading-relaxed">
+                            <i class="fa-solid fa-triangle-exclamation text-rose-600 mr-1"></i>
+                            <strong>Perlu revisi:</strong> {{ $dbMetadata->rejection_notes }}
+                        </div>
+                    @endif
+
+                    @if($declCanSend)
+                        <label for="dataDeclarationCheck" class="flex items-start gap-3 cursor-pointer select-none rounded-xl bg-white border border-orange-200 hover:border-[#f95a00] p-3.5 transition-colors">
+                            <input type="checkbox" id="dataDeclarationCheck" class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 accent-[#f95a00] cursor-pointer">
+                            <span class="leading-relaxed text-slate-800 text-[12px]">
+                                Saya <strong>{{ session('user.displayName', 'pengguna') }}</strong> menyatakan bahwa data yang saya kirim pada tabel ini adalah
+                                <strong>benar</strong>, sesuai dengan sumber data resmi, dan dapat dipertanggungjawabkan.
+                            </span>
+                        </label>
+                    @endif
+                </div>
+                @endif
+
                 <!-- BOTTOM ACTION BAR -->
                 <div id="bottomActionBar" class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-200">
                     <button onclick="backToTableView()" 
@@ -231,6 +274,14 @@
                             <i class="fa-solid fa-floppy-disk text-xs"></i>
                             <span>Simpan Perubahan Data</span>
                         </button>
+                        @if($declCanSend)
+                            <button type="button" id="btnSaveAndSubmit" onclick="saveAndSubmitForVerification()" disabled
+                                    title="Centang pernyataan kebenaran data terlebih dahulu"
+                                    class="px-5 py-2 rounded-xl bg-[#f95a00] hover:bg-orange-700 text-white text-xs font-bold transition-all flex items-center space-x-1.5 shadow-2xs opacity-50 cursor-not-allowed">
+                                <i class="fa-solid fa-paper-plane text-xs"></i>
+                                <span>Simpan &amp; Kirim ke Wali Data</span>
+                            </button>
+                        @endif
                     </div>
                 </div>
 

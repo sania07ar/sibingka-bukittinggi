@@ -1881,37 +1881,18 @@ var isEditMode = false;
             tr.remove();
         }
 
-        async function changeTableYear(newYear) {
-            currentYear = newYear.toString();
-            try {
-                const newUrl = new URL(window.location.href);
-                newUrl.searchParams.set('year', currentYear);
-                window.history.pushState({}, '', newUrl.toString());
-            } catch(e) {}
-
-            const selectYearEl = document.getElementById('yearSwitcher');
-            if (selectYearEl) selectYearEl.value = currentYear;
-
-            // Ambil data terbaru dari database MySQL untuk tahun ini
-            try {
-                const res = await fetch(`${window.SiBingkaConfig.routes.apiData}?code=${currentTableCode}&opd=${currentOpdCode}&year=${currentYear}&type=${typeof currentType !== 'undefined' ? currentType : 'opd'}`);
-                const dataRes = await res.json();
-                if (dataRes.success) {
-                    if (dataRes.dataStore) {
-                        Object.assign(serverDbDataStore, dataRes.dataStore);
-                    }
-                    if (dataRes.metadata !== undefined) {
-                        serverDbMetadata = dataRes.metadata;
-                    }
-                    if (dataRes.fallbackMetadata !== undefined) {
-                        serverDbFallbackMetadata = dataRes.fallbackMetadata;
-                    }
-                }
-            } catch(e) {}
-
-            renderTablePage();
-            showToast(`Tahun data diubah ke ${currentYear}`);
+        function changeTableYear(newYear) {
+            if (!newYear) return;
+            const cleanYear = newYear.toString().trim();
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.set('year', cleanYear);
+            newUrl.searchParams.delete('title');
+            newUrl.searchParams.delete('title_en');
+            newUrl.searchParams.delete('titleEn');
+            newUrl.searchParams.delete('saved');
+            window.location.href = newUrl.toString();
         }
+        window.changeTableYear = changeTableYear;
 
         function goToEditPage() {
             let url = `${window.SiBingkaConfig.routes.editTabel}?code=${currentTableCode}&opd=${currentOpdCode}&year=${currentYear}`;

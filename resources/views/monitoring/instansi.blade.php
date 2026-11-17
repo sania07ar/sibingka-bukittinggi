@@ -155,11 +155,15 @@
                 });
 
             $allTablesStatus = [];
+            $instFill = []; // keterisian angka per instansi (hanya tabel resmi milik instansi tsb)
             foreach ($allTablesRawInst as $item) {
                 $cOpd = str_pad($item->opd_code, 2, '0', STR_PAD_LEFT);
                 $dbKey = $cOpd . '_' . $item->table_code;
                 $tdCount = isset($tabelDataCountsInst[$dbKey]) ? (int) $tabelDataCountsInst[$dbKey]->count : 0;
                 $eval = $item->getNumericStatus($tdCount);
+                if (in_array($item->table_code, \App\Support\MonitoringProgress::catalogTables('instansi', $cOpd), true)) {
+                    $instFill[$cOpd][$eval['status']] = ($instFill[$cOpd][$eval['status']] ?? 0) + 1;
+                }
 
                 $allTablesStatus[$dbKey] = [
                     'table_code' => $item->table_code,
@@ -185,9 +189,17 @@
             $countBerjalan = 0;
             $countBelum = 0;
 
+            // Status verifikasi semua tabel pada tahun ini -> dasar 3 persentase (Input, Verifikasi Wali Data, Validasi BPS)
+            $progressMapInst = \App\Support\MonitoringProgress::load($selectedYear);
+
             foreach ($instansiList as &$inst) {
                 $code = $inst['code'];
-                $pct = $inst['progress'];
+                // Progres pengisian angka riil dari database (sebelumnya angka tetap/dummy)
+                $instTotal = count(\App\Support\MonitoringProgress::catalogTables('instansi', $code));
+                $fill = $instFill[$code] ?? [];
+                $pct = $instTotal > 0 ? min(100, (int) round((($fill['lengkap'] ?? 0) + (($fill['proses'] ?? 0) * 0.5)) / $instTotal * 100)) : 0;
+                $inst['progress'] = $pct;
+                $inst += \App\Support\MonitoringProgress::stats($progressMapInst, 'instansi', $code);
 
                 $inst['submitted'] = $submittedCountsInstansi[$code] ?? ($submittedCountsInstansi[ltrim($code, '0')] ?? 0);
                 $inst['verified'] = $verifiedCountsInstansi[$code] ?? ($verifiedCountsInstansi[ltrim($code, '0')] ?? 0);
@@ -241,6 +253,7 @@
             unset($inst);
 
             $countTotal = count($instansiList);
+            $overall = \App\Support\MonitoringProgress::overall($instansiList);
 
             // Donut chart stroke dash calculations
             $circ = 238.76;
