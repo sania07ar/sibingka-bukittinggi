@@ -43,7 +43,7 @@
                                 <i class="fa-solid fa-landmark"></i>
                             </div>
                             <h3 class="font-bold text-slate-900 text-xs sm:text-[13px] group-hover:text-sky-600 transition-colors leading-snug min-h-[2rem] flex items-center">
-                                Instansi Vertikal & Lainnya
+                                Instansi Vertikal &amp; Lainnya
                             </h3>
                             <p class="text-[11px] text-slate-500 mt-1 leading-snug min-h-[1.75rem]">
                                 Isi dan kelola data instansi

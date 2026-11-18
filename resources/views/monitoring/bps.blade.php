@@ -191,6 +191,7 @@
 
             // Status verifikasi semua tabel pada tahun ini -> dasar 3 persentase (Input, Verifikasi Wali Data, Validasi BPS)
             $progressMapBps = \App\Support\MonitoringProgress::load($selectedYear);
+            $activityMapBps = \App\Support\MonitoringProgress::loadActivities($selectedYear);
 
             foreach ($bpsDatasets as &$ds) {
                 $code = $ds['code'];
@@ -202,6 +203,7 @@
 
                 $ds['progress'] = $pct;
                 $ds += \App\Support\MonitoringProgress::stats($progressMapBps, 'bps', $code);
+                $ds['activities'] = \App\Support\MonitoringProgress::activitiesFor($activityMapBps, 'bps', $code);
                 $ds['submitted'] = $submittedCountsBps[$code] ?? ($submittedCountsBps['bps_' . $code] ?? 0);
                 $ds['verified'] = $verifiedCountsBps[$code] ?? ($verifiedCountsBps['bps_' . $code] ?? 0);
                 $ds['revision'] = $revisionCountsBps[$code] ?? ($revisionCountsBps['bps_' . $code] ?? 0);
@@ -344,6 +346,7 @@
         window.monitoringSelectedYear = {{ $selectedYear }};
         window.allTablesStatusDb = @json($allTablesStatus);
         const allBpsData = @json($bpsDatasets);
+        window.monAllData = allBpsData; // dipakai jendela detail (riwayat aktivitas & persentase)
 
         function exportMonitoringExcel() {
             exportMonitoringToExcel({

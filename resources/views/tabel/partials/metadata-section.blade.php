@@ -66,6 +66,14 @@
                     <p class="text-[11px] text-amber-800 font-medium mt-0.5">
                         Data telah diajukan oleh dinas dan sedang dalam proses penelaahan konsistensi & kewajaran angka oleh Pembina Data Statistik BPS.
                     </p>
+                    @if($dbMetadata?->submitted_by || $dbMetadata?->data_declared)
+                        <div class="mt-2 pt-2 border-t border-amber-200/80 flex items-start gap-2 text-[11.5px] text-amber-950">
+                            <i class="fa-solid fa-circle-check text-emerald-600 mt-0.5 shrink-0"></i>
+                            <span>
+                                Saya <strong>{{ $dbMetadata->submitted_by ?? session('user.displayName', 'Pengguna') }}</strong> menyatakan bahwa data yang saya kirim pada tabel ini adalah <strong>benar</strong>, sesuai dengan sumber data resmi, dan dapat dipertanggungjawabkan.@if($dbMetadata?->submitted_at) <span class="text-amber-800 font-normal">({{ \Carbon\Carbon::parse($dbMetadata->submitted_at)->isoFormat('D MMMM Y, HH:mm') }})</span>@endif
+                            </span>
+                        </div>
+                    @endif
                 </div>
             </div>
             @if($isAdmin)

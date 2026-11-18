@@ -39,9 +39,11 @@
             <select id="yearSwitcher" onchange="changeTableYear(this.value)" 
                     class="bg-transparent text-xs font-bold text-slate-700 focus:outline-none cursor-pointer max-w-[125px] sm:max-w-none">
                 @php
-                    $selYr = (int) ($currentYear ?? date('Y'));
+                    $selYr = (int) ($currentYear ?? 2025);
+                    $maxYr = max(2036, $selYr);
+                    $minYr = min(2015, $selYr);
                 @endphp
-                @for($y = 2035; $y >= 2018; $y--)
+                @for($y = $maxYr; $y >= $minYr; $y--)
                     <option value="{{ $y }}" {{ $y === $selYr ? 'selected' : '' }}>Tahun {{ $y }}</option>
                 @endfor
             </select>

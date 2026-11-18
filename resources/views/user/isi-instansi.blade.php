@@ -265,18 +265,70 @@
                     </div>
                 @endif
 
-                <!-- Card Footer Actions: Blanko PDF (Admin Only) & Home (Centered) -->
+                <!-- Card Footer Actions: Unduh Excel Per Instansi & Home (Centered) -->
                 <div class="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 mt-1 sm:mt-1.5 pt-2 border-t border-slate-100 shrink-0">
-                    @if($isAdmin)
-                        <!-- BLANKO PDF (Google Drive) - Hanya Muncul untuk Admin BPS -->
-                        <a href="https://drive.google.com/drive/folders/1ytU-i5aTt7-94u2jiNefX8Ef0Hqr3_5E"
-                           target="_blank"
-                           rel="noopener noreferrer"
-                           class="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-orange-50 hover:bg-orange-100 text-[#f95a00] hover:text-orange-700 font-bold text-xs border border-orange-200/80 transition-all shadow-2xs hover:shadow-xs"
-                           title="Buka Folder Google Drive Blanko PDF">
-                            <i class="fa-solid fa-file-pdf text-xs"></i>
-                            <span>BLANKO PDF</span>
-                        </a>
+                    @if($isInstansiUser && $userInstansi)
+                        <!-- UNDUH EXCEL DATA INSTANSI (User Instansi Terpilih) + Pilih Tahun -->
+                        <div class="inline-flex items-center space-x-1.5 bg-emerald-50/70 border border-emerald-200/90 rounded-xl p-1 shadow-2xs">
+                            <select id="instansiUserExportYear" 
+                                    onchange="updateInstansiUserExportUrl(this.value)" 
+                                    class="bg-white border border-emerald-200 text-emerald-800 text-xs font-bold rounded-lg px-2.5 py-1 focus:outline-none cursor-pointer"
+                                    title="Pilih tahun data Excel yang ingin diunduh">
+                                @foreach(range(max(2027, ((int)date('Y')) + 1), 2020) as $yr)
+                                    <option value="{{ $yr }}" {{ ((int)request('year', date('Y'))) === $yr ? 'selected' : '' }}>Tahun {{ $yr }}</option>
+                                @endforeach
+                            </select>
+                            <a id="instansiUserExportBtn" 
+                               href="{{ route('tabel-opd.export-agency-excel', ['opd' => $userInstansi['code'], 'type' => 'instansi', 'year' => request('year', date('Y'))]) }}"
+                               class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors shadow-2xs no-underline"
+                               title="Unduh Seluruh Tabel {{ $userInstansi['short'] }} Format Excel (.xlsx)">
+                                <i class="fa-solid fa-file-excel text-xs"></i>
+                                <span>UNDUH EXCEL DATA INSTANSI</span>
+                            </a>
+                        </div>
+                    @else
+                        <!-- UNDUH EXCEL PER INSTANSI (Admin BPS - Dropdown / Pilihan Instansi & Tahun) -->
+                        <div class="relative inline-block text-left" id="adminInstansiExportDropdownWrapper">
+                            <button type="button" 
+                                    onclick="toggleAdminInstansiExportDropdown()"
+                                    class="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 hover:text-emerald-800 font-bold text-xs border border-emerald-200/80 transition-all shadow-2xs hover:shadow-xs cursor-pointer"
+                                    title="Unduh Data Excel per Instansi Vertikal">
+                                <i class="fa-solid fa-file-excel text-xs text-emerald-600"></i>
+                                <span>UNDUH EXCEL DATA INSTANSI</span>
+                                <i class="fa-solid fa-chevron-down text-[10px] ml-1"></i>
+                            </button>
+                            <div id="adminInstansiExportDropdown" 
+                                 class="hidden absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-80 max-h-80 overflow-y-auto bg-white rounded-2xl shadow-2xl border border-slate-200 p-2.5 z-50 text-left text-xs">
+                                
+                                <!-- Pilih Tahun Excel -->
+                                <div class="px-2 py-1.5 border-b border-slate-100 mb-2 bg-slate-50 rounded-xl">
+                                    <label for="adminInstansiExportYearSelector" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                                        Pilih Tahun Data:
+                                    </label>
+                                    <select id="adminInstansiExportYearSelector" 
+                                            onchange="changeAdminInstansiExportYear(this.value)" 
+                                            class="w-full bg-white border border-slate-200 text-slate-800 text-xs font-bold rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-emerald-500 cursor-pointer">
+                                        @foreach(range(max(2027, ((int)date('Y')) + 1), 2020) as $yr)
+                                            <option value="{{ $yr }}" {{ ((int)request('year', date('Y'))) === $yr ? 'selected' : '' }}>Tahun {{ $yr }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="px-2 py-1 font-bold text-slate-400 uppercase text-[10px] mb-1">
+                                    Pilih Instansi Vertikal:
+                                </div>
+                                <div class="space-y-0.5" id="adminInstansiExportLinksContainer">
+                                    @foreach($instansiList as $instItem)
+                                        <a href="{{ route('tabel-opd.export-agency-excel', ['opd' => $instItem['code'], 'type' => 'instansi', 'year' => request('year', date('Y'))]) }}"
+                                           data-base-url="{{ route('tabel-opd.export-agency-excel', ['opd' => $instItem['code'], 'type' => 'instansi']) }}"
+                                           class="admin-instansi-export-link flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-emerald-50 hover:text-emerald-800 text-slate-700 font-medium transition-colors no-underline">
+                                            <span class="truncate">{{ $instItem['code'] }}. {{ $instItem['short'] }}</span>
+                                            <i class="fa-solid fa-download text-[10px] text-emerald-600 shrink-0 ml-2"></i>
+                                        </a>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
                     @endif
 
                     <!-- HOME -->
@@ -334,5 +386,35 @@
         };
     </script>
     <script src="{{ asset('js/dinas-catalog.js') }}"></script>
+    <script>
+        function toggleAdminInstansiExportDropdown() {
+            const drop = document.getElementById('adminInstansiExportDropdown');
+            if (drop) drop.classList.toggle('hidden');
+        }
+        function changeAdminInstansiExportYear(selectedYear) {
+            const links = document.querySelectorAll('.admin-instansi-export-link');
+            links.forEach(a => {
+                const base = a.getAttribute('data-base-url');
+                if (base) {
+                    a.href = base + (base.includes('?') ? '&' : '?') + 'year=' + encodeURIComponent(selectedYear);
+                }
+            });
+        }
+        function updateInstansiUserExportUrl(selectedYear) {
+            const btn = document.getElementById('instansiUserExportBtn');
+            if (btn) {
+                const url = new URL(btn.href, window.location.origin);
+                url.searchParams.set('year', selectedYear);
+                btn.href = url.pathname + url.search;
+            }
+        }
+        document.addEventListener('click', function(e) {
+            const wrap = document.getElementById('adminInstansiExportDropdownWrapper');
+            const drop = document.getElementById('adminInstansiExportDropdown');
+            if (wrap && drop && !wrap.contains(e.target)) {
+                drop.classList.add('hidden');
+            }
+        });
+    </script>
 </body>
 </html>

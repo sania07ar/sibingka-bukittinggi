@@ -61,8 +61,10 @@ trait ResolvesAgencies
         return match ($tableCode) {
             '4.1.24' => '11', // Dinas Perpustakaan dan Kearsipan
             '4.1.20' => '10', // Dinas Pemuda dan Olahraga
+            '4.2.14', '4.2.15' => '13', // Dinas Lingkungan Hidup
             '4.3.4'  => '09', // Badan Penanggulangan Bencana Daerah
             '4.3.5', '4.3.6', '4.3.7', '4.3.8' => '15', // Dinas Pemadam Kebakaran dan Penyelamatan
+            '4.3.13', '4.3.1.3', '4.3.14', '4.3.15' => '16', // Dinas Sosial
             default  => $opdCode,
         };
     }
@@ -73,7 +75,24 @@ trait ResolvesAgencies
     public function normalizeAgency(string $tableCode, string $opdCode, string $type): array
     {
         $cleanCode = trim(rtrim($tableCode, '.'));
+        if ($cleanCode === '4.3.1.3') {
+            $cleanCode = '4.3.13';
+        }
         $cleanOpd = str_pad($opdCode, 2, '0', STR_PAD_LEFT);
+
+        // 0. JIKA dipanggil dari Data BPS, pastikan tetap di BPS dan tentukan satuan datasetnya (01 s.d 10)
+        if ($type === 'bps') {
+            $bpsCatalog = config('sibingka_tables.bps', []);
+            if (!empty($bpsCatalog[$cleanOpd]) && in_array($cleanCode, $bpsCatalog[$cleanOpd])) {
+                return [$cleanOpd, 'bps'];
+            }
+            foreach ($bpsCatalog as $bCode => $tables) {
+                if (in_array($cleanCode, $tables)) {
+                    return [$bCode, 'bps'];
+                }
+            }
+            return [$cleanOpd ?: '01', 'bps'];
+        }
 
         // 1. Khusus tabel kampus Perguruan Tinggi 4.1.18 & 4.1.19 (SELALU INSTANSI VERTIKAL!)
         if (in_array($cleanCode, ['4.1.18', '4.1.19'])) {
@@ -99,7 +118,7 @@ trait ResolvesAgencies
         if ($cleanCode === '8.2.7') return ['35', 'instansi']; // RRI
         if (in_array($cleanCode, ['1.1.7', '1.1.8', '1.1.9'])) return ['01', 'instansi']; // BPN
         if ($cleanCode === '2.2.1') return ['02', 'instansi']; // KPU
-        if (in_array($cleanCode, ['4.1.3', '4.1.4', '4.1.5', '4.2.14', '4.4.1', '4.4.2', '4.4.3', '4.4.4', '4.4.5', '4.4.6', '4.4.7', '4.4.8'])) {
+        if (in_array($cleanCode, ['4.1.3', '4.1.4', '4.1.5', '4.4.1', '4.4.2', '4.4.3', '4.4.4', '4.4.5', '4.4.6', '4.4.7', '4.4.8'])) {
             return ['03', 'instansi']; // Kemenag
         }
 
@@ -189,8 +208,8 @@ trait ResolvesAgencies
             '09' => 'BADAN PENANGGULANGAN BENCANA DAERAH',
             '10' => 'DINAS KEPEMUDAAN DAN OLAHRAGA',
             '11' => 'DINAS PERPUSTAKAAN DAN KEARSIPAN',
-            '12' => 'DINAS LINGKUNGAN HIDUP',
-            '13' => 'DINAS KESEHATAN KOTA BUKITTINGGI',
+            '12' => 'DINAS KESEHATAN KOTA BUKITTINGGI',
+            '13' => 'DINAS LINGKUNGAN HIDUP',
             '14' => 'DINAS P3APPKB KOTA BUKITTINGGI',
             '15' => 'DINAS PEMADAM KEBAKARAN DAN PENYELAMATAN',
             '16' => 'SATUAN POLISI PAMONG PRAJA',

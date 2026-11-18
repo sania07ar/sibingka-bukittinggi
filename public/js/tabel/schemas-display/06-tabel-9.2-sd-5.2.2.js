@@ -400,6 +400,159 @@ Object.assign(window.tableSchemas, {
                     `;
                 }
             },
+            '5.1.1': {
+                titleId: 'Luas Panen Tanaman Sayuran Menurut Kecamatan dan Jenis Tanaman di Kota Bukittinggi (Ha)',
+                titleEn: 'Harvested Area of Vegetables by Sub District and Kind of Plant in Bukittinggi Municipality (Ha)',
+                isMultiYear: true,
+                source: 'Dinas Pertanian dan Pangan Kota Bukittinggi / <span class="italic text-slate-500">Agriculture and Food Service of Bukittinggi Municipality</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2024;
+                    const y1 = yr - 1;
+                    const y2 = yr;
+
+                    const official2024 = {
+                        sec1: {
+                            '01. Guguk Panjang': ['5', '4', '2', '5', '-', '-', '4', '4'],
+                            '02. Mandiangin Koto Selayan': ['11', '9', '17', '11', '-', '-', '5', '7'],
+                            '03. Aur Birugo Tigo Baleh': ['18', '19', '8', '10', '1', '1', '-', '-'],
+                            'Bukittinggi': ['34', '32', '27', '26', '1', '1', '9', '11']
+                        },
+                        sec2: {
+                            '01. Guguk Panjang': ['9', '6', '2', '1', '4', '4'],
+                            '02. Mandiangin Koto Selayan': ['12', '12', '-', '-', '9', '8'],
+                            '03. Aur Birugo Tigo Baleh': ['-', '-', '-', '-', '6', '5'],
+                            'Bukittinggi': ['21', '18', '-', '-', '19', '17']
+                        },
+                        sec3: {
+                            '01. Guguk Panjang': ['-', '-', '-', '-', '5', '5'],
+                            '02. Mandiangin Koto Selayan': ['9', '10', '-', '-', '53', '29'],
+                            '03. Aur Birugo Tigo Baleh': ['7', '8', '8', '8', '23', '23'],
+                            'Bukittinggi': ['16', '18', '8', '8', '81', '57']
+                        }
+                    };
+
+                    const dists = [
+                        '01. Guguk Panjang',
+                        '02. Mandiangin Koto Selayan',
+                        '03. Aur Birugo Tigo Baleh',
+                        'Bukittinggi'
+                    ];
+
+                    const fmt = (v) => {
+                        const s = (v !== undefined && v !== null) ? String(v).trim() : '-';
+                        if (s === '' || s === '-' || s === '–' || s === '—') return '<span class="text-slate-400 font-normal">-</span>';
+                        return s;
+                    };
+
+                    const getVal = (secKey, dist, colIdx) => {
+                        if (yr === 2024 && official2024[secKey] && official2024[secKey][dist]) {
+                            return official2024[secKey][dist][colIdx];
+                        }
+                        return '-';
+                    };
+
+                    const renderRows = (secKey, numCols, hasTrailingBlank) => {
+                        return dists.map(d => {
+                            const isTot = (d === 'Bukittinggi');
+                            const rowCls = isTot 
+                                ? 'bg-[#fed7aa] font-bold text-slate-900 border-t border-slate-700' 
+                                : 'hover:bg-amber-100/60 transition-colors bg-[#fef9c3] text-slate-900 font-medium';
+                            const cellCls = isTot ? ' font-bold' : '';
+                            let cells = `<td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle${cellCls}">${d}</td>`;
+                            for (let c = 0; c < numCols; c++) {
+                                cells += `<td class="py-2.5 px-4 border border-slate-700 text-center align-middle text-right font-medium${cellCls}">${fmt(getVal(secKey, d, c))}</td>`;
+                            }
+                            if (hasTrailingBlank) {
+                                cells += `<td colspan="2" class="border border-slate-700 bg-slate-100/40 text-center text-slate-300 font-normal"><span class="text-slate-400 font-normal">-</span></td>`;
+                            }
+                            return `<tr class="${rowCls}">${cells}</tr>`;
+                        }).join('\n');
+                    };
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="2">
+                                    <div>Bawang Daun</div><div class="italic font-normal text-[11px] sm:text-xs">Scallion</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="2">
+                                    <div>Bawang Merah</div><div class="italic font-normal text-[11px] sm:text-xs">Shallots</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="2">
+                                    <div>Buncis</div><div class="italic font-normal text-[11px] sm:text-xs">String Bean</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="2">
+                                    <div>Cabai Rawit</div><div class="italic font-normal text-[11px] sm:text-xs">Chili/ Cayenne Pepper</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                ${Array(4).fill(0).map(() => `<th class="py-2.5 px-3 font-bold border border-slate-700"><div>${y1}</div></th><th class="py-2.5 px-3 font-bold border border-slate-700"><div>${y2}</div></th>`).join('')}
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                ${Array(9).fill(0).map((_, i) => `<th class="py-1 px-3 border border-slate-700">(${i + 1})</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${renderRows('sec1', 8, false)}
+                            <tr class="subtable-spacer-row pointer-events-none select-none">
+                                <td colspan="9" class="h-6 sm:h-8 bg-[#f0f3f8] border-y border-slate-200/90 border-x-0 p-0 text-center">&nbsp;</td>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-title">
+                                <th class="py-3 px-4 font-bold border border-slate-700 text-center align-middle" rowspan="2">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700 text-center align-middle" colspan="2">
+                                    <div>Kangkung</div><div class="italic font-normal text-[11px] sm:text-xs">Water Spinach</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700 text-center align-middle" colspan="2">
+                                    <div>Labu Siam</div><div class="italic font-normal text-[11px] sm:text-xs">Chayote</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700 text-center align-middle" colspan="2">
+                                    <div>Terung</div><div class="italic font-normal text-[11px] sm:text-xs">Eggplant</div>
+                                </th>
+                                <th class="border border-slate-700 bg-slate-200/50" colspan="2" rowspan="3"></th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs subtable-header-years">
+                                ${Array(3).fill(0).map(() => `<th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle text-xs"><div>${y1}</div></th><th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle text-xs"><div>${y2}</div></th>`).join('')}
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs subtable-header-numbering">
+                                <th class="py-1 px-3 border border-slate-700 text-center font-bold text-xs">(1)</th>
+                                ${[10, 11, 12, 13, 14, 15].map(n => `<th class="py-1 px-3 border border-slate-700 text-center font-bold text-xs">(${n})</th>`).join('')}
+                            </tr>
+                            ${renderRows('sec2', 6, true)}
+                            <tr class="subtable-spacer-row pointer-events-none select-none">
+                                <td colspan="9" class="h-6 sm:h-8 bg-[#f0f3f8] border-y border-slate-200/90 border-x-0 p-0 text-center">&nbsp;</td>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold subtable-header-title">
+                                <th class="py-3 px-4 font-bold border border-slate-700 text-center align-middle" rowspan="2">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700 text-center align-middle" colspan="2">
+                                    <div>Tomat</div><div class="italic font-normal text-[11px] sm:text-xs">Tomato</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700 text-center align-middle" colspan="2">
+                                    <div>Wortel</div><div class="italic font-normal text-[11px] sm:text-xs">Carrot</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700 text-center align-middle" colspan="2">
+                                    <div>Cabai Keriting</div><div class="italic font-normal text-[11px] sm:text-xs">Chilli/ Curly chilli</div>
+                                </th>
+                                <th class="border border-slate-700 bg-slate-200/50" colspan="2" rowspan="3"></th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs subtable-header-years">
+                                ${Array(3).fill(0).map(() => `<th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle text-xs"><div>${y1}</div></th><th class="py-2.5 px-3 font-bold border border-slate-700 text-center align-middle text-xs"><div>${y2}</div></th>`).join('')}
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs subtable-header-numbering">
+                                <th class="py-1 px-3 border border-slate-700 text-center font-bold text-xs">(1)</th>
+                                ${[16, 17, 18, 19, 20, 21].map(n => `<th class="py-1 px-3 border border-slate-700 text-center font-bold text-xs">(${n})</th>`).join('')}
+                            </tr>
+                            ${renderRows('sec3', 6, true)}
+                        </tbody>
+                    `;
+                }
+            },
             '5.1.15': {
                 titleId: 'Luas Areal Sawah Menurut Jenis Pengairan per Kecamatan di Kota Bukittinggi',
                 titleEn: 'Area of Wetland by Type of Irrigation per District in Bukittinggi Municipality',

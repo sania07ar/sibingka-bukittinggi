@@ -82,6 +82,10 @@
                             $canVerify = ($isAdmin || $isWali);
                             $isLocked = (bool) ($dbMetadata?->is_locked ?? false);
                             $vStatus = $dbMetadata?->verification_status ?? 'draft';
+
+                            // Tombol Simpan & Kirim hanya untuk pengisi data yang tabelnya belum diverifikasi
+                            $declStatus = $vStatus;
+                            $declCanSend = !$isWali && !($isLocked && !$isAdmin) && !in_array($declStatus, ['verified', 'validated'], true);
                         @endphp
 
                         @if($isLocked && !$isAdmin)
@@ -91,8 +95,15 @@
                                 <i class="fa-solid fa-lock text-xs"></i>
                                 <span>Terkunci</span>
                             </button>
+                        @elseif($declCanSend)
+                            <button type="button" onclick="saveAndSubmitForVerification()"
+                                    class="px-3 sm:px-4 py-1.5 rounded-lg bg-[#f95a00] hover:bg-orange-700 text-white font-bold text-xs flex items-center space-x-1 sm:space-x-1.5 shadow-2xs transition-all cursor-pointer"
+                                    title="Simpan data lalu kirim (wajib centang pernyataan kebenaran data)">
+                                <i class="fa-solid fa-paper-plane text-xs"></i>
+                                <span>Simpan &amp; Kirim</span>
+                            </button>
                         @else
-                            <button onclick="saveAndReturn()" 
+                            <button onclick="saveAndReturn()"
                                     class="px-3 sm:px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center space-x-1 sm:space-x-1.5 shadow-2xs transition-all cursor-pointer">
                                 <i class="fa-solid fa-floppy-disk text-xs"></i>
                                 <span>Simpan<span class="hidden sm:inline"> Perubahan</span></span>
@@ -153,7 +164,7 @@
                         </div>
                         <div>
                             <span class="font-bold text-slate-900">Petunjuk Pengeditan:</span>
-                            <p class="text-slate-600 text-[11px] mt-0.5">Ubah angka atau teks pada kotak oranye di bawah ini (termasuk judul kolom & nomor kolom pada kepala tabel). Setelah selesai, klik tombol <strong>"Simpan Perubahan"</strong> di atas atau di bawah tabel.</p>
+                            <p class="text-slate-600 text-[11px] mt-0.5">Ubah angka atau teks pada kotak oranye di bawah ini (termasuk judul kolom & nomor kolom pada kepala tabel). Setelah selesai, centang <strong>Pernyataan Kebenaran Data</strong> di bawah "Sumber", lalu klik tombol <strong>"Simpan &amp; Kirim"</strong>.</p>
                         </div>
                     </div>
                 </div>
@@ -192,21 +203,27 @@
                 <!-- TABLE FOOTER: NOTE & SOURCE / SUMBER -->
                 <div class="text-xs text-slate-700 space-y-2 pt-2 border-t border-slate-100 mb-6">
                     <div id="tableNoteRow" class="hidden grid grid-cols-1 sm:grid-cols-12 gap-1 sm:gap-2">
-                        <div class="sm:col-span-2 font-bold flex space-x-1">
+                        <div class="sm:col-span-2 font-bold flex space-x-1 items-center">
                             <span>Catatan</span>
                             <span class="font-normal">/</span>
                             <span class="italic font-normal text-slate-500">Note:</span>
                         </div>
-                        <div class="sm:col-span-10 text-slate-700 leading-relaxed" id="tableNoteContent">
+                        <div class="sm:col-span-10 text-slate-700 leading-relaxed outline-none focus:ring-1 focus:ring-orange-400 p-1.5 rounded border border-slate-200 hover:border-slate-300 bg-white min-h-[32px]" contenteditable="true" id="tableNoteContent">
                         </div>
                     </div>
+                    <div id="btnAddNoteWrapper" class="flex items-center">
+                        <button type="button" onclick="document.getElementById('tableNoteRow').classList.remove('hidden'); document.getElementById('tableNoteContent').focus(); document.getElementById('btnAddNoteWrapper').classList.add('hidden');" class="text-xs text-orange-600 hover:text-orange-700 font-semibold inline-flex items-center space-x-1.5 cursor-pointer py-1 px-2 rounded hover:bg-orange-50 border border-dashed border-orange-300 transition-colors">
+                            <i class="fa-solid fa-plus text-[11px]"></i>
+                            <span>Tambah Catatan (Note)</span>
+                        </button>
+                    </div>
                     <div class="grid grid-cols-1 sm:grid-cols-12 gap-1 sm:gap-2">
-                        <div class="sm:col-span-2 font-bold flex space-x-1">
+                        <div class="sm:col-span-2 font-bold flex space-x-1 items-center">
                             <span>Sumber</span>
                             <span class="font-normal">/</span>
                             <span class="italic font-normal text-slate-500">Source:</span>
                         </div>
-                        <div class="sm:col-span-10 text-slate-600" id="tableSourceContent">
+                        <div class="sm:col-span-10 text-slate-600 outline-none focus:ring-1 focus:ring-orange-400 p-1.5 rounded border border-slate-200 hover:border-slate-300 bg-white min-h-[32px]" contenteditable="true" id="tableSourceContent">
                             Dinas Pekerjaan Umum dan Penataan Ruang Kota Bukittinggi / <span class="italic text-slate-500">Public Work and Spatial Planning Service of Bukittinggi Municipality</span>
                         </div>
                     </div>
@@ -244,14 +261,15 @@
                     @endif
 
                     @if($declCanSend)
-                        <label for="dataDeclarationCheck" class="flex items-start gap-3 cursor-pointer select-none rounded-xl bg-white border border-orange-200 hover:border-[#f95a00] p-3.5 transition-colors">
-                            <input type="checkbox" id="dataDeclarationCheck" class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 accent-[#f95a00] cursor-pointer">
-                            <span class="leading-relaxed text-slate-800 text-[12px]">
+                        <label class="flex items-center gap-3 p-3 rounded-xl bg-white border border-orange-200/90 shadow-2xs cursor-pointer hover:bg-orange-50/40 transition-colors">
+                            <input type="checkbox" id="dataDeclarationCheck" class="w-4 h-4 rounded border-orange-300 text-[#f95a00] focus:ring-[#f95a00] cursor-pointer">
+                            <span class="text-xs text-slate-800 leading-relaxed select-none">
                                 Saya <strong>{{ session('user.displayName', 'pengguna') }}</strong> menyatakan bahwa data yang saya kirim pada tabel ini adalah
                                 <strong>benar</strong>, sesuai dengan sumber data resmi, dan dapat dipertanggungjawabkan.
                             </span>
                         </label>
                     @endif
+
                 </div>
                 @endif
 
@@ -269,17 +287,18 @@
                             <i class="fa-solid fa-rotate-left text-xs"></i>
                             <span>Reset Nilai Asli</span>
                         </button>
-                        <button onclick="saveAndReturn()" 
-                                class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer shadow-2xs">
-                            <i class="fa-solid fa-floppy-disk text-xs"></i>
-                            <span>Simpan Perubahan Data</span>
-                        </button>
                         @if($declCanSend)
-                            <button type="button" id="btnSaveAndSubmit" onclick="saveAndSubmitForVerification()" disabled
+                            <button type="button" id="btnSaveAndSubmit" onclick="saveAndSubmitForVerification()"
                                     title="Centang pernyataan kebenaran data terlebih dahulu"
                                     class="px-5 py-2 rounded-xl bg-[#f95a00] hover:bg-orange-700 text-white text-xs font-bold transition-all flex items-center space-x-1.5 shadow-2xs opacity-50 cursor-not-allowed">
                                 <i class="fa-solid fa-paper-plane text-xs"></i>
-                                <span>Simpan &amp; Kirim ke Wali Data</span>
+                                <span>Simpan &amp; Kirim</span>
+                            </button>
+                        @else
+                            <button onclick="saveAndReturn()"
+                                    class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer shadow-2xs">
+                                <i class="fa-solid fa-floppy-disk text-xs"></i>
+                                <span>Simpan Perubahan Data</span>
                             </button>
                         @endif
                     </div>

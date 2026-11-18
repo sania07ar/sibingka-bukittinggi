@@ -240,6 +240,80 @@ trait BuildsBab3Templates
     }
 
     /**
+     * Membangun HTML bersih dan rapi untuk Tabel 3.1.6 (BPS Susenas - Jenis Kelamin & Kepandaian Membaca dan Menulis)
+     */
+    private function buildTabel316Html(int $year, ?string $existingHtml = null): string
+    {
+        $dash = '<span class="text-slate-400 font-normal">-</span>';
+
+        $knownData = [
+            2025 => [
+                'l_dapat' => '99,60',
+                'l_tidak' => '0,40',
+                'p_dapat' => '99,48',
+                'p_tidak' => '0,52',
+            ],
+            2024 => [
+                'l_dapat' => '99,45',
+                'l_tidak' => '0,55',
+                'p_dapat' => '99,85',
+                'p_tidak' => '0,15',
+            ],
+        ];
+
+        $cur = $knownData[$year] ?? [
+            'l_dapat' => $dash,
+            'l_tidak' => $dash,
+            'p_dapat' => $dash,
+            'p_tidak' => $dash,
+        ];
+
+        $valLDapat = $cur['l_dapat'];
+        $valLTidak = $cur['l_tidak'];
+        $valPDapat = $cur['p_dapat'];
+        $valPTidak = $cur['p_tidak'];
+
+        return <<<HTML
+<thead>
+    <tr class="bg-[#f95a00] text-white text-center font-bold">
+        <th class="py-3 px-4 font-bold border border-slate-700" colspan="2">
+            <div>Jenis Kelamin</div>
+            <div class="italic font-normal text-[11px] sm:text-xs">Sex Type</div>
+        </th>
+        <th class="py-3 px-4 font-bold border border-slate-700">
+            <div>Persentase</div>
+            <div class="italic font-normal text-[11px] sm:text-xs">Percentage</div>
+        </th>
+    </tr>
+    <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+        <th class="py-1 px-3 border border-slate-700" colspan="2">(1)</th>
+        <th class="py-1 px-3 border border-slate-700">(2)</th>
+    </tr>
+</thead>
+<tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+    <tr class="hover:bg-amber-100/60 transition-colors bg-[#fef9c3] text-slate-900 font-medium">
+        <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle" rowspan="2">Laki–laki / <span class="italic font-normal">Male</span></td>
+        <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle">Dapat Baca Tulis / <span class="italic font-normal">Read / Write Skill</span></td>
+        <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">{$valLDapat}</td>
+    </tr>
+    <tr class="hover:bg-amber-100/60 transition-colors bg-[#fef9c3] text-slate-900 font-medium">
+        <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle">Tidak Dapat Baca Tulis / <span class="italic font-normal">Read / Write Unskill</span></td>
+        <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">{$valLTidak}</td>
+    </tr>
+    <tr class="hover:bg-amber-100/60 transition-colors bg-[#fef9c3] text-slate-900 font-medium">
+        <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle" rowspan="2">Perempuan / <span class="italic font-normal">Female</span></td>
+        <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle">Dapat Baca Tulis / <span class="italic font-normal">Read / Write Skill</span></td>
+        <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">{$valPDapat}</td>
+    </tr>
+    <tr class="hover:bg-amber-100/60 transition-colors bg-[#fef9c3] text-slate-900 font-medium">
+        <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle">Tidak Dapat Baca Tulis / <span class="italic font-normal">Read / Write Unskill</span></td>
+        <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">{$valPTidak}</td>
+    </tr>
+</tbody>
+HTML;
+    }
+
+    /**
      * Membangun HTML bersih dan akurat untuk Tabel 3.1.8 (Disdukcapil - Penduduk Wajib KTP)
      * dengan rentang 6 tahun historis pada bagian Jumlah: [year, year-1, ..., year-5]
      */

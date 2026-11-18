@@ -65,7 +65,7 @@
         </div>
 
         @php
-            $selectedYear = (int) request('year', 2025);
+            $selectedYear = (int) request('year', (int) date('Y'));
             $endYear = max(2036, ((int) date('Y')) + 10);
             $availableYears = range($endYear, 2018);
 
@@ -177,6 +177,7 @@
 
             // Status verifikasi semua tabel pada tahun ini -> dasar 3 persentase (Input, Verifikasi Wali Data, Validasi BPS)
             $progressMap = \App\Support\MonitoringProgress::load($selectedYear);
+            $activityMap = \App\Support\MonitoringProgress::loadActivities($selectedYear);
 
             foreach ($opdList as $code => $info) {
                 $totalCat = count(\App\Support\MonitoringProgress::catalogTables('opd', $code)) ?: ($opdCatalogCounts[$code] ?? 4);
@@ -270,7 +271,8 @@
                     'revision' => $revisionCounts[$code] ?? ($revisionCounts[ltrim($code, '0')] ?? 0),
                     'is_verified_by_wali' => $isVerifiedByWali,
                     'has_submitted' => $hasSubmitted,
-                ] + \App\Support\MonitoringProgress::stats($progressMap, 'opd', $code);
+                ] + \App\Support\MonitoringProgress::stats($progressMap, 'opd', $code)
+                  + ['activities' => \App\Support\MonitoringProgress::activitiesFor($activityMap, 'opd', $code)];
             }
 
             $countTotal = count($allOpds);
@@ -364,6 +366,7 @@
         window.monitoringSelectedYear = {{ $selectedYear }};
         window.allTablesStatusDb = @json($allTablesStatus);
         const allOpdsData = @json($allOpds);
+        window.monAllData = allOpdsData; // dipakai jendela detail (riwayat aktivitas & persentase)
 
         function exportMonitoringExcel() {
             exportMonitoringToExcel({

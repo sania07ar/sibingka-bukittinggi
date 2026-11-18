@@ -32,7 +32,11 @@ trait AdjustsTemplateYears
         }
         $years = range(2018, 2036);
         $cleanHtml = $this->buildEmptyTemplateFromHtml($html);
-        $targetSourceType = in_array($sourceType, ['custom_bps', 'custom_instansi', 'custom', 'custom_opd']) ? $sourceType : ($type === 'bps' ? 'custom_bps' : ($type === 'instansi' ? 'custom_instansi' : 'template'));
+        $targetSourceType = match($type) {
+            'bps' => 'custom_bps',
+            'instansi' => 'custom_instansi',
+            default => (in_array($sourceType, ['custom', 'custom_opd']) ? $sourceType : 'custom_opd')
+        };
 
         foreach ($years as $targetYear) {
             if ($targetYear === $sourceYear) continue;
@@ -97,7 +101,14 @@ trait AdjustsTemplateYears
                 if ($colspan >= 2 && preg_match('/[a-zA-Z]{3,}/', $rawText)) continue;
                 if ($td->hasAttribute('rowspan') && preg_match('/[a-zA-Z]{3,}/', $rawText)) continue;
                 // Lindungi label tahun (misal: 2024, 2025, 2022(SIUP)) agar tidak diubah menjadi '-'
-                if (preg_match('/^(19|20)\d{2}(\s*\(SIUP\))?$/', $rawText)) continue;
+                // Hanya lindungi jika berada di kolom indeks <= 1 dan merupakan label, bukan data numerik
+                if ($cIdx <= 1 && preg_match('/^(19|20)\d{2}(\s*\(SIUP\))?$/', $rawText)) {
+                    $col0 = $tds->item(0);
+                    $col0Text = $col0 ? trim($col0->textContent) : '';
+                    if ($cIdx === 0 || preg_match('/(jumlah|total)/i', $col0Text) || $td->hasAttribute('rowspan') || $col0->hasAttribute('rowspan')) {
+                        continue;
+                    }
+                }
                 $isPureNumberOrDash = preg_match('/^[\d.,\s\-%–—()]+$/', $rawText) || $rawText === '';
                 if ($isPureNumberOrDash) {
                     while ($td->hasChildNodes()) {
@@ -227,16 +238,50 @@ trait AdjustsTemplateYears
             $tds = $xpath->query('//tbody//td');
             foreach ($tds as $td) {
                 $text = strtolower(trim($td->textContent));
-                if (str_starts_with($text, 'jumlah') || str_starts_with($text, 'total') || str_contains($text, 'jumlah / total') || str_contains($text, 'jumlah/total')) {
+                if (str_starts_with($text, 'jumlah') || str_starts_with($text, 'total') || str_contains($text, 'jumlah / total') || str_contains($text, 'jumlah/total') || str_contains($text, 'jumlah / tota')) {
+                    // Perbaiki teks jika terpotong menjadi "Jumlah / Tota"
+                    if (str_contains($text, 'tota') && !str_contains($text, 'total')) {
+                        while ($td->hasChildNodes()) {
+                            $td->removeChild($td->firstChild);
+                        }
+                        $td->appendChild($dom->createTextNode('Jumlah / '));
+                        $spanTot = $dom->createElement('span', 'Total');
+                        $spanTot->setAttribute('class', 'italic font-bold');
+                        $td->appendChild($spanTot);
+                    }
+
                     $rowspan = (int) $td->getAttribute('rowspan');
                     if ($rowspan > 1) {
                         $hasJumlahMultiYear = true;
                         $tr = $td->parentNode;
-                        for ($i = 0; $i < $rowspan && $tr; $i++) {
-                            $rowTds = $xpath->query('td', $tr);
+
+                        // Kumpulkan baris-baris tahun historis yang terkait dengan blok Jumlah ini
+                        $yearRows = [$tr];
+                        $nextTr = $tr ? $tr->nextSibling : null;
+                        while ($nextTr) {
+                            if ($nextTr instanceof \DOMElement && $nextTr->nodeName === 'tr') {
+                                $rTds = $xpath->query('td', $nextTr);
+                                // Jika baris ini diawali angka tahun 4 digit (misal 2024, 2023, dst.)
+                                if ($rTds->length > 0 && (preg_match('/^(19|20)\d{2}\*?(\s*\(SIUP\))?$/', trim($rTds->item(0)->textContent)) || trim($rTds->item(0)->textContent) === '-')) {
+                                    $yearRows[] = $nextTr;
+                                } else {
+                                    break;
+                                }
+                            }
+                            $nextTr = $nextTr->nextSibling;
+                        }
+
+                        // Jika jumlah baris tahun di HTML lebih besar dari rowspan (misal rowspan 5 padahal barisnya ada 6 seperti pada Tabel 11.1)
+                        if (count($yearRows) > $rowspan) {
+                            $rowspan = count($yearRows);
+                            $td->setAttribute('rowspan', (string)$rowspan);
+                        }
+
+                        foreach ($yearRows as $i => $yTr) {
+                            $rowTds = $xpath->query('td', $yTr);
                             $yearTd = null;
                             foreach ($rowTds as $rTd) {
-                                if ($rTd !== $td && preg_match('/^(19|20)\d{2}(\s*\(SIUP\))?$/', trim($rTd->textContent))) {
+                                if ($rTd !== $td && preg_match('/^(19|20)\d{2}\*?(\s*\(SIUP\))?$/', trim($rTd->textContent))) {
                                     $yearTd = $rTd;
                                     break;
                                 }
@@ -246,14 +291,10 @@ trait AdjustsTemplateYears
                             }
                             if ($yearTd) {
                                 $curTxt = trim($yearTd->textContent);
-                                if (preg_match('/^(19|20)\d{2}(\s*\(SIUP\))?$/', $curTxt) || $curTxt === '-' || $curTxt === '') {
+                                if (preg_match('/^(19|20)\d{2}\*?(\s*\(SIUP\))?$/', $curTxt) || $curTxt === '-' || $curTxt === '') {
                                     $y = $targetYear - $i;
                                     $yearTd->textContent = (string)$y;
                                 }
-                            }
-                            $tr = $tr->nextSibling;
-                            while ($tr && $tr->nodeType !== XML_ELEMENT_NODE) {
-                                $tr = $tr->nextSibling;
                             }
                         }
                     } else {
@@ -303,7 +344,7 @@ trait AdjustsTemplateYears
                     if ($rowTds->length > 0) {
                         $firstTd = $rowTds->item(0);
                         $txt = trim($firstTd->textContent);
-                        if (preg_match('/^(19|20)\d{2}(\s*\(SIUP\))?$/', $txt)) {
+                        if (preg_match('/^(19|20)\d{2}\*?(\s*\(SIUP\))?$/', $txt)) {
                             array_unshift($bottomYearTds, $firstTd);
                         } else {
                             break;
@@ -311,13 +352,28 @@ trait AdjustsTemplateYears
                     }
                 }
                 if (count($bottomYearTds) >= 2) {
-                    $firstY = (int) trim($bottomYearTds[0]->textContent);
-                    $lastY = (int) trim($bottomYearTds[count($bottomYearTds) - 1]->textContent);
+                    $firstY = (int) preg_replace('/\D/', '', trim($bottomYearTds[0]->textContent));
+                    $lastY = (int) preg_replace('/\D/', '', trim($bottomYearTds[count($bottomYearTds) - 1]->textContent));
                     $isDesc = $firstY > $lastY;
                     $count = count($bottomYearTds);
+
+                    // Cek apakah baris sebelum $bottomYearTds[0] adalah baris Jumlah/Total tahun target (misal Tabel 4.2.17)
+                    $startOffset = 0;
+                    $firstTr = $bottomYearTds[0]->parentNode;
+                    $prevTr = $firstTr ? $firstTr->previousSibling : null;
+                    while ($prevTr && !($prevTr instanceof \DOMElement && $prevTr->nodeName === 'tr')) {
+                        $prevTr = $prevTr->previousSibling;
+                    }
+                    if ($prevTr) {
+                        $prevText = trim($prevTr->textContent);
+                        if (preg_match('/(jumlah|total)/i', $prevText)) {
+                            $startOffset = 1;
+                        }
+                    }
+
                     foreach ($bottomYearTds as $idx => $td) {
-                        $targetY = $isDesc ? ($targetYear - $idx) : ($targetYear - ($count - 1 - $idx));
-                        $td->textContent = (string)$targetY;
+                        $targetY = $isDesc ? ($targetYear - $startOffset - $idx) : ($targetYear - $startOffset - ($count - 1 - $idx));
+                        $td->textContent = ($targetY <= 2019 && str_contains($td->textContent, '*')) ? "{$targetY}*" : (string)$targetY;
                     }
                 }
             }

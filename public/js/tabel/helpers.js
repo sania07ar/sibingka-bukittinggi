@@ -292,11 +292,14 @@
             if (tableCode === '5.2.1' || tableCode === '5.2.2') {
                 return get2YearPeriod(year);
             }
-            if (tableCode === '4.1.20' || tableCode === '2.4.1' || tableCode === '2.4.2') {
+            if (tableCode === '4.3.3' || tableCode === '4.1.20' || tableCode === '2.4.1' || tableCode === '2.4.2') {
                 return get4YearPeriod(year);
             }
-            if (tableCode === '4.2.20' || tableCode === '4.3.15' || tableCode === '9.3' || tableCode === '8.1.6') {
+            if (tableCode === '4.2.15' || tableCode === '4.2.16' || tableCode === '4.2.20' || tableCode === '4.3.15' || tableCode === '9.3' || tableCode === '8.1.6' || tableCode === '2.4.4' || tableCode === '4.5.1' || tableCode === '6.3' || tableCode === '5.3.2' || tableCode === '5.3.3' || tableCode === '5.3.4' || tableCode === '5.3.6') {
                 return get7YearPeriod(year);
+            }
+            if (tableCode === '3.1.8' || tableCode === '3.2.8' || tableCode === '9.4' || tableCode === '11.1' || tableCode === '11.3' || tableCode === '11.4' || tableCode === '4.3.2' || tableCode === '4.3.10' || tableCode === '4.3.11' || tableCode === '4.3.12' || tableCode === '8.2.5') {
+                return get6YearPeriod(year);
             }
             return get5YearPeriod(year);
         }

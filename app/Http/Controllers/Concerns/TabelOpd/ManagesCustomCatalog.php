@@ -39,6 +39,36 @@ trait ManagesCustomCatalog
             ->distinct()
             ->get();
 
+        if ($type === 'instansi') {
+            $allOfficialOpdCodes = [];
+            foreach (config('sibingka_tables.opd', []) as $codes) {
+                foreach ($codes as $c) {
+                    $allOfficialOpdCodes[$c] = true;
+                }
+            }
+            $tables = $tables->reject(fn($t) => isset($allOfficialOpdCodes[$t->code]))->values();
+        } elseif ($type === 'opd') {
+            $allOfficialInstansiCodes = [];
+            foreach (config('sibingka_tables.instansi', []) as $codes) {
+                foreach ($codes as $c) {
+                    $allOfficialInstansiCodes[$c] = true;
+                }
+            }
+            $allOfficialBpsCodes = [];
+            foreach (config('sibingka_tables.bps', []) as $codes) {
+                foreach ($codes as $c) {
+                    $allOfficialBpsCodes[$c] = true;
+                }
+            }
+            $allOfficialOpdCodes = [];
+            foreach (config('sibingka_tables.opd', []) as $codes) {
+                foreach ($codes as $c) {
+                    $allOfficialOpdCodes[$c] = true;
+                }
+            }
+            $tables = $tables->reject(fn($t) => (isset($allOfficialInstansiCodes[$t->code]) || isset($allOfficialBpsCodes[$t->code])) && !isset($allOfficialOpdCodes[$t->code]))->values();
+        }
+
         // Ambil daftar kode tabel yang telah dihapus
         $deletedQuery = TabelMetadata::where('source_type', 'deleted');
         if ($opdCode) {
@@ -83,7 +113,7 @@ trait ManagesCustomCatalog
         $sourceType = match($type) {
             'instansi' => 'custom_instansi',
             'bps' => 'custom_bps',
-            default => 'custom'
+            default => 'custom_opd'
         };
 
         $years = [2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028];
@@ -106,7 +136,7 @@ trait ManagesCustomCatalog
                 [
                     'title_id' => $titleId,
                     'title_en' => $titleEn,
-                    'source_type' => 'template',
+                    'source_type' => $sourceType,
                     'table_html' => $starterHtml,
                     'is_saved' => false,
                 ]

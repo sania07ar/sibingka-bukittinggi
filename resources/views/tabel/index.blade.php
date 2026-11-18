@@ -161,6 +161,7 @@
             serverDbDataStore: @json($dbDataStore ?? []),
             serverDbMetadata: @json($dbMetadata ?? null),
             serverDbFallbackMetadata: @json($dbFallbackMetadata ?? null),
+            serverDbCustomTables: @json($dbCustomTables ?? []),
             currentUserData: @json(session('user') ?? ['name' => 'Pengguna', 'role' => 'opd', 'displayName' => 'Pengguna']),
             routes: {
                 dataBps: '{{ route("data-bps") }}',
@@ -184,6 +185,7 @@
         window.serverDbDataStore = window.SiBingkaConfig.serverDbDataStore;
         window.serverDbMetadata = window.SiBingkaConfig.serverDbMetadata;
         window.serverDbFallbackMetadata = window.SiBingkaConfig.serverDbFallbackMetadata;
+        window.serverDbCustomTables = window.SiBingkaConfig.serverDbCustomTables;
         window.currentUserData = window.SiBingkaConfig.currentUserData;
         window.tableSchemas = window.tableSchemas || {};
         window.isEditMode = false;

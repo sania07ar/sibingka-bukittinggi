@@ -213,6 +213,19 @@
                             }
                         }
                     });
+                } else if (currentTableCode === '11.3') {
+                    rowsData = {};
+                    if (!rowsData[currentYear]) rowsData[currentYear] = {};
+                    const bodyRows = tableEl.querySelectorAll('tbody tr');
+                    bodyRows.forEach(tr => {
+                        const inp = tr.querySelector('.table-edit-input');
+                        if (inp) {
+                            const k = inp.getAttribute('data-key');
+                            if (k) {
+                                rowsData[currentYear][k] = inp.value.trim();
+                            }
+                        }
+                    });
                 } else if (currentTableCode === '1.1.8') {
                     rowsData = {};
                     const bodyRows = tableEl.querySelectorAll('tbody tr');

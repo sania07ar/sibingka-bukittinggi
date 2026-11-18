@@ -30,6 +30,10 @@ class TabelMetadata extends Model
         'data_declared',
         'submitted_at',
         'submitted_by',
+        'walidata_verified_at',
+        'walidata_verified_by',
+        'validated_at',
+        'validated_by',
     ];
 
     protected $casts = [
@@ -38,6 +42,8 @@ class TabelMetadata extends Model
         'verified_at' => 'datetime',
         'data_declared' => 'boolean',
         'submitted_at' => 'datetime',
+        'walidata_verified_at' => 'datetime',
+        'validated_at' => 'datetime',
     ];
 
     /**

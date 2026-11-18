@@ -1,5 +1,413 @@
 /** SiBingka - Skema tabel (tampilan / index): 4.1.18, 4.1.19, 1.1.8, 1.1.9, 1.1.10, 1.1.6, 4.1.1, 4.1.2 */
 Object.assign(window.tableSchemas, {
+            '4.1.11': {
+                titleId: 'Jumlah Kelurahan yang Memiliki Fasilitas Sekolah Menurut Kecamatan dan Tingkat Pendidikan di Kota Bukittinggi',
+                titleEn: 'Number of Subdistricts Having Educational Facilities by Subdistrict and Educational Level In Bukittinggi Municipality',
+                isMultiYear: true,
+                render: function(year) {
+                    const yrInt = parseInt(year) || 2025;
+                    const y1 = yrInt - 3;
+                    const y2 = yrInt - 2;
+                    const y3 = yrInt - 1;
+                    const y4 = yrInt;
+                    return `<thead>
+                        <tr class="bg-[#f95a00] text-white text-center font-bold">
+                            <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+                                <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                            </th>
+                            <th class="py-3 px-4 font-bold border border-slate-700" colspan="4">
+                                <div>SD</div><div class="italic font-normal text-[11px] sm:text-xs">Primary School</div>
+                            </th>
+                            <th class="py-3 px-4 font-bold border border-slate-700" colspan="4">
+                                <div>SMP</div><div class="italic font-normal text-[11px] sm:text-xs">Junior High School</div>
+                            </th>
+                            <th class="py-3 px-4 font-bold border border-slate-700" colspan="4">
+                                <div>SMA</div><div class="italic font-normal text-[11px] sm:text-xs">Senior High School</div>
+                            </th>
+                            <th class="py-3 px-4 font-bold border border-slate-700" colspan="4">
+                                <div>SMK</div><div class="italic font-normal text-[11px] sm:text-xs">Vocational High School</div>
+                            </th>
+                            <th class="py-3 px-4 font-bold border border-slate-700" colspan="4">
+                                <div>Akademi/Perguruan Tinggi</div><div class="italic font-normal text-[11px] sm:text-xs">College/University</div>
+                            </th>
+                        </tr>
+                        <tr class="bg-[#f95a00] text-white text-center font-bold text-xs">
+                            <th class="py-2 px-3 font-bold border border-slate-700 text-center"><div>${y1}</div></th>
+                            <th class="py-2 px-3 font-bold border border-slate-700 text-center"><div>${y2}</div></th>
+                            <th class="py-2 px-3 font-bold border border-slate-700 text-center"><div>${y3}</div></th>
+                            <th class="py-2 px-3 font-bold border border-slate-700 text-center"><div>${y4}</div></th>
+                            <th class="py-2 px-3 font-bold border border-slate-700 text-center"><div>${y1}</div></th>
+                            <th class="py-2 px-3 font-bold border border-slate-700 text-center"><div>${y2}</div></th>
+                            <th class="py-2 px-3 font-bold border border-slate-700 text-center"><div>${y3}</div></th>
+                            <th class="py-2 px-3 font-bold border border-slate-700 text-center"><div>${y4}</div></th>
+                            <th class="py-2 px-3 font-bold border border-slate-700 text-center"><div>${y1}</div></th>
+                            <th class="py-2 px-3 font-bold border border-slate-700 text-center"><div>${y2}</div></th>
+                            <th class="py-2 px-3 font-bold border border-slate-700 text-center"><div>${y3}</div></th>
+                            <th class="py-2 px-3 font-bold border border-slate-700 text-center"><div>${y4}</div></th>
+                            <th class="py-2 px-3 font-bold border border-slate-700 text-center"><div>${y1}</div></th>
+                            <th class="py-2 px-3 font-bold border border-slate-700 text-center"><div>${y2}</div></th>
+                            <th class="py-2 px-3 font-bold border border-slate-700 text-center"><div>${y3}</div></th>
+                            <th class="py-2 px-3 font-bold border border-slate-700 text-center"><div>${y4}</div></th>
+                            <th class="py-2 px-3 font-bold border border-slate-700 text-center"><div>${y1}</div></th>
+                            <th class="py-2 px-3 font-bold border border-slate-700 text-center"><div>${y2}</div></th>
+                            <th class="py-2 px-3 font-bold border border-slate-700 text-center"><div>${y3}</div></th>
+                            <th class="py-2 px-3 font-bold border border-slate-700 text-center"><div>${y4}</div></th>
+                        </tr>
+                        <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                            <th class="py-1 px-3 border border-slate-700">(1)</th>
+                            <th class="py-1 px-3 border border-slate-700">(2)</th>
+                            <th class="py-1 px-3 border border-slate-700">(3)</th>
+                            <th class="py-1 px-3 border border-slate-700">(4)</th>
+                            <th class="py-1 px-3 border border-slate-700">(5)</th>
+                            <th class="py-1 px-3 border border-slate-700">(6)</th>
+                            <th class="py-1 px-3 border border-slate-700">(7)</th>
+                            <th class="py-1 px-3 border border-slate-700">(8)</th>
+                            <th class="py-1 px-3 border border-slate-700">(9)</th>
+                            <th class="py-1 px-3 border border-slate-700">(10)</th>
+                            <th class="py-1 px-3 border border-slate-700">(11)</th>
+                            <th class="py-1 px-3 border border-slate-700">(12)</th>
+                            <th class="py-1 px-3 border border-slate-700">(13)</th>
+                            <th class="py-1 px-3 border border-slate-700">(14)</th>
+                            <th class="py-1 px-3 border border-slate-700">(15)</th>
+                            <th class="py-1 px-3 border border-slate-700">(16)</th>
+                            <th class="py-1 px-3 border border-slate-700">(17)</th>
+                            <th class="py-1 px-3 border border-slate-700">(18)</th>
+                            <th class="py-1 px-3 border border-slate-700">(19)</th>
+                            <th class="py-1 px-3 border border-slate-700">(20)</th>
+                            <th class="py-1 px-3 border border-slate-700">(21)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                        <tr class="hover:bg-amber-100/60 transition-colors bg-[#fef9c3] text-slate-900 font-medium">
+                            <td class="py-2 px-4 border border-slate-700 text-left font-semibold align-middle">01. Guguk Panjang</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">7</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">...</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">7</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">7</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">6</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">...</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">6</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">6</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">4</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">...</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">4</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">4</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">2</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">...</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">2</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">2</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">5</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">...</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">5</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">5</td>
+                        </tr>
+                        <tr class="hover:bg-amber-100/60 transition-colors bg-[#fef9c3] text-slate-900 font-medium">
+                            <td class="py-2 px-4 border border-slate-700 text-left font-semibold align-middle">02. Mandiangin Koto Selayan</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">8</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">...</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">8</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">8</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">5</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">...</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">5</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">7</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">5</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">...</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">5</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">5</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">4</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">...</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">4</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">4</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">5</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">...</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">5</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">5</td>
+                        </tr>
+                        <tr class="hover:bg-amber-100/60 transition-colors bg-[#fef9c3] text-slate-900 font-medium">
+                            <td class="py-2 px-4 border border-slate-700 text-left font-semibold align-middle">03. Aur Birugo Tigo Baleh</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">8</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">...</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">8</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">8</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">2</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">...</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">3</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">3</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">1</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">...</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">2</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">2</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">2</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">...</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">2</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">2</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">2</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">...</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">2</td>
+                            <td class="py-2 px-3 border border-slate-700 text-center align-middle">2</td>
+                        </tr>
+                        <tr class="bg-amber-100/70 font-bold border-t-2 border-b-2 border-slate-700 hover:bg-amber-200/60 transition-colors">
+                            <td class="py-2.5 px-4 border border-slate-700 text-left font-bold align-middle">Bukittinggi</td>
+                            <td class="py-2.5 px-3 border border-slate-700 text-center font-bold align-middle">23</td>
+                            <td class="py-2.5 px-3 border border-slate-700 text-center font-bold align-middle">...</td>
+                            <td class="py-2.5 px-3 border border-slate-700 text-center font-bold align-middle">23</td>
+                            <td class="py-2.5 px-3 border border-slate-700 text-center font-bold align-middle">23</td>
+                            <td class="py-2.5 px-3 border border-slate-700 text-center font-bold align-middle">13</td>
+                            <td class="py-2.5 px-3 border border-slate-700 text-center font-bold align-middle">...</td>
+                            <td class="py-2.5 px-3 border border-slate-700 text-center font-bold align-middle">14</td>
+                            <td class="py-2.5 px-3 border border-slate-700 text-center font-bold align-middle">16</td>
+                            <td class="py-2.5 px-3 border border-slate-700 text-center font-bold align-middle">10</td>
+                            <td class="py-2.5 px-3 border border-slate-700 text-center font-bold align-middle">...</td>
+                            <td class="py-2.5 px-3 border border-slate-700 text-center font-bold align-middle">11</td>
+                            <td class="py-2.5 px-3 border border-slate-700 text-center font-bold align-middle">11</td>
+                            <td class="py-2.5 px-3 border border-slate-700 text-center font-bold align-middle">8</td>
+                            <td class="py-2.5 px-3 border border-slate-700 text-center font-bold align-middle">...</td>
+                            <td class="py-2.5 px-3 border border-slate-700 text-center font-bold align-middle">8</td>
+                            <td class="py-2.5 px-3 border border-slate-700 text-center font-bold align-middle">8</td>
+                            <td class="py-2.5 px-3 border border-slate-700 text-center font-bold align-middle">12</td>
+                            <td class="py-2.5 px-3 border border-slate-700 text-center font-bold align-middle">...</td>
+                            <td class="py-2.5 px-3 border border-slate-700 text-center font-bold align-middle">12</td>
+                            <td class="py-2.5 px-3 border border-slate-700 text-center font-bold align-middle">12</td>
+                        </tr>
+                    </tbody>`;
+                }
+            },
+            '4.1.12': {
+                titleId: 'Angka Partisipasi Murni (APM) dan Angka Partisipasi Kasar (APK) Menurut Jenjang Pendidikan di Kota Bukittinggi',
+                titleEn: 'Participant Rates and Gross Participant Rates by Educational Level in Bukittinggi Municipality',
+                isMultiYear: true,
+                render: function(year) {
+                    const yrInt = parseInt(year) || 2025;
+                    const y1 = yrInt - 2;
+                    const y2 = yrInt - 1;
+                    const y3 = yrInt;
+                    const dash = '<span class="text-slate-400 font-normal">-</span>';
+                    const knownData = {
+                        sd: {
+                            2022: { apm: '99,85', apk: '106,34' },
+                            2023: { apm: '99,85', apk: '106,72' },
+                            2024: { apm: '99,21', apk: '107,81' },
+                            2025: { apm: '98,43', apk: '103,17' }
+                        },
+                        smp: {
+                            2022: { apm: '81,98', apk: '86,77' },
+                            2023: { apm: '82,83', apk: '93,12' },
+                            2024: { apm: '88,76', apk: '111,92' },
+                            2025: { apm: '86,27', apk: '105,80' }
+                        },
+                        sma: {
+                            2022: { apm: '74,92', apk: '92,48' },
+                            2023: { apm: '76,92', apk: '98,85' },
+                            2024: { apm: '81,33', apk: '99,96' },
+                            2025: { apm: '73,50', apk: '97,96' }
+                        }
+                    };
+
+                    const sd_apm1 = knownData.sd[y1]?.apm ?? dash;
+                    const sd_apm2 = knownData.sd[y2]?.apm ?? dash;
+                    const sd_apm3 = knownData.sd[y3]?.apm ?? dash;
+                    const sd_apk1 = knownData.sd[y1]?.apk ?? dash;
+                    const sd_apk2 = knownData.sd[y2]?.apk ?? dash;
+                    const sd_apk3 = knownData.sd[y3]?.apk ?? dash;
+
+                    const smp_apm1 = knownData.smp[y1]?.apm ?? dash;
+                    const smp_apm2 = knownData.smp[y2]?.apm ?? dash;
+                    const smp_apm3 = knownData.smp[y3]?.apm ?? dash;
+                    const smp_apk1 = knownData.smp[y1]?.apk ?? dash;
+                    const smp_apk2 = knownData.smp[y2]?.apk ?? dash;
+                    const smp_apk3 = knownData.smp[y3]?.apk ?? dash;
+
+                    const sma_apm1 = knownData.sma[y1]?.apm ?? dash;
+                    const sma_apm2 = knownData.sma[y2]?.apm ?? dash;
+                    const sma_apm3 = knownData.sma[y3]?.apm ?? dash;
+                    const sma_apk1 = knownData.sma[y1]?.apk ?? dash;
+                    const sma_apk2 = knownData.sma[y2]?.apk ?? dash;
+                    const sma_apk3 = knownData.sma[y3]?.apk ?? dash;
+
+                    return `<thead>
+                        <tr class="bg-[#f95a00] text-white text-center font-bold">
+                            <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+                                <div>Jenjang Pendidikan</div><div class="italic font-normal text-[11px] sm:text-xs">Educational Level</div>
+                            </th>
+                            <th class="py-3 px-4 font-bold border border-slate-700" colspan="3">
+                                <div>Angka Partisipasi Murni</div><div class="italic font-normal text-[11px] sm:text-xs">Net Participation Rate</div>
+                            </th>
+                            <th class="py-3 px-4 font-bold border border-slate-700" colspan="3">
+                                <div>Angka Partisipasi Kasar</div><div class="italic font-normal text-[11px] sm:text-xs">Gross Participation Rate</div>
+                            </th>
+                        </tr>
+                        <tr class="bg-[#f95a00] text-white text-center font-bold text-xs sm:text-sm">
+                            <th class="py-2 px-3 border border-slate-700">${y1}</th>
+                            <th class="py-2 px-3 border border-slate-700">${y2}</th>
+                            <th class="py-2 px-3 border border-slate-700">${y3}</th>
+                            <th class="py-2 px-3 border border-slate-700">${y1}</th>
+                            <th class="py-2 px-3 border border-slate-700">${y2}</th>
+                            <th class="py-2 px-3 border border-slate-700">${y3}</th>
+                        </tr>
+                        <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                            <th class="py-1 px-3 border border-slate-700">(1)</th>
+                            <th class="py-1 px-3 border border-slate-700">(2)</th>
+                            <th class="py-1 px-3 border border-slate-700">(3)</th>
+                            <th class="py-1 px-3 border border-slate-700">(4)</th>
+                            <th class="py-1 px-3 border border-slate-700">(5)</th>
+                            <th class="py-1 px-3 border border-slate-700">(6)</th>
+                            <th class="py-1 px-3 border border-slate-700">(7)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                        <tr class="hover:bg-amber-100/60 transition-colors bg-[#fef9c3] text-slate-900 font-medium">
+                            <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle">SD/MI/ <span class="italic font-normal">Elementary School</span></td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${sd_apm1}</td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${sd_apm2}</td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${sd_apm3}</td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${sd_apk1}</td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${sd_apk2}</td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${sd_apk3}</td>
+                        </tr>
+                        <tr class="hover:bg-amber-100/60 transition-colors bg-[#fef9c3] text-slate-900 font-medium">
+                            <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle">SMP/MTs/ <span class="italic font-normal">Junior High School</span></td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${smp_apm1}</td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${smp_apm2}</td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${smp_apm3}</td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${smp_apk1}</td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${smp_apk2}</td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${smp_apk3}</td>
+                        </tr>
+                        <tr class="hover:bg-amber-100/60 transition-colors bg-[#fef9c3] text-slate-900 font-medium">
+                            <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle">SMA/SMK/MA/ <span class="italic font-normal">Senior High School</span></td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${sma_apm1}</td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${sma_apm2}</td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${sma_apm3}</td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${sma_apk1}</td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${sma_apk2}</td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${sma_apk3}</td>
+                        </tr>
+                    </tbody>`;
+                }
+            },
+            '4.1.13': {
+                titleId: 'Angka Melek Aksara Menurut Jenis Kelamin dan Kelompok Umur di Kota Bukittinggi',
+                titleEn: 'Literacy Rate by Sex and Age Group in Bukittinggi Municipality',
+                render: function(year) {
+                    const yrInt = parseInt(year) || 2025;
+                    const dash = '<span class="text-slate-400 font-normal">-</span>';
+                    const known = {
+                        2025: {
+                            '15_24': { l: '100,00', p: '100,00', tot: '100,00' },
+                            '15_59': { l: '99,85', p: '99,80', tot: '99,82' },
+                            '15_plus': { l: '99,60', p: '99,48', tot: '99,54' },
+                            '60_plus': { l: '98,20', p: '97,50', tot: '97,82' }
+                        },
+                        2024: {
+                            '15_24': { l: '100,00', p: '100,00', tot: '100,00' },
+                            '15_59': { l: '99,80', p: '99,75', tot: '99,77' },
+                            '15_plus': { l: '99,45', p: '99,85', tot: '99,65' },
+                            '60_plus': { l: '97,90', p: '97,20', tot: '97,52' }
+                        }
+                    };
+                    const cur = known[yrInt] || {};
+                    const rows = [
+                        { key: '15_24', label: '15–24' },
+                        { key: '15_59', label: '15–59' },
+                        { key: '15_plus', label: '15+' },
+                        { key: '60_plus', label: '60+' }
+                    ];
+                    const tbody = rows.map(r => {
+                        const l = cur[r.key]?.l ?? dash;
+                        const p = cur[r.key]?.p ?? dash;
+                        const tot = cur[r.key]?.tot ?? dash;
+                        return `<tr class="hover:bg-amber-100/60 transition-colors bg-[#fef9c3] text-slate-900 font-medium">
+                            <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle">${r.label}</td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${l}</td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${p}</td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${tot}</td>
+                        </tr>`;
+                    }).join('');
+
+                    return `<thead>
+                        <tr class="bg-[#f95a00] text-white text-center font-bold">
+                            <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+                                <div>Kelompok Umur</div><div class="italic font-normal text-[11px] sm:text-xs">Age Group</div>
+                            </th>
+                            <th class="py-3 px-4 font-bold border border-slate-700" colspan="3">
+                                <div>Jenis Kelamin / Sex</div>
+                            </th>
+                        </tr>
+                        <tr class="bg-[#f95a00] text-white text-center font-bold text-xs sm:text-sm">
+                            <th class="py-2 px-3 border border-slate-700"><div>Laki–laki</div><div class="italic font-normal text-[10px]">Male</div></th>
+                            <th class="py-2 px-3 border border-slate-700"><div>Perempuan</div><div class="italic font-normal text-[10px]">Female</div></th>
+                            <th class="py-2 px-3 border border-slate-700"><div>Laki-laki + Perempuan</div><div class="italic font-normal text-[10px]">Male + Female</div></th>
+                        </tr>
+                        <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                            <th class="py-1 px-3 border border-slate-700">(1)</th>
+                            <th class="py-1 px-3 border border-slate-700">(2)</th>
+                            <th class="py-1 px-3 border border-slate-700">(3)</th>
+                            <th class="py-1 px-3 border border-slate-700">(4)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                        ${tbody}
+                    </tbody>`;
+                }
+            },
+            '4.1.14': {
+                titleId: 'Persentase Penduduk Usia 7—24 Tahun Menurut Jenis Kelamin, Kelompok Umur dan Partisipasi Sekolah di Kota Bukittinggi',
+                titleEn: 'Percentage of Population Aged 7—24 Years by Sex, Age Group and School Participation in Bukittinggi',
+                render: function(year) {
+                    const dash = '<span class="text-slate-400 font-normal">-</span>';
+                    const sexes = [
+                        { key: 'l', label: 'Laki–laki / <span class="italic font-normal">Male</span>' },
+                        { key: 'p', label: 'Perempuan / <span class="italic font-normal">Female</span>' },
+                        { key: 'tot', label: 'Laki-laki + Perempuan / <span class="italic font-normal">Total</span>' }
+                    ];
+                    const ageGroups = ['7–12', '13–15', '16–18', '19–24', '7–24'];
+
+                    let tbody = '';
+                    sexes.forEach(s => {
+                        ageGroups.forEach((ag, idx) => {
+                            tbody += '<tr class="hover:bg-amber-100/60 transition-colors bg-[#fef9c3] text-slate-900 font-medium">';
+                            if (idx === 0) {
+                                tbody += `<td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle" rowspan="5">${s.label}</td>`;
+                            }
+                            tbody += `
+                                <td class="py-2.5 px-4 border border-slate-700 text-left align-middle">${ag}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${dash}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${dash}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${dash}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-middle font-bold">${dash}</td>
+                            </tr>`;
+                        });
+                    });
+
+                    return `<thead>
+                        <tr class="bg-[#f95a00] text-white text-center font-bold">
+                            <th class="py-3 px-4 font-bold border border-slate-700" colspan="2" rowspan="2">
+                                <div>Jenis Kelamin dan Kelompok Umur</div><div class="italic font-normal text-[11px] sm:text-xs">Sex and Age Group</div>
+                            </th>
+                            <th class="py-3 px-4 font-bold border border-slate-700" colspan="4">
+                                <div>Partisipasi Sekolah</div><div class="italic font-normal text-[11px] sm:text-xs">School Participation</div>
+                            </th>
+                        </tr>
+                        <tr class="bg-[#f95a00] text-white text-center font-bold text-xs sm:text-sm">
+                            <th class="py-2 px-3 border border-slate-700"><div>Tidak/Belum Pernah Sekolah</div><div class="italic font-normal text-[10px]">No Schooling</div></th>
+                            <th class="py-2 px-3 border border-slate-700"><div>Masih Sekolah</div><div class="italic font-normal text-[10px]">Attending School</div></th>
+                            <th class="py-2 px-3 border border-slate-700"><div>Tidak Sekolah Lagi</div><div class="italic font-normal text-[10px]">Dropout</div></th>
+                            <th class="py-2 px-3 border border-slate-700"><div>Jumlah</div><div class="italic font-normal text-[10px]">Total</div></th>
+                        </tr>
+                        <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                            <th class="py-1 px-3 border border-slate-700" colspan="2">(1)</th>
+                            <th class="py-1 px-3 border border-slate-700">(2)</th>
+                            <th class="py-1 px-3 border border-slate-700">(3)</th>
+                            <th class="py-1 px-3 border border-slate-700">(4)</th>
+                            <th class="py-1 px-3 border border-slate-700">(5)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                        ${tbody}
+                    </tbody>`;
+                }
+            },
             '4.1.18': {
                 titleId: 'Jumlah Dosen di Perguruan Tinggi',
                 titleEn: 'Number of Lecturer in Bukittinggi',
@@ -275,7 +683,7 @@ Object.assign(window.tableSchemas, {
             '1.1.10': {
                 titleId: 'Jumlah IMB/PBG yang Dikeluarkan Dinas Penanaman Modal PTSP Kota Bukittinggi Menurut Klasifikasinya di Kota Bukittinggi',
                 titleEn: 'Number of Building Approvals (IMB/PBG) Issued by Investment and One-Stop Integrated Services of Bukittinggi Municipality by Classification',
-                isMultiYear: true,
+                isMultiYear: false,
                 source: 'Dinas Penanaman Modal dan Pelayanan Terpadu Satu Pintu Kota Bukittinggi / <span class="italic text-slate-500">Investment and Integrated One-Stop Services Office of Bukittinggi Municipality</span>',
                 render: function(year) {
                     const yr = parseInt(year) || 2026;
@@ -426,6 +834,102 @@ Object.assign(window.tableSchemas, {
                                 <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${abt_jml}</td>
                             </tr>
                             ${jumlahRowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+            '11.3': {
+                titleId: 'Jumlah Nomor Izin Berusaha (NIB) yang Dikeluarkan per Bulan di Kota Bukittinggi',
+                titleEn: 'Number of Business Identification Numbers (NIB) Issued by Month in Bukittinggi Municipality',
+                isMultiYear: false,
+                source: 'Dinas Penanaman Modal dan Pelayanan Terpadu Satu Pintu Kota Bukittinggi / <span class="italic text-slate-500">Investment and Integrated One-Stop Services Office of Bukittinggi Municipality</span>',
+                note: 'Catatan / <span class="italic text-slate-500">Note</span>: Tahun 2020-2023 masih berupa Surat Izin Usaha Perdagangan (SIUP) / <span class="italic text-slate-500">In 2020-2023 was still a Trading Business License (SIUP)</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const months = [
+                        { key: 'jan', label: '01. Januari / January', def: '386' },
+                        { key: 'feb', label: '02. Februari / February', def: '460' },
+                        { key: 'mar', label: '03. Maret / March', def: '254' },
+                        { key: 'apr', label: '04. April / April', def: '250' },
+                        { key: 'mei', label: '05. Mei / May', def: '289' },
+                        { key: 'jun', label: '06. Juni / June', def: '260' },
+                        { key: 'jul', label: '07. Juli / July', def: '293' },
+                        { key: 'ags', label: '08. Agustus / August', def: '301' },
+                        { key: 'sep', label: '09. September / September', def: '330' },
+                        { key: 'okt', label: '10. Oktober / October', def: '283' },
+                        { key: 'nov', label: '11. November / November', def: '211' },
+                        { key: 'des', label: '12. Desember / December', def: '248' }
+                    ];
+
+                    const storeYr = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[yr]) ? serverDbDataStore[yr] : {};
+
+                    let monthRowsHtml = '';
+                    let sum = 0;
+                    let hasCustomVal = false;
+                    months.forEach(m => {
+                        const val = (storeYr[m.key] !== undefined && storeYr[m.key] !== '') ? storeYr[m.key] : (yr === 2025 ? m.def : '-');
+                        if (storeYr[m.key] !== undefined && storeYr[m.key] !== '') hasCustomVal = true;
+                        const num = parseInt(String(val).replace(/\./g, '')) || 0;
+                        sum += num;
+                        monthRowsHtml += `
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle" colspan="2">${m.label}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${val}</td>
+                            </tr>
+                        `;
+                    });
+
+                    const total2025Val = hasCustomVal ? (sum > 0 ? sum.toLocaleString('id-ID') : '-') : (yr === 2025 ? '3.565' : '-');
+
+                    // Data historis resmi dari Dinas DPMPTSP / BPS
+                    const historyRows = [
+                        { yrLabel: `${yr}`, val: (yr === 2025 ? '3.565' : total2025Val), isCurrent: true },
+                        { yrLabel: '2024', val: (storeYr['total_2024'] || '6.008'), isCurrent: false },
+                        { yrLabel: '2023 (SIUP)', val: (storeYr['total_2023'] || '6.907'), isCurrent: false },
+                        { yrLabel: '2022 (SIUP)', val: (storeYr['total_2022'] || '2.542'), isCurrent: false },
+                        { yrLabel: '2021 (SIUP)', val: (storeYr['total_2021'] || '260'), isCurrent: false },
+                        { yrLabel: '2020 (SIUP)', val: (storeYr['total_2020'] || '278'), isCurrent: false }
+                    ];
+
+                    let totalRowsHtml = '';
+                    historyRows.forEach((h, idx) => {
+                        const rowClass = h.isCurrent ? 'bg-[#fed7aa] font-bold text-slate-900 border-t border-slate-700' : 'hover:bg-amber-100/60 transition-colors bg-[#fed7aa] font-bold text-slate-900';
+                        const cellClass = h.isCurrent ? 'font-extrabold' : 'font-bold';
+                        totalRowsHtml += `<tr class="${rowClass}">`;
+                        if (idx === 0) {
+                            totalRowsHtml += `
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle bg-amber-50/70" rowspan="${historyRows.length}">
+                                    <div>Jumlah</div>
+                                    <div class="italic font-bold text-xs">Total</div>
+                                </td>
+                            `;
+                        }
+                        totalRowsHtml += `
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-middle ${cellClass}">${h.yrLabel}</td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-middle ${cellClass}">${h.val}</td>
+                        </tr>`;
+                    });
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="2">
+                                    <div>Bulan</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Month</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Jumlah</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700" colspan="2">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${monthRowsHtml}
+                            ${totalRowsHtml}
                         </tbody>
                     `;
                 }

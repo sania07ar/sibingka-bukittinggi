@@ -1077,7 +1077,7 @@ Object.assign(window.tableSchemas, {
                 source: 'Dinas Lingkungan Hidup Kota Bukittinggi / <span class="italic text-slate-500">Environmental Services Bukittinggi Municipality</span>',
                 render: function(year) {
                     const yr = parseInt(year) || 2025;
-                    const p = get5YearPeriod(yr);
+                    const p = get7YearPeriod(yr);
                     const years = p.yearsAsc;
 
                     const officialData = {

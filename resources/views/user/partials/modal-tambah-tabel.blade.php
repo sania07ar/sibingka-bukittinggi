@@ -84,7 +84,7 @@
                 <button type="button" onclick="closeAddTableModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-100 transition-colors cursor-pointer">
                     Batal
                 </button>
-                <button type="submit" id="btnSubmitNewTable" class="px-4 py-2 rounded-xl bg-[#f98825] hover:bg-[#e07212] text-white text-xs font-bold shadow-xs hover:shadow-md transition-all flex items-center space-x-1.5 cursor-pointer">
+                <button type="submit" id="btnSubmitNewTable" onclick="submitNewTable(event)" class="px-4 py-2 rounded-xl bg-[#f98825] hover:bg-[#e07212] text-white text-xs font-bold shadow-xs hover:shadow-md transition-all flex items-center space-x-1.5 cursor-pointer">
                     <i class="fa-solid fa-plus text-xs"></i>
                     <span>Simpan Tabel Baru</span>
                 </button>

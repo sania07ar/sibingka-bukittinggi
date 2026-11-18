@@ -20,116 +20,106 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// Activity Logs Catalog
-const agencyActivityLogs = {
-    '01': [
-        {
-            date: '22 Jan 2026',
-            time: '(14:30 WIB)',
-            dotColor: 'bg-emerald-600',
-            lineColor: 'bg-emerald-600',
-            boxColor: 'bg-emerald-600',
-            icon: 'fa-file-lines',
-            title: 'Pembaruan Progress: Verifikasi data sektoral oleh admin BPS Kota Bukittinggi',
-            badge: 'Berhasil',
-            badgeClass: 'bg-emerald-100 text-emerald-800',
-            actor: 'BPS Admin'
-        },
-        {
-            date: '21 Jan 2026',
-            time: '(11:15 WIB)',
-            dotColor: 'bg-[#f98825]',
-            lineColor: 'bg-emerald-600',
-            boxColor: 'bg-[#e07212]',
-            icon: 'fa-file-circle-check',
-            title: 'Unggah Dokumen: Input Data Tahap II',
-            badge: 'Proses Verifikasi',
-            badgeClass: 'bg-amber-100 text-amber-800',
-            actor: 'Admin Instansi'
-        },
-        {
-            date: '19 Jan 2026',
-            time: '(09:00 WIB)',
-            dotColor: 'bg-rose-600',
-            lineColor: 'bg-emerald-600',
-            boxColor: 'bg-[#a81c2e]',
-            icon: 'fa-screwdriver-wrench',
-            title: 'Pemeriksaan: Penyesuaian format kolom data tabel',
-            badge: 'Perlu Revisi',
-            badgeClass: 'bg-rose-100 text-rose-800',
-            actor: 'BPS Admin'
-        },
-        {
-            date: '15 Jan 2026',
-            time: '(10:00 WIB)',
-            dotColor: 'bg-emerald-600',
-            lineColor: 'bg-transparent',
-            boxColor: 'bg-emerald-600',
-            icon: 'fa-file-lines',
-            title: 'Persiapan awal & Pembuatan tabel data statistik',
-            badge: 'Selesai',
-            badgeClass: 'bg-emerald-100 text-emerald-800',
-            actor: 'BPS Admin'
-        }
-    ]
+// Riwayat aktivitas nyata dari database: kirim tabel, verifikasi Wali Data, validasi BPS.
+// Datanya disiapkan server (App\Support\MonitoringProgress::activitiesFor) dan ikut di window.monAllData.
+const ACTIVITY_STYLE = {
+    kirim:      { icon: 'fa-paper-plane',      boxColor: 'bg-[#f95a00]',  badge: 'Terkirim',      badgeClass: 'bg-orange-100 text-orange-800',  verb: 'Mengirim 1 tabel' },
+    verifikasi: { icon: 'fa-user-check',       boxColor: 'bg-sky-600',    badge: 'Terverifikasi', badgeClass: 'bg-sky-100 text-sky-800',        verb: 'Verifikasi Wali Data atas 1 tabel' },
+    validasi:   { icon: 'fa-circle-check',     boxColor: 'bg-emerald-600', badge: 'Tervalidasi',  badgeClass: 'bg-emerald-100 text-emerald-800', verb: 'Validasi Admin BPS atas 1 tabel' }
 };
 
-function getAgencyLogs(code, shortName) {
-    if (agencyActivityLogs[code]) {
-        return agencyActivityLogs[code];
-    }
+function getAgencyLogs(code) {
+    const items = Array.isArray(window.monAllData) ? window.monAllData : [];
+    const item = items.find((entry) => String(entry.code) === String(code));
+    const activities = (item && Array.isArray(item.activities)) ? item.activities : [];
 
-    const cleanName = shortName.replace(/^\d+\.\s*/, '');
-    return [
-        {
-            date: '23 Jan 2026',
-            time: '(14:20 WIB)',
-            dotColor: 'bg-emerald-600',
-            lineColor: 'bg-emerald-600',
-            boxColor: 'bg-emerald-600',
-            icon: 'fa-file-lines',
-            title: `Pembaruan Progress: Verifikasi data sektoral oleh admin BPS Kota Bukittinggi`,
-            badge: 'Berhasil',
-            badgeClass: 'bg-emerald-100 text-emerald-800',
-            actor: `Oleh: Admin ${cleanName}`
-        },
-        {
-            date: '21 Jan 2026',
-            time: '(10:45 WIB)',
-            dotColor: 'bg-[#f98825]',
-            lineColor: 'bg-emerald-600',
-            boxColor: 'bg-[#e07212]',
-            icon: 'fa-file-circle-check',
-            title: `Unggah Dokumen: Input Data Sektoral (${cleanName})`,
-            badge: 'Proses Verifikasi',
-            badgeClass: 'bg-amber-100 text-amber-800',
-            actor: `Oleh: Admin ${cleanName}`
-        },
-        {
-            date: '18 Jan 2026',
-            time: '(11:00 WIB)',
-            dotColor: 'bg-emerald-600',
-            lineColor: 'bg-emerald-600',
-            boxColor: 'bg-emerald-600',
-            icon: 'fa-file-lines',
-            title: `Pemeriksaan Awal: Validasi struktur form tabel data oleh BPS`,
-            badge: 'Selesai',
-            badgeClass: 'bg-emerald-100 text-emerald-800',
-            actor: 'BPS Admin'
-        },
-        {
-            date: '15 Jan 2026',
-            time: '(09:30 WIB)',
-            dotColor: 'bg-emerald-600',
-            lineColor: 'bg-transparent',
-            boxColor: 'bg-emerald-600',
-            icon: 'fa-file-lines',
-            title: 'Persiapan awal & Pembuatan formulir tabel data',
-            badge: 'Selesai',
-            badgeClass: 'bg-emerald-100 text-emerald-800',
-            actor: 'BPS Admin'
+    return activities.map((act) => {
+        const style = ACTIVITY_STYLE[act.kind] || ACTIVITY_STYLE.kirim;
+        const tableName = `Tabel ${act.table_code}` + (act.title ? ` - ${act.title}` : '');
+        return {
+            kind: act.kind,
+            date: act.date,
+            time: act.time ? `Pukul ${act.time}` : '',
+            icon: style.icon,
+            boxColor: style.boxColor,
+            tableName,
+            title: `${style.verb}: ${tableName}`,
+            badge: style.badge,
+            badgeClass: style.badgeClass,
+            actor: act.actor && act.actor !== '-' ? `Oleh: ${act.actor}` : ''
+        };
+    });
+}
+
+// Helper: format tanggal relatif singkat
+function _relativeTime(dateStr, timeStr) {
+    if (!dateStr) return '';
+    // dateStr biasanya sudah format "17 Nov 2026" atau ISO, timeStr "Pukul 13:53"
+    // Coba parse dari dateStr + timeStr
+    try {
+        // Coba parse ISO langsung jika dateStr berformat ISO
+        let dt;
+        if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+            dt = new Date(dateStr);
+        } else {
+            // Format "17 November 2026" atau "17 Nov 2026"
+            const rawTime = timeStr ? timeStr.replace('Pukul ', '') : '00:00';
+            dt = new Date(dateStr + ' ' + rawTime);
         }
+        if (isNaN(dt.getTime())) return '';
+        const diffMs = Date.now() - dt.getTime();
+        const diffMin = Math.floor(diffMs / 60000);
+        const diffHr  = Math.floor(diffMs / 3600000);
+        const diffDay = Math.floor(diffMs / 86400000);
+        if (diffMin < 2)   return 'baru saja';
+        if (diffMin < 60)  return diffMin + ' menit lalu';
+        if (diffHr < 24)   return diffHr + ' jam lalu';
+        if (diffDay === 1) return 'kemarin';
+        return diffDay + ' hari lalu';
+    } catch(e) { return ''; }
+}
+
+// Daftar aktivitas per tahap (urut: Input Data, Verifikasi Wali Data, Validasi BPS), tanggal tercatat dari database
+function renderModalStageLists(logs) {
+    const stageConfig = [
+        { kind: 'kirim',      el: 'modalListInput', empty: 'Belum ada tabel yang dikirim.',                dotCls: 'bg-[#f95a00]', borderCls: 'border-orange-200' },
+        { kind: 'verifikasi', el: 'modalListVerif', empty: 'Belum ada tabel yang diverifikasi Wali Data.', dotCls: 'bg-sky-500',    borderCls: 'border-sky-200'    },
+        { kind: 'validasi',   el: 'modalListValid', empty: 'Belum ada tabel yang divalidasi BPS.',         dotCls: 'bg-emerald-500',borderCls: 'border-emerald-200' }
     ];
+    stageConfig.forEach(({ kind, el, empty, dotCls, borderCls }) => {
+        const box = document.getElementById(el);
+        if (!box) return;
+        const rows = logs.filter((log) => log.kind === kind);
+        if (!rows.length) {
+            box.innerHTML = `<p class="py-2.5 text-[11px] text-slate-400 italic">${empty}</p>`;
+            return;
+        }
+        // Tampilkan sebagai activity feed dengan timeline dot
+        box.innerHTML = `<div class="relative mt-1">` +
+            // Garis vertikal
+            `<div class="absolute left-[7px] top-2 bottom-2 w-px bg-slate-100 pointer-events-none"></div>` +
+            rows.map((log) => {
+                const relative = _relativeTime(log.date, log.time);
+                const actorHtml = log.actor ? `<span class="text-slate-400">· ${log.actor}</span>` : '';
+                const timeClean = log.time ? log.time.replace('Pukul ', '') : '';
+                return `
+                <div class="relative flex items-start gap-3 py-2 activity-log-item">
+                    <span class="shrink-0 mt-1 w-3.5 h-3.5 rounded-full ${dotCls} ring-2 ring-white z-10 inline-block"></span>
+                    <div class="flex-1 min-w-0 flex items-start justify-between gap-2">
+                        <div class="min-w-0">
+                            <div class="text-[12px] font-bold text-slate-800 leading-snug break-words">${log.tableName}</div>
+                            ${log.actor ? `<div class="text-[10px] text-slate-500 mt-0.5">${log.actor}</div>` : ''}
+                        </div>
+                        <div class="text-right shrink-0 ml-1">
+                            <div class="text-[11px] font-semibold text-slate-700 leading-tight whitespace-nowrap">${log.date}</div>
+                            ${timeClean ? `<div class="text-[10px] text-slate-400 leading-tight mt-0.5">${timeClean}</div>` : ''}
+                            ${relative ? `<div class="text-[10px] text-slate-400 italic mt-0.5">${relative}</div>` : ''}
+                        </div>
+                    </div>
+                </div>`;
+            }).join('') +
+        `</div>`;
+    });
 }
 
 // Isi 3 persentase (Input Data, Verifikasi Wali Data, Validasi BPS) pada modal detail
@@ -160,7 +150,7 @@ function openAgencyDetailModal(type, code, short, full, pct, status, stepLabel, 
 
     const link = document.getElementById('modalAgencyGoLink');
     const linkText = document.getElementById('modalAgencyGoLinkText');
-    const selectedYear = window.monitoringSelectedYear || 2025;
+    const selectedYear = window.monitoringSelectedYear || (new Date().getFullYear());
     if (link) {
         let routeName = 'isi-data-opd';
         if (type === 'instansi') {
@@ -182,46 +172,10 @@ function openAgencyDetailModal(type, code, short, full, pct, status, stepLabel, 
 
     highlightModalStageButtons(step, isVerifiedByWali, hasSubmitted);
 
-    const logs = getAgencyLogs(code, short);
+    const logs = getAgencyLogs(code);
     const container = document.getElementById('modalTimelineContainer');
     
-    if (container) {
-        let html = '';
-        logs.forEach((log, idx) => {
-            const isLast = idx === logs.length - 1;
-            html += `
-                <div class="flex items-start justify-between gap-3 relative">
-                    <div class="w-24 sm:w-28 text-right shrink-0 pt-0.5">
-                        <div class="text-[11px] sm:text-xs font-bold text-slate-800 leading-tight">${log.date}</div>
-                        <div class="text-[10px] sm:text-[11px] text-slate-500 font-medium leading-tight mt-0.5">${log.time}</div>
-                    </div>
-                    <div class="flex items-center space-x-2 shrink-0 relative">
-                        ${!isLast ? `<div class="absolute left-1 top-3 bottom-[-24px] w-0.5 ${log.lineColor}"></div>` : ''}
-                        <div class="w-2.5 h-2.5 rounded-full ${log.dotColor} relative z-10 shrink-0"></div>
-                        <div class="w-8 h-8 rounded-lg ${log.boxColor} text-white flex items-center justify-center text-xs relative z-10 shadow-2xs shrink-0">
-                            <i class="fa-solid ${log.icon}"></i>
-                        </div>
-                    </div>
-                    <div class="flex-1 min-w-0 pt-0.5 pl-1">
-                        <h4 class="text-xs sm:text-[13px] font-bold text-slate-900 leading-snug">
-                            ${log.title}
-                        </h4>
-                        <div class="mt-1">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold ${log.badgeClass}">
-                                ${log.badge}
-                            </span>
-                        </div>
-                    </div>
-                    <div class="w-24 sm:w-28 text-right shrink-0 pt-0.5">
-                        <div class="text-[11px] font-semibold text-slate-700 leading-tight">
-                            ${log.actor}
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
-        container.innerHTML = html;
-    }
+    renderModalStageLists(logs);
 
     const modal = document.getElementById('agencyDetailModal') || document.getElementById('opdDetailModal') || document.getElementById('instansiDetailModal');
     if (modal) modal.classList.remove('hidden');
@@ -358,7 +312,7 @@ function changeModalStage(newStage) {
 async function updateStageQuick(agencyType, agencyCode, newStage) {
     try {
         const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        const selectedYear = window.monitoringSelectedYear || 2025;
+        const selectedYear = window.monitoringSelectedYear || (new Date().getFullYear());
         const res = await fetch(sbUrl('/monitoring/update-stage'), {
             method: 'POST',
             headers: {
@@ -451,7 +405,7 @@ function filterInstansiCards() { filterAgencyCards(); }
 // Export Single Agency Activity Log
 function exportCurrentAgencyLog() {
     if (!currentModalAgency) return;
-    const logs = getAgencyLogs(currentModalAgency.code, currentModalAgency.short);
+    const logs = getAgencyLogs(currentModalAgency.code);
     
     const wsData = [
         [`RIWAYAT AKTIVITAS & PROGRESS - ${currentModalAgency.full.toUpperCase()}`],

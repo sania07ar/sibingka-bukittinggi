@@ -4,6 +4,11 @@
             const file = event.target.files ? event.target.files[0] : null;
             if (!file) return;
 
+            if (!confirm('Apakah Anda yakin?')) {
+                event.target.value = '';
+                return;
+            }
+
             const loadingEl = document.getElementById('excelUploadLoading');
             if (loadingEl) loadingEl.classList.remove('hidden');
 

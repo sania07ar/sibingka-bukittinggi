@@ -5,7 +5,7 @@
             // JANGAN PERNAH potong kolom pada Tabel 1.1.6, 8.1.x, atau tabel multi-tahun
             const schema = (typeof tableSchemas !== 'undefined') ? tableSchemas[currentTableCode] : null;
             if (schema && (schema.isMultiYear || schema.isExcludeSelectedYear)) return;
-            if (currentTableCode === '1.1.6' || currentTableCode.startsWith('8.1') || currentTableCode.startsWith('4.1') || currentOpdCode === '08') return;
+            if (currentTableCode === '1.1.6' || currentTableCode === '3.1.6' || currentTableCode.startsWith('8.1') || currentTableCode.startsWith('4.1') || currentOpdCode === '08') return;
 
             const bodyRows = table.querySelectorAll('tbody tr');
             if (bodyRows.length === 0) return;
@@ -196,36 +196,16 @@
             tr.remove();
         }
 
-        async function changeTableYear(newYear) {
-            currentYear = newYear.toString();
-            try {
-                const newUrl = new URL(window.location.href);
-                newUrl.searchParams.set('year', currentYear);
-                window.history.pushState({}, '', newUrl.toString());
-            } catch(e) {}
-
-            const selectYearEl = document.getElementById('yearSwitcher');
-            if (selectYearEl) selectYearEl.value = currentYear;
-
-            // Ambil data terbaru dari database MySQL untuk tahun ini
-            try {
-                const res = await fetch(`${window.SiBingkaConfig.routes.apiData}?code=${currentTableCode}&opd=${currentOpdCode}&year=${currentYear}&type=${typeof currentType !== 'undefined' ? currentType : 'opd'}`);
-                const dataRes = await res.json();
-                if (dataRes.success) {
-                    if (dataRes.dataStore) {
-                        Object.assign(serverDbDataStore, dataRes.dataStore);
-                    }
-                    if (dataRes.metadata !== undefined) {
-                        serverDbMetadata = dataRes.metadata;
-                    }
-                    if (dataRes.fallbackMetadata !== undefined) {
-                        serverDbFallbackMetadata = dataRes.fallbackMetadata;
-                    }
-                }
-            } catch(e) {}
-
-            renderTablePage();
-            showToast(`Tahun data diubah ke ${currentYear}`);
+        function changeTableYear(newYear) {
+            if (!newYear) return;
+            const cleanYr = newYear.toString().trim();
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.set('year', cleanYr);
+            newUrl.searchParams.delete('title');
+            newUrl.searchParams.delete('title_en');
+            newUrl.searchParams.delete('titleEn');
+            newUrl.searchParams.delete('saved');
+            window.location.href = newUrl.toString();
         }
 
         function goToEditPage() {

@@ -19,6 +19,7 @@ use App\Http\Controllers\Concerns\TabelOpd\ManagesTableMetadata;
 use App\Http\Controllers\Concerns\TabelOpd\BuildsBab1Templates;
 use App\Http\Controllers\Concerns\TabelOpd\BuildsBab3Templates;
 use App\Http\Controllers\Concerns\TabelOpd\BuildsBab4Templates;
+use App\Http\Controllers\Concerns\TabelOpd\BuildsBab5Templates;
 use App\Http\Controllers\Concerns\TabelOpd\BuildsBab9Templates;
 
 class TabelOpdController extends Controller
@@ -33,6 +34,7 @@ class TabelOpdController extends Controller
         BuildsBab1Templates,
         BuildsBab3Templates,
         BuildsBab4Templates,
+        BuildsBab5Templates,
         BuildsBab9Templates;
 
     public function index(Request $request)
@@ -75,7 +77,7 @@ class TabelOpdController extends Controller
 
         $sourceTypes = match($type) {
             'instansi' => ['custom_instansi'],
-            'bps' => ['custom_bps', 'bps'],
+            'bps' => ['custom_bps'],
             default => ['custom', 'custom_opd']
         };
         $dbCustomTables = TabelMetadata::whereIn('source_type', $sourceTypes)
@@ -140,7 +142,7 @@ class TabelOpdController extends Controller
 
         $sourceTypes = match($type) {
             'instansi' => ['custom_instansi'],
-            'bps' => ['custom_bps', 'bps'],
+            'bps' => ['custom_bps'],
             default => ['custom', 'custom_opd']
         };
         $dbCustomTables = TabelMetadata::whereIn('source_type', $sourceTypes)
@@ -251,7 +253,7 @@ class TabelOpdController extends Controller
         $defaultSourceType = match($type) {
             'bps' => 'custom_bps',
             'instansi' => 'custom_instansi',
-            default => 'database'
+            default => 'custom_opd'
         };
         $sourceType = $request->input('source_type', $defaultSourceType);
         $rowsData = $request->input('rows_data'); // format: [year => [row_key => value]]
@@ -341,12 +343,12 @@ class TabelOpdController extends Controller
             ->where('year', $year)
             ->first();
 
-        if ($existingMeta && in_array($existingMeta->source_type, ['custom_bps', 'custom_instansi', 'custom', 'custom_opd'])) {
-            $sourceType = $existingMeta->source_type;
-        } elseif ($type === 'bps') {
+        if ($type === 'bps') {
             $sourceType = 'custom_bps';
         } elseif ($type === 'instansi') {
             $sourceType = 'custom_instansi';
+        } else {
+            $sourceType = in_array($existingMeta?->source_type, ['custom', 'custom_opd']) ? $existingMeta->source_type : 'custom_opd';
         }
 
         // File-based snapshot storage (resilient backup saat MySQL InnoDB dalam mode read-only / recovery)
@@ -415,14 +417,14 @@ class TabelOpdController extends Controller
             }
 
             // Jika multi-tahun, tandai juga tahun-tahun lain yang ada datanya dengan range tahun yang sesuai
-            if (is_array($rowsData) && (str_starts_with($tableCode, '8.1.') || in_array($tableCode, ['8.2.2', '2.2.5', '1.1.10', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2']))) {
+            if (is_array($rowsData) && (str_starts_with($tableCode, '8.1.') || in_array($tableCode, ['4.3.3', '8.2.2', '2.2.5', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2']))) {
                 foreach (array_keys($rowsData) as $otherYear) {
                     $oYear = (int) $otherYear;
                     if ($oYear > 0 && $oYear !== $year) {
                         $oTitleId = $titleId;
                         $oTitleEn = $titleEn;
-                        if ((str_starts_with($tableCode, '8.1.') || in_array($tableCode, ['8.2.2', '2.2.5', '1.1.10', '9.1', '2.4.3', '2.4.1', '2.4.2'])) && $oTitleId) {
-                            $span = ($tableCode === '9.3') ? 6 : (($tableCode === '2.4.1' || $tableCode === '2.4.2') ? 3 : 4);
+                        if ((str_starts_with($tableCode, '8.1.') || in_array($tableCode, ['4.3.3', '8.2.2', '2.2.5', '9.1', '2.4.3', '2.4.1', '2.4.2'])) && $oTitleId) {
+                            $span = ($tableCode === '9.3') ? 6 : (($tableCode === '2.4.1' || $tableCode === '2.4.2' || $tableCode === '4.3.3') ? 3 : 4);
                             $oRange = ($oYear - $span) . '–' . $oYear;
                             $cleanId = preg_replace('/([,\s]*)(?:(?:19|20)\d{2}|\d{3,4})[\s–\-]*(?:19|20)\d{2}(?:[\s–\-]*(?:19|20)\d{2})*\s*$/u', '', $titleId);
                             $oTitleId = rtrim(trim($cleanId), ',') . ", {$oRange}";

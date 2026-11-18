@@ -16,7 +16,7 @@ const opdTablesCatalog = {
     '02': [
         { code: '1.1.10', title: 'Jumlah IMB/PBG yang Dikeluarkan Dinas Penanaman Modal PTSP Kota Bukittinggi Menurut Klasifikasinya di Kota Bukittinggi', titleEn: 'Number of Building Approvals (IMB/PBG) Issued by Investment and One-Stop Integrated Services of Bukittinggi Municipality by Classification' },
         { code: '11.2', title: 'Jumlah Nomor Induk Berusaha (NIB) yang Dikeluarkan Menurut Sektor di Kota Bukittinggi', titleEn: 'Number of Business Identification Numbers (NIB) Issued by Sector in Bukittinggi Municipality' },
-        { code: '11.3', title: 'Jumlah Nomor Izin Berusaha (NIB) yang Dikeluarkan per Bulan di Kota Bukittinggiin Bukittinggi Municipality', titleEn: 'Number of Business Identification Numbers (NIB) Issued by Month in Bukittinggi Municipality' },
+        { code: '11.3', title: 'Jumlah Nomor Izin Berusaha (NIB) yang Dikeluarkan per Bulan di Kota Bukittinggi', titleEn: 'Number of Business Identification Numbers (NIB) Issued by Month in Bukittinggi Municipality' },
         { code: '11.4', title: 'Jumlah Nomor Induk Berusaha (NIB) yang Dikeluarkan Menurut Sektor di Kota Bukittinggi', titleEn: 'Number of Business Identification Numbers (NIB) Issued by Sector in Bukittinggi Municipality' }
     ],
     '03': [
@@ -304,16 +304,86 @@ const instansiTablesCatalog = {
 };
 
 const bpsTablesCatalog = {
-    '01': [], // PODES
-    '02': [], // PENDUDUK
-    '03': [], // SUSENAS
-    '04': [], // SAKERNAS
-    '05': [], // HORTI
-    '06': [], // IMK
-    '07': [], // HOTEL
-    '08': [], // IHK & INFLASI
-    '09': [], // PDRB LAPUS
-    '10': []  // PDRB PENGELUARAN
+    '01': [ // 01. PODES
+        { code: '1.1.3', title: 'Jumlah Desa1/Kelurahan Menurut Kecamatan di Kota Bukittinggi dan Letak Geografi', titleEn: 'Number of Villages1/Subdistricts by District in Bukittinggi Municipality and Geographical Location' },
+        { code: '1.1.4', title: 'Jumlah Desa1/Kelurahan Menurut Kecamatan di Kota Bukittinggi dan Topografi Wilayah', titleEn: 'Number of Villages1/Subdistricts by District in Bukittinggi Municipality and Topographical Areas' },
+        { code: '2.1.1', title: 'Jumlah Kelurahan Menurut Kecamatan di Kota Bukittinggi', titleEn: 'Number of Villages by District in Bukittinggi Municipality' },
+        { code: '2.1.2', title: 'Jumlah Rukun Tetangga dan Rukun Warga yang Aktif Menurut Kelurahan di Kota Bukittinggi', titleEn: 'Number of Active Neighbor Concord and Citizen Concord by Village in Bukittinggi' },
+        { code: '4.1.11', title: 'Jumlah Kelurahan yang Memiliki Fasilitas Sekolah Menurut Kecamatan dan Tingkat Pendidikan di Kota Bukittinggi', titleEn: 'Number of Subdistricts Having Educational Facilities by Subdistrict and Educational Level In Bukittinggi Municipality', isMultiYear: true },
+        { code: '4.3.3', title: 'Jumlah Kelurahan yang Mengalami Bencana Alam Menurut Kecamatan Kota Bukittinggi', titleEn: 'Number of Subdistricts that Have Natural Disaster By District in Bukittinggi Municipality', isMultiYear: true },
+        { code: '8.2.2', title: 'Jumlah Desa1/Kelurahan yang Memiliki Kantor Pos2 Menurut Kecamatan di Kota Bukittinggi', titleEn: 'Number of Villages1/Subdistricts with Post Office2 by District in Bukittinggi Municipality' },
+        { code: '8.2.3', title: 'Banyaknya Desa1/Kelurahan Menurut Kecamatan dan Penerimaan Sinyal Internet Telepon Seluler di Kota Bukittinggi', titleEn: 'Number of Villages1/Subdistricts by District in Bukittinggi Municipality and Cellular Phone Internet Signal Reception' },
+    ],
+    '02': [ // 02. PENDUDUK
+        { code: '3.1.1', title: 'Jumlah Penduduk, Laju Pertumbuhan Penduduk, Distribusi Persentase Penduduk, Kepadatan Penduduk, Rasio Jenis Kelamin Penduduk Menurut Kecamatan di Kota Bukittinggi', titleEn: 'Population, Population Growth Rate, Percentage Distribution of Population, Population Density, and Population Sex Ratio by District in Bukittinggi Municipality' },
+        { code: '3.1.2', title: 'Penduduk Menurut Golongan Umur dan Jenis Kelamin di Kota Bukittinggi (ribu)', titleEn: 'Population by Age Group and Sex in Bukittinggi Municipality (thousand)' },
+        { code: '3.1.3', title: 'Jumlah Penduduk, Kepadatan Penduduk, dan Laju Pertumbuhan Penduduk', titleEn: 'Population, Population Density, and Population Growth Rate', isMultiYear: true },
+        { code: '3.1.4', title: 'Jumlah Penduduk dan Sex Ratio Kota Bukittinggi', titleEn: 'Number of Population And Sex Ratio Bukittinggi Municipality' },
+    ],
+    '03': [ // 03. SUSENAS
+        { code: '3.1.5', title: 'Persentase Penduduk Berumur 10 tahun Ke Atas Menurut Ijazah Tertinggi yang Dimiliki di Kota Bukittinggi', titleEn: 'Percentage of Population 10 Year of Age by Title of Degree in Bukittinggi Municipality' },
+        { code: '3.1.6', title: 'Persentase Penduduk Berumur 15 Ke Atas Menurut Jenis Kelamin dan kepandaian Membaca dan Menulis di Kota Bukittinggi', titleEn: 'Percentage of Population Age 15 and over by Sex and Read/Writes Skill in Bukittinggi Municipality' },
+        { code: '3.1.7', title: 'Persentase Penduduk Berumur 10 tahun Ke Atas Menurut Partisipasi Sekolah di Kota Bukittinggi', titleEn: 'percentage of Population Aged 10 and Over by School Participation in Bukittinggi Municipality' },
+        { code: '4.1.12', title: 'Angka Partisipasi Murni (APM) dan Angka Partisipasi Kasar (APK) Menurut Jenjang Pendidikan di Kota Bukittinggi', titleEn: 'Participant Rates and Gross Participant Rates by Educational Level in Bukittinggi Municipality', isMultiYear: true },
+        { code: '4.1.13', title: 'Angka Melek Aksara Menurut Jenis Kelamin dan Kelompok Umur di Kota Bukittinggi', titleEn: 'Literacy Rate by Sex and Age Group in Bukittinggi Municipality' },
+        { code: '4.1.14', title: 'Persentase Penduduk Usia 7—24 Tahun Menurut Jenis Kelamin, Kelompok Umur dan Partisipasi Sekolah di Kota Bukittinggi', titleEn: 'Percentage of Population Aged 7—24 Years by Sex, Age Group and School Participation in Bukittinggi' },
+        { code: '4.2.8', title: 'Persentase Balita yang pernah Mendapat Imunisasi Menurut Jenis Imunisasi di Kota Bukittinggi', titleEn: 'Percentage of Children Under Five Years Who Had Immunization by Type of Immunization in Bukittinggi' },
+        { code: '4.4.1', title: 'Garis Kemiskinan, Jumlah, dan Persentase Penduduk Miskin di Kota Bukittinggi', titleEn: 'Poverty Line, Number, and Percentage of Poor People in Bukittinggi Municipality' },
+        { code: '4.4.2', title: 'Indeks Kedalaman Kemiskinan dan Indeks Keparahan Kemiskinan di Kota Bukittinggi', titleEn: 'Poverty Gap Index and Poverty Severity Index in Bukittinggi Municipality' },
+        { code: '10.1', title: 'Rata–rata Pengeluaran per Kapita Sebulan Menurut Kelompok Komoditas (rupiah) di Kota Bukittinggi', titleEn: 'Monthly Average Expenditure per Capita by Commodity Group (rupiahs) in Bukittinggi Municipality' },
+        { code: '10.2', title: 'Persentase Pengeluaran per Kapita Sebulan Menurut Kelompok Komoditas (rupiah) di Kota Bukittinggi', titleEn: 'Percentage of Monthly Expenditure per Capita by Commodity Group in Bukittinggi Municipality' },
+        { code: '10.3', title: 'Persentase Penduduk Menurut Golongan Pengeluaran per Kapita Sebulan di Kota Bukittinggi', titleEn: 'Percentage of Population by per Capita Spending Group a Month in Bukittinggi Municipality' },
+        { code: '13.6', title: 'Umur Harapan Hidup (UHH) Menurut Kab/Kota di Sumatera Barat', titleEn: 'Life Expectancy at Birth by Regency/Municipality in Sumatera Barat' },
+    ],
+    '04': [ // 04. SAKERNAS
+        { code: '3.2.1', title: 'Jumlah Penduduk Berumur 15 Tahun Keatas Menurut Jenis Kegiatan Selama Seminggu Terakhir dan Jenis Kelamin di Kota Bukittinggi', titleEn: 'Population 15 Years of Age and Over by Type of Activity During The Last Week and Sex in Bukittinggi Municipality' },
+        { code: '3.2.2', title: 'Penduduk Berumur 15 Tahun ke Atas Menurut Pendidikan Tertinggi yang Ditamatkan dan Jenis Kegiatan Selama Seminggu Terakhir di Kota Bukittinggi', titleEn: 'Population 15 Years of Age and Over by Educational Attainment and Type of Activity During The last Week in Bukittinggi' },
+        { code: '3.2.3', title: 'Penduduk Berumur 15 Tahun Ke Atas yang Bekerja Selama Seminggu Terakhir Menurut Status Pekerjaan Utama dan Jenis Kelamin di Kota Bukittinggi', titleEn: 'Population 15 Years of Age and Over Who Worked During the Last Week by Main Employment Status and Sex in Bukittinggi' },
+        { code: '3.2.4', title: 'Jumlah Penduduk Berumur 15 Tahun Keatas yang Bekerja Selama Seminggu yang Lalu Menurut Kelompok Umur dan Jenis Kelamin di Kota Bukittinggi', titleEn: 'Population 15 Years of Age and Over Who Worked During the Previous Week by Age Group and Sex in Bukittinggi' },
+        { code: '3.2.5', title: 'Jumlah Penduduk Berumur 15 Tahun Keatas yang Bekerja Selama Seminggu yang Lalu Menurut Lapangan Pekerjaan Utama dan Jenis Kelamin di Kota Bukittinggi', titleEn: 'Population 15 Years of Age and Over Who Worked During the Previous Week by Main Industry and Sex in Bukittinggi' },
+        { code: '3.2.6', title: 'Jumlah Penduduk Berumur 15 Tahun Keatas yang Bekerja Selama Seminggu yang Lalu Menurut Jumlah Jam Kerja Seluruhnya dan Jenis Kelamin di Kota Bukittinggi', titleEn: 'Population 15 Years of Age and Over Who Worked During the Population 15 Years of Age and Over Who Worked During the Previous Week by Total Working Hours and Sex in Bukittinggi' },
+        { code: '3.2.7', title: 'Jumlah Penduduk Berumur 15 Tahun Keatas yang Bekerja Selama Seminggu yang Lalu Menurut Jumlah Jam Kerja Pada Pekerjaan Utama dan Jenis Kelamin di Kota Bukittinggi', titleEn: 'Population 15 Years of Age and Over Who Worked During the Previous Week by Number of Working Hours on Main Industry and Sex in Bukittinggi' },
+        { code: '13.4', title: 'Tingkat Pengangguran Terbuka (TPT) Menurut Kabupaten/Kota di Provinsi Sumatera Barat (persen)', titleEn: 'Open Unemployment Rate Regency/Municipality in Sumatera Barat Province (Percentage)' },
+    ],
+    '05': [ // 05. HORTI
+        { code: '5.1.1', title: 'Luas Panen Tanaman Sayuran Menurut Kecamatan dan Jenis Tanaman di Kota Bukittinggi (Ha)', titleEn: 'Harvested Area of Vegetables by Sub District and Kind of Plant in Bukittinggi Municipality (Ha)' },
+        { code: '5.1.2', title: 'Produksi Tanaman Sayuran Menurut Kecamatan dan Jenis Tanaman di Kota Bukittinggi (kw)', titleEn: 'Production of Vegetables by Sub District and Kind of Plant in Bukittinggi Municipality (qui)' },
+        { code: '5.1.3', title: 'Luas Panen Tanaman Sayuran dan Buah–Buahan Semusim Menurut Jenis Tanaman di Kota Bukittinggi (Ha)', titleEn: 'Harvested Area of Seasonal Vegetables and Fruits by Kind of Plant in Bukittinggi Municipality (Ha)' },
+        { code: '5.1.4', title: 'Produksi Tanaman Sayuran dan Buah–Buahan Semusim Menurut Jenis Tanaman di Kota Bukittinggi (kw)', titleEn: 'Production of Seasonal Vegetables and Fruits by Kind of Plant in Bukittinggi Municipality (qui)' },
+        { code: '5.1.5', title: 'Luas Panen Tanaman Biofarmaka Menurut Kecamatan dan Jenis Tanaman di Kota Bukittinggi (m2)', titleEn: 'Harvested Area of Medicinal Plants by Subdistrict and Kind of Plant in Bukittinggi Municipality (m2)' },
+        { code: '5.1.6', title: 'Produksi Tanaman Biofarmaka Menurut Kecamatan dan Jenis Tanaman di Kota Bukittinggi (kg)', titleEn: 'Production of Medicinal Plants by Sub District and Kind of Plant in Bukittinggi Municipality (kg)' },
+        { code: '5.1.7', title: 'Luas Panen Tanaman Biofarmaka Menurut Jenis Tanaman di Kota Bukittinggi', titleEn: 'Harvested Area of Medicinal Plants by Kind of Plant in Bukittinggi Municipality' },
+        { code: '5.1.8', title: 'Produksi Tanaman Biofarmaka Menurut Jenis Tanaman di Kota Bukittinggi (kg)', titleEn: 'Production of Medicinal Plants by Kind of Plant in Bukittinggi Municipality (kg)' },
+        { code: '5.1.9', title: 'Luas Panen Tanaman Hias Menurut Kecamatan dan Jenis Tanaman di Kota Bukittinggi, (m2)', titleEn: 'Harvested Area of Ornamental Plants by Sub District and Kind of Plant in Bukittinggi Municipality, (m2)' },
+        { code: '5.1.10', title: 'Produksi Tanaman Hias Menurut Kecamatan dan Jenis Tanaman Tanaman di Kota Bukittinggi', titleEn: 'Production of Ornamental Plants by Sub District and Kind of Plant in Bukittinggi Municipality' },
+        { code: '5.1.11', title: 'Luas Panen Tanaman Hias Menurut Jenis Tanaman di Kota Bukittinggi (m2)', titleEn: 'Harvested Area of Ornamental Plants by Kind of Plant t in Bukittinggi Municipality (m2)' },
+        { code: '5.1.12', title: 'Produksi Tanaman Hias Menurut Jenis Tanaman di Kota Bukittinggi', titleEn: 'Production of Ornamental Plants by Kind of Plant in Bukittinggi Municipality' },
+        { code: '5.1.13', title: 'Produksi Buah–Buahan Menurut Jenis Tanaman Menurut Kecamatan di Kota Bukittinggi (kw)', titleEn: 'Production of Fruits by Kind of Plant in Bukittinggi Municipality (qui)' },
+        { code: '5.1.14', title: 'Produksi Buah–Buahan dan Sayuran Tahunan Menurut Jenis Tanaman di Kota Bukittinggi (kw)', titleEn: 'Production of Annual Fruits and Vegetables by Kind of Plant in Bukittinggi Municipality (qui)' },
+    ],
+    '06': [ // 06. IMK
+    ],
+    '07': [ // 07. HOTEL
+        { code: '7.2', title: 'Jumlah Hotel Bintang, Non Bintang, Kamar dan Tempat Tidur di Kota Bukittinggi', titleEn: 'Number of Star Hotel, Non Star Hotel, Room and Beds in Bukittinggi' },
+    ],
+    '08': [ // 08. IHK & INFLASI
+        { code: '9.12', title: 'Indeks Harga Konsumen per Bulan Menurut Kelompok Pengeluaran (2022=100) di Kota Bukittinggi', titleEn: 'Consumer Price Index per Month by Expenditure Group (2022=100) in Bukittinggi Municipality' },
+        { code: '9.13', title: 'Inflasi year on year (y on y) Menurut Kelompok Pengeluaran (2022=100) di Kota Bukittinggi', titleEn: 'Inflation Rate year on year (y on y) by Expenditure Group (2022=100) in Bukittinggi Municipality' },
+    ],
+    '09': [ // 09. PDRB LAPUS
+        { code: '12.1', title: 'Produk Domestik Regional Bruto Kota Bukittinggi Atas Dasar Harga Berlaku Menurut Lapangan Usaha (miliar rupiah)', titleEn: 'Gross Regional Domestic Product of Bukittinggi Municipality at Current Market Price' },
+        { code: '12.2', title: 'Produk Domestik Regional Bruto Kota Bukittinggi Atas Dasar Harga Konstan', titleEn: 'Gross Regional Domestic Product of Bukittinggi Municipality at Current Market Price' },
+        { code: '12.3', title: 'Distribusi Persentase Produk Domestik Regional Bruto Kota Bukittinggi Atas Dasar Harga Berlaku Menurut Lapangan Usaha (persen)', titleEn: 'Percentage Distribution of Gross Regional Domestic Product of Bukittinggi Municipality at Current Market Price (percent)' },
+        { code: '12.4', title: 'Laju Pertumbuhan Produk Domestik Regional Bruto Kota Bukittinggi Atas Dasar Harga Konstan', titleEn: 'Growth Rate of Gross Regional Domestic Product of Bukittinggi Municipality at Constant Market Price' },
+        { code: '13.2', title: 'Laju Pertumbuhan PDRB Atas Dasar Harga Konstan', titleEn: 'Growth Rate of Gross Regional Domestic Product at Constant' },
+    ],
+    '10': [ // 10. PDRB PENGELUARAN
+        { code: '12.5', title: 'Produk Domestik Regional Bruto Kota Bukittinggi Atas Dasar Harga Berlaku Menurut Pengeluaran (Juta Rupiah)', titleEn: 'Gross Domestic Regional Product of Bukittinggi Municipality at Current Market Prices by Type of Expenditure (Million Rupiahs)' },
+        { code: '12.6', title: 'Produk Domestik Regional Bruto Kota Bukittinggi Atas Dasar Harga Konstan', titleEn: 'Gross Domestic Regional Product of Bukittinggi Municpality at' },
+        { code: '12.7', title: 'Distribusi Presentase Produk Domestik Regional Bruto Kota Bukittinggi Atas Dasar Harga Berlaku Menurut Pengeluaran', titleEn: 'Percentage Distribution of Gross Domestic Regional Product of Bukittinggi Municpality at Current Prices by Expenditure' },
+        { code: '12.8', title: 'Laju Pertumbuhan Produk Domestik Regional Bruto Kota Bukittinggi Atas Dasar Harga Konstan Menurut Pengeluaran', titleEn: 'Growth Rate of Gross Domestic Regional Product of Bukittinggi Municpalityat Constant Prices by Expenditure' },
+        { code: '13.9', title: 'Pengeluaran Per Kapita Disesuaikan Penduduk Menurut Kab/Kota di Sumatera Barat (Ribu Rupiah/Orang/Tahun)', titleEn: 'Adjusted per Capita Expenditure by Regency/Municipality in Sumatera Barat (Thousand Rupiah/People/Year)' },
+    ],
 };
 
 /**
@@ -359,13 +429,16 @@ function getAgencyTables(opdCode, type) {
     // Gabungkan dari window.serverDbCustomTables jika di-inject oleh backend
     if (typeof window !== 'undefined' && window.serverDbCustomTables && Array.isArray(window.serverDbCustomTables)) {
         window.serverDbCustomTables.forEach(st => {
-            if (!list.some(t => t.code.toString().trim() === st.code.toString().trim())) {
-                list.push({
-                    code: st.code,
-                    title: st.title,
-                    titleEn: st.titleEn || st.title,
-                    isCustom: true
-                });
+            const stOpd = st.opd_code ? st.opd_code.toString().padStart(2, '0') : '';
+            if (!stOpd || stOpd === cleanOpd) {
+                if (!list.some(t => t.code.toString().trim() === st.code.toString().trim())) {
+                    list.push({
+                        code: st.code,
+                        title: st.title,
+                        titleEn: st.titleEn || st.title,
+                        isCustom: true
+                    });
+                }
             }
         });
     }
@@ -549,8 +622,8 @@ function getAgencyInfoForTable(tableCode, defaultOpd = '01', defaultType = 'opd'
     if (cleanCode.startsWith('2.3.')) return { opdCode: '04', type: 'opd' }; // 04. BKPSDM
     if (cleanCode.startsWith('2.4.')) return { opdCode: '05', type: 'opd' }; // 05. Badan Keuangan Daerah
     if (cleanCode.startsWith('9.')) return { opdCode: '07', type: 'opd' }; // 07. Diskop & Tenaga Kerja
-    if (cleanCode === '11.1') return { opdCode: '18', type: 'opd' }; // 18. Dinas Perdagangan
-    if (cleanCode === '11.2') return { opdCode: '02', type: 'opd' }; // 02. DPM-PTSP
+    if (cleanCode === '11.1' || ['6.5', '6.6', '6.7', '6.8'].includes(cleanCode)) return { opdCode: '18', type: 'opd' }; // 18. Dinas Perdagangan dan Perindustrian
+    if (cleanCode === '11.2' || cleanCode === '11.3' || cleanCode === '11.4' || cleanCode === '1.1.10') return { opdCode: '02', type: 'opd' }; // 02. DPM-PTSP
     if (cleanCode === '4.1.24') return { opdCode: '11', type: 'opd' }; // 11. Dinas Perpustakaan dan Kearsipan
     if (cleanCode === '4.1.20') return { opdCode: '10', type: 'opd' }; // 10. Dinas Pemuda dan Olahraga
     if (cleanCode === '4.3.4')  return { opdCode: '09', type: 'opd' }; // 09. BPBD
@@ -605,6 +678,15 @@ try {
             const list10 = JSON.parse(raw10);
             if (Array.isArray(list10) && list10.some(t => t.code === '4.1.24')) {
                 localStorage.setItem(k10, JSON.stringify(list10.filter(t => t.code !== '4.1.24')));
+            }
+        }
+        // Bersihkan jika tabel 6.5 s.d. 6.8 pernah tersimpan di bawah BPS 06 pada localStorage
+        const kBps06 = 'sibingka_custom_bps_tables_06';
+        const rawBps06 = localStorage.getItem(kBps06);
+        if (rawBps06) {
+            const listBps06 = JSON.parse(rawBps06);
+            if (Array.isArray(listBps06)) {
+                localStorage.setItem(kBps06, JSON.stringify(listBps06.filter(t => !['6.5', '6.6', '6.7', '6.8'].includes(t.code))));
             }
         }
     }

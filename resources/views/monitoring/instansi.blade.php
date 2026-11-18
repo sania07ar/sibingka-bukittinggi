@@ -105,7 +105,7 @@
                 ['code' => '37', 'short' => '37. Perum BULOG Cabang Bukittinggi', 'full' => 'Perum BULOG Kantor Cabang Bukittinggi', 'icon' => 'fa-wheat-awn', 'progress' => 0, 'status' => 'Belum Terisi', 'step' => 1, 'step_label' => 'Belum Mulai', 'status_type' => 'belum'],
             ];
 
-            $selectedYear = (int) request('year', 2025);
+            $selectedYear = (int) request('year', (int) date('Y'));
             $endYear = max(2036, ((int) date('Y')) + 10);
             $availableYears = range($endYear, 2018);
 
@@ -191,6 +191,7 @@
 
             // Status verifikasi semua tabel pada tahun ini -> dasar 3 persentase (Input, Verifikasi Wali Data, Validasi BPS)
             $progressMapInst = \App\Support\MonitoringProgress::load($selectedYear);
+            $activityMapInst = \App\Support\MonitoringProgress::loadActivities($selectedYear);
 
             foreach ($instansiList as &$inst) {
                 $code = $inst['code'];
@@ -200,6 +201,7 @@
                 $pct = $instTotal > 0 ? min(100, (int) round((($fill['lengkap'] ?? 0) + (($fill['proses'] ?? 0) * 0.5)) / $instTotal * 100)) : 0;
                 $inst['progress'] = $pct;
                 $inst += \App\Support\MonitoringProgress::stats($progressMapInst, 'instansi', $code);
+                $inst['activities'] = \App\Support\MonitoringProgress::activitiesFor($activityMapInst, 'instansi', $code);
 
                 $inst['submitted'] = $submittedCountsInstansi[$code] ?? ($submittedCountsInstansi[ltrim($code, '0')] ?? 0);
                 $inst['verified'] = $verifiedCountsInstansi[$code] ?? ($verifiedCountsInstansi[ltrim($code, '0')] ?? 0);
@@ -343,6 +345,7 @@
         window.monitoringSelectedYear = {{ $selectedYear }};
         window.allTablesStatusDb = @json($allTablesStatus);
         const allInstansiData = @json($instansiList);
+        window.monAllData = allInstansiData; // dipakai jendela detail (riwayat aktivitas & persentase)
 
         function exportMonitoringExcel() {
             exportMonitoringToExcel({

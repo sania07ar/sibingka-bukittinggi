@@ -202,11 +202,10 @@ trait ManagesTableMetadata
             }
         }
 
-        // Khusus tabel-tabel sekolah (Dinas Pendidikan - 4.1.1, 4.1.3 s.d. 4.1.17):
-        // Di SiBingka, tahun ajaran terkininya adalah Tahun + 1 (misal tahun 2025 memuat 2023/2024, 2024/2025, 2025/2026 dengan judul berakhiran 2025/2026)
-        // Col 1: (year-2)/(year-1), Col 2: (year-1)/year, Col 3: year/(year+1), Judul: year/(year+1)
-        $schoolCodes = ['4.1.1', '4.1.3', '4.1.4', '4.1.5', '4.1.6', '4.1.7', '4.1.8', '4.1.9', '4.1.10', '4.1.11', '4.1.12', '4.1.13', '4.1.14', '4.1.15', '4.1.16', '4.1.17'];
-        if (in_array($tableCode, $schoolCodes)) {
+        // Khusus tabel-tabel sekolah (Dinas Pendidikan - 4.1.1, 4.1.3 s.d. 4.1.10, 4.1.15 s.d. 4.1.17):
+        // CATATAN: 4.1.11 adalah BPS PODES, 4.1.12, 4.1.13, 4.1.14 adalah BPS SUSENAS (BUKAN tabel sekolah 3-in-1 Dinas Pendidikan)
+        $schoolCodes = ['4.1.1', '4.1.3', '4.1.4', '4.1.5', '4.1.6', '4.1.7', '4.1.8', '4.1.9', '4.1.10', '4.1.15', '4.1.16', '4.1.17'];
+        if (in_array($tableCode, $schoolCodes) && $opdCode !== '03' && $opdCode !== '01' && $type !== 'bps') {
             $expectedY1 = ($year - 3) . '/' . ($year - 2);
             $expectedY2 = ($year - 2) . '/' . ($year - 1);
             $expectedY3 = ($year - 1) . '/' . ($year);
@@ -270,6 +269,67 @@ trait ManagesTableMetadata
             }
         }
 
+        // Khusus tabel 5.1.1 (Dinas Pertanian / BPS - Luas Panen Tanaman Sayuran): Multi-subtabel 3-in-1 vertikal
+        if ($tableCode === '5.1.1') {
+            $y1 = $year - 1;
+            $y2 = $year;
+            $expectedRange = "{$y1}–{$y2}";
+
+            if ($dbMetadata) {
+                $needsUpdate = false;
+                $html = $dbMetadata->table_html ?? '';
+
+                $hasBrokenSubheaders = empty($html) ||
+                                      !str_contains($html, 'subtable-spacer-row') ||
+                                      str_contains($html, 'Kecamatan/District') ||
+                                      str_contains($html, 'Indicator Details') ||
+                                      !str_contains($html, '(15)') ||
+                                      !str_contains($html, '(21)');
+
+                if ($hasBrokenSubheaders) {
+                    $html = $this->buildTabel511Html($year, $html);
+                    $needsUpdate = true;
+                }
+
+                $expectedTitleId = "Luas Panen Tanaman Sayuran Menurut Kecamatan dan Jenis Tanaman di Kota Bukittinggi (Ha), {$expectedRange}";
+                $expectedTitleEn = "Harvested Area of Vegetables by Sub District and Kind of Plant in Bukittinggi Municipality (Ha), {$expectedRange}";
+
+                if (trim($dbMetadata->title_id ?? '') !== $expectedTitleId) {
+                    $dbMetadata->title_id = $expectedTitleId;
+                    $needsUpdate = true;
+                }
+                if (trim($dbMetadata->title_en ?? '') !== $expectedTitleEn) {
+                    $dbMetadata->title_en = $expectedTitleEn;
+                    $needsUpdate = true;
+                }
+
+                if (empty($dbMetadata->source)) {
+                    $dbMetadata->source = 'Dinas Pertanian dan Pangan Kota Bukittinggi / <span class="italic text-slate-500">Agriculture and Food Service of Bukittinggi Municipality</span>';
+                    $needsUpdate = true;
+                }
+
+                if ($needsUpdate) {
+                    $dbMetadata->table_html = $html;
+                    $dbMetadata->save();
+                }
+
+                return $dbMetadata;
+            }
+        }
+
+        // Khusus tabel 11.3 (Dinas Penanaman Modal - NIB per Bulan), rapikan struktur baris bulan & historical total agar presisi 3 kolom
+        if ($tableCode === '11.3' && $dbMetadata) {
+            $h = $dbMetadata->table_html ?? '';
+            if (empty($h) || !str_contains($h, 'colspan="2"') || !str_contains($h, 'rowspan="6"')) {
+                $dbMetadata->table_html = $this->buildPrecisionTableHtml113($year);
+                $dbMetadata->title_id = 'Jumlah Nomor Izin Berusaha (NIB) yang Dikeluarkan per Bulan di Kota Bukittinggi';
+                $dbMetadata->title_en = 'Number of Business Identification Numbers (NIB) Issued by Month in Bukittinggi Municipality';
+                $dbMetadata->source = 'Dinas Penanaman Modal dan Pelayanan Terpadu Satu Pintu Kota Bukittinggi / <span class="italic text-slate-500">Investment and Integrated One-Stop Services Office of Bukittinggi Municipality</span>';
+                $dbMetadata->note = 'Catatan / <span class="italic text-slate-500">Note</span>: Tahun 2020-2023 masih berupa Surat Izin Usaha Perdagangan (SIUP) / <span class="italic text-slate-500">In 2020-2023 was still a Trading Business License (SIUP)</span>';
+                $dbMetadata->save();
+            }
+        }
+
         // Khusus tabel 4.1.21 (UPT Perpustakaan Proklamator Bung Hatta), perbaiki header 'Kolom 10' menjadi 'Lain-lain' / 'Others'
         if ($tableCode === '4.1.21' && $dbMetadata && !empty($dbMetadata->table_html)) {
             if (str_contains($dbMetadata->table_html, 'Kolom 10')) {
@@ -327,6 +387,20 @@ trait ManagesTableMetadata
                     '<th class="py-3 px-4 font-bold border border-slate-700"><div>Ringan</div><div class="italic font-normal text-[11px] sm:text-xs">Slightly</div></th>',
                     $dbMetadata->table_html
                 );
+                $dbMetadata->save();
+            }
+        }
+
+        // Khusus tabel 4.2.3 (Dinas Kesehatan - Rumah Sakit & Puskesmas), rapikan 2-level header dan hilangkan kolom dummy dash
+        if ($tableCode === '4.2.3' && $dbMetadata && !empty($dbMetadata->table_html)) {
+            $html = $dbMetadata->table_html;
+            if (str_contains($html, '<div>-</div>') || str_contains($html, 'colspan="2">(1)</th>') || str_contains($html, 'colspan="2">01. Guguk Panjang')) {
+                $dbMetadata->table_html = $this->buildTabel423Html((int)$year, $html);
+                $prevY = (int)$year - 1;
+                $dbMetadata->title_id = "Jumlah Rumah Sakit Umum, Rumah Sakit Khusus, dan Puskesmas Menurut Kecamatan di Kota Bukittinggi, {$prevY} dan {$year}";
+                $dbMetadata->title_en = "Number of General Hospital, Specialized Hospital, and Public Health Center by District in Bukittinggi, {$prevY} dan {$year}";
+                $dbMetadata->source = 'DINAS KESEHATAN Kota Bukittinggi / <span class="italic text-slate-500">Bukittinggi Municipality Health Office</span>';
+                $dbMetadata->note = '<sup>1</sup> Puskesmas yang teregistrasi / <span class="italic text-slate-500">Registered Public Health Center</span>';
                 $dbMetadata->save();
             }
         }
@@ -764,6 +838,39 @@ trait ManagesTableMetadata
             return $dbMetadata;
         }
 
+        // Khusus tabel 3.1.6 (BPS Susenas - Persentase Penduduk Berumur 15 Ke Atas Menurut Jenis Kelamin dan Kepandaian Membaca dan Menulis)
+        if ($tableCode === '3.1.6') {
+            $isUnmerged = $dbMetadata && !empty($dbMetadata->table_html) && (
+                str_contains($dbMetadata->table_html, '>(3)</th>') ||
+                str_contains($dbMetadata->table_html, '<div>-</div>') ||
+                !str_contains($dbMetadata->table_html, 'rowspan="2"')
+            );
+
+            if (!$dbMetadata || empty($dbMetadata->table_html) || $isUnmerged) {
+                $html316 = $this->buildTabel316Html($year, $dbMetadata ? $dbMetadata->table_html : null);
+                $titleId316 = "Persentase Penduduk Berumur 15 Ke Atas Menurut Jenis Kelamin dan kepandaian Membaca dan Menulis di Kota Bukittinggi, {$year}";
+                $titleEn316 = "Percentage of Population Age 15 and over by Sex and Read/Writes Skill in Bukittinggi Municipality, {$year}";
+                $source316 = 'Source: BPS, Hasil Susenas/';
+
+                return TabelMetadata::updateOrCreate(
+                    [
+                        'table_code' => $tableCode,
+                        'opd_code' => $opdCode,
+                        'year' => $year,
+                    ],
+                    [
+                        'title_id' => $titleId316,
+                        'title_en' => $titleEn316,
+                        'source' => $source316,
+                        'note' => '',
+                        'table_html' => $html316,
+                        'source_type' => ($year === 2024 || $year === 2025) ? 'custom_bps' : 'template',
+                        'is_saved' => true,
+                    ]
+                );
+            }
+        }
+
         // Khusus tabel 3.1.8 (Disdukcapil - Penduduk Wajib KTP & KTP Elektronik)
         // Memastikan 6 tahun historis pada Jumlah dinamis [year, year-1, ..., year-5] dan tanpa ghost cell
         if ($tableCode === '3.1.8') {
@@ -829,6 +936,156 @@ trait ManagesTableMetadata
                     ]
                 );
             }
+            return $dbMetadata;
+        }
+
+        // Khusus tabel 4.1.12 (BPS Susenas - APM dan APK Menurut Jenjang Pendidikan)
+        // Khusus tabel 4.1.12 (BPS Susenas - APM dan APK Menurut Jenjang Pendidikan)
+        if ($tableCode === '4.1.12') {
+            $y1 = $year - 2;
+            $range = "{$y1}–{$year}";
+            $titleId4112 = "Angka Partisipasi Murni (APM) dan Angka Partisipasi Kasar (APK) Menurut Jenjang Pendidikan di Kota Bukittinggi, {$range}";
+            $titleEn4112 = "Participant Rates and Gross Participant Rates by Educational Level in Bukittinggi Municipality, {$range}";
+            $source4112 = 'BPS, Survei Sosial Ekonomi Nasional (Susenas) / <span class="italic text-slate-500">BPS, Statistics, Socioeconomic Survey</span>';
+
+            $isCorruptedSchool = $dbMetadata && !empty($dbMetadata->table_html) && (
+                str_contains($dbMetadata->table_html, 'Guru') ||
+                str_contains($dbMetadata->table_html, 'Teachers') ||
+                str_contains($dbMetadata->table_html, 'Murid') ||
+                str_contains($dbMetadata->table_html, 'Students') ||
+                str_contains($dbMetadata->table_html, 'Kecamatan') ||
+                !str_contains($dbMetadata->table_html, 'Partisipasi')
+            );
+
+            if (!$dbMetadata || empty($dbMetadata->table_html) || $isCorruptedSchool) {
+                $html4112 = $this->buildTabel4112Html($year, $dbMetadata ? $dbMetadata->table_html : null);
+                return TabelMetadata::updateOrCreate(
+                    [
+                        'table_code' => $tableCode,
+                        'opd_code' => $opdCode,
+                        'year' => $year,
+                    ],
+                    [
+                        'title_id' => $titleId4112,
+                        'title_en' => $titleEn4112,
+                        'source' => $source4112,
+                        'note' => '',
+                        'table_html' => $html4112,
+                        'source_type' => ($year === 2024 || $year === 2025) ? 'custom_bps' : 'template',
+                        'is_saved' => true,
+                    ]
+                );
+            }
+
+            if ($dbMetadata) {
+                if ($dbMetadata->title_id !== $titleId4112 || $dbMetadata->title_en !== $titleEn4112 || empty($dbMetadata->source) || !$dbMetadata->exists) {
+                    $dbMetadata->title_id = $titleId4112;
+                    $dbMetadata->title_en = $titleEn4112;
+                    if (empty($dbMetadata->source)) {
+                        $dbMetadata->source = $source4112;
+                    }
+                    $dbMetadata->save();
+                }
+            }
+
+            return $dbMetadata;
+        }
+
+        // Khusus tabel 4.1.13 (BPS Susenas - Angka Melek Aksara Menurut Jenis Kelamin dan Kelompok Umur)
+        if ($tableCode === '4.1.13') {
+            $titleId4113 = "Angka Melek Aksara Menurut Jenis Kelamin dan Kelompok Umur di Kota Bukittinggi, {$year}";
+            $titleEn4113 = "Literacy Rate by Sex and Age Group in Bukittinggi Municipality, {$year}";
+            $source4113 = 'BPS, Survei Sosial Ekonomi Nasional (Susenas) / <span class="italic text-slate-500">BPS, Statistics, Socioeconomic Survey</span>';
+
+            $isCorruptedSchool = $dbMetadata && !empty($dbMetadata->table_html) && (
+                str_contains($dbMetadata->table_html, 'Guru') ||
+                str_contains($dbMetadata->table_html, 'Teachers') ||
+                str_contains($dbMetadata->table_html, 'Murid') ||
+                str_contains($dbMetadata->table_html, 'Students') ||
+                str_contains($dbMetadata->table_html, 'Kecamatan') ||
+                !str_contains($dbMetadata->table_html, 'Melek Aksara')
+            );
+
+            if (!$dbMetadata || empty($dbMetadata->table_html) || $isCorruptedSchool) {
+                $html4113 = $this->buildTabel4113Html($year, $dbMetadata ? $dbMetadata->table_html : null);
+                return TabelMetadata::updateOrCreate(
+                    [
+                        'table_code' => $tableCode,
+                        'opd_code' => $opdCode,
+                        'year' => $year,
+                    ],
+                    [
+                        'title_id' => $titleId4113,
+                        'title_en' => $titleEn4113,
+                        'source' => $source4113,
+                        'note' => '',
+                        'table_html' => $html4113,
+                        'source_type' => ($year === 2024 || $year === 2025) ? 'custom_bps' : 'template',
+                        'is_saved' => true,
+                    ]
+                );
+            }
+
+            if ($dbMetadata) {
+                if ($dbMetadata->title_id !== $titleId4113 || $dbMetadata->title_en !== $titleEn4113 || empty($dbMetadata->source) || !$dbMetadata->exists) {
+                    $dbMetadata->title_id = $titleId4113;
+                    $dbMetadata->title_en = $titleEn4113;
+                    if (empty($dbMetadata->source)) {
+                        $dbMetadata->source = $source4113;
+                    }
+                    $dbMetadata->save();
+                }
+            }
+
+            return $dbMetadata;
+        }
+
+        // Khusus tabel 4.1.14 (BPS Susenas - Persentase Penduduk Usia 7—24 Tahun Menurut Partisipasi Sekolah)
+        if ($tableCode === '4.1.14') {
+            $titleId4114 = "Persentase Penduduk Usia 7—24 Tahun Menurut Jenis Kelamin, Kelompok Umur dan Partisipasi Sekolah di Kota Bukittinggi, {$year}";
+            $titleEn4114 = "Percentage of Population Aged 7—24 Years by Sex, Age Group and School Participation in Bukittinggi, {$year}";
+            $source4114 = 'BPS, Survei Sosial Ekonomi Nasional (Susenas) / <span class="italic text-slate-500">BPS, Statistics, Socioeconomic Survey</span>';
+
+            $isCorruptedSchool = $dbMetadata && !empty($dbMetadata->table_html) && (
+                str_contains($dbMetadata->table_html, 'Guru') ||
+                str_contains($dbMetadata->table_html, 'Teachers') ||
+                str_contains($dbMetadata->table_html, 'Murid') ||
+                str_contains($dbMetadata->table_html, 'Students') ||
+                str_contains($dbMetadata->table_html, 'Kecamatan') ||
+                !str_contains($dbMetadata->table_html, 'Partisipasi')
+            );
+
+            if (!$dbMetadata || empty($dbMetadata->table_html) || $isCorruptedSchool) {
+                $html4114 = $this->buildTabel4114Html($year, $dbMetadata ? $dbMetadata->table_html : null);
+                return TabelMetadata::updateOrCreate(
+                    [
+                        'table_code' => $tableCode,
+                        'opd_code' => $opdCode,
+                        'year' => $year,
+                    ],
+                    [
+                        'title_id' => $titleId4114,
+                        'title_en' => $titleEn4114,
+                        'source' => $source4114,
+                        'note' => '',
+                        'table_html' => $html4114,
+                        'source_type' => ($year === 2024 || $year === 2025) ? 'custom_bps' : 'template',
+                        'is_saved' => true,
+                    ]
+                );
+            }
+
+            if ($dbMetadata) {
+                if ($dbMetadata->title_id !== $titleId4114 || $dbMetadata->title_en !== $titleEn4114 || empty($dbMetadata->source) || !$dbMetadata->exists) {
+                    $dbMetadata->title_id = $titleId4114;
+                    $dbMetadata->title_en = $titleEn4114;
+                    if (empty($dbMetadata->source)) {
+                        $dbMetadata->source = $source4114;
+                    }
+                    $dbMetadata->save();
+                }
+            }
+
             return $dbMetadata;
         }
 
@@ -1205,8 +1462,8 @@ trait ManagesTableMetadata
         }
 
         if ($dbMetadata && !empty($dbMetadata->table_html) && !$isStarterDummy) {
-            // Untuk tabel multi-tahun (4.1.18, 4.1.19, 8.1.1-8.1.8, 8.2.2, 2.2.5, 1.1.10, 9.1, 9.3, 2.4.3, 2.4.1, 2.4.2), pastikan table_html memuat tahun awal dan tahun akhir rentang
-            $isMultiYear = in_array($tableCode, ['4.1.18', '4.1.19', '8.1.1', '8.1.2', '8.1.3', '8.1.6', '8.1.7', '8.1.8', '8.2.2', '2.2.5', '1.1.10', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2']);
+            // Untuk tabel multi-tahun (4.1.18, 4.1.19, 8.1.1-8.1.8, 8.2.2, 2.2.5, 9.1, 9.3, 2.4.3, 2.4.1, 2.4.2), pastikan table_html memuat tahun awal dan tahun akhir rentang
+            $isMultiYear = in_array($tableCode, ['4.1.18', '4.1.19', '8.1.1', '8.1.2', '8.1.3', '8.1.6', '8.1.7', '8.1.8', '8.2.2', '2.2.5', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2']);
             if ($isMultiYear) {
                 $span = ($tableCode === '9.3') ? 6 : (($tableCode === '2.4.1' || $tableCode === '2.4.2') ? 3 : ((in_array($tableCode, ['4.1.18', '4.1.19']) && $opdCode === '07') ? 2 : 4));
                 $startYr = (string)($year - $span);
@@ -1221,6 +1478,67 @@ trait ManagesTableMetadata
             }
             if ($dbMetadata) {
                 return $dbMetadata;
+            }
+        }
+
+        // Khusus tabel 5.1.1 (Dinas Pertanian / BPS - Luas Panen Tanaman Sayuran): Multi-subtabel 3-in-1 vertikal
+        if ($tableCode === '5.1.1') {
+            $y1 = $year - 1;
+            $y2 = $year;
+            $expectedRange = "{$y1}–{$y2}";
+
+            if ($dbMetadata) {
+                $needsUpdate = false;
+                $html = $dbMetadata->table_html ?? '';
+
+                $hasBrokenSubheaders = empty($html) ||
+                                      !str_contains($html, 'subtable-spacer-row') ||
+                                      str_contains($html, 'Kecamatan/District') ||
+                                      str_contains($html, 'Indicator Details') ||
+                                      !str_contains($html, '(15)') ||
+                                      !str_contains($html, '(21)');
+
+                if ($hasBrokenSubheaders) {
+                    $html = $this->buildTabel511Html($year, $html);
+                    $needsUpdate = true;
+                }
+
+                $expectedTitleId = "Luas Panen Tanaman Sayuran Menurut Kecamatan dan Jenis Tanaman di Kota Bukittinggi (Ha), {$expectedRange}";
+                $expectedTitleEn = "Harvested Area of Vegetables by Sub District and Kind of Plant in Bukittinggi Municipality (Ha), {$expectedRange}";
+
+                if (trim($dbMetadata->title_id ?? '') !== $expectedTitleId) {
+                    $dbMetadata->title_id = $expectedTitleId;
+                    $needsUpdate = true;
+                }
+                if (trim($dbMetadata->title_en ?? '') !== $expectedTitleEn) {
+                    $dbMetadata->title_en = $expectedTitleEn;
+                    $needsUpdate = true;
+                }
+
+                if (empty($dbMetadata->source)) {
+                    $dbMetadata->source = 'Dinas Pertanian dan Pangan Kota Bukittinggi / <span class="italic text-slate-500">Agriculture and Food Service of Bukittinggi Municipality</span>';
+                    $needsUpdate = true;
+                }
+
+                if ($needsUpdate) {
+                    $dbMetadata->table_html = $html;
+                    $dbMetadata->save();
+                }
+
+                return $dbMetadata;
+            }
+        }
+
+        // Khusus tabel 11.3 (Dinas Penanaman Modal - NIB per Bulan), rapikan struktur baris bulan & historical total agar presisi 3 kolom
+        if ($tableCode === '11.3' && $dbMetadata) {
+            $h = $dbMetadata->table_html ?? '';
+            if (empty($h) || !str_contains($h, 'colspan="2"') || !str_contains($h, 'rowspan="6"')) {
+                $dbMetadata->table_html = $this->buildPrecisionTableHtml113($year);
+                $dbMetadata->title_id = 'Jumlah Nomor Izin Berusaha (NIB) yang Dikeluarkan per Bulan di Kota Bukittinggi';
+                $dbMetadata->title_en = 'Number of Business Identification Numbers (NIB) Issued by Month in Bukittinggi Municipality';
+                $dbMetadata->source = 'Dinas Penanaman Modal dan Pelayanan Terpadu Satu Pintu Kota Bukittinggi / <span class="italic text-slate-500">Investment and Integrated One-Stop Services Office of Bukittinggi Municipality</span>';
+                $dbMetadata->note = 'Catatan / <span class="italic text-slate-500">Note</span>: Tahun 2020-2023 masih berupa Surat Izin Usaha Perdagangan (SIUP) / <span class="italic text-slate-500">In 2020-2023 was still a Trading Business License (SIUP)</span>';
+                $dbMetadata->save();
             }
         }
 
@@ -1281,6 +1599,20 @@ trait ManagesTableMetadata
                     '<th class="py-3 px-4 font-bold border border-slate-700"><div>Ringan</div><div class="italic font-normal text-[11px] sm:text-xs">Slightly</div></th>',
                     $dbMetadata->table_html
                 );
+                $dbMetadata->save();
+            }
+        }
+
+        // Khusus tabel 4.2.3 (Dinas Kesehatan - Rumah Sakit & Puskesmas), rapikan 2-level header dan hilangkan kolom dummy dash
+        if ($tableCode === '4.2.3' && $dbMetadata && !empty($dbMetadata->table_html)) {
+            $html = $dbMetadata->table_html;
+            if (str_contains($html, '<div>-</div>') || str_contains($html, 'colspan="2">(1)</th>') || str_contains($html, 'colspan="2">01. Guguk Panjang')) {
+                $dbMetadata->table_html = $this->buildTabel423Html((int)$year, $html);
+                $prevY = (int)$year - 1;
+                $dbMetadata->title_id = "Jumlah Rumah Sakit Umum, Rumah Sakit Khusus, dan Puskesmas Menurut Kecamatan di Kota Bukittinggi, {$prevY} dan {$year}";
+                $dbMetadata->title_en = "Number of General Hospital, Specialized Hospital, and Public Health Center by District in Bukittinggi, {$prevY} dan {$year}";
+                $dbMetadata->source = 'DINAS KESEHATAN Kota Bukittinggi / <span class="italic text-slate-500">Bukittinggi Municipality Health Office</span>';
+                $dbMetadata->note = '<sup>1</sup> Puskesmas yang teregistrasi / <span class="italic text-slate-500">Registered Public Health Center</span>';
                 $dbMetadata->save();
             }
         }
@@ -1552,7 +1884,7 @@ trait ManagesTableMetadata
 
         // Tabel multi-tahun dan instansi dengan format tahunan unik seperti RRI (8.2.7 / OPD 35).
         // Jangan pernah meminjam metadata/HTML dari tahun lain karena setiap tahun isian/strukturnya berbeda.
-        if ($opdCode === '35' || $tableCode === '8.2.7' || in_array($tableCode, ['4.1.18', '4.1.19', '8.1.1', '8.1.2', '8.1.3', '8.1.6', '8.1.7', '8.1.8', '8.2.2', '2.2.5', '1.1.10', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2'])) {
+        if ($opdCode === '35' || $tableCode === '8.2.7' || in_array($tableCode, ['4.1.18', '4.1.19', '8.1.1', '8.1.2', '8.1.3', '8.1.6', '8.1.7', '8.1.8', '8.2.2', '2.2.5', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2'])) {
             return $dbMetadata;
         }
 
@@ -1613,7 +1945,7 @@ trait ManagesTableMetadata
             if (!empty($yTitleEn)) {
                 $yTitleEn = preg_replace('/(,\s*|\s+)\d{4}\s*\/\s*\d{4}.*$/i', ", {$expectedY1} and {$expectedY2}", $yTitleEn);
             }
-        } elseif (in_array($tableCode, ['4.1.1', '4.1.3', '4.1.4', '4.1.5', '4.1.6', '4.1.7', '4.1.8', '4.1.9', '4.1.10', '4.1.11', '4.1.12', '4.1.13', '4.1.14', '4.1.15', '4.1.16', '4.1.17'])) {
+        } elseif (in_array($tableCode, ['4.1.1', '4.1.3', '4.1.4', '4.1.5', '4.1.6', '4.1.7', '4.1.8', '4.1.9', '4.1.10', '4.1.15', '4.1.16', '4.1.17']) && $opdCode !== '03' && $type !== 'bps') {
             $expectedY1 = ($year - 2) . '/' . ($year - 1);
             $expectedY2 = ($year - 1) . '/' . ($year);
             $expectedY3 = ($year) . '/' . ($year + 1);
@@ -1883,6 +2215,81 @@ trait ManagesTableMetadata
         {$tdTotal}
     </tr>
 </tbody>";
+    }
+
+    /**
+     * Helper: Membangun struktur presisi Tabel 11.3 (Dinas Penanaman Modal - NIB per Bulan)
+     */
+    protected function buildPrecisionTableHtml113(int $year = 2025): string
+    {
+        $months = [
+            ['label' => '01. Januari / January', 'val' => '386'],
+            ['label' => '02. Februari / February', 'val' => '460'],
+            ['label' => '03. Maret / March', 'val' => '254'],
+            ['label' => '04. April / April', 'val' => '250'],
+            ['label' => '05. Mei / May', 'val' => '289'],
+            ['label' => '06. Juni / June', 'val' => '260'],
+            ['label' => '07. Juli / July', 'val' => '293'],
+            ['label' => '08. Agustus / August', 'val' => '301'],
+            ['label' => '09. September / September', 'val' => '330'],
+            ['label' => '10. Oktober / October', 'val' => '283'],
+            ['label' => '11. November / November', 'val' => '211'],
+            ['label' => '12. Desember / December', 'val' => '248'],
+        ];
+
+        $html = "<thead>\n";
+        $html .= "    <tr class=\"bg-[#f95a00] text-white text-center font-bold\">\n";
+        $html .= "        <th class=\"py-3 px-4 font-bold border border-slate-700\" colspan=\"2\">\n";
+        $html .= "            <div>Bulan</div>\n";
+        $html .= "            <div class=\"italic font-normal text-[11px] sm:text-xs\">Month</div>\n";
+        $html .= "        </th>\n";
+        $html .= "        <th class=\"py-3 px-4 font-bold border border-slate-700\">\n";
+        $html .= "            <div>Jumlah</div>\n";
+        $html .= "            <div class=\"italic font-normal text-[11px] sm:text-xs\">Total</div>\n";
+        $html .= "        </th>\n";
+        $html .= "    </tr>\n";
+        $html .= "    <tr class=\"bg-[#fed7aa] text-slate-900 text-center font-bold text-xs\">\n";
+        $html .= "        <th class=\"py-1 px-3 border border-slate-700\" colspan=\"2\">(1)</th>\n";
+        $html .= "        <th class=\"py-1 px-3 border border-slate-700\">(2)</th>\n";
+        $html .= "    </tr>\n";
+        $html .= "</thead>\n";
+        $html .= "<tbody class=\"bg-[#fef9c3] text-slate-900 font-medium\">\n";
+
+        foreach ($months as $m) {
+            $val = ($year === 2025) ? $m['val'] : '-';
+            $html .= "    <tr class=\"hover:bg-amber-100/60 transition-colors\">\n";
+            $html .= "        <td class=\"py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle\" colspan=\"2\">{$m['label']}</td>\n";
+            $html .= "        <td class=\"py-2.5 px-4 border border-slate-700 text-center align-middle\">{$val}</td>\n";
+            $html .= "    </tr>\n";
+        }
+
+        $history = [
+            ['year' => (string)$year, 'val' => ($year === 2025 ? '3.565' : '-'), 'isCurrent' => true],
+            ['year' => '2024', 'val' => '6.008', 'isCurrent' => false],
+            ['year' => '2023 (SIUP)', 'val' => '6.907', 'isCurrent' => false],
+            ['year' => '2022 (SIUP)', 'val' => '2.542', 'isCurrent' => false],
+            ['year' => '2021 (SIUP)', 'val' => '260', 'isCurrent' => false],
+            ['year' => '2020 (SIUP)', 'val' => '278', 'isCurrent' => false],
+        ];
+
+        $span = count($history);
+        foreach ($history as $idx => $h) {
+            $rowClass = $h['isCurrent'] ? 'bg-[#fed7aa] font-bold text-slate-900 border-t border-slate-700' : 'hover:bg-amber-100/60 transition-colors bg-[#fed7aa] font-bold text-slate-900';
+            $cellClass = $h['isCurrent'] ? 'font-extrabold' : 'font-bold';
+            $html .= "    <tr class=\"{$rowClass}\">\n";
+            if ($idx === 0) {
+                $html .= "        <td class=\"py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle bg-amber-50/70 font-bold\" rowspan=\"{$span}\">\n";
+                $html .= "            <div>Jumlah</div>\n";
+                $html .= "            <div class=\"italic font-bold text-xs\">Total</div>\n";
+                $html .= "        </td>\n";
+            }
+            $html .= "        <td class=\"py-2.5 px-4 border border-slate-700 text-center align-middle {$cellClass}\">{$h['year']}</td>\n";
+            $html .= "        <td class=\"py-2.5 px-4 border border-slate-700 text-center align-middle {$cellClass}\">{$h['val']}</td>\n";
+            $html .= "    </tr>\n";
+        }
+
+        $html .= "</tbody>";
+        return $html;
     }
 
     /**

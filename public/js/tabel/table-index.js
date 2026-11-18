@@ -407,11 +407,39 @@ var isEditMode = false;
             schema.titleEn = cleanSchemaTitles.en;
 
             // For Table 8.1.1, 8.1.2, and 8.1.3, ensure title always reflects the exact 5-year range [yr-4, yr]
-                        if (currentTableCode === '4.1.20') {
+            if (currentTableCode === '4.2.14') {
+                const cachedHtml = localStorage.getItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
+                if (cachedHtml && (cachedHtml.includes('(4)') || cachedHtml.includes('(5)'))) {
+                    localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_source_${currentTableCode}_${currentYear}`);
+                }
+            }
+
+            if (currentTableCode === '4.1.20') {
                 const yrInt = parseInt(currentYear) || 2025;
                 const expectedRange = `${yrInt - 3}–${yrInt}`;
                 const customId = localStorage.getItem(`sibingka_table_title_id_${currentTableCode}_${currentYear}`);
                 if (customId && (customId.includes('Number of Sport') || !customId.includes(expectedRange))) {
+                    localStorage.removeItem(`sibingka_table_title_id_${currentTableCode}_${currentYear}`);
+                    customTitleId = null;
+                }
+                const customEn = localStorage.getItem(`sibingka_table_title_en_${currentTableCode}_${currentYear}`);
+                if (customEn && (!customEn.includes(expectedRange) || customEn.toLowerCase() === 'table')) {
+                    localStorage.removeItem(`sibingka_table_title_en_${currentTableCode}_${currentYear}`);
+                    customTitleEn = null;
+                }
+                const cachedHtml = localStorage.getItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
+                if (cachedHtml && (!cachedHtml.includes(yrInt.toString()) || (cachedHtml.includes('2022') && yrInt >= 2026))) {
+                    localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_source_${currentTableCode}_${currentYear}`);
+                }
+            }
+
+            if (currentTableCode === '4.3.3') {
+                const yrInt = parseInt(currentYear) || 2025;
+                const expectedRange = `${yrInt - 3}–${yrInt}`;
+                const customId = localStorage.getItem(`sibingka_table_title_id_${currentTableCode}_${currentYear}`);
+                if (customId && !customId.includes(expectedRange)) {
                     localStorage.removeItem(`sibingka_table_title_id_${currentTableCode}_${currentYear}`);
                     customTitleId = null;
                 }
@@ -464,8 +492,8 @@ var isEditMode = false;
 
             // Sanitize customNote if it contains corrupted dumps from Excel
             if (customNote) {
-                const nLower = customNote.toLowerCase();
-                if (customNote.length > 600 || nLower.includes('tabel ') || nLower.includes('table ') || nLower.includes('negara') || nLower.includes('rahmat afrisyaf')) {
+                const nLower = customNote.toLowerCase().trim();
+                if (customNote.length > 2000 || /^tabel\s*[\d\.]+/i.test(nLower) || /^table\s*[\d\.]+/i.test(nLower) || nLower.includes('rahmat afrisyaf')) {
                     localStorage.removeItem(`sibingka_table_note_${currentTableCode}_${currentYear}`);
                     customNote = null;
                 }
@@ -493,7 +521,7 @@ var isEditMode = false;
                     return `${cleanBase}, ${acadYr}`;
                 }
 
-                // Khusus Tabel 4.1.20 (Dispora): multi-tahun 4 tahun [yr-3 s.d yr]
+                // Khusus Tabel 4.1.20 (Dispora) & 4.3.3 (BPS PODES): multi-tahun 4 tahun [yr-3 s.d yr]
                 if (currentTableCode === '4.1.20') {
                     const yrInt = parseInt(currentYear) || 2025;
                     const range = `${yrInt - 3}–${yrInt}`;
@@ -503,6 +531,18 @@ var isEditMode = false;
                         return `Number of Sport Club in Bukittinggi, ${range}`;
                     } else {
                         return `Jumlah Klub/Persatuan Olahraga di Kota Bukittinggi, ${range}`;
+                    }
+                }
+
+                if (currentTableCode === '4.3.3') {
+                    const yrInt = parseInt(currentYear) || 2025;
+                    const range = `${yrInt - 3}–${yrInt}`;
+                    const raw = (defaultTitle || title || '').trim();
+                    const isEn = raw.toLowerCase().includes('subdistrict') || raw.toLowerCase().includes('disaster') || (schema && schema.titleEn && defaultTitle === schema.titleEn);
+                    if (isEn) {
+                        return `Number of Subdistricts that Have Natural Disaster By District in Bukittinggi Municipality, ${range}`;
+                    } else {
+                        return `Jumlah Kelurahan yang Mengalami Bencana Alam Menurut Kecamatan Kota Bukittinggi ${range}`;
                     }
                 }
 
@@ -766,6 +806,24 @@ var isEditMode = false;
                 }
             }
 
+            // Self-healing tabel 5.1.1: pastikan struktur 3 sub-tabel vertikal dengan spacer row dan subheader lengkap
+            if (currentTableCode === '5.1.1' && savedHtml) {
+                if (!savedHtml.includes('subtable-spacer-row') || 
+                    savedHtml.includes('<td>Kecamatan/District</td>') || 
+                    savedHtml.includes('<td>Kangkung') || 
+                    savedHtml.includes('Indicator Details') ||
+                    !savedHtml.includes('(15)') || 
+                    !savedHtml.includes('(21)')) {
+                    localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_source_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_is_saved_${currentTableCode}_${currentYear}`);
+                    if (serverDbMetadata) {
+                        serverDbMetadata.table_html = null;
+                    }
+                    savedHtml = (tableSchemas[currentTableCode]) ? tableSchemas[currentTableCode].render(currentYear) : null;
+                }
+            }
+
             // Auto-repair header tabel 5.4.2 (Petani Ikan Darat: Sewaktu-waktu/Sometime & Kolom (5))
             if (currentTableCode === '5.4.2' && savedHtml) {
                 if (savedHtml.includes('colspan="2"><div>Sewaktu-waktu</div>') || savedHtml.includes('(6)</th>') || !savedHtml.includes('Sometime')) {
@@ -1000,7 +1058,7 @@ var isEditMode = false;
 
             // Validasi savedHtml untuk tabel multi-tahun yang memiliki kolom tahun di header
             const isMultiYearTable = Boolean(schema && (schema.isMultiYear || schema.isExcludeSelectedYear)) || 
-                                     ['8.1.1', '8.1.2', '8.1.3', '8.1.4', '8.1.5', '8.1.6', '8.2.2', '2.2.5', '1.1.10', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2', '5.2.1', '5.2.2'].includes(currentTableCode);
+                                     ['8.1.1', '8.1.2', '8.1.3', '8.1.4', '8.1.5', '8.1.6', '8.2.2', '2.2.5', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2', '5.2.1', '5.2.2'].includes(currentTableCode);
 
             const isRowBasedYearTable = ['1.1.8', '4.1.18', '4.1.19', '8.1.4', '8.1.5', '8.1.6', '1.1.10', '4.2.4', '4.2.5', '4.2.7', '4.2.9', '4.2.10', '4.2.13', '4.2.15', '4.2.16'].includes(currentTableCode);
 
@@ -1066,6 +1124,41 @@ var isEditMode = false;
                     serverDbMetadata.table_html = null;
                 }
                 savedHtml = null;
+            }
+
+            // Self-healing tabel 1.1.10: bersihkan cache jika tersimpan dengan label multi-tahun 2028–2032
+            if (currentTableCode === '1.1.10' && savedHtml && (savedHtml.includes('2028–2032') || savedHtml.includes('2028-2032'))) {
+                localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
+                localStorage.removeItem(`sibingka_table_source_${currentTableCode}_${currentYear}`);
+                localStorage.removeItem(`sibingka_table_is_saved_${currentTableCode}_${currentYear}`);
+                if (serverDbMetadata) {
+                    serverDbMetadata.table_html = null;
+                }
+                savedHtml = null;
+            }
+
+            // Self-healing tabel 4.2.3: bersihkan cache jika memuat dummy dash '-' di thead atau colspan="2" pada kolom Kecamatan
+            if (currentTableCode === '4.2.3' && savedHtml && (savedHtml.includes('<div>-</div>') || savedHtml.includes('colspan="2">(1)</th>') || savedHtml.includes('colspan="2">01. Guguk Panjang'))) {
+                localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
+                localStorage.removeItem(`sibingka_table_source_${currentTableCode}_${currentYear}`);
+                localStorage.removeItem(`sibingka_table_is_saved_${currentTableCode}_${currentYear}`);
+                if (serverDbMetadata) {
+                    serverDbMetadata.table_html = null;
+                }
+                savedHtml = null;
+            }
+
+            // Self-healing tabel 11.3: bersihkan cache jika tabel lama belum memiliki colspan="2" pada baris bulan atau rowspan="6"
+            if (currentTableCode === '11.3' && savedHtml) {
+                if (!savedHtml.includes('colspan="2"') || !savedHtml.includes('rowspan="6"')) {
+                    localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_source_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_is_saved_${currentTableCode}_${currentYear}`);
+                    if (serverDbMetadata) {
+                        serverDbMetadata.table_html = null;
+                    }
+                    savedHtml = null;
+                }
             }
 
             // Self-healing tabel 2.3.1 & 2.3.2: bersihkan cache jika format tabel tidak memiliki header standar BPS (10 kolom)
@@ -1509,18 +1602,19 @@ var isEditMode = false;
                                           firstCellText.includes('Aur Birugo');
                     const isTotalRow = firstCellText === 'Bukittinggi' || firstCellText.startsWith('Bukittinggi');
 
-                    if (text.includes('Guru') || text.includes('Teachers') || text.includes('Murid') || text.includes('Students')) {
+                    if (text.includes('Guru') || text.includes('Teachers') || text.includes('Murid') || text.includes('Students') || text.includes('Kangkung') || text.includes('Tomat') || tr.classList.contains('subtable-header-title')) {
                         // Pastikan ada baris pemisah / gap setidaknya 1 spasi sebelum header sub-tabel
                         const prevTr = tr.previousElementSibling;
                         if (prevTr && !prevTr.classList.contains('subtable-spacer-row')) {
                             const spacer = document.createElement('tr');
                             spacer.className = 'subtable-spacer-row pointer-events-none select-none';
-                            spacer.innerHTML = '<td colspan="10" class="h-7 sm:h-9 bg-[#f0f3f8] border-y border-slate-200/90 border-x-0 p-0 text-center">&nbsp;</td>';
+                            spacer.innerHTML = '<td colspan="9" class="h-6 sm:h-8 bg-[#f0f3f8] border-y border-slate-200/90 border-x-0 p-0 text-center">&nbsp;</td>';
                             tr.parentNode.insertBefore(spacer, tr);
                         }
 
                         tr.className = 'bg-[#f95a00] text-white text-center font-bold subtable-header-title';
                         tds.forEach(td => {
+                            if (td.classList.contains('bg-slate-200/50') || (td.getAttribute('colspan') >= 2 && td.innerText.trim() === '')) return;
                             td.className = 'py-2.5 px-3 font-bold border border-slate-700 text-center align-middle';
                             if ((td.innerText.includes('Guru') || td.innerText.includes('Murid')) && !td.querySelector('.italic')) {
                                 const isGuru = td.innerText.includes('Guru');
@@ -1543,7 +1637,7 @@ var isEditMode = false;
                                 td.innerHTML = '<div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>';
                             }
                         });
-                    } else if (!isDistrictRow && !isTotalRow && /\b(?:19|20)\d{2}\s*\/\s*(?:19|20)\d{2}\b/.test(text) && tds.length >= 6) {
+                    } else if (!isDistrictRow && !isTotalRow && (/\b(?:19|20)\d{2}\s*\/\s*(?:19|20)\d{2}\b/.test(text) || (currentTableCode === '5.1.1' && /\b(?:19|20)\d{2}\b/.test(text)) || tr.classList.contains('subtable-header-years')) && tds.length >= 6) {
                         tr.className = 'bg-[#f95a00] text-white text-center font-bold text-xs subtable-header-years';
                         let subAcadIdx = 0;
                         tds.forEach(td => {
@@ -1554,11 +1648,13 @@ var isEditMode = false;
                                 td.innerHTML = `<div>${correctYr}</div>`;
                             }
                         });
-                    } else if (text.includes('-1') || text.includes('(1)') || (tds.length === 10 && (tds[0].innerText.trim() === '-1' || tds[0].innerText.trim() === '(1)'))) {
+                    } else if (text.includes('-1') || text.includes('(1)') || tr.classList.contains('subtable-header-numbering') || (tds.length >= 6 && tds[0].innerText.trim() === '(1)')) {
                         tr.className = 'bg-[#fed7aa] text-slate-900 text-center font-bold text-xs subtable-header-numbering';
                         tds.forEach((td, idx) => {
-                            td.className = 'py-1 px-2 border border-slate-700 text-center font-bold text-xs';
-                            td.innerText = `(${idx + 1})`;
+                            if (!tr.classList.contains('subtable-header-numbering')) {
+                                td.className = 'py-1 px-2 border border-slate-700 text-center font-bold text-xs';
+                                td.innerText = `(${idx + 1})`;
+                            }
                         });
                     } else if (isTotalRow) {
                         tr.className = 'bg-amber-100/70 font-bold border-t-2 border-b-2 border-slate-700 hover:bg-amber-200/60 transition-colors';
@@ -1949,6 +2045,11 @@ var isEditMode = false;
         async function handleExcelFileSelected(event) {
             const file = event.target.files ? event.target.files[0] : null;
             if (!file) return;
+
+            if (!confirm('Apakah Anda yakin?')) {
+                event.target.value = '';
+                return;
+            }
 
             const loadingEl = document.getElementById('excelUploadLoading');
             if (loadingEl) loadingEl.classList.remove('hidden');

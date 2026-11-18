@@ -38,6 +38,14 @@ var isEditMode = true;
                 localStorage.removeItem('sibingka_table_html_1.1.6_2026');
                 localStorage.removeItem('sibingka_table_html_8.1.2_2026');
                 localStorage.removeItem('sibingka_table_html_8.1.2_2027');
+                for (let y = 2018; y <= 2035; y++) {
+                    const k4214 = `sibingka_table_html_4.2.14_${y}`;
+                    const val4214 = localStorage.getItem(k4214);
+                    if (val4214 && (val4214.includes('(4)') || val4214.includes('(5)'))) {
+                        localStorage.removeItem(k4214);
+                        localStorage.removeItem(`sibingka_table_source_4.2.14_${y}`);
+                    }
+                }
                 for (let y = 2015; y <= 2035; y++) {
                     ['5.1.15', '5.1.16', '5.1.17'].forEach(code => {
                         const k = `sibingka_table_html_${code}_${y}`;
@@ -627,8 +635,8 @@ var isEditMode = true;
 
             // Sanitize customNote if it contains corrupted dumps from Excel
             if (customNote) {
-                const nLower = customNote.toLowerCase();
-                if (customNote.length > 600 || nLower.includes('tabel ') || nLower.includes('table ') || nLower.includes('negara') || nLower.includes('rahmat afrisyaf')) {
+                const nLower = customNote.toLowerCase().trim();
+                if (customNote.length > 2000 || /^tabel\s*[\d\.]+/i.test(nLower) || /^table\s*[\d\.]+/i.test(nLower) || nLower.includes('rahmat afrisyaf')) {
                     localStorage.removeItem(`sibingka_table_note_${currentTableCode}_${currentYear}`);
                     customNote = null;
                 }
@@ -656,7 +664,7 @@ var isEditMode = true;
                     return `${cleanBase}, ${acadYr}`;
                 }
 
-                // Khusus Tabel 4.1.20 (Dispora): multi-tahun 4 tahun [yr-3 s.d yr]
+                // Khusus Tabel 4.1.20 (Dispora) & 4.3.3 (BPS PODES): multi-tahun 4 tahun [yr-3 s.d yr]
                 if (currentTableCode === '4.1.20') {
                     const yrInt = parseInt(currentYear) || 2025;
                     const range = `${yrInt - 3}–${yrInt}`;
@@ -666,6 +674,18 @@ var isEditMode = true;
                         return `Number of Sport Club in Bukittinggi, ${range}`;
                     } else {
                         return `Jumlah Klub/Persatuan Olahraga di Kota Bukittinggi, ${range}`;
+                    }
+                }
+
+                if (currentTableCode === '4.3.3') {
+                    const yrInt = parseInt(currentYear) || 2025;
+                    const range = `${yrInt - 3}–${yrInt}`;
+                    const raw = (defaultTitle || title || '').trim();
+                    const isEn = raw.toLowerCase().includes('subdistrict') || raw.toLowerCase().includes('disaster') || (schema && schema.titleEn && defaultTitle === schema.titleEn);
+                    if (isEn) {
+                        return `Number of Subdistricts that Have Natural Disaster By District in Bukittinggi Municipality, ${range}`;
+                    } else {
+                        return `Jumlah Kelurahan yang Mengalami Bencana Alam Menurut Kecamatan Kota Bukittinggi ${range}`;
                     }
                 }
 
@@ -729,14 +749,17 @@ var isEditMode = true;
 
             const noteRowEl = document.getElementById('tableNoteRow');
             const noteContentEl = document.getElementById('tableNoteContent');
+            const addNoteWrapper = document.getElementById('btnAddNoteWrapper');
             if (noteRowEl && noteContentEl) {
                 const rawNote = customNote !== null ? customNote : (schema.note || '');
                 const noteVal = formatNoteWithYear(rawNote, currentYear);
                 if (noteVal) {
                     noteContentEl.innerHTML = noteVal;
                     noteRowEl.classList.remove('hidden');
+                    if (addNoteWrapper) addNoteWrapper.classList.add('hidden');
                 } else {
                     noteRowEl.classList.add('hidden');
+                    if (addNoteWrapper) addNoteWrapper.classList.remove('hidden');
                 }
             }
 
@@ -795,13 +818,48 @@ var isEditMode = true;
 
             // Validasi savedHtml untuk tabel multi-tahun (8.1.1, 8.1.2, 8.1.3, 8.1.4, 8.1.5, 8.2.2, 2.2.5, 1.1.10, 9.1, 9.3 atau schema.isMultiYear)
             const isMultiYearTable = Boolean(schema && (schema.isMultiYear || schema.isExcludeSelectedYear)) || 
-                                     ['8.1.1', '8.1.2', '8.1.3', '8.1.4', '8.1.5', '8.1.6', '8.2.2', '2.2.5', '1.1.10', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2'].includes(currentTableCode);
+                                     ['8.1.1', '8.1.2', '8.1.3', '8.1.4', '8.1.5', '8.1.6', '8.2.2', '2.2.5', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2'].includes(currentTableCode);
 
             if (currentTableCode === '9.3' && savedHtml) {
                 const yrInt = parseInt(currentYear) || 2025;
                 const expectedStartYear = (yrInt - 6).toString();
                 const expectedEndYear = yrInt.toString();
                 if (!savedHtml.includes(expectedStartYear) || !savedHtml.includes(expectedEndYear)) {
+                    localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_source_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_is_saved_${currentTableCode}_${currentYear}`);
+                    if (serverDbMetadata) {
+                        serverDbMetadata.table_html = null;
+                    }
+                    savedHtml = null;
+                }
+            }
+
+            // Self-healing tabel 1.1.10: bersihkan cache jika tersimpan dengan label multi-tahun 2028–2032
+            if (currentTableCode === '1.1.10' && savedHtml && (savedHtml.includes('2028–2032') || savedHtml.includes('2028-2032'))) {
+                localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
+                localStorage.removeItem(`sibingka_table_source_${currentTableCode}_${currentYear}`);
+                localStorage.removeItem(`sibingka_table_is_saved_${currentTableCode}_${currentYear}`);
+                if (serverDbMetadata) {
+                    serverDbMetadata.table_html = null;
+                }
+                savedHtml = null;
+            }
+
+            // Self-healing tabel 4.2.3: bersihkan cache jika memuat dummy dash '-' di thead atau colspan="2" pada kolom Kecamatan
+            if (currentTableCode === '4.2.3' && savedHtml && (savedHtml.includes('<div>-</div>') || savedHtml.includes('colspan="2">(1)</th>') || savedHtml.includes('colspan="2">01. Guguk Panjang'))) {
+                localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
+                localStorage.removeItem(`sibingka_table_source_${currentTableCode}_${currentYear}`);
+                localStorage.removeItem(`sibingka_table_is_saved_${currentTableCode}_${currentYear}`);
+                if (serverDbMetadata) {
+                    serverDbMetadata.table_html = null;
+                }
+                savedHtml = null;
+            }
+
+            // Self-healing tabel 11.3: bersihkan cache jika tabel lama belum memiliki colspan="2" pada baris bulan atau rowspan="6"
+            if (currentTableCode === '11.3' && savedHtml) {
+                if (!savedHtml.includes('colspan="2"') || !savedHtml.includes('rowspan="6"')) {
                     localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
                     localStorage.removeItem(`sibingka_table_source_${currentTableCode}_${currentYear}`);
                     localStorage.removeItem(`sibingka_table_is_saved_${currentTableCode}_${currentYear}`);
@@ -1056,6 +1114,24 @@ var isEditMode = true;
                 tempDiv.innerHTML = savedHtml;
                 const headerThs = tempDiv.querySelectorAll('thead tr:last-child th');
                 if (hasExtraCrops || headerThs.length !== 9) {
+                    localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_source_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_is_saved_${currentTableCode}_${currentYear}`);
+                    if (serverDbMetadata) {
+                        serverDbMetadata.table_html = null;
+                    }
+                    savedHtml = (tableSchemas[currentTableCode]) ? tableSchemas[currentTableCode].render(currentYear) : null;
+                }
+            }
+
+            // Self-healing tabel 5.1.1: pastikan struktur 3 sub-tabel vertikal dengan spacer row dan subheader lengkap
+            if (currentTableCode === '5.1.1' && savedHtml) {
+                if (!savedHtml.includes('subtable-spacer-row') || 
+                    savedHtml.includes('<td>Kecamatan/District</td>') || 
+                    savedHtml.includes('<td>Kangkung') || 
+                    savedHtml.includes('Indicator Details') ||
+                    !savedHtml.includes('(15)') || 
+                    !savedHtml.includes('(21)')) {
                     localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
                     localStorage.removeItem(`sibingka_table_source_${currentTableCode}_${currentYear}`);
                     localStorage.removeItem(`sibingka_table_is_saved_${currentTableCode}_${currentYear}`);
@@ -1550,18 +1626,19 @@ var isEditMode = true;
                                           firstCellText.includes('Aur Birugo');
                     const isTotalRow = firstCellText === 'Bukittinggi' || firstCellText.startsWith('Bukittinggi');
 
-                    if (text.includes('Guru') || text.includes('Teachers') || text.includes('Murid') || text.includes('Students')) {
+                    if (text.includes('Guru') || text.includes('Teachers') || text.includes('Murid') || text.includes('Students') || text.includes('Kangkung') || text.includes('Tomat') || tr.classList.contains('subtable-header-title')) {
                         // Pastikan ada baris pemisah / gap setidaknya 1 spasi sebelum header sub-tabel
                         const prevTr = tr.previousElementSibling;
                         if (prevTr && !prevTr.classList.contains('subtable-spacer-row')) {
                             const spacer = document.createElement('tr');
                             spacer.className = 'subtable-spacer-row pointer-events-none select-none';
-                            spacer.innerHTML = '<td colspan="10" class="h-7 sm:h-9 bg-[#f0f3f8] border-y border-slate-200/90 border-x-0 p-0 text-center">&nbsp;</td>';
+                            spacer.innerHTML = '<td colspan="9" class="h-6 sm:h-8 bg-[#f0f3f8] border-y border-slate-200/90 border-x-0 p-0 text-center">&nbsp;</td>';
                             tr.parentNode.insertBefore(spacer, tr);
                         }
 
                         tr.className = 'bg-[#f95a00] text-white text-center font-bold subtable-header-title';
                         tds.forEach(td => {
+                            if (td.classList.contains('bg-slate-200/50') || (td.getAttribute('colspan') >= 2 && td.innerText.trim() === '')) return;
                             td.className = 'py-2.5 px-3 font-bold border border-slate-700 text-center align-middle';
                             if ((td.innerText.includes('Guru') || td.innerText.includes('Murid')) && !td.querySelector('.italic')) {
                                 const isGuru = td.innerText.includes('Guru');
@@ -1584,7 +1661,7 @@ var isEditMode = true;
                                 td.innerHTML = '<div>Swasta</div><div class="italic font-normal text-[11px] sm:text-xs">Private</div>';
                             }
                         });
-                    } else if (!isDistrictRow && !isTotalRow && /\b(?:19|20)\d{2}\s*\/\s*(?:19|20)\d{2}\b/.test(text) && tds.length >= 6) {
+                    } else if (!isDistrictRow && !isTotalRow && (/\b(?:19|20)\d{2}\s*\/\s*(?:19|20)\d{2}\b/.test(text) || (currentTableCode === '5.1.1' && /\b(?:19|20)\d{2}\b/.test(text)) || tr.classList.contains('subtable-header-years')) && tds.length >= 6) {
                         tr.className = 'bg-[#f95a00] text-white text-center font-bold text-xs subtable-header-years';
                         let subAcadIdx = 0;
                         tds.forEach(td => {
@@ -1595,11 +1672,13 @@ var isEditMode = true;
                                 td.innerHTML = `<div>${correctYr}</div>`;
                             }
                         });
-                    } else if (text.includes('-1') || text.includes('(1)') || (tds.length === 10 && (tds[0].innerText.trim() === '-1' || tds[0].innerText.trim() === '(1)'))) {
+                    } else if (text.includes('-1') || text.includes('(1)') || tr.classList.contains('subtable-header-numbering') || (tds.length >= 6 && tds[0].innerText.trim() === '(1)')) {
                         tr.className = 'bg-[#fed7aa] text-slate-900 text-center font-bold text-xs subtable-header-numbering';
                         tds.forEach((td, idx) => {
-                            td.className = 'py-1 px-2 border border-slate-700 text-center font-bold text-xs';
-                            td.innerText = `(${idx + 1})`;
+                            if (!tr.classList.contains('subtable-header-numbering')) {
+                                td.className = 'py-1 px-2 border border-slate-700 text-center font-bold text-xs';
+                                td.innerText = `(${idx + 1})`;
+                            }
                         });
                     } else if (isTotalRow) {
                         tr.className = 'bg-amber-100/70 font-bold border-t-2 border-b-2 border-slate-700 hover:bg-amber-200/60 transition-colors';
@@ -1822,8 +1901,8 @@ var isEditMode = true;
                 return;
             }
 
-            // Khusus Tabel Dinas 08 / Tabel 4.1.x: Tabel Pendidikan (Sekolah, Guru, Murid)
-            const isEducation3in1Edit = ['4.1.1', '4.1.3', '4.1.4', '4.1.5', '4.1.6', '4.1.7', '4.1.8', '4.1.9', '4.1.10', '4.1.11', '4.1.12', '4.1.13', '4.1.14', '4.1.15', '4.1.16', '4.1.17'].includes(currentTableCode);
+            // Khusus Tabel multi-bagian vertikal (Dinas 08 / Tabel 4.1.x Pendidikan, atau Tabel 5.1.1 Hortikultura)
+            const isEducation3in1Edit = ((currentType !== 'bps') && ['4.1.1', '4.1.3', '4.1.4', '4.1.5', '4.1.6', '4.1.7', '4.1.8', '4.1.9', '4.1.10', '4.1.15', '4.1.16', '4.1.17'].includes(currentTableCode)) || currentTableCode === '5.1.1';
             if (isEducation3in1Edit) {
                 rows.forEach(tr => {
                     const text = tr.innerText.trim();
@@ -1837,12 +1916,17 @@ var isEditMode = true;
                                           firstCellText.includes('Aur Birugo');
                     const isTotalRow = firstCellText === 'Bukittinggi' || firstCellText.startsWith('Bukittinggi');
 
-                    // Cek baris header dalam tbody (Guru / Murid headers) atau baris pemisah -> JANGAN jadikan input!
+                    // Cek baris header dalam tbody (Guru / Murid / Sayuran headers) atau baris pemisah -> JANGAN jadikan input!
                     const isHeader = tr.classList.contains('subtable-spacer-row') ||
+                                     tr.classList.contains('subtable-header-title') ||
+                                     tr.classList.contains('subtable-header-subtitle') ||
+                                     tr.classList.contains('subtable-header-years') ||
+                                     tr.classList.contains('subtable-header-numbering') ||
                                      text.includes('Guru') || text.includes('Teachers') || 
                                      text.includes('Murid') || text.includes('Students') ||
+                                     text.includes('Kangkung') || text.includes('Tomat') ||
                                      text.includes('Negeri') || text.includes('Swasta') ||
-                                     (!isDistrictRow && !isTotalRow && /\b(?:19|20)\d{2}\s*\/\s*(?:19|20)\d{2}\b/.test(text) && tds.length >= 6) ||
+                                     (!isDistrictRow && !isTotalRow && (/\b(?:19|20)\d{2}\s*\/\s*(?:19|20)\d{2}\b/.test(text) || (currentTableCode === '5.1.1' && /\b(?:19|20)\d{2}\b/.test(text))) && tds.length >= 6) ||
                                      text.includes('(1)') || text.includes('-1') ||
                                      tds.length === 1; // Baris separator
 
@@ -1856,6 +1940,13 @@ var isEditMode = true;
                         // Kolom 0: Kecamatan / Bukittinggi -> label tetap
                         if (idx === 0) {
                             td.classList.add('font-bold', 'text-left');
+                            return;
+                        }
+
+                        // Kolom trailing/disabled pada 5.1.1 (colspan 2) -> jangan input
+                        if (td.getAttribute('colspan') >= 2 && (td.innerText.trim() === '-' || td.classList.contains('bg-slate-100/40') || td.classList.contains('bg-slate-200/50'))) {
+                            td.className = 'border border-slate-700 bg-slate-100/40 text-center text-slate-300 select-none';
+                            td.innerHTML = '<span class="text-slate-400 font-normal">-</span>';
                             return;
                         }
 
@@ -2206,7 +2297,6 @@ var isEditMode = true;
             window.location.href = newUrl.toString();
         }
         window.changeTableYear = changeTableYear;
-        }
 
         async function resetTableOriginal() {
             window._isResetting = true;
@@ -2515,6 +2605,19 @@ var isEditMode = true;
                                 rowsData[y]['total_btt'] = inputs[1].value.trim();
                                 rowsData[y]['total_cmp'] = inputs[2].value.trim();
                                 rowsData[y]['total_jml'] = inputs[3].value.trim();
+                            }
+                        }
+                    });
+                } else if (currentTableCode === '11.3') {
+                    rowsData = {};
+                    if (!rowsData[currentYear]) rowsData[currentYear] = {};
+                    const bodyRows = tableEl.querySelectorAll('tbody tr');
+                    bodyRows.forEach(tr => {
+                        const inp = tr.querySelector('.table-edit-input');
+                        if (inp) {
+                            const k = inp.getAttribute('data-key');
+                            if (k) {
+                                rowsData[currentYear][k] = inp.value.trim();
                             }
                         }
                     });
@@ -3096,6 +3199,9 @@ var isEditMode = true;
         }
 
         async function saveAndReturn() {
+            if (typeof saveAndSubmitForVerification === 'function') {
+                return saveAndSubmitForVerification();
+            }
             window._hasUnsavedEdits = false;
             await persistTableData(true);
         }
@@ -3123,6 +3229,11 @@ var isEditMode = true;
         async function handleEditExcelImport(event) {
             const file = event.target.files ? event.target.files[0] : null;
             if (!file) return;
+
+            if (!confirm('Apakah Anda yakin?')) {
+                event.target.value = '';
+                return;
+            }
 
             const loadingEl = document.getElementById('excelUploadLoading');
             if (loadingEl) loadingEl.classList.remove('hidden');

@@ -279,7 +279,7 @@ window.tableSchemas = {
             '1.1.10': {
                 titleId: 'Jumlah IMB/PBG yang Dikeluarkan Dinas Penanaman Modal PTSP Kota Bukittinggi Menurut Klasifikasinya di Kota Bukittinggi',
                 titleEn: 'Number of Building Approvals (IMB/PBG) Issued by Investment and One-Stop Integrated Services of Bukittinggi Municipality by Classification',
-                isMultiYear: true,
+                isMultiYear: false,
                 source: 'Dinas Penanaman Modal dan Pelayanan Terpadu Satu Pintu Kota Bukittinggi / <span class="italic text-slate-500">Investment and Integrated One-Stop Services Office of Bukittinggi Municipality</span>',
                 render: function(year) {
                     const yr = parseInt(year) || 2026;
@@ -430,6 +430,102 @@ window.tableSchemas = {
                                 <td class="py-2.5 px-4 border border-slate-700 text-center align-top">${abt_jml}</td>
                             </tr>
                             ${jumlahRowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+            '11.3': {
+                titleId: 'Jumlah Nomor Izin Berusaha (NIB) yang Dikeluarkan per Bulan di Kota Bukittinggi',
+                titleEn: 'Number of Business Identification Numbers (NIB) Issued by Month in Bukittinggi Municipality',
+                isMultiYear: false,
+                source: 'Dinas Penanaman Modal dan Pelayanan Terpadu Satu Pintu Kota Bukittinggi / <span class="italic text-slate-500">Investment and Integrated One-Stop Services Office of Bukittinggi Municipality</span>',
+                note: 'Catatan / <span class="italic text-slate-500">Note</span>: Tahun 2020-2023 masih berupa Surat Izin Usaha Perdagangan (SIUP) / <span class="italic text-slate-500">In 2020-2023 was still a Trading Business License (SIUP)</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const months = [
+                        { key: 'jan', label: '01. Januari / January', def: '386' },
+                        { key: 'feb', label: '02. Februari / February', def: '460' },
+                        { key: 'mar', label: '03. Maret / March', def: '254' },
+                        { key: 'apr', label: '04. April / April', def: '250' },
+                        { key: 'mei', label: '05. Mei / May', def: '289' },
+                        { key: 'jun', label: '06. Juni / June', def: '260' },
+                        { key: 'jul', label: '07. Juli / July', def: '293' },
+                        { key: 'ags', label: '08. Agustus / August', def: '301' },
+                        { key: 'sep', label: '09. September / September', def: '330' },
+                        { key: 'okt', label: '10. Oktober / October', def: '283' },
+                        { key: 'nov', label: '11. November / November', def: '211' },
+                        { key: 'des', label: '12. Desember / December', def: '248' }
+                    ];
+
+                    const storeYr = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[yr]) ? serverDbDataStore[yr] : {};
+
+                    let monthRowsHtml = '';
+                    let sum = 0;
+                    let hasCustomVal = false;
+                    months.forEach(m => {
+                        const val = (storeYr[m.key] !== undefined && storeYr[m.key] !== '') ? storeYr[m.key] : (yr === 2025 ? m.def : '-');
+                        if (storeYr[m.key] !== undefined && storeYr[m.key] !== '') hasCustomVal = true;
+                        const num = parseInt(String(val).replace(/\./g, '')) || 0;
+                        sum += num;
+                        monthRowsHtml += `
+                            <tr class="hover:bg-amber-100/60 transition-colors">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle" colspan="2">${m.label}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${val}</td>
+                            </tr>
+                        `;
+                    });
+
+                    const total2025Val = hasCustomVal ? (sum > 0 ? sum.toLocaleString('id-ID') : '-') : (yr === 2025 ? '3.565' : '-');
+
+                    // Data historis resmi dari Dinas DPMPTSP / BPS
+                    const historyRows = [
+                        { yrLabel: `${yr}`, val: (yr === 2025 ? '3.565' : total2025Val), isCurrent: true },
+                        { yrLabel: '2024', val: (storeYr['total_2024'] || '6.008'), isCurrent: false },
+                        { yrLabel: '2023 (SIUP)', val: (storeYr['total_2023'] || '6.907'), isCurrent: false },
+                        { yrLabel: '2022 (SIUP)', val: (storeYr['total_2022'] || '2.542'), isCurrent: false },
+                        { yrLabel: '2021 (SIUP)', val: (storeYr['total_2021'] || '260'), isCurrent: false },
+                        { yrLabel: '2020 (SIUP)', val: (storeYr['total_2020'] || '278'), isCurrent: false }
+                    ];
+
+                    let totalRowsHtml = '';
+                    historyRows.forEach((h, idx) => {
+                        const rowClass = h.isCurrent ? 'bg-[#fed7aa] font-bold text-slate-900 border-t border-slate-700' : 'hover:bg-amber-100/60 transition-colors bg-[#fed7aa] font-bold text-slate-900';
+                        const cellClass = h.isCurrent ? 'font-extrabold' : 'font-bold';
+                        totalRowsHtml += `<tr class="${rowClass}">`;
+                        if (idx === 0) {
+                            totalRowsHtml += `
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle bg-amber-50/70" rowspan="${historyRows.length}">
+                                    <div>Jumlah</div>
+                                    <div class="italic font-bold text-xs">Total</div>
+                                </td>
+                            `;
+                        }
+                        totalRowsHtml += `
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-middle ${cellClass}">${h.yrLabel}</td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-middle ${cellClass}">${h.val}</td>
+                        </tr>`;
+                    });
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="2">
+                                    <div>Bulan</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Month</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700">
+                                    <div>Jumlah</div>
+                                    <div class="italic font-normal text-[11px] sm:text-xs">Total</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700" colspan="2">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${monthRowsHtml}
+                            ${totalRowsHtml}
                         </tbody>
                     `;
                 }
@@ -5637,6 +5733,137 @@ window.tableSchemas = {
                 }
             },
 
+            '4.2.3': {
+                titleId: 'Jumlah Rumah Sakit Umum, Rumah Sakit Khusus, dan Puskesmas Menurut Kecamatan di Kota Bukittinggi',
+                titleEn: 'Number of General Hospital, Specialized Hospital, and Public Health Center by District in Bukittinggi',
+                isMultiYear: true,
+                isExcludeSelectedYear: false,
+                source: 'DINAS KESEHATAN Kota Bukittinggi / <span class="italic text-slate-500">Bukittinggi Municipality Health Office</span>',
+                note: '<sup>1</sup> Puskesmas yang teregistrasi / <span class="italic text-slate-500">Registered Public Health Center</span>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const prevYr = yr - 1;
+                    const isFuture = (yr > 2025);
+
+                    const officialData = {
+                        2025: {
+                            gp:   ['1', '1', '0', '0', '0', '0', '2', '2', '58', '58', '8', '7', '9', '9'],
+                            mks:  ['1', '1', '0', '0', '0', '0', '4', '4', '50', '49', '5', '5', '9', '9'],
+                            abtb: ['3', '3', '1', '1', '0', '0', '1', '1', '32', '32', '8', '13', '8', '8'],
+                            tot:  ['5', '5', '1', '1', '0', '0', '7', '7', '140', '139', '21', '25', '26', '26']
+                        },
+                        2024: {
+                            gp:   ['1', '1', '0', '0', '0', '0', '2', '2', '57', '58', '8', '8', '9', '9'],
+                            mks:  ['1', '1', '0', '0', '0', '0', '4', '4', '48', '50', '5', '5', '9', '9'],
+                            abtb: ['3', '3', '1', '1', '0', '0', '1', '1', '32', '32', '8', '8', '8', '8'],
+                            tot:  ['5', '5', '1', '1', '0', '0', '7', '7', '137', '140', '21', '21', '26', '26']
+                        }
+                    };
+
+                    const yrData = officialData[yr] || officialData[2025];
+                    const getVal = (rowKey, colIdx) => {
+                        if (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[yr] && serverDbDataStore[yr][`${rowKey}_col${colIdx}`] !== undefined) {
+                            return serverDbDataStore[yr][`${rowKey}_col${colIdx}`];
+                        }
+                        if (yrData && yrData[rowKey] && yrData[rowKey][colIdx] !== undefined) {
+                            return yrData[rowKey][colIdx];
+                        }
+                        return isFuture ? '<span class="text-slate-400 font-normal">-</span>' : '-';
+                    };
+
+                    const rows = [
+                        { key: 'gp', name: '01. Guguk Panjang' },
+                        { key: 'mks', name: '02. Mandiangin Koto Selayan' },
+                        { key: 'abtb', name: '03. Aur Birugo Tigo baleh' }
+                    ];
+
+                    let rowsHtml = '';
+                    rows.forEach(r => {
+                        let cells = `<td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${r.name}</td>`;
+                        for (let i = 0; i < 14; i++) {
+                            const val = getVal(r.key, i);
+                            cells += `<td class="py-2.5 px-4 border border-slate-700 text-center align-middle font-medium">${val}</td>`;
+                        }
+                        rowsHtml += `<tr class="hover:bg-amber-100/60 transition-colors bg-[#fef9c3] text-slate-900 font-medium">${cells}</tr>`;
+                    });
+
+                    // Baris Total Bukittinggi
+                    let totalCells = `<td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">Bukittinggi</td>`;
+                    for (let i = 0; i < 14; i++) {
+                        const val = getVal('tot', i);
+                        totalCells += `<td class="py-2.5 px-4 border border-slate-700 text-center align-middle font-extrabold">${val}</td>`;
+                    }
+                    rowsHtml += `<tr class="bg-[#fed7aa] font-bold text-slate-900 border-t-2 border-slate-700">${totalCells}</tr>`;
+
+                    return `
+                        <thead>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="2">
+                                    <div>Rumah Sakit Umum</div><div class="italic font-normal text-[11px] sm:text-xs">General Hospital</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="2">
+                                    <div>Rumah Sakit Khusus</div><div class="italic font-normal text-[11px] sm:text-xs">Specialized Hospital</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="2">
+                                    <div>Puskesmas<sup>1</sup> Rawat Inap</div><div class="italic font-normal text-[11px] sm:text-xs">Public Health Center<sup>1</sup> with Inpatient Care</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="2">
+                                    <div>Puskesmas<sup>1</sup> Non Rawat Inap</div><div class="italic font-normal text-[11px] sm:text-xs">Public Health Center<sup>1</sup> without Inpatient Care</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="2">
+                                    <div>Posyandu</div><div class="italic font-normal text-[11px] sm:text-xs">Maternal &amp; Child Health Center</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="2">
+                                    <div>Klinik / Balai Kesehatan</div><div class="italic font-normal text-[11px] sm:text-xs">Clinic / Health Center</div>
+                                </th>
+                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="2">
+                                    <div>Polindes / Poskeskel</div><div class="italic font-normal text-[11px] sm:text-xs">Village Maternity</div>
+                                </th>
+                            </tr>
+                            <tr class="bg-[#f95a00] text-white text-center font-bold">
+                                <th class="py-2 px-3 font-bold border border-slate-700">${prevYr}</th>
+                                <th class="py-2 px-3 font-bold border border-slate-700">${yr}</th>
+                                <th class="py-2 px-3 font-bold border border-slate-700">${prevYr}</th>
+                                <th class="py-2 px-3 font-bold border border-slate-700">${yr}</th>
+                                <th class="py-2 px-3 font-bold border border-slate-700">${prevYr}</th>
+                                <th class="py-2 px-3 font-bold border border-slate-700">${yr}</th>
+                                <th class="py-2 px-3 font-bold border border-slate-700">${prevYr}</th>
+                                <th class="py-2 px-3 font-bold border border-slate-700">${yr}</th>
+                                <th class="py-2 px-3 font-bold border border-slate-700">${prevYr}</th>
+                                <th class="py-2 px-3 font-bold border border-slate-700">${yr}</th>
+                                <th class="py-2 px-3 font-bold border border-slate-700">${prevYr}</th>
+                                <th class="py-2 px-3 font-bold border border-slate-700">${yr}</th>
+                                <th class="py-2 px-3 font-bold border border-slate-700">${prevYr}</th>
+                                <th class="py-2 px-3 font-bold border border-slate-700">${yr}</th>
+                            </tr>
+                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                                <th class="py-1 px-3 border border-slate-700">(1)</th>
+                                <th class="py-1 px-3 border border-slate-700">(2)</th>
+                                <th class="py-1 px-3 border border-slate-700">(3)</th>
+                                <th class="py-1 px-3 border border-slate-700">(4)</th>
+                                <th class="py-1 px-3 border border-slate-700">(5)</th>
+                                <th class="py-1 px-3 border border-slate-700">(6)</th>
+                                <th class="py-1 px-3 border border-slate-700">(7)</th>
+                                <th class="py-1 px-3 border border-slate-700">(8)</th>
+                                <th class="py-1 px-3 border border-slate-700">(9)</th>
+                                <th class="py-1 px-3 border border-slate-700">(10)</th>
+                                <th class="py-1 px-3 border border-slate-700">(11)</th>
+                                <th class="py-1 px-3 border border-slate-700">(12)</th>
+                                <th class="py-1 px-3 border border-slate-700">(13)</th>
+                                <th class="py-1 px-3 border border-slate-700">(14)</th>
+                                <th class="py-1 px-3 border border-slate-700">(15)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    `;
+                }
+            },
+
             '4.2.4': {
                 titleId: 'Jumlah Tempat Tidur Pada Rumah Sakit Pemerintah dan Swasta di Kota Bukittinggi',
                 titleEn: 'Number of Beds at Government and Private Hospital in Bukittinggi',
@@ -6079,1484 +6306,4 @@ window.tableSchemas = {
             },
 
             '4.2.10': {
-                titleId: 'Jumlah Kunjungan dan Rata–rata Kunjungan per Hari pada Puskesmas Kota Bukittinggi di Kota Bukittinggi',
-                titleEn: 'Number of Attendence and Average Daily Attendence to puskesmas in Bukittinggi Municipality in Bukittinggi',
-                isMultiYear: true,
-                isExcludeSelectedYear: false,
-                source: 'DINAS KESEHATAN Kota Bukittinggi / <span class="italic text-slate-500">Public Health Office of Bukittinggi Municipality</span>',
-                render: function(year) {
-                    const yr = parseInt(year) || 2025;
-                    const p = get5YearPeriod(yr);
-                    const years = p.yearsAsc;
-
-                    const officialData = {
-                        2017: { baru: '26082', lama: '91162', kunjungan: '117244', rata: '58' },
-                        2018: { baru: '25272', lama: '90319', kunjungan: '115591', rata: '58' },
-                        2019: { baru: '20975', lama: '93073', kunjungan: '114048', rata: '58' },
-                        2020: { baru: '22375', lama: '91420', kunjungan: '114155', rata: '58' },
-                        2021: { baru: '22710', lama: '48812', kunjungan: '71522', rata: '35' },
-                        2022: { baru: '22428', lama: '89412', kunjungan: '111840', rata: '55' },
-                        2023: { baru: '18534', lama: '113450', kunjungan: '131984', rata: '63' },
-                        2024: { baru: '12023', lama: '122306', kunjungan: '134329', rata: '53' },
-                        2025: { baru: '10820', lama: '139147', kunjungan: '149967', rata: '81' }
-                    };
-
-                    const getVal = (y, key) => {
-                        if (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[y] && serverDbDataStore[y][key] !== undefined) {
-                            return serverDbDataStore[y][key];
-                        }
-                        if (officialData[y] && officialData[y][key] !== undefined) {
-                            return officialData[y][key];
-                        }
-                        return '-';
-                    };
-
-                    const rowsHtml = years.map(y => {
-                        const isCurrent = (y === yr);
-                        const vBaru = getVal(y, 'baru');
-                        const vLama = getVal(y, 'lama');
-                        const vKunjungan = getVal(y, 'kunjungan');
-                        const vRata = getVal(y, 'rata');
-                        return `
-                            <tr class="hover:bg-amber-100/60 transition-colors ${isCurrent ? 'bg-amber-100/30' : ''}">
-                                <td class="py-2.5 px-4 font-semibold border border-slate-700 text-left align-middle ${isCurrent ? 'font-bold' : ''}">${y}</td>
-                                <td class="py-2.5 px-4 text-center border border-slate-700 align-middle ${isCurrent ? 'font-semibold' : ''}">${vBaru}</td>
-                                <td class="py-2.5 px-4 text-center border border-slate-700 align-middle ${isCurrent ? 'font-semibold' : ''}">${vLama}</td>
-                                <td class="py-2.5 px-4 text-center border border-slate-700 align-middle ${isCurrent ? 'font-semibold' : ''}">${vKunjungan}</td>
-                                <td class="py-2.5 px-4 text-center border border-slate-700 align-middle ${isCurrent ? 'font-semibold' : ''}">${vRata}</td>
-                            </tr>
-                        `;
-                    }).join('');
-
-                    return `
-                        <thead>
-                            <tr class="bg-[#f95a00] text-white text-center font-bold">
-                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
-                                    <div>Tahun</div><div class="italic font-normal text-[11px] sm:text-xs">Year</div>
-                                </th>
-                                <th class="py-2 px-3 font-bold border border-slate-700" colspan="2">
-                                    <div>Penderita</div><div class="italic font-normal text-[11px] sm:text-xs">Patient</div>
-                                </th>
-                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
-                                    <div>Kunjungan</div><div class="italic font-normal text-[11px] sm:text-xs">Attendence</div>
-                                </th>
-                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
-                                    <div>Rata–rata Kunjungan per Hari</div><div class="italic font-normal text-[11px] sm:text-xs">Average Daily Attendence</div>
-                                </th>
-                            </tr>
-                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs">
-                                <th class="py-2 px-3 border border-slate-700"><div>Baru</div><div class="italic font-normal text-[10px]">New</div></th>
-                                <th class="py-2 px-3 border border-slate-700"><div>Lama</div><div class="italic font-normal text-[10px]">Old</div></th>
-                            </tr>
-                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
-                                <th class="py-1 px-3 border border-slate-700">(1)</th>
-                                <th class="py-1 px-3 border border-slate-700">(2)</th>
-                                <th class="py-1 px-3 border border-slate-700">(3)</th>
-                                <th class="py-1 px-3 border border-slate-700">(4)</th>
-                                <th class="py-1 px-3 border border-slate-700">(5)</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
-                            ${rowsHtml}
-                        </tbody>
-                    `;
-                }
-            },
-            '4.2.12': {
-                titleId: 'Perkiraan Rata–rata Timbunan Sampah dan Volume Sampah yang Terangkut per Hari Setiap Bulan di Kota Bukittinggi',
-                titleEn: 'Estimation of Rubbish Heap and Volume of Rubbish Carry Out per Day Monthly in Bukittinggi',
-                isMultiYear: false,
-                source: 'Dinas Lingkungan Hidup Kota Bukittinggi / <span class="italic text-slate-500">Environmental Services Bukittinggi Municipality</span>',
-                render: function(year) {
-                    const yr = parseInt(year) || 2025;
-                    const officialData4212 = {
-                        1: { timbunan: '110.91', terangkut: '108.35' },
-                        2: { timbunan: '100.88', terangkut: '98.32' },
-                        3: { timbunan: '111.72', terangkut: '109.16' },
-                        4: { timbunan: '104.32', terangkut: '101.76' },
-                        5: { timbunan: '95.19', terangkut: '88.32' },
-                        6: { timbunan: '90.67', terangkut: '83.8' },
-                        7: { timbunan: '90.12', terangkut: '83.25' },
-                        8: { timbunan: '85.16', terangkut: '78.29' },
-                        9: { timbunan: '79', terangkut: '72.13' },
-                        10: { timbunan: '85.77', terangkut: '78.9' },
-                        11: { timbunan: '75.67', terangkut: '68.8' },
-                        12: { timbunan: '119.45', terangkut: '112.58' }
-                    };
-                    const months = [
-                        { no: '01', id: 'Januari', en: 'January' },
-                        { no: '02', id: 'Februari', en: 'February' },
-                        { no: '03', id: 'Maret', en: 'March' },
-                        { no: '04', id: 'April', en: 'April' },
-                        { no: '05', id: 'Mei', en: 'May' },
-                        { no: '06', id: 'Juni', en: 'June' },
-                        { no: '07', id: 'Juli', en: 'July' },
-                        { no: '08', id: 'Agustus', en: 'August' },
-                        { no: '09', id: 'September', en: 'September' },
-                        { no: '10', id: 'Oktober', en: 'October' },
-                        { no: '11', id: 'November', en: 'November' },
-                        { no: '12', id: 'Desember', en: 'December' }
-                    ];
-                    let rowsHtml = '';
-                    months.forEach((m, idx) => {
-                        const mNum = idx + 1;
-                        const rowData = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[yr] && serverDbDataStore[yr][mNum]) ? serverDbDataStore[yr][mNum] : (officialData4212[mNum] || {});
-                        const vTim = rowData.timbunan !== undefined ? rowData.timbunan : '-';
-                        const vTer = rowData.terangkut !== undefined ? rowData.terangkut : '-';
-                        rowsHtml += `
-                            <tr class="hover:bg-amber-100/60 transition-colors">
-                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">
-                                    ${m.no}. ${m.id} / <span class="italic font-normal text-slate-700">${m.en}</span>
-                                </td>
-                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">
-                                    ${vTim}
-                                </td>
-                                <td class="py-2.5 px-4 border border-slate-700 text-center align-top">
-                                    ${vTer}
-                                </td>
-                            </tr>
-                        `;
-                    });
-                    return `
-                        <thead>
-                            <tr class="bg-[#f95a00] text-white text-center font-bold">
-                                <th class="py-3 px-4 font-bold border border-slate-700">
-                                    <div>Bulan</div><div class="italic font-normal text-[11px] sm:text-xs">Month</div>
-                                </th>
-                                <th class="py-3 px-4 font-bold border border-slate-700">
-                                    <div>Sampah per Hari</div><div class="italic font-normal text-[11px] sm:text-xs">Number of Rubbish Heap (ton)</div>
-                                </th>
-                                <th class="py-3 px-4 font-bold border border-slate-700">
-                                    <div>Volume Sampah yang Terangkut per Hari</div><div class="italic font-normal text-[11px] sm:text-xs">Volume of Rubbish Carry Out by Day (ton)</div>
-                                </th>
-                            </tr>
-                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
-                                <th class="py-1 px-3 border border-slate-700">(1)</th>
-                                <th class="py-1 px-3 border border-slate-700">(2)</th>
-                                <th class="py-1 px-3 border border-slate-700">(3)</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
-                            ${rowsHtml}
-                        </tbody>
-                    `;
-                }
-            },
-            '4.2.13': {
-                titleId: 'Persentase Komposisi Sampah di Kota Bukittinggi (%)',
-                titleEn: 'Percentage of Rubbish Composition in Bukittinggi (%)',
-                isMultiYear: true,
-                isExcludeSelectedYear: false,
-                source: 'Dinas Lingkungan Hidup Kota Bukittinggi / <span class="italic text-slate-500">Environmental Services Bukittinggi Municipality</span>',
-                render: function(year) {
-                    const yr = parseInt(year) || 2025;
-                    const p = get5YearPeriod(yr);
-                    const years = p.yearsAsc;
-
-                    const officialData4213 = {
-                        2017: { organik: '-', logam: '-', plastik: '-', kaca: '-', kertas: '-', lainnya: '-', total: '-' },
-                        2018: { organik: '-', logam: '-', plastik: '-', kaca: '-', kertas: '-', lainnya: '-', total: '-' },
-                        2019: { organik: '-', logam: '-', plastik: '-', kaca: '-', kertas: '-', lainnya: '-', total: '-' },
-                        2020: { organik: '-', logam: '-', plastik: '-', kaca: '-', kertas: '-', lainnya: '-', total: '-' },
-                        2021: { organik: '67.06', logam: '0.64', plastik: '14.64', kaca: '0.7', kertas: '13.65', lainnya: '3.3', total: '100' },
-                        2022: { organik: '62.26', logam: '0.46', plastik: '18.72', kaca: '0.5', kertas: '16.5', lainnya: '1.56', total: '100' },
-                        2023: { organik: '69.39', logam: '0.48', plastik: '19.18', kaca: '0.3', kertas: '9.2', lainnya: '1.45', total: '100' },
-                        2024: { organik: '55.98', logam: '1.75', plastik: '21.96', kaca: '1.35', kertas: '5.51', lainnya: '13.45', total: '100' },
-                        2025: { organik: '55.98', logam: '1.75', plastik: '21.96', kaca: '1.35', kertas: '5.51', lainnya: '13.45', total: '100' }
-                    };
-
-                    const categories = [
-                        { key: 'organik', label: '01. Organik' },
-                        { key: 'logam', label: '02. Logam' },
-                        { key: 'plastik', label: '03. Plastik' },
-                        { key: 'kaca', label: '04. Gelas / Kaca' },
-                        { key: 'kertas', label: '05. Kertas' },
-                        { key: 'lainnya', label: '06. Lainnya' }
-                    ];
-
-                    let rowsHtml = '';
-                    categories.forEach(cat => {
-                        let cellsHtml = '';
-                        years.forEach(y => {
-                            const rowData = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[y]) ? serverDbDataStore[y] : (officialData4213[y] || {});
-                            const val = rowData[cat.key] !== undefined ? rowData[cat.key] : '-';
-                            cellsHtml += `<td class="py-2.5 px-4 border border-slate-700 text-center align-top ${y === yr ? 'bg-amber-100/60 font-semibold' : ''}">${val}</td>`;
-                        });
-                        rowsHtml += `
-                            <tr class="hover:bg-amber-100/60 transition-colors">
-                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${cat.label}</td>
-                                ${cellsHtml}
-                            </tr>
-                        `;
-                    });
-
-                    // Baris Total
-                    let totalCellsHtml = '';
-                    years.forEach(y => {
-                        const rowData = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[y]) ? serverDbDataStore[y] : (officialData4213[y] || {});
-                        const val = rowData.total !== undefined ? rowData.total : '100';
-                        totalCellsHtml += `<td class="py-2.5 px-4 border border-slate-700 text-center align-top font-bold ${y === yr ? 'bg-amber-200/60' : ''}">${val}</td>`;
-                    });
-                    rowsHtml += `
-                        <tr class="bg-[#fed7aa] font-bold">
-                            <td class="py-2.5 px-4 border border-slate-700 text-left font-bold align-top">Jumlah / Total</td>
-                            ${totalCellsHtml}
-                        </tr>
-                    `;
-
-                    let theadYearsHtml = '';
-                    let theadNumHtml = '';
-                    years.forEach((y, idx) => {
-                        theadYearsHtml += `<th class="py-3 px-4 font-bold border border-slate-700 ${y === yr ? 'bg-amber-600' : ''}"><div>${y}</div></th>`;
-                        theadNumHtml += `<th class="py-1 px-3 border border-slate-700">(${idx + 2})</th>`;
-                    });
-
-                    return `
-                        <thead>
-                            <tr class="bg-[#f95a00] text-white text-center font-bold">
-                                <th class="py-3 px-4 font-bold border border-slate-700">
-                                    <div>Jenis Sampah</div><div class="italic font-normal text-[11px] sm:text-xs">Kind of Rubbish</div>
-                                </th>
-                                ${theadYearsHtml}
-                            </tr>
-                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
-                                <th class="py-1 px-3 border border-slate-700">(1)</th>
-                                ${theadNumHtml}
-                            </tr>
-                        </thead>
-                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
-                            ${rowsHtml}
-                        </tbody>
-                    `;
-                }
-            },
-            '4.2.14': {
-                titleId: 'Rata–rata Timbunan Sampah yang Terangkut menurut Sumber Timbunan Sampah di Kota Bukittinggi',
-                titleEn: 'Rubbish Which is Carried by Source of Rubbish in Bukittinggi Municipality',
-                isMultiYear: false,
-                source: 'Dinas Lingkungan Hidup Kota Bukittinggi / <span class="italic text-slate-500">Environmental Services Bukittinggi Municipality</span>',
-                render: function(year) {
-                    const yr = parseInt(year) || 2025;
-                    const dataByYear = {
-                        2023: [
-                            { label: '01. Rumah Tangga / Pemukiman', timbunan: '47,43', persentase: '52,51' },
-                            { label: '02. Pasar', timbunan: '17,10', persentase: '18,93' },
-                            { label: '03. Pertokoan/Komersial Fasilitas & Umum', timbunan: '8,94', persentase: '9,90' },
-                            { label: '04. Perkantoran', timbunan: '0,42', persentase: '0,46' },
-                            { label: '05. Sekolah', timbunan: '5,36', persentase: '5,93' },
-                            { label: '06. Rumah Sakit', timbunan: '2,43', persentase: '2,69' },
-                            { label: '07. Hotel', timbunan: '6,77', persentase: '7,49' },
-                            { label: '08. Restorant', timbunan: '1,19', persentase: '1,32' },
-                            { label: '09. Lainnya', timbunan: '0,70', persentase: '0,77' },
-                            { label: 'Jumlah/ Total', timbunan: '90,33', persentase: '100' }
-                        ],
-                        2024: [
-                            { label: '01. Rumah Tangga / Pemukiman', timbunan: '25,45', persentase: '26,25' },
-                            { label: '02. Pasar', timbunan: '20,36', persentase: '21,00' },
-                            { label: '03. Pertokoan / Komersial Fasilitas & Umum', timbunan: '14,06', persentase: '14,50' },
-                            { label: '04. Perkantoran', timbunan: '0,35', persentase: '0,36' },
-                            { label: '05. Sekolah', timbunan: '0,28', persentase: '0,29' },
-                            { label: '06. Rumah Sakit', timbunan: '7,28', persentase: '7,51' },
-                            { label: '07. Hotel', timbunan: '0,40', persentase: '0,41' },
-                            { label: '08. Restorant', timbunan: '0,70', persentase: '0,72' },
-                            { label: '09. Lainnya', timbunan: '28,06', persentase: '28,94' },
-                            { label: 'Jumlah/ Total', timbunan: '96,95', persentase: '100' }
-                        ]
-                    };
-                    const officialData4214 = dataByYear[yr] || (dataByYear[2024] ? dataByYear[2024].map(r => ({ label: r.label, timbunan: '-', persentase: '-' })) : []);
-
-                    let rowsHtml = '';
-                    officialData4214.forEach(row => {
-                        const isTotal = row.label.toLowerCase().includes('jumlah');
-                        const trClass = isTotal ? 'bg-[#fed7aa] font-bold' : 'hover:bg-amber-100/60 transition-colors';
-                        const fontClass = isTotal ? 'font-bold' : 'font-semibold';
-                        const alignClass = isTotal ? 'font-extrabold text-right' : 'font-semibold text-right';
-                        rowsHtml += `
-                            <tr class="${trClass}">
-                                <td class="py-2.5 px-4 border border-slate-700 text-left ${fontClass} align-middle">${row.label}</td>
-                                <td class="py-2.5 px-4 border border-slate-700 align-middle ${alignClass}" style="text-align: right;">${row.timbunan}</td>
-                                <td class="py-2.5 px-4 border border-slate-700 align-middle ${alignClass}" style="text-align: right;">${row.persentase}</td>
-                            </tr>
-                        `;
-                    });
-
-                    return `
-                        <thead>
-                            <tr class="bg-[#f95a00] text-white text-center font-bold">
-                                <th class="py-3 px-4 font-bold border border-slate-700">
-                                    <div>Sumber</div><div class="italic font-normal text-[11px] sm:text-xs">Source</div>
-                                </th>
-                                <th class="py-3 px-4 font-bold border border-slate-700">
-                                    <div>Timbunan per Hari</div><div class="italic font-normal text-[11px] sm:text-xs">Rubbish Heap per Day (ton)</div>
-                                </th>
-                                <th class="py-3 px-4 font-bold border border-slate-700">
-                                    <div>Persentase</div><div class="italic font-normal text-[11px] sm:text-xs">Percentage</div>
-                                </th>
-                            </tr>
-                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
-                                <th class="py-1 px-3 border border-slate-700">(1)</th>
-                                <th class="py-1 px-3 border border-slate-700">(2)</th>
-                                <th class="py-1 px-3 border border-slate-700">(3)</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
-                            ${rowsHtml}
-                        </tbody>
-                    `;
-                }
-            },
-            '4.2.15': {
-                titleId: 'Jumlah Personil dan Sarana Kebersihan dan Pertamanan di Kota Bukittinggi',
-                titleEn: 'Number of Personal, Tools and Equipment Cleanners in Bukittinggi',
-                isMultiYear: true,
-                isExcludeSelectedYear: false,
-                source: 'Dinas Lingkungan Hidup Kota Bukittinggi / <span class="italic text-slate-500">Environmental Services Bukittinggi Municipality</span>',
-                render: function(year) {
-                    const yr = parseInt(year) || 2025;
-                    const p = get5YearPeriod(yr);
-                    const years = p.yearsAsc;
-
-                    const officialData = {
-                        2017: { pegawai: '257', truk: '17', gerobak: '58', becak_dayung: '8', becak_motor: '58' },
-                        2018: { pegawai: '290', truk: '20', gerobak: '59', becak_dayung: '17', becak_motor: '62' },
-                        2019: { pegawai: '287', truk: '19', gerobak: '39', becak_dayung: '13', becak_motor: '46' },
-                        2020: { pegawai: '289', truk: '20', gerobak: '24', becak_dayung: '17', becak_motor: '45' },
-                        2021: { pegawai: '313', truk: '20', gerobak: '24', becak_dayung: '10', becak_motor: '42' },
-                        2022: { pegawai: '308', truk: '23', gerobak: '22', becak_dayung: '8', becak_motor: '45' },
-                        2023: { pegawai: '292', truk: '17', gerobak: '22', becak_dayung: '8', becak_motor: '40' },
-                        2024: { pegawai: '286', truk: '21', gerobak: '26', becak_dayung: '-', becak_motor: '39' },
-                        2025: { pegawai: '258', truk: '17', gerobak: '51', becak_dayung: '-', becak_motor: '51' }
-                    };
-
-                    const getVal = (y, key) => {
-                        if (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[y] && serverDbDataStore[y][key] !== undefined) {
-                            return serverDbDataStore[y][key];
-                        }
-                        if (officialData[y] && officialData[y][key] !== undefined) {
-                            return officialData[y][key];
-                        }
-                        return '-';
-                    };
-
-                    const rowsHtml = years.map(y => {
-                        const isCurrent = (y === yr);
-                        const vPeg = getVal(y, 'pegawai');
-                        const vTruk = getVal(y, 'truk');
-                        const vGer = getVal(y, 'gerobak');
-                        const vBecD = getVal(y, 'becak_dayung');
-                        const vBecM = getVal(y, 'becak_motor');
-                        return `
-                            <tr class="hover:bg-amber-100/60 transition-colors ${isCurrent ? 'bg-amber-100/30' : ''}">
-                                <td class="py-2.5 px-4 font-semibold border border-slate-700 text-left align-middle ${isCurrent ? 'font-bold' : ''}">${y}</td>
-                                <td class="py-2.5 px-4 text-center border border-slate-700 align-middle ${isCurrent ? 'font-semibold' : ''}">${vPeg}</td>
-                                <td class="py-2.5 px-4 text-center border border-slate-700 align-middle ${isCurrent ? 'font-semibold' : ''}">${vTruk}</td>
-                                <td class="py-2.5 px-4 text-center border border-slate-700 align-middle ${isCurrent ? 'font-semibold' : ''}">${vGer}</td>
-                                <td class="py-2.5 px-4 text-center border border-slate-700 align-middle ${isCurrent ? 'font-semibold' : ''}">${vBecD}</td>
-                                <td class="py-2.5 px-4 text-center border border-slate-700 align-middle ${isCurrent ? 'font-semibold' : ''}">${vBecM}</td>
-                            </tr>
-                        `;
-                    }).join('');
-
-                    return `
-                        <thead>
-                            <tr class="bg-[#f95a00] text-white text-center font-bold">
-                                <th class="py-3 px-4 font-bold border border-slate-700">
-                                    <div>Tahun</div><div class="italic font-normal text-[11px] sm:text-xs">Year</div>
-                                </th>
-                                <th class="py-3 px-4 font-bold border border-slate-700">
-                                    <div>Pegawai</div><div class="italic font-normal text-[11px] sm:text-xs">Personil</div>
-                                </th>
-                                <th class="py-3 px-4 font-bold border border-slate-700">
-                                    <div>Truk Sampah</div><div class="italic font-normal text-[11px] sm:text-xs">Truck of Trash/ (unit)</div>
-                                </th>
-                                <th class="py-3 px-4 font-bold border border-slate-700">
-                                    <div>Gerobak</div><div class="italic font-normal text-[11px] sm:text-xs">Wagon (unit)</div>
-                                </th>
-                                <th class="py-3 px-4 font-bold border border-slate-700">
-                                    <div>Becak Dayung</div><div class="italic font-normal text-[11px] sm:text-xs">Tricycle (unit)</div>
-                                </th>
-                                <th class="py-3 px-4 font-bold border border-slate-700">
-                                    <div>Becak Motor</div><div class="italic font-normal text-[11px] sm:text-xs">Motor Tricycle (unit)</div>
-                                </th>
-                            </tr>
-                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
-                                <th class="py-1 px-3 border border-slate-700">(1)</th>
-                                <th class="py-1 px-3 border border-slate-700">(2)</th>
-                                <th class="py-1 px-3 border border-slate-700">(3)</th>
-                                <th class="py-1 px-3 border border-slate-700">(4)</th>
-                                <th class="py-1 px-3 border border-slate-700">(5)</th>
-                                <th class="py-1 px-3 border border-slate-700">(6)</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
-                            ${rowsHtml}
-                        </tbody>
-                    `;
-                }
-            },
-
-            '4.1.20': {
-                titleId: 'Jumlah Klub/Persatuan Olahraga di Kota Bukittinggi',
-                titleEn: 'Number of Sport Club in Bukittinggi',
-                isMultiYear: true,
-                isExcludeSelectedYear: false,
-                source: 'Dinas Pemuda dan Olahraga Kota Bukittinggi / <span class="italic text-slate-500">Youth and Sports Agency of Bukittinggi Municipality</span>',
-                render: function(year) {
-                    const yr = parseInt(year) || 2025;
-                    const years = [yr - 3, yr - 2, yr - 1, yr];
-                    const sportsList = [
-                        { key: 'sport_1', name: '01. Sepak Bola / Soccer', def: { 2022: '3', 2023: '3', 2024: '3', 2025: '3' } },
-                        { key: 'sport_2', name: '02. Bola Volly / Volley Ball', def: { 2022: '16', 2023: '16', 2024: '5', 2025: '5' } },
-                        { key: 'sport_3', name: '03. Bola Basket / Basket Ball', def: { 2022: '17', 2023: '17', 2024: '18', 2025: '18' } },
-                        { key: 'sport_4', name: '04. Bulu Tangkis / Badminton', def: { 2022: '7', 2023: '7', 2024: '7', 2025: '7' } },
-                        { key: 'sport_5', name: '05. Tenis Meja / Table Tennis', def: { 2022: '3', 2023: '3', 2024: '3', 2025: '3' } },
-                        { key: 'sport_6', name: '06. Atletik / Atletic', def: { 2022: '3', 2023: '3', 2024: '3', 2025: '3' } },
-                        { key: 'sport_7', name: '07. Tenis / Tennis', def: { 2022: '7', 2023: '7', 2024: '6', 2025: '6' } },
-                        { key: 'sport_8', name: '08. Catur / Chess', def: { 2022: '1', 2023: '1', 2024: '1', 2025: '1' } },
-                        { key: 'sport_9', name: '09. Bridge / Bridge', def: { 2022: '1', 2023: '1', 2024: '1', 2025: '1' } },
-                        { key: 'sport_10', name: '10. Bola Sodok / Billiards', def: { 2022: '1', 2023: '1', 2024: '3', 2025: '3' } },
-                        { key: 'sport_11', name: '11. Renang / Swimming', def: { 2022: '6', 2023: '6', 2024: '6', 2025: '6' } },
-                        { key: 'sport_12', name: '12. Karate / Karate', def: { 2022: '2', 2023: '2', 2024: '2', 2025: '2' } },
-                        { key: 'sport_13', name: '13. Silat / Self Defence', def: { 2022: '26', 2023: '26', 2024: '26', 2025: '26' } },
-                        { key: 'sport_14', name: '14. Gulat / Wrestler', def: { 2022: '2', 2023: '2', 2024: '2', 2025: '2' } },
-                        { key: 'sport_15', name: '15. Aero Sport / Aero Sport', def: { 2022: '1', 2023: '1', 2024: '3', 2025: '3' } },
-                        { key: 'sport_16', name: '16. Kempo / Kempo', def: { 2022: '5', 2023: '5', 2024: '5', 2025: '5' } },
-                        { key: 'sport_17', name: '17. Wushu / Wushu', def: { 2022: '3', 2023: '3', 2024: '3', 2025: '3' } },
-                        { key: 'sport_18', name: '18. Hoki / Hockey', def: { 2022: '1', 2023: '1', 2024: '2', 2025: '2' } },
-                        { key: 'sport_19', name: '19. Menembak dan Berburu / Shooting', def: { 2022: '2', 2023: '2', 2024: '2', 2025: '2' } },
-                        { key: 'sport_20', name: '20. Senam / Exercise', def: { 2022: '4', 2023: '4', 2024: '1', 2025: '1' } },
-                        { key: 'sport_21', name: '21. Panahan / Archery', def: { 2022: '1', 2023: '1', 2024: '1', 2025: '1' } },
-                        { key: 'sport_22', name: '22. Balap Motor / Road Race', def: { 2022: '1', 2023: '1', 2024: '5', 2025: '5' } },
-                        { key: 'sport_23', name: '23. Sepau Roda / Roller sports', def: { 2022: '1', 2023: '1', 2024: '1', 2025: '1' } },
-                        { key: 'sport_24', name: '24. Tarung Derajat / Tarung Derajat', def: { 2022: '6', 2023: '6', 2024: '6', 2025: '6' } },
-                        { key: 'sport_25', name: '25. Tinju / Boxing', def: { 2022: '7', 2023: '7', 2024: '6', 2025: '6' } },
-                        { key: 'sport_26', name: '26. Muaythai / Muaythai', def: { 2022: '3', 2023: '3', 2024: '2', 2025: '2' } },
-                        { key: 'sport_27', name: '27. Taekwondo / Taekwondo', def: { 2022: '3', 2023: '3', 2024: '3', 2025: '3' } },
-                        { key: 'sport_28', name: '28. Dayung / Rowing', def: { 2022: '1', 2023: '1', 2024: '1', 2025: '1' } },
-                        { key: 'sport_29', name: '29. Balap Sepeda / Bike Racing', def: { 2022: '5', 2023: '5', 2024: '5', 2025: '5' } },
-                        { key: 'sport_30', name: '30. Panjat Tebing / Rock Climbing', def: { 2022: '3', 2023: '3', 2024: '1', 2025: '1' } },
-                        { key: 'sport_31', name: '31. Gate Ball / Gate Ball', def: { 2022: '1', 2023: '1', 2024: '1', 2025: '1' } },
-                        { key: 'sport_32', name: '32. Hapkido / Hapkido', def: { 2022: '1', 2023: '1', 2024: '1', 2025: '1' } },
-                        { key: 'sport_33', name: '33. Bola Tangan / Hand Ball', def: { 2022: '1', 2023: '1', 2024: '3', 2025: '3' } },
-                        { key: 'sport_34', name: '34. Kriket / Cricket', def: { 2022: '1', 2023: '1', 2024: '2', 2025: '2' } },
-                        { key: 'sport_35', name: '35. Beladiri Amatir / Mix Martial Arts', def: { 2022: '1', 2023: '1', 2024: '1', 2025: '1' } },
-                        { key: 'sport_36', name: '36. Kick Boxing / Kick Boxing', def: { 2022: '1', 2023: '1', 2024: '2', 2025: '2' } },
-                        { key: 'sport_37', name: '37. Binaraga / Bodybuilding', def: { 2022: '5', 2023: '5', 2024: '5', 2025: '5' } },
-                        { key: 'sport_38', name: '38. Angkat Berat / Powerlifting', def: { 2022: '1', 2023: '1', 2024: '1', 2025: '1' } },
-                        { key: 'sport_39', name: '39. Petanque / Petanque', def: { 2022: '1', 2023: '1', 2024: '2', 2025: '2' } },
-                        { key: 'sport_40', name: '40. Sambo / Sambo', def: { 2022: '1', 2023: '1', 2024: '1', 2025: '1' } },
-                        { key: 'sport_41', name: '41. Angkat Besi / Weightlifting', def: { 2022: '1', 2023: '1', 2024: '1', 2025: '1' } },
-                        { key: 'sport_42', name: '42. E–Sport / E–Sport', def: { 2022: '1', 2023: '1', 2024: '1', 2025: '1' } },
-                        { key: 'sport_43', name: '43. PJSI / Persatuan Judo Seluruh Indonesia', def: { 2022: '-', 2023: '-', 2024: '1', 2025: '1' } },
-                        { key: 'sport_44', name: '44. PORDASI / Persatuan Olahraga Berkuda Seluruh Indonesia', def: { 2022: '-', 2023: '-', 2024: '1', 2025: '1' } },
-                        { key: 'sport_45', name: '45. PSTI / Persatuan Sepak Takrau Indonesia', def: { 2022: '-', 2023: '-', 2024: '1', 2025: '1' } },
-                        { key: 'sport_46', name: '46. PTMSI / Persatuan Tenis Meja Seluruh Indoneisa', def: { 2022: '-', 2023: '-', 2024: '1', 2025: '1' } }
-                    ];
-
-                    const getVal = (y, key, defObj) => {
-                        if (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[y] && serverDbDataStore[y][key] !== undefined) {
-                            return serverDbDataStore[y][key];
-                        }
-                        if (defObj && defObj[y] !== undefined) {
-                            return defObj[y];
-                        }
-                        return '-';
-                    };
-
-                    const rowsHtml = sportsList.map(sp => {
-                        let displayName = sp.name;
-                        if (displayName.includes('/')) {
-                            const parts = displayName.split('/');
-                            displayName = `${parts[0].trim()} / <span class="italic font-normal text-slate-600">${parts.slice(1).join('/').trim()}</span>`;
-                        }
-                        return `
-                            <tr class="hover:bg-amber-100/60 transition-colors" data-key="${sp.key}">
-                                <td class="py-2 px-4 font-semibold border border-slate-700 text-left align-middle">${displayName}</td>
-                                ${years.map(y => {
-                                    const val = getVal(y, sp.key, sp.def);
-                                    const isCur = (y === yr);
-                                    const valDisplay = (val === '' || val === '-') ? '<span class="text-slate-400 font-normal">-</span>' : val;
-                                    return `<td class="py-2 px-3 border border-slate-700 text-center align-middle ${isCur ? 'bg-amber-100/60 font-bold' : ''}">${valDisplay}</td>`;
-                                }).join('')}
-                            </tr>
-                        `;
-                    }).join('');
-
-                    return `
-                        <thead>
-                            <tr class="bg-[#f95a00] text-white text-center font-bold">
-                                <th class="py-3 px-4 font-bold border border-slate-700 text-left align-middle">
-                                    <div>Jenis Olahraga</div>
-                                    <div class="italic font-normal text-[11px] sm:text-xs">Kind of Sport</div>
-                                </th>
-                                ${years.map(y => `<th class="py-3 px-4 border border-slate-700 text-center ${y === yr ? 'bg-amber-600 font-extrabold ring-1 ring-white/30' : ''}">${y}</th>`).join('')}
-                            </tr>
-                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
-                                <th class="py-1 px-3 border border-slate-700 text-center">(1)</th>
-                                ${years.map((y, idx) => `<th class="py-1 px-3 border border-slate-700 text-center">(${idx + 2})</th>`).join('')}
-                            </tr>
-                        </thead>
-                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
-                            ${rowsHtml}
-                        </tbody>
-                    `;
-                }
-            },
-
-            '4.3.4': {
-                titleId: 'Jumlah Kejadian Bencana Alam di Kota Bukittinggi Menurut Kecamatan',
-                titleEn: 'Number of Natural Disasters in Bukittinggi Municipality by District',
-                isMultiYear: false,
-                isExcludeSelectedYear: false,
-                source: 'Badan Penanggulangan Bencana Daerah (BPBD) Kota Bukittinggi / <span class="italic text-slate-500">Regional Agency for Disaster Management of Bukittinggi Municipality</span>',
-                render: function(year) {
-                    const yr = parseInt(year) || 2025;
-                    const isFuture = (yr > 2025);
-                    const officialData = {
-                        2023: {
-                            guguk_panjang: ['38', '297', '0', '1'],
-                            mandiangin_koto_selayan: ['48', '561', '2', '1'],
-                            aur_birugo_tigo_baleh: ['23', '98', '1', '0'],
-                            total: ['109', '956', '3', '2']
-                        },
-                        2024: {
-                            guguk_panjang: ['45', '249', '8', '0'],
-                            mandiangin_koto_selayan: ['31', '694', '0', '0'],
-                            aur_birugo_tigo_baleh: ['17', '712', '50', '1'],
-                            total: ['93', '1655', '58', '1']
-                        },
-                        2025: {
-                            guguk_panjang: ['21', '130', '33', '6'],
-                            mandiangin_koto_selayan: ['42', '74', '20', '8'],
-                            aur_birugo_tigo_baleh: ['4', '0', '1', '1'],
-                            total: ['67', '204', '54', '15']
-                        }
-                    };
-
-                    const yrData = officialData[yr] || {};
-
-                    const getVal = (distKey, colIdx, colName) => {
-                        const dbKey = `${distKey}_${colName}`;
-                        if (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[yr] && serverDbDataStore[yr][dbKey] !== undefined) {
-                            return serverDbDataStore[yr][dbKey];
-                        }
-                        if (isFuture) {
-                            return '-';
-                        }
-                        if (yrData[distKey] && yrData[distKey][colIdx] !== undefined) {
-                            return yrData[distKey][colIdx];
-                        }
-                        return '-';
-                    };
-
-                    const dists = [
-                        { key: 'guguk_panjang', label: '01. GUGUK PANJANG' },
-                        { key: 'mandiangin_koto_selayan', label: '02. MANDIANGIN KOTO SELAYAN' },
-                        { key: 'aur_birugo_tigo_baleh', label: '03. AUR BIRUGO TIGO BALEH' }
-                    ];
-
-                    const rowsHtml = dists.map(d => `
-                        <tr class="hover:bg-amber-100/60 transition-colors" data-key="${d.key}">
-                            <td class="py-2.5 px-4 font-semibold border border-slate-700 text-left align-middle">${d.label}</td>
-                            <td class="py-2.5 px-3 border border-slate-700 text-center align-middle">${getVal(d.key, 0, 'kejadian')}</td>
-                            <td class="py-2.5 px-3 border border-slate-700 text-center align-middle">${getVal(d.key, 1, 'korban')}</td>
-                            <td class="py-2.5 px-3 border border-slate-700 text-center align-middle">${getVal(d.key, 2, 'rumah')}</td>
-                            <td class="py-2.5 px-3 border border-slate-700 text-center align-middle">${getVal(d.key, 3, 'lainnya')}</td>
-                        </tr>
-                    `).join('');
-
-                    return `
-                        <thead>
-                            <tr class="bg-[#f95a00] text-white text-center font-bold">
-                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
-                                    <div>Kecamatan</div>
-                                    <div class="italic font-normal text-[11px] sm:text-xs">District</div>
-                                </th>
-                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
-                                    <div>Jumlah Kejadian Bencana Alam</div>
-                                    <div class="italic font-normal text-[11px] sm:text-xs">Number of Natural Disaster</div>
-                                </th>
-                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
-                                    <div>Jumlah Korban Terdampak</div>
-                                    <div class="italic font-normal text-[11px] sm:text-xs">Number of Victims Affected</div>
-                                </th>
-                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="2">
-                                    <div>Jumlah Kerusakan Bangunan</div>
-                                    <div class="italic font-normal text-[11px] sm:text-xs">Amount of Damage to Buildings</div>
-                                </th>
-                            </tr>
-                            <tr class="bg-[#f95a00] text-white text-center font-bold">
-                                <th class="py-3 px-4 font-bold border border-slate-700">
-                                    <div>Rumah</div>
-                                    <div class="italic font-normal text-[11px] sm:text-xs">House</div>
-                                </th>
-                                <th class="py-3 px-4 font-bold border border-slate-700">
-                                    <div>Lainnya</div>
-                                    <div class="italic font-normal text-[11px] sm:text-xs">Other</div>
-                                </th>
-                            </tr>
-                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
-                                <th class="py-1 px-3 border border-slate-700">(1)</th>
-                                <th class="py-1 px-3 border border-slate-700">(2)</th>
-                                <th class="py-1 px-3 border border-slate-700">(3)</th>
-                                <th class="py-1 px-3 border border-slate-700">(4)</th>
-                                <th class="py-1 px-3 border border-slate-700">(5)</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
-                            ${rowsHtml}
-                            <tr class="bg-[#fed7aa] font-bold" data-key="total">
-                                <td class="py-2.5 px-4 border border-slate-700 text-left font-extrabold align-middle">Jumlah / <span class="italic font-bold">Total</span></td>
-                                <td class="py-2.5 px-3 border border-slate-700 text-center align-middle font-extrabold">${getVal('total', 0, 'kejadian')}</td>
-                                <td class="py-2.5 px-3 border border-slate-700 text-center align-middle font-extrabold">${getVal('total', 1, 'korban')}</td>
-                                <td class="py-2.5 px-3 border border-slate-700 text-center align-middle font-extrabold">${getVal('total', 2, 'rumah')}</td>
-                                <td class="py-2.5 px-3 border border-slate-700 text-center align-middle font-extrabold">${getVal('total', 3, 'lainnya')}</td>
-                            </tr>
-                        </tbody>
-                    `;
-                }
-            },
-            '9.2': {
-                titleId: 'Jumlah Koperasi Menurut Jenis Koperasi dan Kecamatan di Kota Bukittinggi',
-                titleEn: 'Number of Cooperative by Kind of Cooperative and Subdistrict in Bukittinggi Municipality',
-                isMultiYear: false,
-                isExcludeSelectedYear: false,
-                source: 'Dinas Koperasi, UKM dan Tenaga Kerja Kota Bukittinggi / <span class="italic text-slate-500">Cooperative, Small and Medium Business and Labor Services of Bukittinggi Municipality</span>',
-                render: function(year) {
-                    const yr = parseInt(year) || 2025;
-                    const officialData = {
-                        2023: {
-                            guguk_panjang: ['0', '13', '14', '25', '52'],
-                            mandiangin_koto_selayan: ['0', '4', '1', '10', '15'],
-                            aur_birugo_tigo_baleh: ['1', '12', '3', '11', '27'],
-                            total: ['1', '29', '18', '46', '94']
-                        },
-                        2024: {
-                            guguk_panjang: ['0', '13', '10', '34', '57'],
-                            mandiangin_koto_selayan: ['0', '4', '1', '20', '25'],
-                            aur_birugo_tigo_baleh: ['1', '10', '6', '14', '31'],
-                            total: ['1', '27', '17', '68', '113']
-                        },
-                        2025: {
-                            guguk_panjang: ['0', '29', '11', '22', '62'],
-                            mandiangin_koto_selayan: ['0', '4', '1', '25', '30'],
-                            aur_birugo_tigo_baleh: ['1', '10', '6', '19', '36'],
-                            total: ['1', '43', '18', '66', '128']
-                        }
-                    };
-
-                    const yrData = officialData[yr] || {};
-
-                    const getVal = (distKey, colIdx, colName) => {
-                        const dbKey = `${distKey}_${colName}`;
-                        if (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[yr] && serverDbDataStore[yr][dbKey] !== undefined) {
-                            return serverDbDataStore[yr][dbKey];
-                        }
-                        if (yrData[distKey] && yrData[distKey][colIdx] !== undefined) {
-                            return yrData[distKey][colIdx];
-                        }
-                        return '-';
-                    };
-
-                    const dists = [
-                        { key: 'guguk_panjang', label: 'Guguk Panjang' },
-                        { key: 'mandiangin_koto_selayan', label: 'Mandiangin Koto Selayan' },
-                        { key: 'aur_birugo_tigo_baleh', label: 'Aur Birugo Tigo Baleh' }
-                    ];
-
-                    const inp = (v, cls = '') => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm ${cls}" value="${v}">`;
-
-                    const rowsHtml = dists.map(d => `
-                        <tr class="hover:bg-amber-100/60 transition-colors" data-key="${d.key}">
-                            <td class="py-2.5 px-4 font-semibold border border-slate-700 text-left align-middle">${d.label}</td>
-                            <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(getVal(d.key, 0, 'kud'))}</td>
-                            <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(getVal(d.key, 1, 'kpri'))}</td>
-                            <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(getVal(d.key, 2, 'kopkar'))}</td>
-                            <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(getVal(d.key, 3, 'lainnya'))}</td>
-                            <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(getVal(d.key, 4, 'total'), 'font-bold bg-amber-50/50')}</td>
-                        </tr>
-                    `).join('');
-
-                    return `
-                        <thead>
-                            <tr class="bg-[#f95a00] text-white text-center font-bold">
-                                <th class="py-3 px-4 font-bold border border-slate-700">
-                                    <div>Kecamatan</div>
-                                    <div class="italic font-normal text-[11px] sm:text-xs">Subdistrict</div>
-                                </th>
-                                <th class="py-3 px-4 font-bold border border-slate-700"><div>KUD</div></th>
-                                <th class="py-3 px-4 font-bold border border-slate-700"><div>KPRI</div></th>
-                                <th class="py-3 px-4 font-bold border border-slate-700"><div>KOPKAR</div></th>
-                                <th class="py-3 px-4 font-bold border border-slate-700">
-                                    <div>Lainnya</div>
-                                    <div class="italic font-normal text-[11px] sm:text-xs">Other</div>
-                                </th>
-                                <th class="py-3 px-4 font-bold border border-slate-700">
-                                    <div>Jumlah</div>
-                                    <div class="italic font-normal text-[11px] sm:text-xs">Total</div>
-                                </th>
-                            </tr>
-                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
-                                <th class="py-1 px-3 border border-slate-700">(1)</th>
-                                <th class="py-1 px-3 border border-slate-700">(2)</th>
-                                <th class="py-1 px-3 border border-slate-700">(3)</th>
-                                <th class="py-1 px-3 border border-slate-700">(4)</th>
-                                <th class="py-1 px-3 border border-slate-700">(5)</th>
-                                <th class="py-1 px-3 border border-slate-700">(6)</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
-                            ${rowsHtml}
-                            <tr class="bg-[#fed7aa] font-bold" data-key="total">
-                                <td class="py-2.5 px-4 border border-slate-700 text-left font-extrabold align-middle">Jumlah / <span class="italic font-bold">Total</span></td>
-                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(getVal('total', 0, 'kud'), 'font-extrabold')}</td>
-                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(getVal('total', 1, 'kpri'), 'font-extrabold')}</td>
-                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(getVal('total', 2, 'kopkar'), 'font-extrabold')}</td>
-                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(getVal('total', 3, 'lainnya'), 'font-extrabold')}</td>
-                                <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(getVal('total', 4, 'total'), 'font-extrabold bg-amber-100/80')}</td>
-                            </tr>
-                        </tbody>
-                    `;
-                }
-            },
-            '9.3': {
-                titleId: 'Perkembangan Koperasi Dirinci Menurut Anggota, Simpanan dan Volume Usaha di Kota Bukittinggi',
-                titleEn: 'Growth of Cooperative by Member, Deposite and Omset in Bukittinggi',
-                isMultiYear: false,
-                isExcludeSelectedYear: false,
-                source: 'Dinas Koperasi, UKM dan Tenaga Kerja Kota Bukittinggi / <span class="italic text-slate-500">Cooperative, Small and Medium Business and Labor Services of Bukittinggi Municipality</span>',
-                render: function(year) {
-                    const yr = parseInt(year) || 2025;
-                    const p = get7YearPeriod(yr);
-                    const years = p.yearsAsc;
-
-                    const officialData = {
-                        2017: { koperasi: '92', anggota: '15736', simpanan: '177732269', volume_usaha: '480543113', permodalan: '272173141' },
-                        2018: { koperasi: '92', anggota: '15910', simpanan: '212256371', volume_usaha: '202499464', permodalan: '310499179' },
-                        2019: { koperasi: '93', anggota: '15111', simpanan: '183270080', volume_usaha: '195793390', permodalan: '291298760' },
-                        2020: { koperasi: '94', anggota: '14561', simpanan: '210868800', volume_usaha: '179916467', permodalan: '300268854' },
-                        2021: { koperasi: '95', anggota: '14403', simpanan: '202041670', volume_usaha: '175575520', permodalan: '304235940' },
-                        2022: { koperasi: '94', anggota: '14241', simpanan: '183893370', volume_usaha: '147951760', permodalan: '276352910' },
-                        2023: { koperasi: '94', anggota: '14204', simpanan: '116872110', volume_usaha: '139303060', permodalan: '221056024' },
-                        2024: { koperasi: '113', anggota: '13939', simpanan: '133938170', volume_usaha: '104568190', permodalan: '183952529' },
-                        2025: { koperasi: '128', anggota: '14081', simpanan: '137045463', volume_usaha: '82924543', permodalan: '185537956' }
-                    };
-
-                    const getVal = (y, key) => {
-                        if (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[y] && serverDbDataStore[y][key] !== undefined) {
-                            return serverDbDataStore[y][key];
-                        }
-                        if (officialData[y] && officialData[y][key] !== undefined) return officialData[y][key];
-                        return '-';
-                    };
-
-                    const rowsHtml = years.map(y => `
-                        <tr class="hover:bg-amber-100/60 transition-colors" data-year="${y}">
-                            <td class="py-2.5 px-4 font-semibold border border-slate-700 text-left align-middle ${y === yr ? 'font-bold bg-amber-100/60' : ''}">${y}</td>
-                            <td class="py-1 px-2 border border-slate-700 text-center align-middle ${y === yr ? 'bg-amber-100/60' : ''}">
-                                <input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm" data-key="koperasi" value="${getVal(y, 'koperasi')}">
-                            </td>
-                            <td class="py-1 px-2 border border-slate-700 text-center align-middle ${y === yr ? 'bg-amber-100/60' : ''}">
-                                <input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm" data-key="anggota" value="${getVal(y, 'anggota')}">
-                            </td>
-                            <td class="py-1 px-2 border border-slate-700 text-center align-middle ${y === yr ? 'bg-amber-100/60' : ''}">
-                                <input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm" data-key="simpanan" value="${getVal(y, 'simpanan')}">
-                            </td>
-                            <td class="py-1 px-2 border border-slate-700 text-center align-middle ${y === yr ? 'bg-amber-100/60' : ''}">
-                                <input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm" data-key="volume_usaha" value="${getVal(y, 'volume_usaha')}">
-                            </td>
-                            <td class="py-1 px-2 border border-slate-700 text-center align-middle ${y === yr ? 'bg-amber-100/60' : ''}">
-                                <input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm" data-key="permodalan" value="${getVal(y, 'permodalan')}">
-                            </td>
-                        </tr>
-                    `).join('');
-
-                    return `
-                        <thead>
-                            <tr class="bg-[#f95a00] text-white text-center font-bold">
-                                <th class="py-3 px-4 font-bold border border-slate-700">
-                                    <div>Tahun</div><div class="italic font-normal text-[11px] sm:text-xs">Year</div>
-                                </th>
-                                <th class="py-3 px-4 font-bold border border-slate-700">
-                                    <div>Jumlah Koperasi</div><div class="italic font-normal text-[11px] sm:text-xs">Number of Cooperative (Buah/Unit)</div>
-                                </th>
-                                <th class="py-3 px-4 font-bold border border-slate-700">
-                                    <div>Anggota</div><div class="italic font-normal text-[11px] sm:text-xs">Member (Orang/ Person)</div>
-                                </th>
-                                <th class="py-3 px-4 font-bold border border-slate-700">
-                                    <div>Simpanan</div><div class="italic font-normal text-[11px] sm:text-xs">Deposits (000)</div>
-                                </th>
-                                <th class="py-3 px-4 font-bold border border-slate-700">
-                                    <div>Volume Usaha</div><div class="italic font-normal text-[11px] sm:text-xs">Omsets (000)</div>
-                                </th>
-                                <th class="py-3 px-4 font-bold border border-slate-700">
-                                    <div>Permodalan</div><div class="italic font-normal text-[11px] sm:text-xs">Assets (000)</div>
-                                </th>
-                            </tr>
-                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
-                                <th class="py-1 px-3 border border-slate-700">(1)</th>
-                                <th class="py-1 px-3 border border-slate-700">(2)</th>
-                                <th class="py-1 px-3 border border-slate-700">(3)</th>
-                                <th class="py-1 px-3 border border-slate-700">(4)</th>
-                                <th class="py-1 px-3 border border-slate-700">(5)</th>
-                                <th class="py-1 px-3 border border-slate-700">(6)</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
-                            ${rowsHtml}
-                        </tbody>
-                    `;
-                }
-            },
-
-            '9.4': {
-                titleId: 'Jumlah Koperasi Menurut Jenisnya per Kecamatan di Kota Bukittinggi',
-                titleEn: 'Number of Cooperation by Kind in District in Bukittinggi',
-                isMultiYear: false,
-                isExcludeSelectedYear: false,
-                source: 'Dinas Koperasi, UKM dan Tenaga Kerja Kota Bukittinggi / <span class="italic text-slate-500">Cooperative, Small and Medium Business and Labor Services of Bukittinggi Municipality</span>',
-                render: function(year) {
-                    const yr = parseInt(year) || 2025;
-                    const categories = [
-                        { is_header: true, label: 'Koperasi Primer', key: 'primer_header' },
-                        { key: 'kop_pertanian', label: '1. Kop. Pertanian', sub: false },
-                        { key: 'kop_peternakan', label: '2. Kop. Peternakan', sub: false },
-                        { key: 'kop_serba_usaha', label: '3. Kop. Serba Usaha', sub: false },
-                        { key: 'kop_kerajinan', label: '4. Kop. Kerajinan', sub: false },
-                        { key: 'kop_simpan_pinjam', label: '5. Kop. Simpan Pinjam', sub: false },
-                        { key: 'kop_jasa_angkutan', label: '6. Kop. Jasa / <span class="italic font-normal text-slate-700">Angkutan</span>', raw_label: '6. Kop. Jasa / Angkutan', sub: false },
-                        { is_header: true, label: '7. Kop Menurut Golongan', key: 'golongan_header' },
-                        { key: 'gol_pegawai_negeri', label: '- Pegawai Negeri', sub: true },
-                        { key: 'gol_angkatan_darat', label: '- Angkatan Darat', sub: true },
-                        { key: 'gol_polri', label: '- Polri', sub: true },
-                        { key: 'gol_karyawan_perum', label: '- Karyawan / <span class="italic font-normal text-slate-700">Perum</span>', raw_label: '- Karyawan / Perum', sub: true },
-                        { key: 'gol_guru_swasta', label: '- Guru Swasta', sub: true },
-                        { key: 'gol_veteran', label: '- Veteran', sub: true },
-                        { key: 'gol_pensiun_abri', label: '- Pensiun ABRI', sub: true },
-                        { key: 'gol_pensiun_pn', label: '- Pensiun PN', sub: true },
-                        { key: 'gol_karyawan_bank', label: '- Karyawan Bank', sub: true },
-                        { key: 'gol_organisasi_wanita', label: '- Organisasi Wanita', sub: true },
-                        { key: 'kop_mahasiswa', label: '8. Kop. Mahasiswa', sub: false },
-                        { key: 'kop_sekolah', label: '9. Kop. Sekolah', sub: false },
-                        { key: 'koppas', label: '10. Koppas', sub: false },
-                        { key: 'kop_lainnya', label: '11. Koperasi lainnya', sub: false },
-                        { is_header: true, label: 'Koperasi Sekunder', key: 'sekunder_header' },
-                        { key: 'sek_pkppn', label: '1. PKPPN', sub: false },
-                        { key: 'sek_pusat_wanita', label: '2. Pusat Koperasi Wanita', sub: false }
-                    ];
-
-                    const officialDataByYear = {
-                        2025: {
-                            kop_pertanian: ['0', '0', '1', '1'],
-                            kop_peternakan: ['0', '0', '0', '0'],
-                            kop_serba_usaha: ['12', '3', '3', '18'],
-                            kop_kerajinan: ['0', '0', '0', '0'],
-                            kop_simpan_pinjam: ['4', '4', '1', '9'],
-                            kop_jasa_angkutan: ['1', '0', '0', '1'],
-                            gol_pegawai_negeri: ['13', '4', '10', '27'],
-                            gol_angkatan_darat: ['0', '0', '2', '2'],
-                            gol_polri: ['0', '0', '1', '1'],
-                            gol_karyawan_perum: ['11', '1', '6', '18'],
-                            gol_guru_swasta: ['0', '0', '0', '0'],
-                            gol_veteran: ['1', '0', '0', '1'],
-                            gol_pensiun_abri: ['1', '0', '0', '1'],
-                            gol_pensiun_pn: ['0', '0', '0', '0'],
-                            gol_karyawan_bank: ['0', '0', '0', '0'],
-                            gol_organisasi_wanita: ['2', '1', '1', '4'],
-                            kop_mahasiswa: ['0', '0', '0', '0'],
-                            kop_sekolah: ['0', '0', '0', '0'],
-                            koppas: ['2', '1', '0', '3'],
-                            kop_lainnya: ['15', '16', '11', '42'],
-                            sek_pkppn: ['0', '0', '0', '0'],
-                            sek_pusat_wanita: ['0', '0', '0', '0']
-                        },
-                        2024: {
-                            kop_pertanian: ['0', '0', '1', '1'],
-                            kop_peternakan: ['0', '0', '0', '0'],
-                            kop_serba_usaha: ['12', '3', '3', '18'],
-                            kop_kerajinan: ['1', '0', '0', '1'],
-                            kop_simpan_pinjam: ['12', '3', '3', '18'],
-                            kop_jasa_angkutan: ['1', '0', '0', '1'],
-                            gol_pegawai_negeri: ['12', '4', '10', '26'],
-                            gol_angkatan_darat: ['0', '0', '2', '2'],
-                            gol_polri: ['0', '0', '1', '1'],
-                            gol_karyawan_perum: ['11', '1', '6', '18'],
-                            gol_guru_swasta: ['0', '0', '0', '0'],
-                            gol_veteran: ['1', '0', '0', '1'],
-                            gol_pensiun_abri: ['1', '0', '0', '1'],
-                            gol_pensiun_pn: ['0', '0', '0', '0'],
-                            gol_karyawan_bank: ['0', '0', '0', '0'],
-                            gol_organisasi_wanita: ['0', '0', '0', '0'],
-                            kop_mahasiswa: ['0', '0', '0', '0'],
-                            kop_sekolah: ['0', '0', '0', '0'],
-                            koppas: ['2', '1', '-', '3'],
-                            kop_lainnya: ['4', '13', '5', '22'],
-                            sek_pkppn: ['-', '-', '-', '0'],
-                            sek_pusat_wanita: ['-', '-', '-', '0']
-                        },
-                        2023: {
-                            kop_pertanian: ['-', '-', '1', '1'],
-                            kop_peternakan: ['-', '-', '-', '-'],
-                            kop_serba_usaha: ['13', '3', '4', '20'],
-                            kop_kerajinan: ['1', '-', '-', '1'],
-                            kop_simpan_pinjam: ['3', '2', '-', '5'],
-                            kop_jasa_angkutan: ['-', '-', '-', '-'],
-                            gol_pegawai_negeri: ['13', '4', '12', '29'],
-                            gol_angkatan_darat: ['1', '-', '-', '1'],
-                            gol_polri: ['-', '-', '1', '1'],
-                            gol_karyawan_perum: ['14', '1', '3', '18'],
-                            gol_guru_swasta: ['-', '-', '-', '-'],
-                            gol_veteran: ['-', '-', '-', '-'],
-                            gol_pensiun_abri: ['-', '1', '-', '1'],
-                            gol_pensiun_pn: ['-', '-', '-', '-'],
-                            gol_karyawan_bank: ['-', '-', '-', '-'],
-                            gol_organisasi_wanita: ['2', '-', '1', '3'],
-                            kop_mahasiswa: ['-', '-', '-', '-'],
-                            kop_sekolah: ['-', '-', '-', '-'],
-                            koppas: ['-', '-', '-', '-'],
-                            kop_lainnya: ['5', '4', '5', '14'],
-                            sek_pkppn: ['-', '-', '-', '-'],
-                            sek_pusat_wanita: ['-', '-', '-', '-']
-                        }
-                    };
-
-                    const dataForYear = officialDataByYear[yr] || {};
-
-                    let rowsHtml = '';
-                    categories.forEach(cat => {
-                        if (cat.is_header) {
-                            rowsHtml += `
-                                <tr class="hover:bg-amber-100/60 transition-colors">
-                                    <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top" colspan="2">${cat.label}</td>
-                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top"><span class="text-slate-400 font-normal">-</span></td>
-                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top"><span class="text-slate-400 font-normal">-</span></td>
-                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top"><span class="text-slate-400 font-normal">-</span></td>
-                                    <td class="py-2.5 px-4 border border-slate-700 text-center align-top"><span class="text-slate-400 font-normal">-</span></td>
-                                </tr>
-                            `;
-                        } else {
-                            const vals = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[yr] && serverDbDataStore[yr][`${cat.key}_gp`] !== undefined)
-                                ? [serverDbDataStore[yr][`${cat.key}_gp`], serverDbDataStore[yr][`${cat.key}_mks`], serverDbDataStore[yr][`${cat.key}_abtb`], serverDbDataStore[yr][`${cat.key}_total`]]
-                                : (dataForYear[cat.key] || ['-', '-', '-', '-']);
-                            const subCls = cat.sub ? 'pl-8' : '';
-                            const inp = (v) => `<input type="text" class="table-edit-input w-full text-center bg-transparent py-1 px-1 rounded border border-transparent hover:border-slate-300 focus:border-amber-500 focus:bg-white focus:outline-none text-slate-800 font-semibold text-xs sm:text-sm" value="${v}">`;
-                            rowsHtml += `
-                                <tr class="hover:bg-amber-100/60 transition-colors" data-key="${cat.key}">
-                                    <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top ${subCls}" colspan="2">${cat.label}</td>
-                                    <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vals[0])}</td>
-                                    <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vals[1])}</td>
-                                    <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vals[2])}</td>
-                                    <td class="py-1 px-2 border border-slate-700 text-center align-middle">${inp(vals[3])}</td>
-                                </tr>
-                            `;
-                        }
-                    });
-
-                    const officialTotals = {
-                        2025: { gp: '62', mks: '30', abtb: '36', total: '128' },
-                        2024: { gp: '57', mks: '25', abtb: '31', total: '113' },
-                        2023: { gp: '52', mks: '15', abtb: '27', total: '94' },
-                        2022: { gp: '53', mks: '17', abtb: '24', total: '94' },
-                        2021: { gp: '54', mks: '17', abtb: '24', total: '95' },
-                        2020: { gp: '54', mks: '17', abtb: '23', total: '94' },
-                        2019: { gp: '54', mks: '17', abtb: '23', total: '94' },
-                        2018: { gp: '54', mks: '16', abtb: '23', total: '93' }
-                    };
-
-                    const histYears = [yr, yr - 1, yr - 2, yr - 3, yr - 4, yr - 5];
-                    const totalRowsCount = histYears.length;
-
-                    histYears.forEach((hy, idx) => {
-                        const t = officialTotals[hy] || { gp: '-', mks: '-', abtb: '-', total: '-' };
-                        const isCur = (hy === yr);
-                        const trCls = isCur ? 'bg-[#fed7aa] font-bold' : 'hover:bg-amber-100/60 transition-colors';
-                        const boldCls = isCur ? 'font-extrabold' : '';
-
-                        rowsHtml += `<tr class="${trCls}">`;
-                        if (idx === 0) {
-                            rowsHtml += `<td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top" rowspan="${totalRowsCount}">Jumlah / <span class="italic font-bold">Total</span></td>`;
-                        }
-                        rowsHtml += `
-                            <td class="py-2.5 px-4 border border-slate-700 text-center align-top ${boldCls}">${hy}</td>
-                            <td class="py-2.5 px-4 border border-slate-700 text-center align-top ${boldCls}">${t.gp}</td>
-                            <td class="py-2.5 px-4 border border-slate-700 text-center align-top ${boldCls}">${t.mks}</td>
-                            <td class="py-2.5 px-4 border border-slate-700 text-center align-top ${boldCls}">${t.abtb}</td>
-                            <td class="py-2.5 px-4 border border-slate-700 text-center align-top ${boldCls}">${t.total}</td>
-                        </tr>`;
-                    });
-
-                    return `
-                        <thead>
-                            <tr class="bg-[#f95a00] text-white text-center font-bold">
-                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2" colspan="2">
-                                    <div>Jenis Koperasi</div><div class="italic font-normal text-[11px] sm:text-xs">Kind of Cooperative</div>
-                                </th>
-                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="3">
-                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
-                                </th>
-                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
-                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
-                                </th>
-                            </tr>
-                            <tr class="bg-[#f95a00] text-white text-center font-bold">
-                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Guguk Panjang</div></th>
-                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Mandiangin Koto Selayan</div></th>
-                                <th class="py-3 px-4 font-bold border border-slate-700"><div>Aur Birugo Tigo Baleh</div></th>
-                            </tr>
-                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
-                                <th class="py-1 px-3 border border-slate-700" colspan="2">(1)</th>
-                                <th class="py-1 px-3 border border-slate-700">(2)</th>
-                                <th class="py-1 px-3 border border-slate-700">(3)</th>
-                                <th class="py-1 px-3 border border-slate-700">(4)</th>
-                                <th class="py-1 px-3 border border-slate-700">(5)</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
-                            ${rowsHtml}
-                        </tbody>
-                    `;
-                }
-            },
-            '5.1.15': {
-                titleId: 'Luas Areal Sawah Menurut Jenis Pengairan per Kecamatan di Kota Bukittinggi',
-                titleEn: 'Area of Wetland by Type of Irrigation per District in Bukittinggi Municipality',
-                isMultiYear: false,
-                source: 'Dinas Pertanian dan Pangan Kota Bukittinggi / <span class="italic text-slate-500">Agriculture and Food Services of Bukittinggi Municipality</span>',
-                render: function(year) {
-                    const yr = parseInt(year) || 2025;
-                    const dists = [
-                        '01. GUGUK PANJANG',
-                        '02. MANDIANGIN KOTO SELAYAN',
-                        '03. AUR BIRUGO TIGO BALEH'
-                    ];
-
-                    let rowsHtml = '';
-                    dists.forEach(label => {
-                        rowsHtml += `
-                            <tr class="hover:bg-amber-100/60 transition-colors">
-                                <td colspan="2" class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${label}</td>
-                                ${Array(6).fill(0).map(() => `<td class="py-2.5 px-3 border border-slate-700 text-center">-</td>`).join('')}
-                            </tr>
-                        `;
-                    });
-
-                    const yearsDesc = [];
-                    for (let y = yr; y >= yr - 4; y--) {
-                        yearsDesc.push(y);
-                    }
-
-                    yearsDesc.forEach((y, idx) => {
-                        const isFirstYear = (idx === 0);
-                        const rowCls = isFirstYear ? 'bg-[#fed7aa] font-bold' : 'hover:bg-amber-100/60 transition-colors font-medium';
-
-                        rowsHtml += `
-                            <tr class="${rowCls}">
-                                ${isFirstYear ? `<td rowspan="5" class="py-2.5 px-4 border border-slate-700 text-center font-extrabold align-middle bg-[#fed7aa]">Jumlah / Total</td>` : ''}
-                                <td class="py-2.5 px-3 border border-slate-700 text-center font-bold align-middle bg-[#fed7aa]">${y}</td>
-                                ${Array(6).fill(0).map(() => `<td class="py-2.5 px-3 border border-slate-700 text-center">-</td>`).join('')}
-                            </tr>
-                        `;
-                    });
-
-                    return `
-                        <thead>
-                            <tr class="bg-[#f95a00] text-white text-center font-bold">
-                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2" colspan="2">
-                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
-                                </th>
-                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="5">
-                                    <div>Jenis Pengairan</div><div class="italic font-normal text-[11px] sm:text-xs">Type of Irrigation</div>
-                                </th>
-                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
-                                    <div>Jumlah</div><div class="italic font-normal text-[11px] sm:text-xs">Total</div>
-                                </th>
-                            </tr>
-                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs">
-                                <th class="py-2 px-3 border border-slate-700"><div>Teknis</div><div class="italic font-normal text-[10px]">Technical</div></th>
-                                <th class="py-2 px-3 border border-slate-700"><div>½ Teknis</div><div class="italic font-normal text-[10px]">Semi Technical</div></th>
-                                <th class="py-2 px-3 border border-slate-700"><div>Sederhana</div><div class="italic font-normal text-[10px]">Simple</div></th>
-                                <th class="py-2 px-3 border border-slate-700"><div>Irigasi Non PU</div><div class="italic font-normal text-[10px]">Non PU Irrigation</div></th>
-                                <th class="py-2 px-3 border border-slate-700"><div>Tadah Hujan</div><div class="italic font-normal text-[10px]">Non Irrigation</div></th>
-                            </tr>
-                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
-                                <th class="py-1 px-3 border border-slate-700" colspan="2">(1)</th>
-                                <th class="py-1 px-3 border border-slate-700">(2)</th>
-                                <th class="py-1 px-3 border border-slate-700">(3)</th>
-                                <th class="py-1 px-3 border border-slate-700">(4)</th>
-                                <th class="py-1 px-3 border border-slate-700">(5)</th>
-                                <th class="py-1 px-3 border border-slate-700">(6)</th>
-                                <th class="py-1 px-3 border border-slate-700">(7)</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
-                            ${rowsHtml}
-                        </tbody>
-                    `;
-                }
-            },
-            '5.1.16': {
-                titleId: 'Target dan Realisasi Intensifikasi Palawija per Kecamatan di Kota Bukittinggi',
-                titleEn: 'Target and Realization of Secondary Food Crops per District in Bukittinggi Municipality',
-                isMultiYear: false,
-                source: 'Dinas Pertanian dan Pangan Kota Bukittinggi / <span class="italic text-slate-500">Agriculture and Food Services of Bukittinggi Municipality</span>',
-                render: function(year) {
-                    const yr = parseInt(year) || 2025;
-                    const dists = [
-                        '01. GUGUK PANJANG',
-                        '02. MANDIANGIN KOTO SELAYAN',
-                        '03. AUR BIRUGO TIGO BALEH'
-                    ];
-
-                    let rowsHtml = '';
-                    dists.forEach(label => {
-                        rowsHtml += `
-                            <tr class="hover:bg-amber-100/60 transition-colors">
-                                <td colspan="2" class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top min-w-[200px]">${label}</td>
-                                ${Array(12).fill(0).map(() => `<td class="py-2.5 px-2.5 border border-slate-700 text-center min-w-[110px]">-</td>`).join('')}
-                            </tr>
-                        `;
-                    });
-
-                    const yearsDesc = [];
-                    for (let y = yr; y >= yr - 4; y--) {
-                        yearsDesc.push(y);
-                    }
-
-                    yearsDesc.forEach((y, idx) => {
-                        const isFirstYear = (idx === 0);
-                        const rowCls = isFirstYear ? 'bg-[#fed7aa] font-bold' : 'hover:bg-amber-100/60 transition-colors font-medium';
-
-                        rowsHtml += `
-                            <tr class="${rowCls}">
-                                ${isFirstYear ? `<td rowspan="5" class="py-2.5 px-4 border border-slate-700 text-center font-extrabold align-middle bg-[#fed7aa] min-w-[130px]">Jumlah / Total</td>` : ''}
-                                <td class="py-2.5 px-3 border border-slate-700 text-center font-bold align-middle bg-[#fed7aa] min-w-[70px]">${y}</td>
-                                ${Array(12).fill(0).map(() => `<td class="py-2.5 px-2.5 border border-slate-700 text-center min-w-[110px]">-</td>`).join('')}
-                            </tr>
-                        `;
-                    });
-
-                    return `
-                        <thead>
-                            <tr class="bg-[#f95a00] text-white text-center font-bold">
-                                <th class="py-3.5 px-4 font-bold border border-slate-700 min-w-[200px]" rowspan="2" colspan="2">
-                                    <div class="text-xs sm:text-sm">Kecamatan</div>
-                                    <div class="italic font-normal text-[11px] sm:text-xs text-orange-100">District</div>
-                                </th>
-                                <th class="py-3 px-3 font-bold border border-slate-700 min-w-[700px]" colspan="6">
-                                    <div class="text-xs sm:text-sm">Target</div>
-                                    <div class="italic font-normal text-[11px] sm:text-xs text-orange-100">Target</div>
-                                </th>
-                                <th class="py-3 px-3 font-bold border border-slate-700 min-w-[700px]" colspan="6">
-                                    <div class="text-xs sm:text-sm">Realisasi</div>
-                                    <div class="italic font-normal text-[11px] sm:text-xs text-orange-100">Realization</div>
-                                </th>
-                            </tr>
-                            <tr class="bg-[#ea580c] text-white text-center font-bold text-xs">
-                                <th class="py-2.5 px-2 border border-slate-700 min-w-[110px]">
-                                    <div>Jagung</div><div class="italic font-normal text-[10px] text-orange-100">Maize</div>
-                                </th>
-                                <th class="py-2.5 px-2 border border-slate-700 min-w-[125px]">
-                                    <div>Kacang Tanah</div><div class="italic font-normal text-[10px] text-orange-100">Peanuts</div>
-                                </th>
-                                <th class="py-2.5 px-2 border border-slate-700 min-w-[110px]">
-                                    <div>Kedelai</div><div class="italic font-normal text-[10px] text-orange-100">Soybeans</div>
-                                </th>
-                                <th class="py-2.5 px-2 border border-slate-700 min-w-[125px]">
-                                    <div>Kacang Hijau</div><div class="italic font-normal text-[10px] text-orange-100">Mungbeans</div>
-                                </th>
-                                <th class="py-2.5 px-2 border border-slate-700 min-w-[110px]">
-                                    <div>Ubi Kayu</div><div class="italic font-normal text-[10px] text-orange-100">Cassava</div>
-                                </th>
-                                <th class="py-2.5 px-2 border border-slate-700 min-w-[125px]">
-                                    <div>Ubi Jalar</div><div class="italic font-normal text-[10px] text-orange-100">Sweet Potatoes</div>
-                                </th>
-                                <th class="py-2.5 px-2 border border-slate-700 min-w-[110px]">
-                                    <div>Jagung</div><div class="italic font-normal text-[10px] text-orange-100">Maize</div>
-                                </th>
-                                <th class="py-2.5 px-2 border border-slate-700 min-w-[125px]">
-                                    <div>Kacang Tanah</div><div class="italic font-normal text-[10px] text-orange-100">Peanuts</div>
-                                </th>
-                                <th class="py-2.5 px-2 border border-slate-700 min-w-[110px]">
-                                    <div>Kedelai</div><div class="italic font-normal text-[10px] text-orange-100">Soybeans</div>
-                                </th>
-                                <th class="py-2.5 px-2 border border-slate-700 min-w-[125px]">
-                                    <div>Kacang Hijau</div><div class="italic font-normal text-[10px] text-orange-100">Mungbeans</div>
-                                </th>
-                                <th class="py-2.5 px-2 border border-slate-700 min-w-[110px]">
-                                    <div>Ubi Kayu</div><div class="italic font-normal text-[10px] text-orange-100">Cassava</div>
-                                </th>
-                                <th class="py-2.5 px-2 border border-slate-700 min-w-[125px]">
-                                    <div>Ubi Jalar</div><div class="italic font-normal text-[10px] text-orange-100">Sweet Potatoes</div>
-                                </th>
-                            </tr>
-                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
-                                <th class="py-1.5 px-3 border border-slate-700" colspan="2">(1)</th>
-                                <th class="py-1.5 px-2 border border-slate-700">(2)</th>
-                                <th class="py-1.5 px-2 border border-slate-700">(3)</th>
-                                <th class="py-1.5 px-2 border border-slate-700">(4)</th>
-                                <th class="py-1.5 px-2 border border-slate-700">(5)</th>
-                                <th class="py-1.5 px-2 border border-slate-700">(6)</th>
-                                <th class="py-1.5 px-2 border border-slate-700">(7)</th>
-                                <th class="py-1.5 px-2 border border-slate-700">(8)</th>
-                                <th class="py-1.5 px-2 border border-slate-700">(9)</th>
-                                <th class="py-1.5 px-2 border border-slate-700">(10)</th>
-                                <th class="py-1.5 px-2 border border-slate-700">(11)</th>
-                                <th class="py-1.5 px-2 border border-slate-700">(12)</th>
-                                <th class="py-1.5 px-2 border border-slate-700">(13)</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
-                            ${rowsHtml}
-                        </tbody>
-                    `;
-                }
-            },
-            '5.1.17': {
-                titleId: 'Target dan Realisasi Intensifikasi Sayur–Sayuran per Kecamatan di Kota Bukittinggi',
-                titleEn: 'Target and Realization of Vegetables Intensification per District in Bukittinggi Municipality',
-                isMultiYear: false,
-                source: 'Dinas Pertanian dan Pangan Kota Bukittinggi / <span class="italic text-slate-500">Agriculture and Food Services of Bukittinggi Municipality</span>',
-                render: function(year) {
-                    const yr = parseInt(year) || 2025;
-                    const dists = [
-                        '01. GUGUK PANJANG',
-                        '02. MANDIANGIN KOTO SELAYAN',
-                        '03. AUR BIRUGO TIGO BALEH'
-                    ];
-
-                    let rowsHtml = '';
-                    dists.forEach(label => {
-                        rowsHtml += `
-                            <tr class="hover:bg-amber-100/60 transition-colors">
-                                <td colspan="2" class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${label}</td>
-                                ${Array(12).fill(0).map(() => `<td class="py-2 px-1 border border-slate-700 text-center">-</td>`).join('')}
-                            </tr>
-                        `;
-                    });
-
-                    const yearsDesc = [];
-                    for (let y = yr; y >= yr - 4; y--) {
-                        yearsDesc.push(y);
-                    }
-
-                    yearsDesc.forEach((y, idx) => {
-                        const isFirstYear = (idx === 0);
-                        const rowCls = isFirstYear ? 'bg-[#fed7aa] font-bold' : 'hover:bg-amber-100/60 transition-colors font-medium';
-
-                        rowsHtml += `
-                            <tr class="${rowCls}">
-                                ${isFirstYear ? `<td rowspan="5" class="py-2.5 px-4 border border-slate-700 text-center font-extrabold align-middle bg-[#fed7aa]">Jumlah / Total</td>` : ''}
-                                <td class="py-2.5 px-3 border border-slate-700 text-center font-bold align-middle bg-[#fed7aa]">${y}</td>
-                                ${Array(12).fill(0).map(() => `<td class="py-2 px-1 border border-slate-700 text-center">-</td>`).join('')}
-                            </tr>
-                        `;
-                    });
-
-                    return `
-                        <thead>
-                            <tr class="bg-[#f95a00] text-white text-center font-bold">
-                                <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2" colspan="2">
-                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
-                                </th>
-                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="6">
-                                    <div>Target</div>
-                                </th>
-                                <th class="py-3 px-4 font-bold border border-slate-700" colspan="6">
-                                    <div>Realisasi</div><div class="italic font-normal text-[11px] sm:text-xs">Realization</div>
-                                </th>
-                            </tr>
-                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs">
-                                <th class="py-2 px-1 border border-slate-700">Kentang</th>
-                                <th class="py-2 px-1 border border-slate-700">Tomat</th>
-                                <th class="py-2 px-1 border border-slate-700">Lombok</th>
-                                <th class="py-2 px-1 border border-slate-700">Bawang Daun</th>
-                                <th class="py-2 px-1 border border-slate-700">Lainnya</th>
-                                <th class="py-2 px-1 border border-slate-700">Jumlah</th>
-                                <th class="py-2 px-1 border border-slate-700">Kentang</th>
-                                <th class="py-2 px-1 border border-slate-700">Tomat</th>
-                                <th class="py-2 px-1 border border-slate-700">Lombok</th>
-                                <th class="py-2 px-1 border border-slate-700">Bawang Daun</th>
-                                <th class="py-2 px-1 border border-slate-700">Lainnya</th>
-                                <th class="py-2 px-1 border border-slate-700">Jumlah</th>
-                            </tr>
-                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
-                                <th class="py-1 px-3 border border-slate-700" colspan="2">(1)</th>
-                                ${Array(12).fill(0).map((_, i) => `<th class="py-1 px-1 border border-slate-700">(${i + 2})</th>`).join('')}
-                            </tr>
-                        </thead>
-                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
-                            ${rowsHtml}
-                        </tbody>
-                    `;
-                }
-            },
-            '5.2.1': {
-                titleId: 'Luas Areal Tanaman Perkebunan Menurut Kecamatan dan Jenis Tanaman di Kota Bukittinggi (ha)',
-                titleEn: 'Planted Area of Estate Crops by District and Types of Crops in Bukittinggi Municipality (ha)',
-                isMultiYear: true,
-                source: 'Dinas Pertanian dan Pangan Kota Bukittinggi / <span class="italic text-slate-500">Agriculture and Food Services of Bukittinggi Municipality</span>',
-                render: function(year) {
-                    const yr = parseInt(year) || 2025;
-                    const y1 = yr - 1;
-                    const y2 = yr;
-                    const is2025 = (yr === 2025);
-                    const is2024 = (yr === 2024);
-                    // Standar BPS resmi: HANYA 4 Komoditi (Kelapa Sawit, Kelapa, Karet, Kopi) -> 8 kolom data (Kolom 2 s.d 9)
-                    const dists = [
-                        { name: '01. Guguk Panjang', data: is2025 ? ['-', '-', '0,86', '0,86', '-', '-', '2,9', '2,5'] : (is2024 ? ['-', '-', '-', '0,86', '-', '-', '2,9', '2,9'] : Array(8).fill('-')) },
-                        { name: '02. Mandiangin Koto Selayan', data: is2025 ? ['-', '-', '2', '1,9', '-', '-', '2,2', '2,1'] : (is2024 ? ['-', '-', '-', '2', '-', '-', '2,2', '2,2'] : Array(8).fill('-')) },
-                        { name: '03. Aur Birugo Tigo Baleh', data: is2025 ? ['-', '-', '0,9', '0,9', '-', '-', '-', '-'] : (is2024 ? ['-', '-', '-', '0,9', '-', '-', '-', '-'] : Array(8).fill('-')) }
-                    ];
-                    const totalData = is2025 ? ['-', '-', '3,76', '3,66', '-', '-', '5,1', '4,6'] : (is2024 ? ['-', '-', '-', '3,76', '-', '-', '5,1', '5,1'] : Array(8).fill('-'));
-
-                    const crops = [
-                        { id: 'Kelapa Sawit', en: 'Oil Palm' },
-                        { id: 'Kelapa', en: 'Coconut' },
-                        { id: 'Karet', en: 'Rubber' },
-                        { id: 'Kopi', en: 'Coffee' }
-                    ];
-
-                    let thCropsHtml = '';
-                    let thYearsHtml = '';
-                    let thNumsHtml = '<th class="py-1 px-3 border border-slate-700 text-left">(1)</th>';
-                    let cNum = 2;
-
-                    crops.forEach(c => {
-                        thCropsHtml += `
-                            <th class="py-2 px-3 font-bold border border-slate-700 text-center" colspan="2">
-                                <div>${c.id}</div><div class="italic font-normal text-[11px] sm:text-xs">${c.en}</div>
-                            </th>
-                        `;
-                        thYearsHtml += `
-                            <th class="py-2 px-2 border border-slate-700">${y1}</th>
-                            <th class="py-2 px-2 border border-slate-700">${y2}</th>
-                        `;
-                        thNumsHtml += `
-                            <th class="py-1 px-2 border border-slate-700">(${cNum})</th>
-                            <th class="py-1 px-2 border border-slate-700">(${cNum + 1})</th>
-                        `;
-                        cNum += 2;
-                    });
-
-                    let rowsHtml = '';
-                    dists.forEach(d => {
-                        rowsHtml += `
-                            <tr class="hover:bg-amber-100/60 transition-colors">
-                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${d.name}</td>
-                                ${d.data.map(v => `<td class="py-2.5 px-3 border border-slate-700 text-right align-top pr-4 font-medium">${v}</td>`).join('')}
-                            </tr>
-                        `;
-                    });
-                    rowsHtml += `
-                        <tr class="bg-[#fed7aa] font-bold">
-                            <td class="py-2.5 px-4 border border-slate-700 text-left font-extrabold align-top">Bukittinggi</td>
-                            ${totalData.map(v => `<td class="py-2.5 px-3 border border-slate-700 text-right align-top pr-4 font-extrabold">${v}</td>`).join('')}
-                        </tr>
-                    `;
-
-                    return `
-                        <thead>
-                            <tr class="bg-[#f95a00] text-white text-center font-bold">
-                                <th class="py-3 px-4 font-bold border border-slate-700 align-middle" rowspan="2">
-                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
-                                </th>
-                                ${thCropsHtml}
-                            </tr>
-                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs">
-                                ${thYearsHtml}
-                            </tr>
-                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
-                                ${thNumsHtml}
-                            </tr>
-                        </thead>
-                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
-                            ${rowsHtml}
-                        </tbody>
-                    `;
-                }
-            },
-            '5.2.2': {
-                titleId: 'Produksi Tanaman Perkebunan Menurut Kecamatan dan Jenis Tanaman di Kota Bukittinggi (ton)',
-                titleEn: 'Production of Estate Crops by District and Types of Crops in Bukittinggi Municipality (ton)',
-                isMultiYear: true,
-                source: 'Dinas Pertanian dan Pangan Kota Bukittinggi / <span class="italic text-slate-500">Agriculture and Food Services of Bukittinggi Municipality</span>',
-                render: function(year) {
-                    const yr = parseInt(year) || 2025;
-                    const y1 = yr - 1;
-                    const y2 = yr;
-                    const is2025 = (yr === 2025);
-                    // Standar BPS resmi: HANYA 4 Komoditi (Kelapa Sawit, Kelapa, Karet, Kopi) -> 8 kolom data (Kolom 2 s.d 9)
-                    const dists = [
-                        { name: '01. Guguk Panjang', data: is2025 ? ['-', '-', '0,0034', '0,0002', '-', '-', '0,0011', '0,0004'] : Array(8).fill('-') },
-                        { name: '02. Mandiangin Koto Selayan', data: is2025 ? ['-', '-', '0,0012', '0,0002', '-', '-', '0,0008', '0,0001'] : Array(8).fill('-') },
-                        { name: '03. Aur Birugo Tigo Baleh', data: is2025 ? ['-', '-', '0,001', '0,0002', '-', '-', '-', '-'] : Array(8).fill('-') }
-                    ];
-                    const totalData = is2025 ? ['-', '-', '0,0055', '0,0006', '-', '-', '0,0019', '0,00055'] : Array(8).fill('-');
-
-                    const crops = [
-                        { id: 'Kelapa Sawit', en: 'Oil Palm' },
-                        { id: 'Kelapa', en: 'Coconut' },
-                        { id: 'Karet', en: 'Rubber' },
-                        { id: 'Kopi', en: 'Coffee' }
-                    ];
-
-                    let thCropsHtml = '';
-                    let thYearsHtml = '';
-                    let thNumsHtml = '<th class="py-1 px-3 border border-slate-700 text-left">(1)</th>';
-                    let cNum = 2;
-
-                    crops.forEach(c => {
-                        thCropsHtml += `
-                            <th class="py-2 px-3 font-bold border border-slate-700 text-center" colspan="2">
-                                <div>${c.id}</div><div class="italic font-normal text-[11px] sm:text-xs">${c.en}</div>
-                            </th>
-                        `;
-                        thYearsHtml += `
-                            <th class="py-2 px-2 border border-slate-700">${y1}</th>
-                            <th class="py-2 px-2 border border-slate-700">${y2}</th>
-                        `;
-                        thNumsHtml += `
-                            <th class="py-1 px-2 border border-slate-700">(${cNum})</th>
-                            <th class="py-1 px-2 border border-slate-700">(${cNum + 1})</th>
-                        `;
-                        cNum += 2;
-                    });
-
-                    let rowsHtml = '';
-                    dists.forEach(d => {
-                        rowsHtml += `
-                            <tr class="hover:bg-amber-100/60 transition-colors">
-                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">${d.name}</td>
-                                ${d.data.map(v => `<td class="py-2.5 px-3 border border-slate-700 text-right align-top pr-4 font-medium">${v}</td>`).join('')}
-                            </tr>
-                        `;
-                    });
-                    rowsHtml += `
-                        <tr class="bg-[#fed7aa] font-bold">
-                            <td class="py-2.5 px-4 border border-slate-700 text-left font-extrabold align-top">Bukittinggi</td>
-                            ${totalData.map(v => `<td class="py-2.5 px-3 border border-slate-700 text-right align-top pr-4 font-extrabold">${v}</td>`).join('')}
-                        </tr>
-                    `;
-
-                    return `
-                        <thead>
-                            <tr class="bg-[#f95a00] text-white text-center font-bold">
-                                <th class="py-3 px-4 font-bold border border-slate-700 align-middle" rowspan="2">
-                                    <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
-                                </th>
-                                ${thCropsHtml}
-                            </tr>
-                            <tr class="bg-[#f95a00] text-white text-center font-bold text-xs">
-                                ${thYearsHtml}
-                            </tr>
-                            <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
-                                ${thNumsHtml}
-                            </tr>
-                        </thead>
-                        <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
-                            ${rowsHtml}
-                        </tbody>
-                    `;
-                }
-            }
-        };
+... [truncated for diff preview]

@@ -29,7 +29,7 @@ trait ManagesVerification
         $type = $request->input('type', 'opd');
 
         // Pernyataan kebenaran data wajib dicentang sebelum data dikirim.
-        if (!filter_var($request->input('declaration'), FILTER_VALIDATE_BOOLEAN)) {
+        if (!filter_var($request->input('declaration', $request->input('data_declared')), FILTER_VALIDATE_BOOLEAN)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Centang pernyataan kebenaran data terlebih dahulu sebelum mengirim data.',
@@ -140,6 +140,7 @@ trait ManagesVerification
             $meta->verified_at = now();
             $meta->verified_by = $verifiedSignature;
             $meta->rejection_notes = null;
+            $meta->fill(\App\Support\MonitoringProgress::activityFields('walidata', $userName));
             $meta->save();
 
             // Sinkronisasi status stage ke Monitoring: Stage 2 Terverifikasi Wali Data
@@ -171,6 +172,7 @@ trait ManagesVerification
             $meta->verified_at = now();
             $meta->verified_by = ($meta->verified_by ? $meta->verified_by . ' & ' : '') . $validatedSignature;
             $meta->rejection_notes = null;
+            $meta->fill(\App\Support\MonitoringProgress::activityFields('validated', $userName));
             $meta->save();
 
             // Sinkronisasi status stage ke Monitoring: Stage 3 Validasi BPS Selesai

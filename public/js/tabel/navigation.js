@@ -16,13 +16,42 @@ function updateYearSwitcher(isMultiYear, isExcludeSelectedYear) {
     const curCode = window.currentTableCode || currentTableCode || '1.1.6';
     const curOpd = window.currentOpdCode || (typeof currentOpdCode !== 'undefined' ? currentOpdCode : '');
     const currentVal = curYr.toString();
-    const nowYear = new Date().getFullYear();
-    const endYear = Math.max(2036, nowYear + 10);
+    const curYrNum = parseInt(curYr) || 2025;
+
+    // Deteksi rentang tahun dinamis dari tabel nyata di DOM jika ada
+    let tableSpanYears = null;
+    const tableEl = document.getElementById('tableContainer') ? document.getElementById('tableContainer').querySelector('table') : document.querySelector('table');
+    if (tableEl && typeof getActualTablePeriod === 'function') {
+        const actP = getActualTablePeriod(tableEl, null);
+        if (actP && actP.start && actP.end && actP.end > actP.start) {
+            tableSpanYears = actP.end - actP.start; // misal 2027 - 2021 = 6 (rentang 7 tahun)
+        }
+    }
+
+    // Rentang tahun lengkap sesuai database dari 2036 hingga 2015
+    const endYear = Math.max(2036, curYrNum);
+    const startYear = Math.min(2015, curYrNum);
     selectYearEl.innerHTML = '';
-    for (let y = endYear; y >= 2018; y--) {
+    for (let y = endYear; y >= startYear; y--) {
         const opt = document.createElement('option');
         opt.value = y.toString();
-        const p = (typeof getTablePeriod === 'function') ? getTablePeriod(y, curCode, curOpd) : { label: `${y - 4}–${y}` };
+        let p = (typeof getTablePeriod === 'function') ? getTablePeriod(y, curCode, curOpd) : null;
+        if (curCode === '3.1.3') {
+            const dynamicStart = y - 12;
+            p = { start: dynamicStart, end: y, label: `${dynamicStart}–${y}` };
+        } else if (curCode === '4.1.12') {
+            const dynamicStart = y - 2;
+            p = { start: dynamicStart, end: y, label: `${dynamicStart}–${y}` };
+        } else if (curCode === '4.1.11' || curCode === '4.3.3' || curCode === '4.1.20') {
+            const dynamicStart = y - 3;
+            p = { start: dynamicStart, end: y, label: `${dynamicStart}–${y}` };
+        } else if (tableSpanYears !== null && tableSpanYears > 0) {
+            const dynamicStart = y - tableSpanYears;
+            p = { start: dynamicStart, end: y, label: `${dynamicStart}–${y}` };
+        } else if (!p) {
+            p = { label: `${y - 4}–${y}` };
+        }
+
         if (isExcludeSelectedYear) {
             opt.textContent = `Tahun ${y} (${y - 5}–${y - 1})`;
         } else if (isMultiYear && p && p.label) {
@@ -39,7 +68,14 @@ function updateYearSwitcher(isMultiYear, isExcludeSelectedYear) {
         const customOpt = document.createElement('option');
         customOpt.value = currentVal;
         const cNum = parseInt(currentVal);
-        const p = (typeof getTablePeriod === 'function') ? getTablePeriod(cNum, curCode, curOpd) : { label: `${cNum - 4}–${cNum}` };
+        let p = (typeof getTablePeriod === 'function') ? getTablePeriod(cNum, curCode, curOpd) : null;
+        if (tableSpanYears !== null && tableSpanYears > 0) {
+            const dynamicStart = cNum - tableSpanYears;
+            p = { start: dynamicStart, end: cNum, label: `${dynamicStart}–${cNum}` };
+        } else if (!p) {
+            p = { label: `${cNum - 4}–${cNum}` };
+        }
+
         if (isExcludeSelectedYear && !isNaN(cNum)) {
             customOpt.textContent = `Tahun ${currentVal} (${cNum - 5}–${cNum - 1})`;
         } else if (isMultiYear && !isNaN(cNum) && p && p.label) {
@@ -51,6 +87,18 @@ function updateYearSwitcher(isMultiYear, isExcludeSelectedYear) {
         selectYearEl.insertBefore(customOpt, selectYearEl.firstChild);
     }
     selectYearEl.value = currentVal;
+}
+
+function changeTableYear(newYear) {
+    if (!newYear) return;
+    const cleanYr = newYear.toString().trim();
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.set('year', cleanYr);
+    newUrl.searchParams.delete('title');
+    newUrl.searchParams.delete('title_en');
+    newUrl.searchParams.delete('titleEn');
+    newUrl.searchParams.delete('saved');
+    window.location.href = newUrl.toString();
 }
 
 function updateTableSwitcher() {
@@ -198,7 +246,7 @@ function goToAdjacentTable(direction) {
         const cleanOpd = currentOpdCode ? currentOpdCode.toString().padStart(2, '0') : '01';
         const cat = (currentType === 'instansi' && typeof instansiTablesCatalog !== 'undefined') 
             ? instansiTablesCatalog 
-            : opdTablesCatalog;
+            : (currentType === 'bps' && typeof bpsTablesCatalog !== 'undefined' ? bpsTablesCatalog : opdTablesCatalog);
         tables = (cat && cat[cleanOpd]) ? cat[cleanOpd] : [];
     }
     if (!tables || tables.length === 0) return;
@@ -230,7 +278,7 @@ function formatTitleWithYear(title, defaultTitle, yLabel) {
     }
 
     // Khusus tabel pendidikan 4.1.x (OPD 08): tahun ajaran SiBingka Bukittinggi = Tahun + 1 (misal 2025 -> 2025/2026)
-    if (typeof currentTableCode === 'string' && (currentOpdCode === '08' || currentTableCode.startsWith('4.1')) && currentTableCode !== '4.1.2' && currentTableCode !== '4.1.18' && currentTableCode !== '4.1.19' && currentTableCode !== '4.1.20' && currentTableCode !== '4.1.21' && currentTableCode !== '4.1.22' && currentTableCode !== '4.1.23' && currentTableCode !== '4.1.24') {
+    if (typeof currentTableCode === 'string' && (currentOpdCode === '08' || currentTableCode.startsWith('4.1')) && currentTableCode !== '4.1.2' && currentTableCode !== '4.1.11' && currentTableCode !== '4.1.12' && currentTableCode !== '4.1.13' && currentTableCode !== '4.1.14' && currentTableCode !== '4.1.18' && currentTableCode !== '4.1.19' && currentTableCode !== '4.1.20' && currentTableCode !== '4.1.21' && currentTableCode !== '4.1.22' && currentTableCode !== '4.1.23' && currentTableCode !== '4.1.24') {
         const yrInt = parseInt(yLabel) || 2025;
         const acadYr = `${yrInt}/${yrInt + 1}`;
         let raw = (defaultTitle || title || '').trim();
@@ -241,7 +289,20 @@ function formatTitleWithYear(title, defaultTitle, yLabel) {
         return `${cleanBase}, ${acadYr}`;
     }
 
-    // Khusus Tabel 4.1.20 (Dispora): multi-tahun 4 tahun [yr-3 s.d yr]
+    // Khusus Tabel 4.1.12 (BPS Susenas - APM dan APK): multi-tahun 3 tahun [yr-2 s.d yr]
+    if (typeof currentTableCode !== 'undefined' && currentTableCode === '4.1.12') {
+        const yrInt = parseInt(currentYear) || 2025;
+        const range = `${yrInt - 2}–${yrInt}`;
+        const raw = (defaultTitle || title || '').trim();
+        const isEn = raw.toLowerCase().includes('participant') || (typeof schema !== 'undefined' && schema && schema.titleEn && defaultTitle === schema.titleEn);
+        if (isEn) {
+            return `Participant Rates and Gross Participant Rates by Educational Level in Bukittinggi Municipality, ${range}`;
+        } else {
+            return `Angka Partisipasi Murni (APM) dan Angka Partisipasi Kasar (APK) Menurut Jenjang Pendidikan di Kota Bukittinggi, ${range}`;
+        }
+    }
+
+    // Khusus Tabel 4.1.20 (Dispora) & 4.3.3 (BPS PODES): multi-tahun 4 tahun [yr-3 s.d yr]
     if (typeof currentTableCode !== 'undefined' && currentTableCode === '4.1.20') {
         const yrInt = parseInt(currentYear) || 2025;
         const range = `${yrInt - 3}–${yrInt}`;
@@ -251,6 +312,39 @@ function formatTitleWithYear(title, defaultTitle, yLabel) {
             return `Number of Sport Club in Bukittinggi, ${range}`;
         } else {
             return `Jumlah Klub/Persatuan Olahraga di Kota Bukittinggi, ${range}`;
+        }
+    }
+    if (typeof currentTableCode !== 'undefined' && currentTableCode === '3.1.3') {
+        const yrInt = parseInt(currentYear) || 2024;
+        const range = `${yrInt - 12}–${yrInt}`;
+        const raw = (defaultTitle || title || '').trim();
+        const isEn = raw.toLowerCase().includes('population density') || (typeof schema !== 'undefined' && schema && schema.titleEn && defaultTitle === schema.titleEn);
+        if (isEn) {
+            return `Population, Population Density, and Population Growth Rate ${range}`;
+        } else {
+            return `Jumlah Penduduk, Kepadatan Penduduk, dan Laju Pertumbuhan Penduduk ${range}`;
+        }
+    }
+    if (typeof currentTableCode !== 'undefined' && currentTableCode === '4.1.11') {
+        const yrInt = parseInt(currentYear) || 2025;
+        const range = `${yrInt - 3}–${yrInt}`;
+        const raw = (defaultTitle || title || '').trim();
+        const isEn = raw.toLowerCase().includes('subdistrict') || raw.toLowerCase().includes('educational') || (typeof schema !== 'undefined' && schema && schema.titleEn && defaultTitle === schema.titleEn);
+        if (isEn) {
+            return `Number of Subdistricts Having Educational Facilities by Subdistrict and Educational Level In Bukittinggi Municipality, ${range}`;
+        } else {
+            return `Jumlah Kelurahan yang Memiliki Fasilitas Sekolah Menurut Kecamatan dan Tingkat Pendidikan di Kota Bukittinggi, ${range}`;
+        }
+    }
+    if (typeof currentTableCode !== 'undefined' && currentTableCode === '4.3.3') {
+        const yrInt = parseInt(currentYear) || 2025;
+        const range = `${yrInt - 3}–${yrInt}`;
+        const raw = (defaultTitle || title || '').trim();
+        const isEn = raw.toLowerCase().includes('subdistrict') || raw.toLowerCase().includes('disaster') || (typeof schema !== 'undefined' && schema && schema.titleEn && defaultTitle === schema.titleEn);
+        if (isEn) {
+            return `Number of Subdistricts that Have Natural Disaster By District in Bukittinggi Municipality, ${range}`;
+        } else {
+            return `Jumlah Kelurahan yang Mengalami Bencana Alam Menurut Kecamatan Kota Bukittinggi ${range}`;
         }
     }
 

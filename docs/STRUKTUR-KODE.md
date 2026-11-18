@@ -74,6 +74,9 @@ diawali `/` tanpa `sbUrl()` akan mengarah ke root domain, bukan ke aplikasi ini.
 2. **Verifikasi Wali Data**: status menjadi `verified`.
 3. **Validasi BPS**: Admin BPS memvalidasi, status menjadi `validated`.
 
+Jendela detail di Monitoring menampilkan aktivitas nyata per tahap (tabel mana, tanggal, jam, dan siapa pelakunya).
+Tombol Verifikasi (Wali Data) dan Validasi (Admin BPS) ada di dalam tahapnya masing-masing.
+
 Monitoring menampilkan 3 persentase per instansi dan keseluruhan:
 
 | Persentase | Dihitung dari |

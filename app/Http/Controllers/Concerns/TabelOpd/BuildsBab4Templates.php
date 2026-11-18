@@ -1225,4 +1225,484 @@ trait BuildsBab4Templates
         $html .= '</tbody>';
         return $html;
     }
+
+    /**
+     * Tabel 4.2.3: Jumlah Rumah Sakit Umum, Rumah Sakit Khusus, dan Puskesmas Menurut Kecamatan di Kota Bukittinggi
+     * 15 kolom: Kecamatan (rowspan 2) + 7 kategori fasilitas kesehatan x 2 tahun subheaders
+     */
+    private function buildTabel423Html(int $year, ?string $existingHtml = null): string
+    {
+        $yr = $year;
+        $prevYr = $yr - 1;
+
+        $officialData = [
+            2025 => [
+                'gp'   => [1, 1, 0, 0, 0, 0, 2, 2, 58, 58, 8, 7, 9, 9],
+                'mks'  => [1, 1, 0, 0, 0, 0, 4, 4, 50, 49, 5, 5, 9, 9],
+                'abtb' => [3, 3, 1, 1, 0, 0, 1, 1, 32, 32, 8, 13, 8, 8],
+                'tot'  => [5, 5, 1, 1, 0, 0, 7, 7, 140, 139, 21, 25, 26, 26]
+            ],
+            2024 => [
+                'gp'   => [1, 1, 0, 0, 0, 0, 2, 2, 57, 58, 8, 8, 9, 9],
+                'mks'  => [1, 1, 0, 0, 0, 0, 4, 4, 48, 50, 5, 5, 9, 9],
+                'abtb' => [3, 3, 1, 1, 0, 0, 1, 1, 32, 32, 8, 8, 8, 8],
+                'tot'  => [5, 5, 1, 1, 0, 0, 7, 7, 137, 140, 21, 21, 26, 26]
+            ]
+        ];
+
+        // Jika ada existingHtml, ekstrak nilai dari tiap baris
+        $extractedData = [];
+        if ($existingHtml && preg_match('/<tbody[^>]*>(.*?)<\/tbody>/is', $existingHtml, $mTb)) {
+            preg_match_all('/<tr[^>]*>(.*?)<\/tr>/is', $mTb[1], $mTrs);
+            foreach ($mTrs[0] as $tr) {
+                preg_match_all('/<td[^>]*>(.*?)<\/td>/is', $tr, $mTds);
+                $tds = array_map(fn($x) => trim(strip_tags($x)), $mTds[2] ?? []);
+                if (count($tds) >= 2) {
+                    $rowName = $tds[0];
+                    if (count($tds) > 15 && ($tds[1] === '-' || $tds[1] === '')) {
+                        array_splice($tds, 1, 1);
+                    }
+                    $vals = array_slice($tds, 1, 14);
+                    if (preg_match('/Guguk/i', $rowName)) $extractedData['gp'] = $vals;
+                    elseif (preg_match('/Mandiangin/i', $rowName)) $extractedData['mks'] = $vals;
+                    elseif (preg_match('/Aur/i', $rowName)) $extractedData['abtb'] = $vals;
+                    elseif (preg_match('/(?:Jumlah|Total|Bukittinggi)/i', $rowName)) $extractedData['tot'] = $vals;
+                }
+            }
+        }
+
+        $defaultYr = $officialData[$yr] ?? $officialData[2025];
+        $getData = function($key) use ($extractedData, $defaultYr) {
+            if (isset($extractedData[$key]) && count($extractedData[$key]) === 14) {
+                return $extractedData[$key];
+            }
+            return $defaultYr[$key] ?? array_fill(0, 14, '-');
+        };
+
+        $rowsDef = [
+            ['key' => 'gp', 'name' => '01. Guguk Panjang', 'isTotal' => false],
+            ['key' => 'mks', 'name' => '02. Mandiangin Koto Selayan', 'isTotal' => false],
+            ['key' => 'abtb', 'name' => '03. Aur Birugo Tigo baleh', 'isTotal' => false],
+            ['key' => 'tot', 'name' => 'Bukittinggi', 'isTotal' => true],
+        ];
+
+        $tbodyRows = '';
+        foreach ($rowsDef as $r) {
+            $vals = $getData($r['key']);
+            $trClass = $r['isTotal'] 
+                ? 'bg-[#fed7aa] font-bold text-slate-900 border-t-2 border-slate-700' 
+                : 'hover:bg-amber-100/60 transition-colors bg-[#fef9c3] text-slate-900 font-medium';
+            $boldCls = $r['isTotal'] ? ' font-extrabold' : ' font-medium';
+
+            $cells = '<td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-top">' . $r['name'] . '</td>' . "\n";
+            for ($i = 0; $i < 14; $i++) {
+                $val = $vals[$i] ?? '-';
+                $vDisplay = ($val === '' || $val === '-' || $val === '–') ? '<span class="text-slate-400 font-normal">-</span>' : htmlspecialchars((string)$val);
+                $cells .= "        <td class=\"py-2.5 px-4 border border-slate-700 text-center align-middle{$boldCls}\">{$vDisplay}</td>\n";
+            }
+            $tbodyRows .= "    <tr class=\"{$trClass}\">\n        {$cells}    </tr>\n";
+        }
+
+        return <<<HTML
+<thead>
+    <tr class="bg-[#f95a00] text-white text-center font-bold">
+        <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+            <div>Kecamatan</div><div class="italic font-normal text-[11px] sm:text-xs">District</div>
+        </th>
+        <th class="py-3 px-4 font-bold border border-slate-700" colspan="2">
+            <div>Rumah Sakit Umum</div><div class="italic font-normal text-[11px] sm:text-xs">General Hospital</div>
+        </th>
+        <th class="py-3 px-4 font-bold border border-slate-700" colspan="2">
+            <div>Rumah Sakit Khusus</div><div class="italic font-normal text-[11px] sm:text-xs">Specialized Hospital</div>
+        </th>
+        <th class="py-3 px-4 font-bold border border-slate-700" colspan="2">
+            <div>Puskesmas<sup>1</sup> Rawat Inap</div><div class="italic font-normal text-[11px] sm:text-xs">Public Health Center<sup>1</sup> with Inpatient Care</div>
+        </th>
+        <th class="py-3 px-4 font-bold border border-slate-700" colspan="2">
+            <div>Puskesmas<sup>1</sup> Non Rawat Inap</div><div class="italic font-normal text-[11px] sm:text-xs">Public Health Center<sup>1</sup> without Inpatient Care</div>
+        </th>
+        <th class="py-3 px-4 font-bold border border-slate-700" colspan="2">
+            <div>Posyandu</div><div class="italic font-normal text-[11px] sm:text-xs">Maternal &amp; Child Health Center</div>
+        </th>
+        <th class="py-3 px-4 font-bold border border-slate-700" colspan="2">
+            <div>Klinik / Balai Kesehatan</div><div class="italic font-normal text-[11px] sm:text-xs">Clinic / Health Center</div>
+        </th>
+        <th class="py-3 px-4 font-bold border border-slate-700" colspan="2">
+            <div>Polindes / Poskeskel</div><div class="italic font-normal text-[11px] sm:text-xs">Village Maternity</div>
+        </th>
+    </tr>
+    <tr class="bg-[#f95a00] text-white text-center font-bold">
+        <th class="py-2 px-3 font-bold border border-slate-700">{$prevYr}</th>
+        <th class="py-2 px-3 font-bold border border-slate-700">{$yr}</th>
+        <th class="py-2 px-3 font-bold border border-slate-700">{$prevYr}</th>
+        <th class="py-2 px-3 font-bold border border-slate-700">{$yr}</th>
+        <th class="py-2 px-3 font-bold border border-slate-700">{$prevYr}</th>
+        <th class="py-2 px-3 font-bold border border-slate-700">{$yr}</th>
+        <th class="py-2 px-3 font-bold border border-slate-700">{$prevYr}</th>
+        <th class="py-2 px-3 font-bold border border-slate-700">{$yr}</th>
+        <th class="py-2 px-3 font-bold border border-slate-700">{$prevYr}</th>
+        <th class="py-2 px-3 font-bold border border-slate-700">{$yr}</th>
+        <th class="py-2 px-3 font-bold border border-slate-700">{$prevYr}</th>
+        <th class="py-2 px-3 font-bold border border-slate-700">{$yr}</th>
+        <th class="py-2 px-3 font-bold border border-slate-700">{$prevYr}</th>
+        <th class="py-2 px-3 font-bold border border-slate-700">{$yr}</th>
+    </tr>
+    <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+        <th class="py-1 px-3 border border-slate-700">(1)</th>
+        <th class="py-1 px-3 border border-slate-700">(2)</th>
+        <th class="py-1 px-3 border border-slate-700">(3)</th>
+        <th class="py-1 px-3 border border-slate-700">(4)</th>
+        <th class="py-1 px-3 border border-slate-700">(5)</th>
+        <th class="py-1 px-3 border border-slate-700">(6)</th>
+        <th class="py-1 px-3 border border-slate-700">(7)</th>
+        <th class="py-1 px-3 border border-slate-700">(8)</th>
+        <th class="py-1 px-3 border border-slate-700">(9)</th>
+        <th class="py-1 px-3 border border-slate-700">(10)</th>
+        <th class="py-1 px-3 border border-slate-700">(11)</th>
+        <th class="py-1 px-3 border border-slate-700">(12)</th>
+        <th class="py-1 px-3 border border-slate-700">(13)</th>
+        <th class="py-1 px-3 border border-slate-700">(14)</th>
+        <th class="py-1 px-3 border border-slate-700">(15)</th>
+    </tr>
+</thead>
+<tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+{$tbodyRows}</tbody>
+HTML;
+    }
+
+    /**
+     * Build HTML untuk Tabel 4.1.12 (BPS Susenas - APM dan APK Menurut Jenjang Pendidikan)
+     * Format multi-tahun 3 tahun berurutan [year-2, year-1, year]
+     */
+    private function buildTabel4112Html(int $year, ?string $existingHtml = null): string
+    {
+        $dash = '<span class="text-slate-400 font-normal">-</span>';
+        $y1 = $year - 2;
+        $y2 = $year - 1;
+        $y3 = $year;
+
+        // Data resmi Susenas BPS Kota Bukittinggi:
+        $knownData = [
+            'sd' => [
+                2022 => ['apm' => '99,85', 'apk' => '106,34'],
+                2023 => ['apm' => '99,85', 'apk' => '106,72'],
+                2024 => ['apm' => '99,21', 'apk' => '107,81'],
+                2025 => ['apm' => '98,43', 'apk' => '103,17'],
+            ],
+            'smp' => [
+                2022 => ['apm' => '81,98', 'apk' => '86,77'],
+                2023 => ['apm' => '82,83', 'apk' => '93,12'],
+                2024 => ['apm' => '88,76', 'apk' => '111,92'],
+                2025 => ['apm' => '86,27', 'apk' => '105,80'],
+            ],
+            'sma' => [
+                2022 => ['apm' => '74,92', 'apk' => '92,48'],
+                2023 => ['apm' => '76,92', 'apk' => '98,85'],
+                2024 => ['apm' => '81,33', 'apk' => '99,96'],
+                2025 => ['apm' => '73,50', 'apk' => '97,96'],
+            ],
+        ];
+
+        $sd_apm1 = $knownData['sd'][$y1]['apm'] ?? $dash;
+        $sd_apm2 = $knownData['sd'][$y2]['apm'] ?? $dash;
+        $sd_apm3 = $knownData['sd'][$y3]['apm'] ?? $dash;
+        $sd_apk1 = $knownData['sd'][$y1]['apk'] ?? $dash;
+        $sd_apk2 = $knownData['sd'][$y2]['apk'] ?? $dash;
+        $sd_apk3 = $knownData['sd'][$y3]['apk'] ?? $dash;
+
+        $smp_apm1 = $knownData['smp'][$y1]['apm'] ?? $dash;
+        $smp_apm2 = $knownData['smp'][$y2]['apm'] ?? $dash;
+        $smp_apm3 = $knownData['smp'][$y3]['apm'] ?? $dash;
+        $smp_apk1 = $knownData['smp'][$y1]['apk'] ?? $dash;
+        $smp_apk2 = $knownData['smp'][$y2]['apk'] ?? $dash;
+        $smp_apk3 = $knownData['smp'][$y3]['apk'] ?? $dash;
+
+        $sma_apm1 = $knownData['sma'][$y1]['apm'] ?? $dash;
+        $sma_apm2 = $knownData['sma'][$y2]['apm'] ?? $dash;
+        $sma_apm3 = $knownData['sma'][$y3]['apm'] ?? $dash;
+        $sma_apk1 = $knownData['sma'][$y1]['apk'] ?? $dash;
+        $sma_apk2 = $knownData['sma'][$y2]['apk'] ?? $dash;
+        $sma_apk3 = $knownData['sma'][$y3]['apk'] ?? $dash;
+
+        return <<<HTML
+<thead>
+    <tr class="bg-[#f95a00] text-white text-center font-bold">
+        <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+            <div>Jenjang Pendidikan</div>
+            <div class="italic font-normal text-[11px] sm:text-xs">Educational Level</div>
+        </th>
+        <th class="py-3 px-4 font-bold border border-slate-700" colspan="3">
+            <div>Angka Partisipasi Murni</div>
+            <div class="italic font-normal text-[11px] sm:text-xs">Net Participation Rate</div>
+        </th>
+        <th class="py-3 px-4 font-bold border border-slate-700" colspan="3">
+            <div>Angka Partisipasi Kasar</div>
+            <div class="italic font-normal text-[11px] sm:text-xs">Gross Participation Rate</div>
+        </th>
+    </tr>
+    <tr class="bg-[#f95a00] text-white text-center font-bold text-xs sm:text-sm">
+        <th class="py-2 px-3 border border-slate-700">{$y1}</th>
+        <th class="py-2 px-3 border border-slate-700">{$y2}</th>
+        <th class="py-2 px-3 border border-slate-700">{$y3}</th>
+        <th class="py-2 px-3 border border-slate-700">{$y1}</th>
+        <th class="py-2 px-3 border border-slate-700">{$y2}</th>
+        <th class="py-2 px-3 border border-slate-700">{$y3}</th>
+    </tr>
+    <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+        <th class="py-1 px-3 border border-slate-700">(1)</th>
+        <th class="py-1 px-3 border border-slate-700">(2)</th>
+        <th class="py-1 px-3 border border-slate-700">(3)</th>
+        <th class="py-1 px-3 border border-slate-700">(4)</th>
+        <th class="py-1 px-3 border border-slate-700">(5)</th>
+        <th class="py-1 px-3 border border-slate-700">(6)</th>
+        <th class="py-1 px-3 border border-slate-700">(7)</th>
+    </tr>
+</thead>
+<tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+    <tr class="hover:bg-amber-100/60 transition-colors bg-[#fef9c3] text-slate-900 font-medium">
+        <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle">SD/MI/ <span class="italic font-normal">Elementary School</span></td>
+        <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">{$sd_apm1}</td>
+        <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">{$sd_apm2}</td>
+        <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">{$sd_apm3}</td>
+        <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">{$sd_apk1}</td>
+        <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">{$sd_apk2}</td>
+        <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">{$sd_apk3}</td>
+    </tr>
+    <tr class="hover:bg-amber-100/60 transition-colors bg-[#fef9c3] text-slate-900 font-medium">
+        <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle">SMP/MTs/ <span class="italic font-normal">Junior High School</span></td>
+        <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">{$smp_apm1}</td>
+        <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">{$smp_apm2}</td>
+        <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">{$smp_apm3}</td>
+        <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">{$smp_apk1}</td>
+        <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">{$smp_apk2}</td>
+        <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">{$smp_apk3}</td>
+    </tr>
+    <tr class="hover:bg-amber-100/60 transition-colors bg-[#fef9c3] text-slate-900 font-medium">
+        <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle">SMA/SMK/MA/ <span class="italic font-normal">Senior High School</span></td>
+        <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">{$sma_apm1}</td>
+        <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">{$sma_apm2}</td>
+        <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">{$sma_apm3}</td>
+        <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">{$sma_apk1}</td>
+        <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">{$sma_apk2}</td>
+        <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">{$sma_apk3}</td>
+    </tr>
+</tbody>
+HTML;
+    }
+
+    /**
+     * Build HTML untuk Tabel 4.1.13 (BPS Susenas - Angka Melek Aksara Menurut Jenis Kelamin dan Kelompok Umur)
+     * Format multi-tahun 2 tahun berurutan [year-1, year]
+     */
+    private function buildTabel4113Html(int $year, ?string $existingHtml = null): string
+    {
+        $dash = '<span class="text-slate-400 font-normal">-</span>';
+        $y1 = $year - 1;
+        $y2 = $year;
+
+        // Data resmi Susenas BPS Kota Bukittinggi (Tahun 2024 & 2025)
+        $officialData = [
+            'male' => [
+                '15–24'   => [2024 => '100', 2025 => '99,03'],
+                '15–59'   => [2024 => '99,38', 2025 => '99,54'],
+                '15+'     => [2024 => '99,45', 2025 => '99,60'],
+                '60+'     => [2024 => '100', 2025 => '100'],
+            ],
+            'female' => [
+                '15–24'   => [2024 => '100', 2025 => '100'],
+                '15–59'   => [2024 => '100', 2025 => '100'],
+                '15+'     => [2024 => '99,85', 2025 => '99,48'],
+                '60+'     => [2024 => '98,76', 2025 => '95,77'],
+            ],
+            'total' => [
+                '15–24'   => [2024 => '100', 2025 => '99,57'],
+                '15–59'   => [2024 => '99,70', 2025 => '99,78'],
+                '15+'     => [2024 => '99,66', 2025 => '99,53'],
+                '60+'     => [2024 => '99,32', 2025 => '97,75'],
+            ],
+        ];
+
+        $getVal = function($sec, $age, $targetYear) use ($officialData, $dash) {
+            return $officialData[$sec][$age][$targetYear] ?? $dash;
+        };
+
+        $sections = [
+            [
+                'title' => 'Laki–laki / <span class="italic font-normal text-xs text-slate-600">Male</span>',
+                'class' => 'bg-amber-100/80 font-bold border-t border-b border-slate-700 text-slate-900',
+                'sec'   => 'male',
+            ],
+            [
+                'title' => 'Perempuan / <span class="italic font-normal text-xs text-slate-600">Female</span>',
+                'class' => 'bg-amber-100/80 font-bold border-t border-b border-slate-700 text-slate-900',
+                'sec'   => 'female',
+            ],
+            [
+                'title' => 'Jumlah / <span class="italic font-normal text-xs text-slate-600">Total</span>',
+                'class' => 'bg-[#fed7aa] font-bold border-t-2 border-b-2 border-slate-700 text-slate-900',
+                'sec'   => 'total',
+            ],
+        ];
+
+        $ageGroups = ['15–24', '15–59', '15+', '60+'];
+
+        $tbodyHtml = '';
+        foreach ($sections as $s) {
+            $tbodyHtml .= "    <tr class=\"{$s['class']}\">\n";
+            $tbodyHtml .= "        <td colspan=\"3\" class=\"py-2 px-4 border border-slate-700 text-left font-bold\">{$s['title']}</td>\n";
+            $tbodyHtml .= "    </tr>\n";
+
+            foreach ($ageGroups as $ag) {
+                $v1 = $getVal($s['sec'], $ag, $y1);
+                $v2 = $getVal($s['sec'], $ag, $y2);
+
+                $tbodyHtml .= "    <tr class=\"hover:bg-amber-100/60 transition-colors bg-[#fef9c3] text-slate-900 font-medium\">\n";
+                $tbodyHtml .= "        <td class=\"py-2 px-4 border border-slate-700 text-left font-medium align-middle\">{$ag}</td>\n";
+                $tbodyHtml .= "        <td class=\"py-2 px-4 border border-slate-700 text-center align-middle\">{$v1}</td>\n";
+                $tbodyHtml .= "        <td class=\"py-2 px-4 border border-slate-700 text-center align-middle\">{$v2}</td>\n";
+                $tbodyHtml .= "    </tr>\n";
+            }
+        }
+
+        return <<<HTML
+<thead>
+    <tr class="bg-[#f95a00] text-white text-center font-bold">
+        <th class="py-3 px-4 font-bold border border-slate-700">
+            <div>Jenis Kelamin dan Kelompok Umur</div>
+            <div class="italic font-normal text-[11px] sm:text-xs">Sex and Age Group</div>
+        </th>
+        <th class="py-3 px-4 font-bold border border-slate-700">
+            <div>{$y1}</div>
+        </th>
+        <th class="py-3 px-4 font-bold border border-slate-700">
+            <div>{$y2}</div>
+        </th>
+    </tr>
+    <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+        <th class="py-1 px-3 border border-slate-700">(1)</th>
+        <th class="py-1 px-3 border border-slate-700">(2)</th>
+        <th class="py-1 px-3 border border-slate-700">(3)</th>
+    </tr>
+</thead>
+<tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+{$tbodyHtml}
+</tbody>
+HTML;
+    }
+
+    /**
+     * Build HTML untuk Tabel 4.1.14 (BPS Susenas - Persentase Penduduk Usia 7—24 Tahun Menurut Jenis Kelamin, Kelompok Umur dan Partisipasi Sekolah)
+     */
+    private function buildTabel4114Html(int $year, ?string $existingHtml = null): string
+    {
+        $dash = '<span class="text-slate-400 font-normal">-</span>';
+
+        // Data resmi Susenas BPS Kota Bukittinggi (Tahun 2025)
+        $official2025 = [
+            'male' => [
+                '7–12'   => ['0,6', '99,4', '0'],
+                '13–15'  => ['3,1', '96,9', '0'],
+                '16–18'  => ['0,0', '91,3', '8,7'],
+                '19–24'  => ['2,5', '38,2', '59,3'],
+                '7–24'   => ['1,5', '79', '19,5'],
+            ],
+            'female' => [
+                '7–12'   => ['0', '100', '0'],
+                '13–15'  => ['0', '100', '0'],
+                '16–18'  => ['0', '97,9', '2,1'],
+                '19–24'  => ['0', '34,2', '65,8'],
+                '7–24'   => ['0', '78,3', '21,7'],
+            ],
+            'total' => [
+                '7–12'   => ['0,3', '99,7', '0'],
+                '13–15'  => ['1,5', '98,5', '0'],
+                '16–18'  => ['0', '95,2', '4,8'],
+                '19–24'  => ['1,1', '36,0', '62,9'],
+                '7–24'   => ['0,7', '78,6', '20,7'],
+            ],
+        ];
+
+        $getVals = function($sec, $age) use ($year, $official2025, $dash) {
+            if ($year === 2025 && isset($official2025[$sec][$age])) {
+                return $official2025[$sec][$age];
+            }
+            return [$dash, $dash, $dash];
+        };
+
+        $sections = [
+            [
+                'title' => 'Laki–Laki / <span class="italic font-normal text-xs text-slate-600">Male</span>',
+                'class' => 'bg-amber-100/80 font-bold border-t border-b border-slate-700 text-slate-900',
+                'sec'   => 'male',
+            ],
+            [
+                'title' => 'Perempuan / <span class="italic font-normal text-xs text-slate-600">Female</span>',
+                'class' => 'bg-amber-100/80 font-bold border-t border-b border-slate-700 text-slate-900',
+                'sec'   => 'female',
+            ],
+            [
+                'title' => 'Jumlah / <span class="italic font-normal text-xs text-slate-600">Total</span>',
+                'class' => 'bg-[#fed7aa] font-bold border-t-2 border-b-2 border-slate-700 text-slate-900',
+                'sec'   => 'total',
+            ],
+        ];
+
+        $ageGroups = ['7–12', '13–15', '16–18', '19–24', '7–24'];
+
+        $tbodyHtml = '';
+        foreach ($sections as $s) {
+            $tbodyHtml .= "    <tr class=\"{$s['class']}\">\n";
+            $tbodyHtml .= "        <td colspan=\"4\" class=\"py-2 px-4 border border-slate-700 text-left font-bold\">{$s['title']}</td>\n";
+            $tbodyHtml .= "    </tr>\n";
+
+            foreach ($ageGroups as $ag) {
+                [$c1, $c2, $c3] = $getVals($s['sec'], $ag);
+
+                $tbodyHtml .= "    <tr class=\"hover:bg-amber-100/60 transition-colors bg-[#fef9c3] text-slate-900 font-medium\">\n";
+                $tbodyHtml .= "        <td class=\"py-2 px-4 border border-slate-700 text-left font-medium align-middle\">{$ag}</td>\n";
+                $tbodyHtml .= "        <td class=\"py-2 px-4 border border-slate-700 text-center align-middle\">{$c1}</td>\n";
+                $tbodyHtml .= "        <td class=\"py-2 px-4 border border-slate-700 text-center align-middle\">{$c2}</td>\n";
+                $tbodyHtml .= "        <td class=\"py-2 px-4 border border-slate-700 text-center align-middle\">{$c3}</td>\n";
+                $tbodyHtml .= "    </tr>\n";
+            }
+        }
+
+        return <<<HTML
+<thead>
+    <tr class="bg-[#f95a00] text-white text-center font-bold">
+        <th class="py-3 px-4 font-bold border border-slate-700" rowspan="2">
+            <div>Jenis Kelamin dan Kelompok Umur</div>
+            <div class="italic font-normal text-[11px] sm:text-xs">Sex and School Age Group</div>
+        </th>
+        <th class="py-3 px-4 font-bold border border-slate-700" colspan="3">
+            <div>Partisipasi Sekolah</div>
+            <div class="italic font-normal text-[11px] sm:text-xs">School Participation</div>
+        </th>
+    </tr>
+    <tr class="bg-[#f95a00] text-white text-center font-bold text-xs sm:text-sm">
+        <th class="py-2 px-3 border border-slate-700">
+            <div>Tidak/Belum Pernah</div>
+            <div class="italic font-normal text-[10px]">Not/Never Attending School</div>
+        </th>
+        <th class="py-2 px-3 border border-slate-700">
+            <div>Masih sekolah</div>
+            <div class="italic font-normal text-[10px]">Attending School</div>
+        </th>
+        <th class="py-2 px-3 border border-slate-700">
+            <div>Tidak Sekolah Lagi</div>
+            <div class="italic font-normal text-[10px]">Attending School Anymore</div>
+        </th>
+    </tr>
+    <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+        <th class="py-1 px-3 border border-slate-700">(1)</th>
+        <th class="py-1 px-3 border border-slate-700">(2)</th>
+        <th class="py-1 px-3 border border-slate-700">(3)</th>
+        <th class="py-1 px-3 border border-slate-700">(4)</th>
+    </tr>
+</thead>
+<tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+{$tbodyHtml}
+</tbody>
+HTML;
+    }
 }

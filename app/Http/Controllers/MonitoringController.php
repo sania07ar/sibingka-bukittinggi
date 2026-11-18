@@ -94,7 +94,7 @@ class MonitoringController extends Controller
                     'verified_by' => session('user.displayName', 'Wali Data Kominfo') . ' (Wali Data)',
                     'verified_at' => now(),
                     'is_locked' => true,
-                ]);
+                ] + \App\Support\MonitoringProgress::activityFields('walidata', session('user.displayName', 'Wali Data Kominfo')));
 
             return response()->json([
                 'success' => true,
@@ -152,7 +152,7 @@ class MonitoringController extends Controller
                     ->update([
                         'verification_status' => 'validated',
                         'is_locked' => true,
-                    ]);
+                    ] + \App\Support\MonitoringProgress::activityFields('validated', session('user.displayName', 'Admin BPS Bukittinggi')));
 
                 return response()->json([
                     'success' => true,
@@ -179,7 +179,7 @@ class MonitoringController extends Controller
                     ->where('verification_status', 'validated')
                     ->update([
                         'verification_status' => 'verified',
-                    ]);
+                    ] + \App\Support\MonitoringProgress::activityFields('unvalidate'));
 
                 return response()->json([
                     'success' => true,

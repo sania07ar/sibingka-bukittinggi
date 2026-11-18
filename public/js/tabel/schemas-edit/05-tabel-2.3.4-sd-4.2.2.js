@@ -552,6 +552,142 @@ Object.assign(window.tableSchemas, {
                     `;
                 }
             },
+            '3.1.3': {
+                titleId: 'Jumlah Penduduk, Kepadatan Penduduk, dan Laju Pertumbuhan Penduduk',
+                titleEn: 'Population, Population Density, and Population Growth Rate',
+                isMultiYear: true,
+                source: 'Source: BPS, Hasil Proyeksi Penduduk interim 2020–2023 (Pertengahan tahun/Juni)/',
+                note: '<div>* Proyeksi</div>',
+                render: function(year) {
+                    const yr = parseInt(year) || 2024;
+                    const startY = yr - 12;
+                    const endY = yr;
+
+                    const known = {
+                        2012: ['116.075', '4599', '0.10486111111111'],
+                        2013: ['118.26', '4.686', '0.10277777777778'],
+                        2014: ['120.491', '4774', '0.10347222222222'],
+                        2015: ['122.621', '4858', '0.095138888888889'],
+                        2016: ['124.715', '4941', '0.090972222222222'],
+                        2017: ['126.804', '5024', '0.088888888888889'],
+                        2018: ['128.783', '5103', '0.080555555555556'],
+                        2019: ['130.773', '5181', '0.079861111111111'],
+                        2020: ['121.028', '4795', '0.05625'],
+                        2021: ['121.588', '4817', '0.031944444444444'],
+                        2022: ['122.311', '4846', '0.040972222222222'],
+                        2023: ['124.047', '5132', '0.0625'],
+                        2024: ['125.015', '5.033', '0.85']
+                    };
+
+                    let tbodyHtml = '';
+                    for (let y = startY; y <= endY; y++) {
+                        const label = (y <= 2019) ? `${y}*` : `${y}`;
+                        const d = known[y] || ['-', '-', '-'];
+                        const c1 = d[0] === '-' ? '<span class="text-slate-400 font-normal">-</span>' : d[0];
+                        const c2 = d[1] === '-' ? '<span class="text-slate-400 font-normal">-</span>' : d[1];
+                        const c3 = d[2] === '-' ? '<span class="text-slate-400 font-normal">-</span>' : d[2];
+                        tbodyHtml += `
+                            <tr class="hover:bg-amber-100/60 transition-colors bg-[#fef9c3] text-slate-900 font-medium">
+                                <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle">${label}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${c1}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${c2}</td>
+                                <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${c3}</td>
+                            </tr>
+                        `;
+                    }
+
+                    return `<thead>
+                        <tr class="bg-[#f95a00] text-white text-center font-bold">
+                            <th class="py-3 px-4 font-bold border border-slate-700"><div>Tahun</div><div class="italic font-normal text-[11px] sm:text-xs">Year</div></th>
+                            <th class="py-3 px-4 font-bold border border-slate-700"><div>Penduduk</div><div class="italic font-normal text-[11px] sm:text-xs">Population</div></th>
+                            <th class="py-3 px-4 font-bold border border-slate-700"><div>Kepadatan</div><div class="italic font-normal text-[11px] sm:text-xs">Density (Km2)</div></th>
+                            <th class="py-3 px-4 font-bold border border-slate-700"><div>Laju Pertumbuhan Penduduk</div><div class="italic font-normal text-[11px] sm:text-xs">Population Growth Rate (%)</div></th>
+                        </tr>
+                        <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                            <th class="py-1 px-3 border border-slate-700">(1)</th>
+                            <th class="py-1 px-3 border border-slate-700">(2)</th>
+                            <th class="py-1 px-3 border border-slate-700">(3)</th>
+                            <th class="py-1 px-3 border border-slate-700">(4)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                        ${tbodyHtml}
+                    </tbody>`;
+                }
+            },
+            '3.1.6': {
+                titleId: 'Persentase Penduduk Berumur 15 Ke Atas Menurut Jenis Kelamin dan kepandaian Membaca dan Menulis di Kota Bukittinggi',
+                titleEn: 'Percentage of Population Age 15 and over by Sex and Read/Writes Skill in Bukittinggi Municipality',
+                source: 'Source: BPS, Hasil Susenas/',
+                render: function(year) {
+                    const yr = parseInt(year) || 2025;
+                    const d = (typeof serverDbDataStore !== 'undefined' && serverDbDataStore[yr]) ? serverDbDataStore[yr] : {};
+
+                    const known = {
+                        2025: {
+                            l_dapat: '99,60',
+                            l_tidak: '0,40',
+                            p_dapat: '99,48',
+                            p_tidak: '0,52'
+                        },
+                        2024: {
+                            l_dapat: '99,45',
+                            l_tidak: '0,55',
+                            p_dapat: '99,85',
+                            p_tidak: '0,15'
+                        }
+                    };
+
+                    const cur = known[yr] || {
+                        l_dapat: '-',
+                        l_tidak: '-',
+                        p_dapat: '-',
+                        p_tidak: '-'
+                    };
+
+                    const valLDapat = d['l_dapat'] !== undefined ? d['l_dapat'] : cur.l_dapat;
+                    const valLTidak = d['l_tidak'] !== undefined ? d['l_tidak'] : cur.l_tidak;
+                    const valPDapat = d['p_dapat'] !== undefined ? d['p_dapat'] : cur.p_dapat;
+                    const valPTidak = d['p_tidak'] !== undefined ? d['p_tidak'] : cur.p_tidak;
+
+                    return `<thead>
+                        <tr class="bg-[#f95a00] text-white text-center font-bold">
+                            <th class="py-3 px-4 font-bold border border-slate-700" colspan="2">
+                                <div>Jenis Kelamin</div>
+                                <div class="italic font-normal text-[11px] sm:text-xs">Sex Type</div>
+                            </th>
+                            <th class="py-3 px-4 font-bold border border-slate-700">
+                                <div>Persentase</div>
+                                <div class="italic font-normal text-[11px] sm:text-xs">Percentage</div>
+                            </th>
+                        </tr>
+                        <tr class="bg-[#fed7aa] text-slate-900 text-center font-bold text-xs">
+                            <th class="py-1 px-3 border border-slate-700" colspan="2">(1)</th>
+                            <th class="py-1 px-3 border border-slate-700">(2)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-[#fef9c3] text-slate-900 font-medium">
+                        <tr class="hover:bg-amber-100/60 transition-colors bg-[#fef9c3] text-slate-900 font-medium">
+                            <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle" rowspan="2">Laki–laki / <span class="italic font-normal">Male</span></td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle">Dapat Baca Tulis / <span class="italic font-normal">Read / Write Skill</span></td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${valLDapat}</td>
+                        </tr>
+                        <tr class="hover:bg-amber-100/60 transition-colors bg-[#fef9c3] text-slate-900 font-medium">
+                            <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle">Tidak Dapat Baca Tulis / <span class="italic font-normal">Read / Write Unskill</span></td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${valLTidak}</td>
+                        </tr>
+                        <tr class="hover:bg-amber-100/60 transition-colors bg-[#fef9c3] text-slate-900 font-medium">
+                            <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle" rowspan="2">Perempuan / <span class="italic font-normal">Female</span></td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle">Dapat Baca Tulis / <span class="italic font-normal">Read / Write Skill</span></td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${valPDapat}</td>
+                        </tr>
+                        <tr class="hover:bg-amber-100/60 transition-colors bg-[#fef9c3] text-slate-900 font-medium">
+                            <td class="py-2.5 px-4 border border-slate-700 text-left font-semibold align-middle">Tidak Dapat Baca Tulis / <span class="italic font-normal">Read / Write Unskill</span></td>
+                            <td class="py-2.5 px-4 border border-slate-700 text-center align-middle">${valPTidak}</td>
+                        </tr>
+                    </tbody>`;
+                }
+            },
             '3.1.8': {
                 titleId: 'Jumlah Penduduk Wajib KTP (Kartu Tanda Penduduk) dan yang Telah Memiliki KTP dirinci Menurut Kecamatan di Kota Bukittinggi',
                 titleEn: 'Number of Population Owner Identity Card and Be Possessed Identity Card Already by District in Bukittinggi Municipality',

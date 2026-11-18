@@ -1,6 +1,9 @@
 /** SiBingka | table-editor | bagian 6/6: FITUR CATATAN / KOMENTAR RINCIAN DATA (DRAWER CHAT)
  *  Dimuat berurutan bersama file lain di folder ini (partials/script-group). */
         async function saveAndReturn() {
+            if (typeof saveAndSubmitForVerification === 'function') {
+                return saveAndSubmitForVerification();
+            }
             window._hasUnsavedEdits = false;
             await persistTableData(true);
         }
@@ -28,6 +31,11 @@
         async function handleEditExcelImport(event) {
             const file = event.target.files ? event.target.files[0] : null;
             if (!file) return;
+
+            if (!confirm('Apakah Anda yakin?')) {
+                event.target.value = '';
+                return;
+            }
 
             const loadingEl = document.getElementById('excelUploadLoading');
             if (loadingEl) loadingEl.classList.remove('hidden');

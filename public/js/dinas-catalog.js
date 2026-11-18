@@ -108,12 +108,52 @@
         const cleanCode = code ? code.toString().padStart(2, '0') : '';
         const storageKey = `sibingka_custom_${cfg.type}_tables_${code}`;
 
+        const isOfficialOpdCode = (tblCode) => {
+            if (!window.opdTablesCatalog) return false;
+            const cTrim = (tblCode || '').trim().toLowerCase();
+            for (const k in window.opdTablesCatalog) {
+                if (window.opdTablesCatalog[k].some(t => t.code && t.code.trim().toLowerCase() === cTrim)) {
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        const isOfficialInstansiCode = (tblCode) => {
+            if (!window.instansiTablesCatalog) return false;
+            const cTrim = (tblCode || '').trim().toLowerCase();
+            for (const k in window.instansiTablesCatalog) {
+                if (window.instansiTablesCatalog[k].some(t => t.code && t.code.trim().toLowerCase() === cTrim)) {
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        const isOfficialBpsCode = (tblCode) => {
+            if (!window.bpsTablesCatalog) return false;
+            const cTrim = (tblCode || '').trim().toLowerCase();
+            for (const k in window.bpsTablesCatalog) {
+                if (window.bpsTablesCatalog[k].some(t => t.code && t.code.trim().toLowerCase() === cTrim)) {
+                    return true;
+                }
+            }
+            return false;
+        };
+
         // 1. Gabungkan langsung dari window.serverDbCustomTables jika di-inject oleh backend
         if (typeof window !== 'undefined' && Array.isArray(window.serverDbCustomTables)) {
             if (!catalog[code]) catalog[code] = [];
             window.serverDbCustomTables.forEach(st => {
                 const stOpd = st.opd_code ? st.opd_code.toString().padStart(2, '0') : '';
                 if (!stOpd || stOpd === cleanCode || stOpd === code) {
+                    // Cegah kontaminasi silang antara OPD, Instansi, dan BPS
+                    if (cfg.type === 'instansi' && (isOfficialOpdCode(st.code) || isOfficialBpsCode(st.code)) && !isOfficialInstansiCode(st.code)) {
+                        return;
+                    }
+                    if (cfg.type === 'opd' && (isOfficialInstansiCode(st.code) || isOfficialBpsCode(st.code)) && !isOfficialOpdCode(st.code)) {
+                        return;
+                    }
                     if (!catalog[code].some(t => t.code.trim() === st.code.trim())) {
                         catalog[code].push({
                             code: st.code,
@@ -127,10 +167,31 @@
         }
 
         try {
-            const stored = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            let stored = JSON.parse(localStorage.getItem(storageKey) || '[]');
             if (Array.isArray(stored)) {
+                // Bersihkan tabel silang dari localStorage
+                if (cfg.type === 'instansi') {
+                    const originalLen = stored.length;
+                    stored = stored.filter(st => !((isOfficialOpdCode(st.code) || isOfficialBpsCode(st.code)) && !isOfficialInstansiCode(st.code)));
+                    if (stored.length !== originalLen) {
+                        localStorage.setItem(storageKey, JSON.stringify(stored));
+                    }
+                } else if (cfg.type === 'opd') {
+                    const originalLen = stored.length;
+                    stored = stored.filter(st => !((isOfficialInstansiCode(st.code) || isOfficialBpsCode(st.code)) && !isOfficialOpdCode(st.code)));
+                    if (stored.length !== originalLen) {
+                        localStorage.setItem(storageKey, JSON.stringify(stored));
+                    }
+                }
+
                 if (!catalog[code]) catalog[code] = [];
                 stored.forEach(st => {
+                    if (cfg.type === 'instansi' && (isOfficialOpdCode(st.code) || isOfficialBpsCode(st.code)) && !isOfficialInstansiCode(st.code)) {
+                        return;
+                    }
+                    if (cfg.type === 'opd' && (isOfficialInstansiCode(st.code) || isOfficialBpsCode(st.code)) && !isOfficialOpdCode(st.code)) {
+                        return;
+                    }
                     const exists = catalog[code].some(t => t.code.trim() === st.code.trim());
                     if (!exists) {
                         catalog[code].push({ ...st, isCustom: true });
@@ -139,6 +200,13 @@
             }
         } catch (e) {
             console.warn('Gagal membaca custom tables dari localStorage:', e);
+        }
+
+        // Pastikan tabel silang dihapus dari catalog di memori
+        if (cfg.type === 'instansi' && catalog[code]) {
+            catalog[code] = catalog[code].filter(t => !(t.isCustom && (isOfficialOpdCode(t.code) || isOfficialBpsCode(t.code)) && !isOfficialInstansiCode(t.code)));
+        } else if (cfg.type === 'opd' && catalog[code]) {
+            catalog[code] = catalog[code].filter(t => !(t.isCustom && (isOfficialInstansiCode(t.code) || isOfficialBpsCode(t.code)) && !isOfficialOpdCode(t.code)));
         }
 
         // Sync dari Database SiBingka
@@ -166,6 +234,12 @@
                     // 2. Tambahkan tabel kustom baru jika ada
                     if (Array.isArray(data.tables)) {
                         data.tables.forEach(dbTable => {
+                            if (cfg.type === 'instansi' && (isOfficialOpdCode(dbTable.code) || isOfficialBpsCode(dbTable.code)) && !isOfficialInstansiCode(dbTable.code)) {
+                                return;
+                            }
+                            if (cfg.type === 'opd' && (isOfficialInstansiCode(dbTable.code) || isOfficialBpsCode(dbTable.code)) && !isOfficialOpdCode(dbTable.code)) {
+                                return;
+                            }
                             const exists = catalog[code].some(t => t.code.trim() === dbTable.code.trim());
                             if (!exists) {
                                 catalog[code].push({
@@ -206,6 +280,14 @@
         if (tagEl) {
             tagEl.innerText = `${code}. ${shortTitle}`;
         }
+
+        // Tombol & Selector Tahun Unduh Excel Instansi
+        const modalYearSel = document.getElementById('modalExportYearSelect');
+        const curYear = new URLSearchParams(window.location.search).get('year') || (window.currentSelectedYear || '2026');
+        if (modalYearSel) {
+            modalYearSel.value = curYear;
+        }
+        window.updateModalExportUrl(curYear);
 
         // Google Drive link
         const driveBtn = document.getElementById('bpsDriveLinkHeader');
@@ -418,19 +500,30 @@
         window.renderTableRows();
     };
 
+    // --- Update URL Unduh Excel per Instansi sesuai Tahun Terpilih ---
+    window.updateModalExportUrl = function (year) {
+        const btn = document.getElementById('modalExportAgencyExcelBtn');
+        if (!btn || !currentAgencyCode) return;
+        const curType = getConfig().type || 'opd';
+        const baseUrl = window.DinasCatalogConfig?.tabelOpdUrl || '/tabel-opd';
+        const y = year || document.getElementById('modalExportYearSelect')?.value || '2026';
+        btn.href = `${baseUrl}/export-agency-excel?opd=${encodeURIComponent(currentAgencyCode)}&year=${encodeURIComponent(y)}&type=${encodeURIComponent(curType)}`;
+        btn.title = `Unduh Seluruh Tabel ${currentAgencyShort || ''} Tahun ${y} Format Excel (.xlsx)`;
+    };
+
     // --- Year Modal Handling ---
     window.populateYearOptions = function () {
         const yearSelect = document.getElementById('selectedYearSelect');
         if (!yearSelect) return;
 
-        const currentYear = new Date().getFullYear();
-        const endYear = Math.max(2036, currentYear + 10);
+        const urlYear = new URLSearchParams(window.location.search).get('year');
+        const defaultYear = urlYear ? parseInt(urlYear, 10) : 2026;
 
-        let html = '<option value="" disabled>Pilih Tahun Data</option>';
-        for (let y = endYear; y >= 2020; y--) {
-            const is2025 = y === 2025;
-            html += `<option value="${y}" ${is2025 ? 'selected' : ''}>Tahun ${y}</option>`;
+        let html = '';
+        for (let y = 2027; y >= 2020; y--) {
+            html += `<option value="${y}" ${y === defaultYear ? 'selected' : ''}>Tahun ${y}</option>`;
         }
+        
         yearSelect.innerHTML = html;
     };
 
@@ -464,7 +557,8 @@
 
         const yearSelect = document.getElementById('selectedYearSelect');
         if (yearSelect) {
-            yearSelect.value = '2025';
+            const urlYear = new URLSearchParams(window.location.search).get('year');
+            yearSelect.value = urlYear || '2026';
         }
 
         const modal = document.getElementById('yearModal');
@@ -605,6 +699,8 @@
     window.submitNewTable = function (e) {
         if (e && e.preventDefault) e.preventDefault();
 
+        const cfg = getConfig();
+
         const selectorDiv = document.getElementById('addTableOpdSelectorContainer');
         const isGlobal = selectorDiv && !selectorDiv.classList.contains('hidden');
 
@@ -669,7 +765,6 @@
         filteredTablesList = [...currentTablesList];
 
         // Simpan ke localStorage
-        const cfg = getConfig();
         const storageKey = `sibingka_custom_${cfg.type}_tables_${currentAgencyCode}`;
         try {
             let stored = JSON.parse(localStorage.getItem(storageKey) || '[]');

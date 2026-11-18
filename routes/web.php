@@ -59,6 +59,7 @@ Route::middleware(['sibingka.auth'])->group(function () {
     Route::get('/tabel', [TabelOpdController::class, 'index'])->name('tabel');
     Route::get('/edit-tabel-opd', [TabelOpdController::class, 'edit'])->name('edit-tabel-opd');
     Route::get('/tabel-opd/export-excel', [TabelOpdController::class, 'exportExcel'])->name('tabel-opd.export-excel');
+    Route::get('/tabel-opd/export-agency-excel', [TabelOpdController::class, 'exportAgencyExcel'])->name('tabel-opd.export-agency-excel');
     Route::post('/tabel-opd/import-excel', [TabelOpdController::class, 'importExcel'])->name('tabel-opd.import-excel');
     Route::get('/api/tabel-opd/data', [TabelOpdController::class, 'apiGetData'])->name('tabel-opd.api.data');
     Route::post('/api/tabel-opd/save', [TabelOpdController::class, 'apiSaveData'])->name('tabel-opd.api.save');

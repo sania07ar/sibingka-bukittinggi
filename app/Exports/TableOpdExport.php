@@ -116,7 +116,8 @@ class TableOpdExport implements FromView, ShouldAutoSize, WithTitle, WithStyles
 
     public function title(): string
     {
-        return mb_substr("Tabel_{$this->tableCode}", 0, 31);
+        $clean = preg_replace('/[\\\\\\/\?\*:\\[\\]]/', '_', $this->tableCode);
+        return mb_substr("Tabel_{$clean}", 0, 31);
     }
 
     public function styles(Worksheet $sheet): ?array

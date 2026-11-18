@@ -44,8 +44,25 @@
                 </div>
             </div>
 
-            <!-- Right: Close Button -->
+            <!-- Right: Unduh Excel (Pilih Tahun) & Close Button -->
             <div class="flex items-center space-x-2 shrink-0">
+                <div class="inline-flex items-center space-x-1.5 bg-emerald-50/70 border border-emerald-200/90 rounded-xl p-1 shadow-2xs">
+                    <select id="modalExportYearSelect" 
+                            onchange="window.updateModalExportUrl(this.value)" 
+                            class="bg-white border border-emerald-200 text-emerald-800 text-xs font-bold rounded-lg px-2 py-1 focus:outline-none cursor-pointer"
+                            title="Pilih tahun data Excel yang ingin diunduh">
+                        @foreach(range(max(2027, ((int)date('Y')) + 1), 2020) as $yr)
+                            <option value="{{ $yr }}" {{ ((int)request('year', date('Y'))) === $yr ? 'selected' : '' }}>{{ $yr }}</option>
+                        @endforeach
+                    </select>
+                    <a id="modalExportAgencyExcelBtn" 
+                       href="#" 
+                       class="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors no-underline"
+                       title="Unduh Seluruh Tabel Instansi Ini ke Format Excel (.xlsx)">
+                        <i class="fa-solid fa-file-excel text-xs"></i>
+                        <span class="hidden sm:inline">Unduh Excel</span>
+                    </a>
+                </div>
                 <button onclick="{{ $closeFn }}" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-colors cursor-pointer" title="Tutup">
                     <i class="fa-solid fa-xmark text-sm"></i>
                 </button>

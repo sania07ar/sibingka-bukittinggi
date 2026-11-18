@@ -5,7 +5,7 @@
             // JANGAN PERNAH potong kolom pada Tabel 1.1.6, 8.1.x, atau tabel multi-tahun
             const schema = (typeof tableSchemas !== 'undefined') ? tableSchemas[currentTableCode] : null;
             if (schema && (schema.isMultiYear || schema.isExcludeSelectedYear)) return;
-            if (currentTableCode === '1.1.6' || currentTableCode.startsWith('8.1') || currentTableCode.startsWith('4.1') || currentOpdCode === '08') return;
+            if (currentTableCode === '1.1.6' || currentTableCode === '3.1.6' || currentTableCode.startsWith('8.1') || currentTableCode.startsWith('4.1') || currentOpdCode === '08') return;
 
             const bodyRows = table.querySelectorAll('tbody tr');
             if (bodyRows.length === 0) return;
@@ -193,8 +193,8 @@
                 return;
             }
 
-            // Khusus Tabel Dinas 08 / Tabel 4.1.x: Tabel Pendidikan (Sekolah, Guru, Murid)
-            const isEducation3in1Edit = ['4.1.1', '4.1.3', '4.1.4', '4.1.5', '4.1.6', '4.1.7', '4.1.8', '4.1.9', '4.1.10', '4.1.11', '4.1.12', '4.1.13', '4.1.14', '4.1.15', '4.1.16', '4.1.17'].includes(currentTableCode);
+            // Khusus Tabel multi-bagian vertikal (Dinas 08 / Tabel 4.1.x Pendidikan, atau Tabel 5.1.1 Hortikultura)
+            const isEducation3in1Edit = ((currentType !== 'bps') && ['4.1.1', '4.1.3', '4.1.4', '4.1.5', '4.1.6', '4.1.7', '4.1.8', '4.1.9', '4.1.10', '4.1.15', '4.1.16', '4.1.17'].includes(currentTableCode)) || currentTableCode === '5.1.1';
             if (isEducation3in1Edit) {
                 rows.forEach(tr => {
                     const text = tr.innerText.trim();
@@ -208,12 +208,17 @@
                                           firstCellText.includes('Aur Birugo');
                     const isTotalRow = firstCellText === 'Bukittinggi' || firstCellText.startsWith('Bukittinggi');
 
-                    // Cek baris header dalam tbody (Guru / Murid headers) atau baris pemisah -> JANGAN jadikan input!
+                    // Cek baris header dalam tbody (Guru / Murid / Sayuran headers) atau baris pemisah -> JANGAN jadikan input!
                     const isHeader = tr.classList.contains('subtable-spacer-row') ||
+                                     tr.classList.contains('subtable-header-title') ||
+                                     tr.classList.contains('subtable-header-subtitle') ||
+                                     tr.classList.contains('subtable-header-years') ||
+                                     tr.classList.contains('subtable-header-numbering') ||
                                      text.includes('Guru') || text.includes('Teachers') || 
                                      text.includes('Murid') || text.includes('Students') ||
+                                     text.includes('Kangkung') || text.includes('Tomat') ||
                                      text.includes('Negeri') || text.includes('Swasta') ||
-                                     (!isDistrictRow && !isTotalRow && /\b(?:19|20)\d{2}\s*\/\s*(?:19|20)\d{2}\b/.test(text) && tds.length >= 6) ||
+                                     (!isDistrictRow && !isTotalRow && (/\b(?:19|20)\d{2}\s*\/\s*(?:19|20)\d{2}\b/.test(text) || (currentTableCode === '5.1.1' && /\b(?:19|20)\d{2}\b/.test(text))) && tds.length >= 6) ||
                                      text.includes('(1)') || text.includes('-1') ||
                                      tds.length === 1; // Baris separator
 
@@ -227,6 +232,13 @@
                         // Kolom 0: Kecamatan / Bukittinggi -> label tetap
                         if (idx === 0) {
                             td.classList.add('font-bold', 'text-left');
+                            return;
+                        }
+
+                        // Kolom trailing/disabled pada 5.1.1 (colspan 2) -> jangan input
+                        if (td.getAttribute('colspan') >= 2 && (td.innerText.trim() === '-' || td.classList.contains('bg-slate-100/40') || td.classList.contains('bg-slate-200/50'))) {
+                            td.className = 'border border-slate-700 bg-slate-100/40 text-center text-slate-300 select-none';
+                            td.innerHTML = '<span class="text-slate-400 font-normal">-</span>';
                             return;
                         }
 
