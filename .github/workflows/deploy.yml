@@ -42,18 +42,19 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
 
           ssh-keygen -y -f ~/.ssh/id_ed25519 > /dev/null
-        
+      
       - name: Upload
         env:
           SSH_PORT: ${{ secrets.SSH_PORT }}
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
         run: |
-          SSH="ssh -i ~/.ssh/id_ed25519 \
+          SSH="ssh -4 -i ~/.ssh/id_ed25519 \
             -p $SSH_PORT \
             -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=no \
-            -o UserKnownHostsFile=/dev/null"
+            -o UserKnownHostsFile=/dev/null \
+            -o ConnectTimeout=20"
 
           TARGET="$SSH_USER@$SSH_HOST"
 
@@ -71,15 +72,15 @@ jobs:
             --exclude='public/storage' \
             --exclude='public/hot' \
             -e "$SSH" \
-            ./ "$TARGET:$APP_DIR/"
-        
+            ./ "$TARGET:$APP_DIR/"   
+      
       - name: Post-deploy
         env:
           SSH_PORT: ${{ secrets.SSH_PORT }}
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
         run: |
-          SSH="ssh -i ~/.ssh/id_ed25519 \
+          SSH="ssh -4 -i ~/.ssh/id_ed25519 \
             -p $SSH_PORT \
             -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=no \
