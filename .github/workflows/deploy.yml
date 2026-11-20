@@ -32,29 +32,79 @@ jobs:
         #   VITE_MAPTILER_KEY: ${{ secrets.VITE_MAPTILER_KEY }}
 
       - name: Setup SSH
+        env:
+          SSH_KEY: ${{ secrets.SSH_KEY }}
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 700 ~/.ssh
+
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
 
+          ssh-keygen -y -f ~/.ssh/id_ed25519 > /dev/null
+      
+      - name: Test SSH Connection
+        env:
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+        run: |
+          ssh -i ~/.ssh/id_ed25519 \
+            -p "$SSH_PORT" \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=no \
+            "$SSH_USER@$SSH_HOST" \
+            "whoami && pwd && php -v"
+        
       - name: Upload
+        env:
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
         run: |
-          SSH="ssh -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
-          TARGET=${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
-          $SSH $TARGET "mkdir -p $APP_DIR"
-          rsync -az --delete \
-            --exclude '.git' --exclude '.github' --exclude 'node_modules' --exclude 'tests' \
-            --exclude '.env' \
-            --exclude 'storage/app' --exclude 'storage/logs' --exclude 'storage/framework' \
-            --exclude 'public/storage' --exclude 'public/hot' \
-            -e "$SSH" ./ $TARGET:$APP_DIR/
+          SSH="ssh -i ~/.ssh/id_ed25519 \
+            -p $SSH_PORT \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null"
 
+          TARGET="$SSH_USER@$SSH_HOST"
+
+          $SSH "$TARGET" "mkdir -p '$APP_DIR'"
+
+          rsync -az --delete \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='node_modules' \
+            --exclude='tests' \
+            --exclude='.env' \
+            --exclude='storage/app' \
+            --exclude='storage/logs' \
+            --exclude='storage/framework' \
+            --exclude='public/storage' \
+            --exclude='public/hot' \
+            -e "$SSH" \
+            ./ "$TARGET:$APP_DIR/"
+        
       - name: Post-deploy
+        env:
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
         run: |
-          SSH="ssh -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
-          TARGET=${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
-          $SSH $TARGET "cd $APP_DIR && \
-            mkdir -p storage/app/public storage/logs storage/framework/cache/data storage/framework/sessions storage/framework/views bootstrap/cache && \
+          SSH="ssh -i ~/.ssh/id_ed25519 \
+            -p $SSH_PORT \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null"
+
+          TARGET="$SSH_USER@$SSH_HOST"
+
+          $SSH "$TARGET" "cd '$APP_DIR' && \
+            mkdir -p storage/app/public storage/logs \
+            storage/framework/cache/data \
+            storage/framework/sessions \
+            storage/framework/views bootstrap/cache && \
             chmod -R 775 storage bootstrap/cache && \
             (php artisan storage:link || true) && \
             php artisan migrate --force && \
@@ -62,3 +112,4 @@ jobs:
             php artisan config:cache && \
             php artisan route:cache && \
             php artisan view:cache"
+      
