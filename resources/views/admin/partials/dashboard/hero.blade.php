@@ -16,7 +16,7 @@
 
             <div class="relative z-10 max-w-xl lg:max-w-2xl px-6 sm:px-10 lg:px-14 py-8">
                 <p class="text-xs sm:text-sm font-bold text-[#ea580c] tracking-wide mb-2.5">
-                    Welcome, <span class="text-[#f95a00] font-extrabold">{{ $dinasName }}</span>
+                    Selamat Datang, <span class="text-[#f95a00] font-extrabold">{{ $dinasName }}</span>
                 </p>
 
                 <div class="space-y-1 mb-2">

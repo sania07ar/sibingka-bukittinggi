@@ -32,82 +32,72 @@
 <!-- VERIFICATION STATUS ALERT & AUDIT TRAIL -->
 <div id="verificationStatusBanner" class="mb-4">
     @if($verificationStatus === 'approved')
-        <div class="p-3.5 sm:p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
-            <div class="flex items-center space-x-3">
-                <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-base shrink-0 shadow-2xs">
-                    <i class="fa-solid fa-circle-check"></i>
+        <div class="bg-emerald-50/60 border border-emerald-200/80 rounded-xl px-4 py-3 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs">
+            <div class="space-y-1">
+                <div class="flex items-center space-x-2.5 flex-wrap">
+                    <span class="px-2.5 py-0.5 rounded-md text-xs font-bold bg-emerald-100 text-emerald-900">
+                        Data Tervalidasi BPS
+                    </span>
+                    <span class="text-xs text-slate-600 font-medium">
+                        Telah disahkan untuk publikasi resmi Daerah Dalam Angka (DDA)
+                    </span>
                 </div>
-                <div>
-                    <div class="flex items-center space-x-2">
-                        <h4 class="text-xs sm:text-sm font-black text-emerald-950">Data Telah Divalidasi BPS Bukittinggi</h4>
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-200 text-emerald-900">ACC &bull; Publikasi</span>
-                    </div>
-                    <p class="text-[11px] text-emerald-800 font-medium mt-0.5">
-                        Tabel ini telah melalui tahapan pemeriksaan kewajaran data oleh Tim Pembina BPS Kota Bukittinggi dan siap dicetak untuk Buku Daerah Dalam Angka (DDA).
-                    </p>
+                <div class="flex items-center space-x-1.5 text-[11px] text-emerald-800">
+                    <i class="fa-solid fa-circle-check text-emerald-600 text-xs"></i>
+                    <span>Diverifikasi oleh: <strong>{{ $dbMetadata->verifier_name ?? 'Admin BPS' }}</strong>@if($dbMetadata?->verified_at) &bull; {{ \Carbon\Carbon::parse($dbMetadata->verified_at)->isoFormat('D MMMM Y, HH:mm') }}@endif</span>
                 </div>
-            </div>
-            <div class="text-right shrink-0">
-                <span class="text-[10px] text-emerald-700 font-semibold block">Diverifikasi oleh: {{ $dbMetadata->verifier_name ?? 'Admin BPS' }}</span>
-                <span class="text-[9px] text-emerald-600 block">{{ $dbMetadata->verified_at ? \Carbon\Carbon::parse($dbMetadata->verified_at)->isoFormat('D MMMM Y, HH:mm') : '' }}</span>
             </div>
         </div>
     @elseif($verificationStatus === 'submitted')
-        <div class="p-3.5 sm:p-4 rounded-2xl bg-amber-50 border border-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
-            <div class="flex items-center space-x-3">
-                <div class="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center text-base shrink-0 shadow-2xs">
-                    <i class="fa-solid fa-clock-rotate-left"></i>
+        <div class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs">
+            <div class="space-y-1">
+                <div class="flex items-center space-x-2.5 flex-wrap">
+                    <span class="px-2.5 py-0.5 rounded-md text-xs font-bold bg-amber-100 text-amber-900">
+                        Menunggu Validasi BPS
+                    </span>
+                    <span class="text-xs text-slate-500 font-medium">
+                        Diajukan oleh <strong class="text-slate-800 font-bold">{{ $dbMetadata->submitted_by ?? session('user.displayName', 'Pengguna') }}</strong>@if($dbMetadata?->submitted_at) &bull; {{ \Carbon\Carbon::parse($dbMetadata->submitted_at)->isoFormat('D MMMM Y, HH:mm') }}@endif
+                    </span>
                 </div>
-                <div>
-                    <div class="flex items-center space-x-2">
-                        <h4 class="text-xs sm:text-sm font-black text-amber-950">Menunggu Verifikasi BPS Kota Bukittinggi</h4>
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-200 text-amber-900">Antrean Periksa</span>
+                @if($dbMetadata?->submitted_by || $dbMetadata?->data_declared)
+                    <div class="flex items-center space-x-1.5 text-[11px] text-slate-500">
+                        <i class="fa-solid fa-circle-check text-emerald-600 text-xs"></i>
+                        <span>Pernyataan keabsahan data telah disetujui secara digital oleh produsen data.</span>
                     </div>
-                    <p class="text-[11px] text-amber-800 font-medium mt-0.5">
-                        Data telah diajukan oleh dinas dan sedang dalam proses penelaahan konsistensi & kewajaran angka oleh Pembina Data Statistik BPS.
-                    </p>
-                    @if($dbMetadata?->submitted_by || $dbMetadata?->data_declared)
-                        <div class="mt-2 pt-2 border-t border-amber-200/80 flex items-start gap-2 text-[11.5px] text-amber-950">
-                            <i class="fa-solid fa-circle-check text-emerald-600 mt-0.5 shrink-0"></i>
-                            <span>
-                                Saya <strong>{{ $dbMetadata->submitted_by ?? session('user.displayName', 'Pengguna') }}</strong> menyatakan bahwa data yang saya kirim pada tabel ini adalah <strong>benar</strong>, sesuai dengan sumber data resmi, dan dapat dipertanggungjawabkan.@if($dbMetadata?->submitted_at) <span class="text-amber-800 font-normal">({{ \Carbon\Carbon::parse($dbMetadata->submitted_at)->isoFormat('D MMMM Y, HH:mm') }})</span>@endif
-                            </span>
-                        </div>
-                    @endif
-                </div>
+                @endif
             </div>
+
             @if($isAdmin)
-                <div class="flex items-center space-x-2 shrink-0">
-                    <button onclick="handleApproveTable()" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-2xs cursor-pointer flex items-center space-x-1">
-                        <i class="fa-solid fa-check text-[11px]"></i>
-                        <span>ACC Data</span>
+                <div class="flex items-center space-x-2 shrink-0 self-end md:self-center">
+                    <button type="button" onclick="openRevisionModal()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-slate-300 hover:border-rose-300 text-xs font-semibold transition-all shadow-2xs cursor-pointer flex items-center space-x-1.5">
+                        <i class="fa-solid fa-triangle-exclamation text-[11px] text-slate-400"></i>
+                        <span>Minta Revisi</span>
                     </button>
-                    <button onclick="openRevisionModal()" class="px-3 py-1.5 rounded-xl bg-white hover:bg-rose-50 text-rose-700 border border-rose-300 text-xs font-bold transition-all shadow-2xs cursor-pointer flex items-center space-x-1">
-                        <i class="fa-solid fa-triangle-exclamation text-[11px]"></i>
-                        <span>Revisi</span>
+                    <button type="button" onclick="handleApproveTable()" class="px-4 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold transition-all shadow-2xs cursor-pointer flex items-center space-x-1.5">
+                        <i class="fa-solid fa-check text-[11px] text-white"></i>
+                        <span>Setujui (ACC Data)</span>
                     </button>
                 </div>
             @endif
         </div>
     @elseif($verificationStatus === 'revision')
-        <div class="p-3.5 sm:p-4 rounded-2xl bg-rose-50 border border-rose-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
-            <div class="flex items-start space-x-3">
-                <div class="w-9 h-9 rounded-xl bg-rose-600 text-white flex items-center justify-center text-base shrink-0 shadow-2xs mt-0.5">
-                    <i class="fa-solid fa-triangle-exclamation"></i>
+        <div class="bg-rose-50/60 border border-rose-200 rounded-xl px-4 py-3 flex flex-col md:flex-row md:items-start justify-between gap-3 shadow-2xs">
+            <div class="space-y-1.5 flex-1">
+                <div class="flex items-center space-x-2.5 flex-wrap">
+                    <span class="px-2.5 py-0.5 rounded-md text-xs font-bold bg-rose-100 text-rose-900">
+                        Perlu Perbaikan
+                    </span>
+                    <span class="text-xs text-rose-900 font-bold">
+                        Catatan Revisi dari BPS Kota Bukittinggi:
+                    </span>
                 </div>
-                <div>
-                    <div class="flex items-center space-x-2">
-                        <h4 class="text-xs sm:text-sm font-black text-rose-950">Catatan Revisi dari BPS Bukittinggi</h4>
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-200 text-rose-900">Perlu Perbaikan</span>
-                    </div>
-                    <div class="text-xs text-rose-900 bg-white/80 border border-rose-200/80 rounded-xl p-2.5 mt-1.5 font-medium leading-relaxed">
-                        <i class="fa-solid fa-comment-dots text-rose-500 mr-1.5"></i>
-                        "{{ $dbMetadata->rejection_notes ?? 'Mohon periksa kembali kelengkapan dan kewajaran data.' }}"
-                    </div>
+                <div class="text-xs text-slate-700 bg-white border border-rose-200 rounded-lg p-2.5 font-medium leading-relaxed">
+                    <i class="fa-solid fa-comment-dots text-rose-500 mr-1.5"></i>
+                    "{{ $dbMetadata->rejection_notes ?? 'Mohon periksa kembali kelengkapan dan kewajaran data.' }}"
                 </div>
             </div>
             @if(!$isLocked)
-                <button onclick="goToEditPage()" class="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all shadow-2xs cursor-pointer shrink-0">
+                <button type="button" onclick="goToEditPage()" class="px-3.5 py-1.5 rounded-lg bg-rose-700 hover:bg-rose-800 text-white text-xs font-semibold transition-all shadow-2xs cursor-pointer shrink-0 self-end md:self-center">
                     <i class="fa-solid fa-pen mr-1"></i> Perbaiki Sekarang
                 </button>
             @endif
