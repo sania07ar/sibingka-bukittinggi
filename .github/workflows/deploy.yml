@@ -42,19 +42,6 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
 
           ssh-keygen -y -f ~/.ssh/id_ed25519 > /dev/null
-      
-      - name: Test SSH Connection
-        env:
-          SSH_PORT: ${{ secrets.SSH_PORT }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-        run: |
-          ssh -i ~/.ssh/id_ed25519 \
-            -p "$SSH_PORT" \
-            -o IdentitiesOnly=yes \
-            -o StrictHostKeyChecking=no \
-            "$SSH_USER@$SSH_HOST" \
-            "whoami && pwd && php -v"
         
       - name: Upload
         env:
