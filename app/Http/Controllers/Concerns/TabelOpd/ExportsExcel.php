@@ -43,6 +43,11 @@ trait ExportsExcel
         $cleanTableCode = str_replace('.', '_', $tableCode);
         $fileName = ($isTemplate ? "Template_Tabel_{$cleanTableCode}_{$year}.xlsx" : "Tabel_{$cleanTableCode}_{$year}.xlsx");
 
+        $exportHtml = $meta?->table_html;
+        if (empty($exportHtml) || str_contains($exportHtml, 'Indicator Details') || str_contains($exportHtml, 'Belum ada data untuk tabel ini')) {
+            $exportHtml = $this->getDefaultHtmlForTable($tableCode, $year);
+        }
+
         return Excel::download(
             new TableOpdExport(
                 $tableCode,
@@ -52,7 +57,7 @@ trait ExportsExcel
                 $meta?->title_en,
                 $meta?->source,
                 $meta?->note,
-                $meta?->table_html,
+                $exportHtml,
                 $isTemplate
             ),
             $fileName
@@ -218,5 +223,130 @@ trait ExportsExcel
             new AgencyTablesExport($sheets),
             $fileName
         );
+    }
+
+    /**
+     * Dapatkan struktur HTML tabel resmi bawaan untuk tabel-tabel multi-tahun saat diekspor
+     */
+    protected function getDefaultHtmlForTable(string $tableCode, int $year): ?string
+    {
+        if ($tableCode === '2.2.5') {
+            $p = ($year >= 2026) ? range($year - 4, $year) : [2021, 2022, 2023, 2024, 2025];
+            $yearsHeaders = '';
+            $numHeaders = '';
+            foreach ($p as $idx => $y) {
+                $yearsHeaders .= "<th class=\"py-3 px-4 border border-slate-700 text-center font-bold bg-[#f95a00] text-white\">{$y}</th>";
+                $numHeaders .= "<th class=\"py-1 px-3 border border-slate-700 text-center font-bold text-xs bg-[#fed7aa] text-slate-900\">(" . ($idx + 2) . ")</th>";
+            }
+
+            $rows = [
+                '01. Peraturan daerah', '02. Keputusan DPRD', '03. Keputusan Pimpinan',
+                '04. Pernyataan', '05. Pernyataan Pendapat', '06. Resolusi',
+                '07. Dengar Pendapat dengan Pemerintah', '08. Rapat Paripurna Terbuka',
+                '09. Rapat Paripurna Istimewa', '10. Rapat Panitia Musyawarah',
+                '11. Rapat Badan Kehormatan', '12. Rapat Panitia / Badan Anggaran',
+                '13. Rapat Panitia Khusus', '14. Rapat Gabungan Komisi',
+                '15. Rapat Komisi', '16. Turun ke Lapangan ke Kelurahan',
+                '17. Keluar Daerah', '18. Rapat Kerja', '19. Penyampaian Aspirasi',
+                '20. Study Banding', '21. Reses', '22. Kunker Komisi'
+            ];
+
+            $tbodyHtml = '';
+            foreach ($rows as $rLabel) {
+                $tbodyHtml .= "<tr><td class=\"py-2.5 px-4 font-semibold border border-slate-700 text-left\">{$rLabel}</td>";
+                foreach ($p as $y) {
+                    $tbodyHtml .= "<td class=\"py-2 px-3 text-center border border-slate-700\">-</td>";
+                }
+                $tbodyHtml .= "</tr>\n";
+            }
+
+            return "<table class=\"w-full text-left text-xs sm:text-sm border-collapse table-custom-border\">
+<thead>
+    <tr class=\"bg-[#f95a00] text-white text-center font-bold\">
+        <th class=\"py-3 px-4 font-bold border border-slate-700 text-left align-middle min-w-[280px]\">
+            <div>Jenis Keputusan</div>
+            <div class=\"italic font-normal text-[11px] sm:text-xs\">Type Of Decision</div>
+        </th>
+        {$yearsHeaders}
+    </tr>
+    <tr class=\"bg-[#fed7aa] text-slate-900 text-center font-bold text-xs\">
+        <th class=\"py-1 px-3 border border-slate-700 text-center\">(1)</th>
+        {$numHeaders}
+    </tr>
+</thead>
+<tbody class=\"bg-[#fef9c3] text-slate-900 font-medium\">
+    {$tbodyHtml}
+</tbody>
+</table>";
+        }
+
+        if ($tableCode === '8.1.4') {
+            $p = ($year >= 2026) ? range($year, $year - 4) : [2025, 2024, 2023, 2022, 2021];
+            $jumlahRowsHtml = '';
+            foreach ($p as $idx => $y) {
+                $jumlahRowsHtml .= '<tr>';
+                if ($idx === 0) {
+                    $spanCount = count($p);
+                    $jumlahRowsHtml .= "<td class=\"py-2.5 px-4 font-bold border border-slate-700 text-center align-middle bg-amber-50/70\" rowspan=\"{$spanCount}\">
+                        <div>Jumlah</div>
+                        <div class=\"italic font-normal text-xs text-slate-600\">Total</div>
+                    </td>";
+                }
+                $jumlahRowsHtml .= "<td class=\"py-2 px-3 font-bold border border-slate-700 text-center\">{$y}</td>
+                    <td class=\"py-2 px-3 text-center border border-slate-700\">-</td>
+                    <td class=\"py-2 px-3 text-center border border-slate-700\">-</td>
+                </tr>\n";
+            }
+
+            return "<table class=\"w-full text-left text-xs sm:text-sm border-collapse table-custom-border\">
+<thead>
+    <tr class=\"bg-[#f95a00] text-white text-center font-bold\">
+        <th class=\"py-3 px-4 font-bold border border-slate-700 w-[50%]\" colspan=\"2\" rowspan=\"2\">
+            <div>Kecamatan</div>
+            <div class=\"italic font-normal text-[11px] sm:text-xs\">District</div>
+        </th>
+        <th class=\"py-2.5 px-4 font-bold border border-slate-700 text-center w-[50%]\" colspan=\"2\">
+            <div>Jembatan</div>
+            <div class=\"italic font-normal text-[11px] sm:text-xs\">Bridge</div>
+        </th>
+    </tr>
+    <tr class=\"bg-[#f95a00] text-white text-center font-bold\">
+        <th class=\"py-2 px-3 font-bold border border-slate-700 w-[25%]\">
+            <div>Banyaknya</div>
+            <div class=\"italic font-normal text-[11px] sm:text-xs\">Number</div>
+        </th>
+        <th class=\"py-2 px-3 font-bold border border-slate-700 w-[25%]\">
+            <div>Panjang</div>
+            <div class=\"italic font-normal text-[11px] sm:text-xs\">Length</div>
+        </th>
+    </tr>
+    <tr class=\"bg-[#fed7aa] text-slate-900 text-center font-bold text-xs\">
+        <th class=\"py-1 px-3 border border-slate-700 text-center\" colspan=\"2\">(1)</th>
+        <th class=\"py-1 px-3 border border-slate-700 text-center\">(2)</th>
+        <th class=\"py-1 px-3 border border-slate-700 text-center\">(3)</th>
+    </tr>
+</thead>
+<tbody class=\"bg-[#fef9c3] text-slate-900 font-medium\">
+    <tr>
+        <td class=\"py-2.5 px-4 font-semibold border border-slate-700 text-left\" colspan=\"2\">01. GUGUK PANJANG</td>
+        <td class=\"py-2.5 px-4 text-center border border-slate-700\">-</td>
+        <td class=\"py-2.5 px-4 text-center border border-slate-700\">-</td>
+    </tr>
+    <tr>
+        <td class=\"py-2.5 px-4 font-semibold border border-slate-700 text-left\" colspan=\"2\">02. MANDIANGIN KOTO SELAYAN</td>
+        <td class=\"py-2.5 px-4 text-center border border-slate-700\">-</td>
+        <td class=\"py-2.5 px-4 text-center border border-slate-700\">-</td>
+    </tr>
+    <tr>
+        <td class=\"py-2.5 px-4 font-semibold border border-slate-700 text-left\" colspan=\"2\">03. AUR BIRUGO TIGO BALEH</td>
+        <td class=\"py-2.5 px-4 text-center border border-slate-700\">-</td>
+        <td class=\"py-2.5 px-4 text-center border border-slate-700\">-</td>
+    </tr>
+    {$jumlahRowsHtml}
+</tbody>
+</table>";
+        }
+
+        return null;
     }
 }

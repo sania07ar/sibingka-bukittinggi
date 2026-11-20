@@ -1187,8 +1187,19 @@ var isEditMode = false;
             const tableSource = localStorage.getItem(`sibingka_table_source_${currentTableCode}_${currentYear}`);
             const isExcelImport = (tableSource === 'excel');
 
-            // Self-healing tabel 2.2.5: bersihkan cache jika memuat baris Jumlah / Total atau nilai lama
-            if (currentTableCode === '2.2.5' && savedHtml && (savedHtml.toLowerCase().includes('jumlah') || savedHtml.toLowerCase().includes('total'))) {
+            // Self-healing tabel 8.1.4: bersihkan cache jika memuat 'Kolom 2' atau penomoran ganda
+            if (currentTableCode === '8.1.4' && savedHtml && (savedHtml.includes('Kolom 2') || savedHtml.includes('Kolom 1'))) {
+                localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
+                localStorage.removeItem(`sibingka_table_source_${currentTableCode}_${currentYear}`);
+                localStorage.removeItem(`sibingka_table_is_saved_${currentTableCode}_${currentYear}`);
+                if (serverDbMetadata) {
+                    serverDbMetadata.table_html = null;
+                }
+                savedHtml = null;
+            }
+
+            // Self-healing tabel 2.2.5: bersihkan cache jika memuat baris Jumlah / Total atau nilai lama atau tabel dobel
+            if (currentTableCode === '2.2.5' && savedHtml && (savedHtml.toLowerCase().includes('jumlah') || savedHtml.toLowerCase().includes('total') || savedHtml.includes('-1') || (savedHtml.match(/Type Of Decision/gi) || []).length > 1)) {
                 localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
                 localStorage.removeItem(`sibingka_table_source_${currentTableCode}_${currentYear}`);
                 localStorage.removeItem(`sibingka_table_is_saved_${currentTableCode}_${currentYear}`);
