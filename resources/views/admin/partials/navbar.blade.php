@@ -27,12 +27,14 @@
         </div>
 
 
-<!-- Right: Direct to SiBingka & Logout -->
+        <!-- Right: Direct to SiBingka & Logout -->
         <div class="flex items-center space-x-2.5 shrink-0 justify-self-end">
-            <a href="{{ route('home') }}" 
-               class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-[#f95a00] hover:bg-[#e04e00] shadow-sm transition-all">
-                <span>Masuk ke SiBingka</span>
-                <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            <a href="{{ route('home') }}"
+                class="inline-flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-[#f95a00] hover:bg-orange-50 transition-all no-underline">
+                <i class="fa-solid fa-house text-[11px]"></i>
+                <span class="hidden sm:inline">
+                    Beranda SiBingka
+                </span>
             </a>
 
             <a href="{{ route('logout') }}" 

@@ -131,12 +131,15 @@
                 <div class="flex items-center space-x-1.5 text-[11px] sm:text-xs">
                     <span>Tampilkan</span>
                     <div class="relative inline-block">
-                        <select id="itemsPerPageSelect" onchange="changeItemsPerPage(this.value)" class="appearance-none bg-[#fef6ee] hover:bg-[#fdeedc] text-[#f98825] border border-[#fbd4aa] rounded-lg px-2.5 py-0.5 pr-5 text-xs font-bold focus:outline-none cursor-pointer">
+                        <select id="itemsPerPageSelect" onchange="changeItemsPerPage(this.value)"
+                            class="appearance-none bg-[#fef6ee] hover:bg-[#fdeedc] text-[#f98825] border border-[#fbd4aa] rounded-lg px-2.5 py-0.5 pr-6 text-xs font-bold focus:outline-none cursor-pointer">
                             <option value="10">10</option>
                             <option value="25">25</option>
                             <option value="50">50</option>
                         </select>
-                        <i class="fa-solid fa-chevron-down text-[7px] text-[#f98825] absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                        <div class="absolute inset-y-0 right-1.5 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-chevron-down text-[8px] text-[#f98825] leading-none"></i>
+                        </div>
                     </div>
                     <span>hasil</span>
                 </div>

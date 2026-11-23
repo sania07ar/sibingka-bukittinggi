@@ -67,26 +67,25 @@
         </div>
 
         <!-- Sub-navigation -->
-        <div class="hidden md:block border-t border-slate-200/70 bg-white/40">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1.5 flex justify-center">
-                <nav class="hidden md:flex items-center space-x-6 lg:space-x-8 text-xs sm:text-sm font-semibold" id="topNavbar">
-                    <a href="#beranda-section" 
-                       data-nav="beranda"
-                       onclick="selectNavTab('beranda', event)"
-                       class="nav-tab text-[#f95a00] border-b-2 border-[#f95a00] pb-1 transition-all cursor-pointer">
+        <div class="border-t border-slate-200/70 bg-white/40">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+                <nav id="topNavbar"
+                    class="flex items-center justify-center md:justify-center gap-4 md:gap-6 lg:gap-8 py-2 overflow-x-auto whitespace-nowrap scrollbar-hide text-xs sm:text-sm font-semibold">
+                    <a href="#beranda-section" data-nav="beranda" onclick="selectNavTab('beranda', event)"
+                        class="nav-tab flex-shrink-0 text-[#f95a00] border-b-2 border-[#f95a00] pb-1 transition-all cursor-pointer">
                         Beranda
                     </a>
-                    @if($isAdmin)
-                        <a href="{{ route('kelola-akun') }}" 
-                           data-nav="kelola-akun"
-                           class="nav-tab text-slate-700 hover:text-[#f95a00] border-b-2 border-transparent hover:border-[#f95a00] pb-1 transition-all cursor-pointer">
+
+                    @if ($isAdmin)
+                        <a href="{{ route('kelola-akun') }}" data-nav="kelola-akun"
+                            class="nav-tab flex-shrink-0 text-slate-700 hover:text-[#f95a00] border-b-2 border-transparent hover:border-[#f95a00] pb-1 transition-all cursor-pointer">
                             Kelola Akun
                         </a>
                     @endif
-                    <a href="#tentang-section" 
-                       data-nav="tentang"
-                       onclick="selectNavTab('tentang', event)"
-                       class="nav-tab text-slate-700 hover:text-[#f95a00] border-b-2 border-transparent hover:border-[#f95a00] pb-1 transition-all cursor-pointer">
+
+                    <a href="#tentang-section" data-nav="tentang" onclick="selectNavTab('tentang', event)"
+                        class="nav-tab flex-shrink-0 text-slate-700 hover:text-[#f95a00] border-b-2 border-transparent hover:border-[#f95a00] pb-1 transition-all cursor-pointer">
                         Tentang
                     </a>
                 </nav>

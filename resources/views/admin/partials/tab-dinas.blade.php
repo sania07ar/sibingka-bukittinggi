@@ -9,12 +9,12 @@
             
             <!-- Search Input -->
             <div class="relative w-full sm:w-64">
-                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                <input type="text" 
-                       name="q" 
-                       value="{{ $search ?? '' }}" 
-                       placeholder="Cari dinas, instansi, username..." 
-                       class="input-custom w-full pl-8 pr-3 py-2 rounded-xl text-xs font-semibold">
+                <div class="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-white">
+                    <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs shrink-0"></i>
+                    <input type="text" name="q" value="{{ $search ?? '' }}"
+                        placeholder="Cari dinas, instansi, username..."
+                        class="w-full bg-transparent border-0 outline-none p-0 text-xs font-semibold text-slate-700 placeholder:text-slate-400">
+                </div>
             </div>
 
             <!-- Filter Kategori / Type -->

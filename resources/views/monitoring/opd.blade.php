@@ -306,12 +306,13 @@
                     <!-- FILTER & SEARCH BAR -->
                     <div class="no-print flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white rounded-2xl p-3 border border-slate-100 shadow-2xs mb-3">
                         <div class="relative flex-1">
-                            <input type="text" 
-                                   id="opdSearchInput"
-                                   oninput="filterAgencyCards()"
-                                   placeholder="Cari OPD / dinas..."
-                                   class="w-full pl-9 pr-3.5 py-2 rounded-xl text-xs bg-slate-50 border border-slate-200 focus:bg-white focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 font-medium text-slate-800 transition-all">
-                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                            <div
+                                class="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 focus-within:bg-white focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500 transition-all">
+                                <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs shrink-0"></i>
+                                <input type="text" id="opdSearchInput" oninput="filterAgencyCards()"
+                                    placeholder="Cari OPD / dinas..."
+                                    class="w-full bg-transparent border-0 p-0 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none">
+                            </div>
                         </div>
                         <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 shrink-0">
                             <button type="button" onclick="setAgencyStatusFilter('all')" id="filterBtnAll"
