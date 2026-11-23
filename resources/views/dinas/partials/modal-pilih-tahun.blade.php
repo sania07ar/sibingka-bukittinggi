@@ -1,6 +1,6 @@
 <!-- POPUP PILIH TAHUN DATA (MUNCUL SAAT KLIK INPUT PADA TABEL) -->
 <div id="yearModal" style="z-index: 80;" class="fixed inset-0 hidden items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs transition-opacity duration-300">
-    <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl transform transition-all scale-95 opacity-0 duration-300 border border-slate-100 relative" id="yearModalCard">
+    <div class="bg-white rounded-2xl max-w-sm sm:max-w-md w-full p-4 sm:p-6 shadow-2xl transform transition-all scale-95 opacity-0 duration-300 border border-slate-100 relative mx-2" id="yearModalCard">
         
         <!-- Modal Header -->
         <div class="flex items-start justify-between border-b border-slate-100 pb-3 mb-4">

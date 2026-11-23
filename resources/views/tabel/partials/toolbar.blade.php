@@ -102,7 +102,7 @@
 
             <!-- Dropdown Menu Box -->
             <div id="exportDropdownMenuTop" 
-                 class="hidden absolute right-0 mt-2 w-72 origin-top-right rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 border border-slate-200/90 divide-y divide-slate-100 focus:outline-none z-50 animate-in fade-in zoom-in-95 duration-150">
+                 class="hidden absolute right-0 mt-2 w-72 max-w-[calc(100vw-2rem)] origin-top-right rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 border border-slate-200/90 divide-y divide-slate-100 focus:outline-none z-50 animate-in fade-in zoom-in-95 duration-150">
                 
                 <div class="p-3 bg-slate-50/90 rounded-t-2xl border-b border-slate-100 flex items-center justify-between">
                     <div class="flex items-center space-x-2">

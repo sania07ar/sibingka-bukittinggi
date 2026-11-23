@@ -1187,8 +1187,8 @@ var isEditMode = false;
             const tableSource = localStorage.getItem(`sibingka_table_source_${currentTableCode}_${currentYear}`);
             const isExcelImport = (tableSource === 'excel');
 
-            // Self-healing tabel 8.1.4: bersihkan cache jika memuat 'Kolom 2' atau penomoran ganda
-            if (currentTableCode === '8.1.4' && savedHtml && (savedHtml.includes('Kolom 2') || savedHtml.includes('Kolom 1'))) {
+            // Self-healing tabel 8.1.4: bersihkan cache jika memuat 'Kolom 2', penomoran ganda, atau dobel tabel
+            if (currentTableCode === '8.1.4' && savedHtml && (savedHtml.includes('Kolom 2') || savedHtml.includes('Kolom 1') || (savedHtml.match(/Number and Length of Bridge/gi) || []).length > 1 || (savedHtml.match(/Kecamatan/gi) || []).length > 2)) {
                 localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
                 localStorage.removeItem(`sibingka_table_source_${currentTableCode}_${currentYear}`);
                 localStorage.removeItem(`sibingka_table_is_saved_${currentTableCode}_${currentYear}`);
@@ -1477,10 +1477,46 @@ var isEditMode = false;
                 }
             }
 
+            // Bersihkan sibling table duplikat jika browser memecah nested table
+            const parentSection = tableEl ? tableEl.parentElement : null;
+            if (parentSection) {
+                const tables = parentSection.querySelectorAll('table');
+                if (tables.length > 1) {
+                    for (let i = 1; i < tables.length; i++) {
+                        tables[i].remove();
+                    }
+                }
+            }
+
+            // Validasi Periode Tahun untuk Tabel Multi-Tahun:
+            // Pastikan HTML yang dimuat (baik dari savedHtml maupun dari server) benar-benar mencakup periode tahun aktif.
+            // Contoh: Jika tahun 2032 dipilih, tabel tidak boleh menampilkan periode 2021-2025!
+            if (schema.isMultiYear || isMultiYearTable) {
+                const yrInt = parseInt(currentYear) || 2025;
+                const pInfo = (typeof get5YearPeriod === 'function') ? get5YearPeriod(yrInt) : null;
+                const expectedYears = pInfo ? (pInfo.yearsAsc || pInfo.yearsDesc || []) : [yrInt];
+
+                const matchesPeriod = (htmlStr) => {
+                    if (!htmlStr) return false;
+                    return expectedYears.some(y => htmlStr.includes(`>${y}<`) || htmlStr.includes(`>${y} `) || htmlStr.includes(` ${y}<`));
+                };
+
+                if (savedHtml && !matchesPeriod(savedHtml) && !isExcelImport) {
+                    localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
+                    savedHtml = null;
+                }
+
+                if (tableEl && !matchesPeriod(tableEl.innerHTML)) {
+                    tableEl.innerHTML = '';
+                }
+            }
+
             if (savedHtml) {
+                savedHtml = savedHtml.replace(/<\/?table[^>]*>/gi, '');
                 tableEl.innerHTML = cleanHtmlYearRanges(savedHtml);
             } else if (tableEl.innerHTML.trim().length > 50 && tableEl.querySelector('tr')) {
                 // Pertahankan HTML yang sudah dirender langsung oleh Blade dari server
+                tableEl.innerHTML = tableEl.innerHTML.replace(/<\/?table[^>]*>/gi, '');
             } else {
                 tableEl.innerHTML = cleanHtmlYearRanges(schema.render(currentYear));
             }

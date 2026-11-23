@@ -51,8 +51,10 @@ class TabelOpdController extends Controller
         $dbDataStore = $this->loadDbDataStore($tableCode, $opdCode);
         $dbMetadata = $this->getOrCreateMetadata($tableCode, $opdCode, $year, $type);
 
+        $isMultiYearTable = in_array($tableCode, ['4.1.18', '4.1.19', '8.1.1', '8.1.2', '8.1.3', '8.1.4', '8.1.5', '8.1.6', '8.1.7', '8.1.8', '8.2.2', '2.2.5', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2']);
+
         $dbFallbackMetadata = null;
-        if ((!$dbMetadata || empty($dbMetadata->table_html) || str_contains($dbMetadata->table_html, 'Indicator Details')) && $opdCode !== '35' && $tableCode !== '8.2.7') {
+        if (!$isMultiYearTable && (!$dbMetadata || empty($dbMetadata->table_html) || str_contains($dbMetadata->table_html, 'Indicator Details')) && $opdCode !== '35' && $tableCode !== '8.2.7') {
             $fallbackQuery = TabelMetadata::where('table_code', $tableCode)
                 ->whereNotNull('table_html')
                 ->where('table_html', '!=', '')
@@ -95,6 +97,7 @@ class TabelOpdController extends Controller
             'dbDataStore' => $dbDataStore,
             'dbMetadata' => $dbMetadata,
             'dbFallbackMetadata' => $dbFallbackMetadata,
+            'isMultiYearTable' => $isMultiYearTable,
             'dbCustomTables' => $dbCustomTables,
         ]);
     }
@@ -116,8 +119,10 @@ class TabelOpdController extends Controller
         $dbDataStore = $this->loadDbDataStore($tableCode, $opdCode);
         $dbMetadata = $this->getOrCreateMetadata($tableCode, $opdCode, $year, $type);
 
+        $isMultiYearTable = in_array($tableCode, ['4.1.18', '4.1.19', '8.1.1', '8.1.2', '8.1.3', '8.1.4', '8.1.5', '8.1.6', '8.1.7', '8.1.8', '8.2.2', '2.2.5', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2']);
+
         $dbFallbackMetadata = null;
-        if ((!$dbMetadata || empty($dbMetadata->table_html) || str_contains($dbMetadata->table_html, 'Indicator Details')) && $opdCode !== '35' && $tableCode !== '8.2.7') {
+        if (!$isMultiYearTable && (!$dbMetadata || empty($dbMetadata->table_html) || str_contains($dbMetadata->table_html, 'Indicator Details')) && $opdCode !== '35' && $tableCode !== '8.2.7') {
             $fallbackQuery = TabelMetadata::where('table_code', $tableCode)
                 ->whereNotNull('table_html')
                 ->where('table_html', '!=', '')
@@ -160,6 +165,7 @@ class TabelOpdController extends Controller
             'dbDataStore' => $dbDataStore,
             'dbMetadata' => $dbMetadata,
             'dbFallbackMetadata' => $dbFallbackMetadata,
+            'isMultiYearTable' => $isMultiYearTable,
             'dbCustomTables' => $dbCustomTables,
         ]);
     }
@@ -181,8 +187,9 @@ class TabelOpdController extends Controller
         $dbMetadata = $this->getOrCreateMetadata($tableCode, $opdCode, $year, $type);
 
         $cleanOpd = str_pad($opdCode, 2, '0', STR_PAD_LEFT);
+        $isMultiYearTable = in_array($tableCode, ['4.1.18', '4.1.19', '8.1.1', '8.1.2', '8.1.3', '8.1.4', '8.1.5', '8.1.6', '8.1.7', '8.1.8', '8.2.2', '2.2.5', '9.1', '9.3', '2.4.3', '2.4.1', '2.4.2']);
         $dbFallbackMetadata = null;
-        if ((!$dbMetadata || empty($dbMetadata->table_html) || str_contains($dbMetadata->table_html, 'Indicator Details')) && $opdCode !== '35' && $tableCode !== '8.2.7') {
+        if (!$isMultiYearTable && (!$dbMetadata || empty($dbMetadata->table_html) || str_contains($dbMetadata->table_html, 'Indicator Details')) && $opdCode !== '35' && $tableCode !== '8.2.7') {
             $fallbackQuery = TabelMetadata::where('table_code', $tableCode)
                 ->whereNotNull('table_html')
                 ->where('table_html', '!=', '')

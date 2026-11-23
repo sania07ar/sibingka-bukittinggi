@@ -30,7 +30,7 @@
 
 
 <!-- Right: Actions & Official Badges -->
-            <div class="flex items-center gap-2.5 sm:gap-3.5 shrink-0 justify-self-end">
+            <div class="flex items-center gap-2 sm:gap-3 shrink-0 justify-self-end">
                 <div class="hidden md:flex items-center">
                     <img src="{{ asset('images/berakhlak-clean.png') }}" alt="BerAKHLAK" class="h-6 sm:h-7 w-auto object-contain">
                 </div>

@@ -83,7 +83,7 @@ trait AdjustsTemplateYears
         }
     }
 
-    private function buildEmptyTemplateFromHtml(string $html): string
+    protected function buildEmptyTemplateFromHtml(string $html): string
     {
         $dom = new \DOMDocument();
         libxml_use_internal_errors(true);
@@ -134,7 +134,7 @@ trait AdjustsTemplateYears
         return $clean ?: $html;
     }
 
-    private function adjustYearInTitle(?string $title, int $sourceYear, int $targetYear): ?string
+    protected function adjustYearInTitle(?string $title, int $sourceYear, int $targetYear): ?string
     {
         if (!$title) return $title;
 
@@ -186,7 +186,7 @@ trait AdjustsTemplateYears
         return str_replace((string)$sourceYear, (string)$targetYear, $title);
     }
 
-    private function adjustYearInHtml(string $html, int $sourceYear, int $targetYear): string
+    protected function adjustYearInHtml(string $html, int $sourceYear, int $targetYear): string
     {
         $delta = $targetYear - $sourceYear;
 
@@ -391,7 +391,7 @@ trait AdjustsTemplateYears
         return $adjustedHtml;
     }
 
-    private function adjustYearInNote(?string $note, int $sourceYear, int $targetYear): ?string
+    protected function adjustYearInNote(?string $note, int $sourceYear, int $targetYear): ?string
     {
         if (!$note) return $note;
         return str_replace((string)$sourceYear, (string)$targetYear, $note);

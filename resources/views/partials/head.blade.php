@@ -18,3 +18,9 @@
 <!-- Tailwind CSS (CDN + Vite) -->
 <script src="https://cdn.tailwindcss.com"></script>
 @vite(['resources/css/app.css', 'resources/js/app.js'])
+<script>
+    try {
+        localStorage.removeItem('sibingka_theme');
+        document.documentElement.classList.remove('dark');
+    } catch(e) {}
+</script>

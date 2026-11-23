@@ -314,6 +314,9 @@ trait ImportsExcel
             $updatedHtml = $this->cleanExcelDateSerials($updatedHtml);
             $updatedHtml = $this->formatFinancialHtml($updatedHtml, $opdCode, $tableCode);
 
+            // Pastikan tidak ada tag <table> atau </table> pembungkus luar agar tidak terjadi duplikasi tabel di DOM
+            $updatedHtml = preg_replace('/<\/?table[^>]*>/i', '', $updatedHtml);
+
             $meta->table_html = $updatedHtml;
             $meta->is_saved = true;
             $meta->source_type = match($type) {

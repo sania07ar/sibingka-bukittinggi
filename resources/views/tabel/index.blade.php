@@ -111,9 +111,9 @@
                 <div class="overflow-x-auto mb-5" id="printableTableSection">
                     <table class="w-full text-left text-xs sm:text-sm border-collapse table-custom-border" id="dataDisplayTable">
                         @if(!empty($dbMetadata?->table_html) && str_contains($dbMetadata->table_html, '<tr'))
-                            {!! $dbMetadata->table_html !!}
-                        @elseif(!empty($dbFallbackMetadata?->table_html) && str_contains($dbFallbackMetadata->table_html, '<tr'))
-                            {!! $dbFallbackMetadata->table_html !!}
+                            {!! preg_replace('/<\/?table[^>]*>/i', '', $dbMetadata->table_html) !!}
+                        @elseif(!empty($dbFallbackMetadata?->table_html) && str_contains($dbFallbackMetadata->table_html, '<tr') && empty($isMultiYearTable))
+                            {!! preg_replace('/<\/?table[^>]*>/i', '', $dbFallbackMetadata->table_html) !!}
                         @endif
                     </table>
                 </div>

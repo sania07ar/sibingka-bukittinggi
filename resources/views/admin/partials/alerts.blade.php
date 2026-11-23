@@ -1,23 +1,23 @@
 <!-- Flash Alert Messages -->
 @if(session('success'))
-    <div id="flash-alert-success" class="mb-5 p-3.5 rounded-xl text-xs font-semibold flex items-center justify-between bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-sm transition-all duration-500">
-        <div class="flex items-center space-x-2.5">
-            <i class="fa-solid fa-circle-check text-base text-emerald-500 shrink-0"></i>
-            <span>{{ session('success') }}</span>
+    <div id="flash-alert-success" class="mb-5 p-3.5 rounded-xl text-xs font-semibold flex items-start sm:items-center justify-between gap-2.5 bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-sm transition-all duration-500">
+        <div class="flex items-start sm:items-center space-x-2.5 min-w-0 flex-1">
+            <i class="fa-solid fa-circle-check text-base text-emerald-500 shrink-0 mt-0.5 sm:mt-0"></i>
+            <span class="break-words leading-snug">{{ session('success') }}</span>
         </div>
-        <button type="button" onclick="dismissFlashAlert('flash-alert-success')" class="text-emerald-600 hover:text-emerald-900 p-1 rounded-md transition-colors shrink-0" title="Tutup Notifikasi">
+        <button type="button" onclick="dismissFlashAlert('flash-alert-success')" class="text-emerald-600 hover:text-emerald-900 p-1 rounded-md transition-colors shrink-0 -mr-1" title="Tutup Notifikasi">
             <i class="fa-solid fa-xmark text-sm"></i>
         </button>
     </div>
 @endif
 
 @if(session('error'))
-    <div id="flash-alert-error" class="mb-5 p-3.5 rounded-xl text-xs font-semibold flex items-center justify-between bg-red-50 text-red-800 border border-red-200 shadow-sm transition-all duration-500">
-        <div class="flex items-center space-x-2.5">
-            <i class="fa-solid fa-circle-xmark text-base text-red-500 shrink-0"></i>
-            <span>{{ session('error') }}</span>
+    <div id="flash-alert-error" class="mb-5 p-3.5 rounded-xl text-xs font-semibold flex items-start sm:items-center justify-between gap-2.5 bg-red-50 text-red-800 border border-red-200 shadow-sm transition-all duration-500">
+        <div class="flex items-start sm:items-center space-x-2.5 min-w-0 flex-1">
+            <i class="fa-solid fa-circle-xmark text-base text-red-500 shrink-0 mt-0.5 sm:mt-0"></i>
+            <span class="break-words leading-snug">{{ session('error') }}</span>
         </div>
-        <button type="button" onclick="dismissFlashAlert('flash-alert-error')" class="text-red-600 hover:text-red-900 p-1 rounded-md transition-colors shrink-0" title="Tutup Notifikasi">
+        <button type="button" onclick="dismissFlashAlert('flash-alert-error')" class="text-red-600 hover:text-red-900 p-1 rounded-md transition-colors shrink-0 -mr-1" title="Tutup Notifikasi">
             <i class="fa-solid fa-xmark text-sm"></i>
         </button>
     </div>
@@ -26,15 +26,15 @@
 @if($errors->any())
     <div id="flash-alert-validation" class="mb-5 p-3.5 rounded-xl text-xs font-medium bg-red-50 text-red-800 border border-red-200 shadow-sm space-y-1 transition-all duration-500">
         <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-1.5 font-bold text-red-700">
+            <div class="flex items-center space-x-1.5 font-bold text-red-700 min-w-0 flex-1">
                 <i class="fa-solid fa-triangle-exclamation text-red-500 shrink-0"></i>
-                <span>Terdapat kesalahan pengisian formulir:</span>
+                <span class="break-words">Terdapat kesalahan pengisian formulir:</span>
             </div>
-            <button type="button" onclick="dismissFlashAlert('flash-alert-validation')" class="text-red-600 hover:text-red-900 p-1 rounded-md transition-colors shrink-0" title="Tutup Notifikasi">
+            <button type="button" onclick="dismissFlashAlert('flash-alert-validation')" class="text-red-600 hover:text-red-900 p-1 rounded-md transition-colors shrink-0 -mr-1" title="Tutup Notifikasi">
                 <i class="fa-solid fa-xmark text-sm"></i>
             </button>
         </div>
-        <ul class="list-disc list-inside pl-1 text-[11px] text-red-600">
+        <ul class="list-disc list-inside pl-1 text-[11px] text-red-600 break-words">
             @foreach($errors->all() as $error)
                 <li>{{ $error }}</li>
             @endforeach

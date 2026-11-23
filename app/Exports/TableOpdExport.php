@@ -48,6 +48,9 @@ class TableOpdExport implements FromView, ShouldAutoSize, WithTitle, WithStyles
         $cleanHtml = preg_replace('/<\/div>\s*<div[^>]*>/i', ' / ', $rawHtml);
         $cleanHtml = preg_replace('/<\/?div[^>]*>/i', '', $cleanHtml);
 
+        // Pastikan tidak ada tag <table> atau </table> bersarang karena blade view exports.table_excel sudah dibungkus <table>
+        $cleanHtml = preg_replace('/<\/?table[^>]*>/i', '', $cleanHtml);
+
         // Jika mode template: kosongkan isi sel data numerik di tbody
         if ($this->isTemplate) {
             $cleanHtml = preg_replace_callback('/<tbody[^>]*>(.*?)<\/tbody>/is', function($tbodyMatch) {
@@ -60,7 +63,7 @@ class TableOpdExport implements FromView, ShouldAutoSize, WithTitle, WithStyles
                         $cellIndex++;
                         $attr = $tdMatch[1];
                         $val = trim(strip_tags($tdMatch[2]));
-                        if ($cellIndex === 1) {
+                        if ($cellIndex === 1 || preg_match('/^(19|20)\d{2}$/', $val)) {
                             return "<td{$attr}>{$val}</td>";
                         }
                         return "<td{$attr}>-</td>";
@@ -82,6 +85,20 @@ class TableOpdExport implements FromView, ShouldAutoSize, WithTitle, WithStyles
             $displayTitleEn = "Table {$displayTitleEn}";
         }
 
+        // Pastikan tahun pada judul selaras dengan tahun file yang diekspor ($this->year)
+        if ($this->year && $this->tableCode !== '4.1.2') {
+            if (preg_match('/([,\s]+)(19|20)\d{2}\s*$/', $displayTitleId)) {
+                $displayTitleId = preg_replace_callback('/([,\s]+)(19|20)\d{2}\s*$/', function($m) {
+                    return $m[1] . $this->year;
+                }, $displayTitleId);
+            }
+            if (!empty($displayTitleEn) && preg_match('/([,\s]+)(19|20)\d{2}\s*$/', $displayTitleEn)) {
+                $displayTitleEn = preg_replace_callback('/([,\s]+)(19|20)\d{2}\s*$/', function($m) {
+                    return $m[1] . $this->year;
+                }, $displayTitleEn);
+            }
+        }
+
         // Khusus Tabel 4.1.2 (Kemenag - RA): 2 Tahun Ajaran Berjalan
         if ($this->tableCode === '4.1.2') {
             $y1 = ($this->year - 1) . '/' . $this->year;
@@ -95,7 +112,16 @@ class TableOpdExport implements FromView, ShouldAutoSize, WithTitle, WithStyles
         // Hitung jumlah kolom sebenarnya dari baris penomoran (1), (2) atau baris data pertama
         $maxCols = 6;
         if (preg_match('/<tr[^>]*>\s*<th[^>]*>\s*\(1\)[\s\S]*?<\/tr>/i', $cleanHtml, $mColRow)) {
-            $maxCols = max(1, substr_count($mColRow[0], '<th'));
+            $colsCount = 0;
+            preg_match_all('/<th([^>]*)>/i', $mColRow[0], $thMatches);
+            foreach ($thMatches[1] as $thAttrs) {
+                if (preg_match('/colspan\s*=\s*["\']?(\d+)["\']?/i', $thAttrs, $mSpan)) {
+                    $colsCount += (int)$mSpan[1];
+                } else {
+                    $colsCount += 1;
+                }
+            }
+            $maxCols = max(1, $colsCount);
         } elseif (preg_match('/<tr[^>]*>([\s\S]*?)<\/tr>/i', $cleanHtml, $mFirstRow)) {
             $maxCols = max(1, substr_count($mFirstRow[1], '<th') + substr_count($mFirstRow[1], '<td'));
         }

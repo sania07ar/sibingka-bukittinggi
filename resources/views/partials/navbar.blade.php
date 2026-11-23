@@ -29,8 +29,8 @@
         </div>
 
         <!-- Right: BerAKHLAK Logo -->
-        <div class="flex items-center justify-end justify-self-end transition-transform hover:scale-[1.02] shrink-0">
-            <img src="{{ asset('images/berakhlak-clean.png') }}" alt="BerAKHLAK" class="h-5 sm:h-7 md:h-9 w-auto object-contain">
+        <div class="flex items-center justify-end justify-self-end space-x-2 sm:space-x-3 shrink-0">
+            <img src="{{ asset('images/berakhlak-clean.png') }}" alt="BerAKHLAK" class="h-5 sm:h-7 md:h-9 w-auto object-contain transition-transform hover:scale-[1.02]">
         </div>
 
     </div>

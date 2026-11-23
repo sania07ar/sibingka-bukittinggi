@@ -289,7 +289,7 @@ trait BuildsExcelTableHtml
             $tbodyHtml .= "</tr>\n";
         }
 
-        return "<table class=\"w-full border-collapse text-xs text-left\">\n<thead>\n{$theadHtml}</thead>\n<tbody>\n{$tbodyHtml}</tbody>\n</table>";
+        return "<thead>\n{$theadHtml}</thead>\n<tbody>\n{$tbodyHtml}</tbody>";
     }
 
     /**
@@ -363,8 +363,7 @@ trait BuildsExcelTableHtml
             </tr>\n";
         }
 
-        return "<table class=\"w-full text-left text-xs sm:text-sm border-collapse table-custom-border\">
-<thead>
+        return "<thead>
     <tr class=\"bg-[#f95a00] text-white text-center font-bold\">
         <th class=\"py-3 px-4 font-bold border border-slate-700 w-[50%]\" colspan=\"2\" rowspan=\"2\">
             <div>Kecamatan</div>
@@ -408,8 +407,7 @@ trait BuildsExcelTableHtml
         <td class=\"py-2.5 px-4 text-center border border-slate-700\">{$abt_p}</td>
     </tr>
     {$jumlahRowsHtml}
-</tbody>
-</table>";
+</tbody>";
     }
 
     /**
@@ -483,25 +481,36 @@ trait BuildsExcelTableHtml
 
         foreach ($excelRows as $row) {
             if (!is_array($row)) continue;
-            $rowStr = implode(' ', array_map('strval', $row));
             
             foreach ($rowDefs as $k => $d) {
-                if (stripos($rowStr, $d['match']) !== false) {
+                // Cari kolom mana yang memuat teks kategori ini
+                $labelCol = null;
+                foreach ($row as $cIdx => $cell) {
+                    if (stripos((string)$cell, $d['match']) !== false) {
+                        $labelCol = $cIdx;
+                        break;
+                    }
+                }
+
+                if ($labelCol !== null) {
+                    // Ambil nilai dari kolom-kolom setelah labelCol secara berurutan
                     $nums = [];
-                    foreach ($row as $cIdx => $cell) {
-                        $val = trim((string)$cell);
-                        if ($val === '') continue;
-                        $val = $this->cleanExcelDateSerials($val);
-                        $clean = str_replace(['.', ',', ' '], '', $val);
-                        if (is_numeric($clean) || $val === '-' || $val === '–') {
-                            $nums[] = $val;
+                    for ($c = $labelCol + 1; $c < count($row); $c++) {
+                        $rawVal = trim((string)($row[$c] ?? ''));
+                        if ($rawVal === '') {
+                            $nums[] = '-';
+                        } else {
+                            $cleanVal = $this->cleanExcelDateSerials($rawVal);
+                            $cleanVal = trim((string)$cleanVal);
+                            $nums[] = ($cleanVal === '' || $cleanVal === '–') ? '-' : $cleanVal;
                         }
                     }
 
                     if (count($nums) >= count($p)) {
-                        $slice = array_slice($nums, -count($p));
                         foreach ($p as $idx => $y) {
-                            $matchedValues[$k][$y] = $slice[$idx] ?? '-';
+                            $val = $nums[$idx] ?? '-';
+                            if ($val === '' || $val === '–') $val = '-';
+                            $matchedValues[$k][$y] = $val;
                         }
                     }
                     break;
@@ -526,8 +535,7 @@ trait BuildsExcelTableHtml
             $tbodyHtml .= "</tr>\n";
         }
 
-        return "<table class=\"w-full text-left text-xs sm:text-sm border-collapse table-custom-border\">
-<thead>
+        return "<thead>
     <tr class=\"bg-[#f95a00] text-white text-center font-bold\">
         <th class=\"py-3 px-4 font-bold border border-slate-700 text-left align-middle min-w-[280px]\">
             <div>Jenis Keputusan</div>
@@ -542,7 +550,6 @@ trait BuildsExcelTableHtml
 </thead>
 <tbody class=\"bg-[#fef9c3] text-slate-900 font-medium\">
 {$tbodyHtml}
-</tbody>
-</table>";
+</tbody>";
     }
 }

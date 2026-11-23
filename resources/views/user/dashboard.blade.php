@@ -54,13 +54,13 @@
 
     <!-- Flash Alert Notification if Access Denied -->
     @if(session('error'))
-        <div id="welcome-alert-error" class="fixed top-24 left-1/2 -translate-x-1/2 z-50 max-w-lg w-full px-4 animate-in fade-in duration-300 transition-all">
-            <div class="p-3 rounded-2xl text-xs font-bold flex items-center justify-between bg-red-600 text-white shadow-2xl shadow-red-900/30 border border-red-500">
-                <div class="flex items-center space-x-2.5">
-                    <i class="fa-solid fa-circle-exclamation text-base shrink-0"></i>
-                    <span>{{ session('error') }}</span>
+        <div id="welcome-alert-error" class="fixed top-20 sm:top-24 inset-x-0 z-50 flex justify-center px-4 pointer-events-none">
+            <div class="w-full max-w-lg pointer-events-auto p-3.5 rounded-2xl text-xs font-bold flex items-start sm:items-center justify-between gap-2.5 bg-red-600 text-white shadow-2xl shadow-red-900/30 border border-red-500">
+                <div class="flex items-start sm:items-center space-x-2.5 min-w-0 flex-1">
+                    <i class="fa-solid fa-circle-exclamation text-base shrink-0 mt-0.5 sm:mt-0"></i>
+                    <span class="break-words leading-snug">{{ session('error') }}</span>
                 </div>
-                <button onclick="document.getElementById('welcome-alert-error').remove()" class="text-white hover:text-red-200 text-sm ml-2">
+                <button type="button" onclick="document.getElementById('welcome-alert-error').remove()" class="text-white hover:text-red-200 text-sm shrink-0 p-1 -mr-1 -mt-0.5 sm:mt-0 cursor-pointer" title="Tutup">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
@@ -68,13 +68,13 @@
     @endif
 
     @if(session('success'))
-        <div id="welcome-alert-success" class="fixed top-24 left-1/2 -translate-x-1/2 z-50 max-w-lg w-full px-4 animate-in fade-in duration-300 transition-all">
-            <div class="p-3 rounded-2xl text-xs font-bold flex items-center justify-between bg-emerald-600 text-white shadow-2xl shadow-emerald-900/30 border border-emerald-500">
-                <div class="flex items-center space-x-2.5">
-                    <i class="fa-solid fa-circle-check text-base shrink-0"></i>
-                    <span>{{ session('success') }}</span>
+        <div id="welcome-alert-success" class="fixed top-20 sm:top-24 inset-x-0 z-50 flex justify-center px-4 pointer-events-none">
+            <div class="w-full max-w-lg pointer-events-auto p-3.5 rounded-2xl text-xs font-bold flex items-start sm:items-center justify-between gap-2.5 bg-emerald-600 text-white shadow-2xl shadow-emerald-900/30 border border-emerald-500">
+                <div class="flex items-start sm:items-center space-x-2.5 min-w-0 flex-1">
+                    <i class="fa-solid fa-circle-check text-base shrink-0 mt-0.5 sm:mt-0"></i>
+                    <span class="break-words leading-snug">{{ session('success') }}</span>
                 </div>
-                <button onclick="document.getElementById('welcome-alert-success').remove()" class="text-white hover:text-emerald-200 text-sm ml-2">
+                <button type="button" onclick="document.getElementById('welcome-alert-success').remove()" class="text-white hover:text-emerald-200 text-sm shrink-0 p-1 -mr-1 -mt-0.5 sm:mt-0 cursor-pointer" title="Tutup">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>

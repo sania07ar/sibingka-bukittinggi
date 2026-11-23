@@ -172,20 +172,20 @@
             <div class="bg-white/95 backdrop-blur-sm rounded-2xl sm:rounded-3xl border border-slate-200/80 p-3 sm:p-4 md:px-5 md:py-3.5 shadow-lg shadow-slate-200/30 w-full transition-all flex flex-col justify-between">
                 
                 <!-- Card Header: Title & Search Filter -->
-                <div class="flex flex-row items-center justify-between gap-3 pb-2 sm:pb-3 border-b border-slate-100 shrink-0">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 pb-2.5 sm:pb-3 border-b border-slate-100 shrink-0">
                     <div>
                         <h1 class="text-base sm:text-lg md:text-xl font-black text-slate-900 tracking-tight leading-tight">Pilih Data BPS</h1>
                         <p class="text-[11px] sm:text-xs text-slate-500 font-medium">Silakan pilih dataset statistik BPS untuk melihat data</p>
                     </div>
 
-                    <div class="flex items-center space-x-2">
+                    <div class="flex items-center w-full sm:w-auto">
                         <!-- Search Input Box -->
-                        <div class="relative w-36 xs:w-44 sm:w-60 flex items-center">
+                        <div class="relative w-full sm:w-60 flex items-center">
                             <input type="text"
                                    id="bpsSearchInput"
                                    oninput="handleSearchBps(this.value)"
                                    placeholder="Cari data BPS..."
-                                   class="w-full bg-[#f8fafc] hover:bg-[#f1f5f9] focus:bg-white border border-slate-200/90 focus:border-[#f95a00] rounded-full pl-4 pr-9 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/15 transition-all">
+                                   class="w-full bg-[#f8fafc] hover:bg-[#f1f5f9] focus:bg-white border border-slate-200/90 focus:border-[#f95a00] rounded-full pl-4 pr-9 py-2 sm:py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/15 transition-all">
                             <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400" style="top: 0; bottom: 0; right: 0;">
                                 <i class="fa-solid fa-magnifying-glass text-xs leading-none"></i>
                             </div>
@@ -239,8 +239,75 @@
                     </button>
                 </div>
 
-                <!-- Card Footer Actions: Home -->
-                <div class="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 mt-2 sm:mt-2.5 pt-2 border-t border-slate-100 shrink-0">
+                <!-- Card Footer Actions: Unduh Excel Data BPS & Home (Centered) -->
+                <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mt-2 sm:mt-2.5 pt-2 border-t border-slate-100 shrink-0">
+                    <!-- UNDUH EXCEL DATA BPS (Dropdown / Pilihan Modul & Tahun) -->
+                    <div class="relative inline-block text-left" id="bpsExportDropdownWrapper">
+                        <button type="button" 
+                                onclick="toggleBpsExportDropdown()"
+                                class="inline-flex items-center space-x-1.5 px-3.5 py-2 sm:py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 hover:text-emerald-800 font-bold text-xs border border-emerald-200/80 transition-all shadow-2xs hover:shadow-xs cursor-pointer"
+                                title="Unduh Data Excel Statistik BPS">
+                            <i class="fa-solid fa-file-excel text-xs text-emerald-600"></i>
+                            <span>UNDUH EXCEL DATA BPS</span>
+                            <i class="fa-solid fa-chevron-down text-[10px] ml-1"></i>
+                        </button>
+                        <div id="bpsExportDropdown" 
+                             class="hidden absolute bottom-full mb-2 left-0 w-[calc(100vw-2rem)] max-w-xs sm:w-80 max-h-[65vh] sm:max-h-80 overflow-y-auto bg-white rounded-2xl shadow-2xl border border-slate-200 p-3 z-50 text-left text-xs transition-all">
+                            
+                            <!-- Header with Close Button -->
+                            <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
+                                <span class="font-bold text-slate-700 text-xs flex items-center gap-1.5">
+                                    <i class="fa-solid fa-file-excel text-emerald-600"></i> Unduh Excel Data BPS
+                                </span>
+                                <button type="button" onclick="toggleBpsExportDropdown()" class="text-slate-400 hover:text-slate-700 p-1 -mr-1 rounded-md" title="Tutup">
+                                    <i class="fa-solid fa-xmark text-sm"></i>
+                                </button>
+                            </div>
+
+                            <!-- Pilih Tahun Excel -->
+                            <div class="px-2 py-1.5 border-b border-slate-100 mb-2 bg-slate-50 rounded-xl">
+                                <label for="bpsExportYearSelector" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                                    Pilih Tahun Data:
+                                </label>
+                                <select id="bpsExportYearSelector" 
+                                        onchange="changeBpsExportYear(this.value)" 
+                                        class="w-full bg-white border border-slate-200 text-slate-800 text-xs font-bold rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-emerald-500 cursor-pointer">
+                                    @foreach(range(max(2027, ((int)date('Y')) + 1), 2020) as $yr)
+                                        <option value="{{ $yr }}" {{ ((int)request('year', date('Y'))) === $yr ? 'selected' : '' }}>Tahun {{ $yr }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <!-- Opsi Unduh Seluruh Data BPS Sekaligus -->
+                            <div class="mb-2">
+                                <a href="{{ route('tabel-opd.export-agency-excel', ['opd' => 'all', 'type' => 'bps', 'year' => request('year', date('Y'))]) }}"
+                                   data-base-url="{{ route('tabel-opd.export-agency-excel', ['opd' => 'all', 'type' => 'bps']) }}"
+                                   class="bps-export-link flex items-center justify-between px-2.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-900 font-bold border border-emerald-200 transition-colors no-underline shadow-2xs">
+                                    <div class="flex items-center space-x-2">
+                                        <i class="fa-solid fa-layer-group text-emerald-600 text-xs"></i>
+                                        <span>Semua Data BPS (Multi-Sheet)</span>
+                                    </div>
+                                    <i class="fa-solid fa-download text-xs text-emerald-600 shrink-0 ml-2"></i>
+                                </a>
+                            </div>
+
+                            <div class="px-2 py-1 font-bold text-slate-400 uppercase text-[10px] mb-1">
+                                Pilih Modul / Dataset BPS:
+                            </div>
+                            <div class="space-y-0.5" id="bpsExportLinksContainer">
+                                @foreach($bpsDatasets as $ds)
+                                    <a href="{{ route('tabel-opd.export-agency-excel', ['opd' => $ds['code'], 'type' => 'bps', 'year' => request('year', date('Y'))]) }}"
+                                       data-base-url="{{ route('tabel-opd.export-agency-excel', ['opd' => $ds['code'], 'type' => 'bps']) }}"
+                                       class="bps-export-link flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-emerald-50 hover:text-emerald-800 text-slate-700 font-medium transition-colors no-underline">
+                                        <span class="truncate">{{ $ds['code'] }}. {{ $ds['short'] }} - {{ $ds['full'] }}</span>
+                                        <i class="fa-solid fa-download text-[10px] text-emerald-600 shrink-0 ml-2"></i>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- HOME -->
                     <a href="{{ url('/') }}"
                        class="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 font-bold text-xs border border-slate-200/80 transition-all shadow-2xs hover:shadow-xs">
                         <i class="fa-solid fa-house text-xs"></i>
@@ -298,5 +365,65 @@
         window.serverDbCustomTables = @json($customTables ?? []);
     </script>
     <script src="{{ asset('js/dinas-catalog.js') }}?v={{ @filemtime(public_path('js/dinas-catalog.js')) }}"></script>
+    <script>
+        function positionDropdownSafely(dropId, wrapId) {
+            const drop = document.getElementById(dropId);
+            const wrap = document.getElementById(wrapId);
+            if (!drop || !wrap || drop.classList.contains('hidden')) return;
+
+            drop.style.left = '0px';
+            drop.style.transform = 'none';
+
+            const wrapRect = wrap.getBoundingClientRect();
+            const dropRect = drop.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            const margin = 12;
+
+            let leftOffset = (wrapRect.width - dropRect.width) / 2;
+            let screenLeft = wrapRect.left + leftOffset;
+            let screenRight = screenLeft + dropRect.width;
+
+            if (screenRight > viewportWidth - margin) {
+                leftOffset -= (screenRight - (viewportWidth - margin));
+            }
+
+            if (wrapRect.left + leftOffset < margin) {
+                leftOffset = margin - wrapRect.left;
+            }
+
+            drop.style.left = Math.round(leftOffset) + 'px';
+        }
+
+        function toggleBpsExportDropdown() {
+            const drop = document.getElementById('bpsExportDropdown');
+            if (!drop) return;
+            const isOpening = drop.classList.contains('hidden');
+            if (isOpening) {
+                drop.classList.remove('hidden');
+                positionDropdownSafely('bpsExportDropdown', 'bpsExportDropdownWrapper');
+            } else {
+                drop.classList.add('hidden');
+            }
+        }
+        function changeBpsExportYear(selectedYear) {
+            const links = document.querySelectorAll('.bps-export-link');
+            links.forEach(a => {
+                const base = a.getAttribute('data-base-url');
+                if (base) {
+                    a.href = base + (base.includes('?') ? '&' : '?') + 'year=' + encodeURIComponent(selectedYear);
+                }
+            });
+        }
+        document.addEventListener('click', function(e) {
+            const wrap = document.getElementById('bpsExportDropdownWrapper');
+            const drop = document.getElementById('bpsExportDropdown');
+            if (wrap && drop && !wrap.contains(e.target)) {
+                drop.classList.add('hidden');
+            }
+        });
+        window.addEventListener('resize', function() {
+            positionDropdownSafely('bpsExportDropdown', 'bpsExportDropdownWrapper');
+        });
+    </script>
 </body>
 </html>

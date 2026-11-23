@@ -28,7 +28,7 @@
 
 
                 <!-- Right: Action Back to View Table -->
-                <div class="flex items-center space-x-1.5 sm:space-x-3 shrink-0">
+                <div class="flex items-center space-x-1.5 sm:space-x-2.5 shrink-0">
                     <button onclick="backToTableView()" 
                        class="px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center space-x-1 sm:space-x-1.5 shadow-2xs cursor-pointer">
                         <i class="fa-solid fa-arrow-left text-[11px]"></i>

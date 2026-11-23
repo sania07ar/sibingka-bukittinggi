@@ -74,11 +74,21 @@ trait ExportsExcel
         $type = $request->query('type', 'opd');
         $isTemplate = (bool) $request->query('template', 0);
 
-        $cleanOpd = str_pad($opdCode, 2, '0', STR_PAD_LEFT);
+        $bpsDatasets = [
+            '01' => ['short' => 'PODES', 'name' => 'Potensi Desa / Kelurahan'],
+            '02' => ['short' => 'PENDUDUK', 'name' => 'Statistik Kependudukan & Proyeksi'],
+            '03' => ['short' => 'SUSENAS', 'name' => 'Survei Sosial Ekonomi Nasional'],
+            '04' => ['short' => 'SAKERNAS', 'name' => 'Survei Angkatan Kerja Nasional'],
+            '05' => ['short' => 'HORTI', 'name' => 'Statistik Pertanian & Hortikultura'],
+            '06' => ['short' => 'IMK', 'name' => 'Industri Mikro dan Kecil'],
+            '07' => ['short' => 'HOTEL', 'name' => 'Statistik Perhotelan & Pariwisata'],
+            '08' => ['short' => 'IHK & INFLASI', 'name' => 'Indeks Harga Konsumen / Inflasi'],
+            '09' => ['short' => 'PDRB LAPUS', 'name' => 'PDRB Menurut Lapangan Usaha'],
+            '10' => ['short' => 'PDRB PENGELUARAN', 'name' => 'PDRB Menurut Pengeluaran'],
+        ];
 
-        // 1. Ambil daftar kode tabel resmi khusus untuk tipe dan kode OPD/Instansi ini
-        $catalog = config("sibingka_tables.{$type}", []);
-        $officialTables = $catalog[$cleanOpd] ?? [];
+        $isAllBps = ($type === 'bps' && ($opdCode === 'all' || empty($opdCode)));
+        $cleanOpd = $isAllBps ? 'all' : str_pad($opdCode, 2, '0', STR_PAD_LEFT);
 
         // Map seluruh tabel resmi dari kategori lain untuk mencegah kontaminasi silang
         $allOfficialBpsTables = [];
@@ -96,58 +106,95 @@ trait ExportsExcel
             foreach ($tbls as $t) $allOfficialOpdTables[$t] = true;
         }
 
-        // 2. Ambil tabel dinamis / kustom murni milik instansi ini
-        $customTablesQuery = TabelMetadata::where('opd_code', $cleanOpd)
-            ->where('year', $year)
-            ->where('source_type', '!=', 'deleted');
-
-        if ($type === 'opd') {
-            $customTablesQuery->where(function($q) {
-                $q->where('source_type', 'like', '%opd%')
-                  ->orWhereNull('source_type');
-            })
-            ->where('source_type', 'not like', '%bps%')
-            ->where('source_type', 'not like', '%instansi%');
+        if ($type === 'bps') {
+            if ($isAllBps) {
+                $agencyName = "Seluruh Data BPS";
+                $cleanAgencyName = "Seluruh_Data_BPS";
+                $officialTables = array_keys($allOfficialBpsTables);
+                $customTables = TabelMetadata::where(function($q) {
+                        $q->where('source_type', 'like', '%bps%')
+                          ->orWhereIn('source_type', ['custom_bps', 'bps']);
+                    })
+                    ->where('year', $year)
+                    ->where('source_type', '!=', 'deleted')
+                    ->pluck('table_code')
+                    ->toArray();
+            } else {
+                $dsInfo = $bpsDatasets[$cleanOpd] ?? null;
+                $dsShort = $dsInfo['short'] ?? "Dataset_{$cleanOpd}";
+                $agencyName = "BPS " . $dsShort;
+                $cleanAgencyName = "BPS_" . preg_replace('/[^a-zA-Z0-9_\-]/', '_', $dsShort);
+                $catalog = config("sibingka_tables.bps", []);
+                $officialTables = $catalog[$cleanOpd] ?? [];
+                $customTables = TabelMetadata::where('opd_code', $cleanOpd)
+                    ->where('year', $year)
+                    ->where(function($q) {
+                        $q->where('source_type', 'like', '%bps%')
+                          ->orWhereIn('source_type', ['custom_bps', 'bps']);
+                    })
+                    ->where('source_type', '!=', 'deleted')
+                    ->pluck('table_code')
+                    ->toArray();
+            }
         } elseif ($type === 'instansi') {
-            $customTablesQuery->where('source_type', 'like', '%instansi%')
+            $catalog = config("sibingka_tables.instansi", []);
+            $officialTables = $catalog[$cleanOpd] ?? [];
+            $customTablesQuery = TabelMetadata::where('opd_code', $cleanOpd)
+                ->where('year', $year)
+                ->where('source_type', '!=', 'deleted')
+                ->where('source_type', 'like', '%instansi%')
                 ->where('source_type', 'not like', '%bps%');
-        } elseif ($type === 'bps') {
-            $customTablesQuery->where('source_type', 'like', '%bps%');
-        }
-
-        $customTables = $customTablesQuery->pluck('table_code')->toArray();
-
-        // Filter ketat: buang tabel yang merupakan milik BPS atau kategori lain
-        if ($type === 'opd') {
-            $customTables = array_filter($customTables, function($t) use ($allOfficialBpsTables, $allOfficialInstansiTables, $officialTables) {
-                if (in_array($t, $officialTables, true)) return true;
-                if (isset($allOfficialBpsTables[$t]) || isset($allOfficialInstansiTables[$t])) return false;
-                return true;
-            });
-        } elseif ($type === 'instansi') {
+            $customTables = $customTablesQuery->pluck('table_code')->toArray();
             $customTables = array_filter($customTables, function($t) use ($allOfficialBpsTables, $allOfficialOpdTables, $officialTables) {
                 if (in_array($t, $officialTables, true)) return true;
                 if (isset($allOfficialBpsTables[$t]) || isset($allOfficialOpdTables[$t])) return false;
                 return true;
             });
+            $instansiList = config('sibingka.instansi_list', []);
+            $agencyInfo = $instansiList[$cleanOpd] ?? null;
+            $agencyName = $agencyInfo['short_name'] ?? ($agencyInfo['name'] ?? "Instansi_{$cleanOpd}");
+            $cleanAgencyName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $agencyName);
+        } else {
+            $catalog = config("sibingka_tables.opd", []);
+            $officialTables = $catalog[$cleanOpd] ?? [];
+            $customTablesQuery = TabelMetadata::where('opd_code', $cleanOpd)
+                ->where('year', $year)
+                ->where('source_type', '!=', 'deleted')
+                ->where(function($q) {
+                    $q->where('source_type', 'like', '%opd%')
+                      ->orWhereNull('source_type');
+                })
+                ->where('source_type', 'not like', '%bps%')
+                ->where('source_type', 'not like', '%instansi%');
+            $customTables = $customTablesQuery->pluck('table_code')->toArray();
+            $customTables = array_filter($customTables, function($t) use ($allOfficialBpsTables, $allOfficialInstansiTables, $officialTables) {
+                if (in_array($t, $officialTables, true)) return true;
+                if (isset($allOfficialBpsTables[$t]) || isset($allOfficialInstansiTables[$t])) return false;
+                return true;
+            });
+            $opdList = config('sibingka.opd_list', []);
+            $agencyInfo = $opdList[$cleanOpd] ?? null;
+            $agencyName = $agencyInfo['short_name'] ?? ($agencyInfo['name'] ?? "OPD_{$cleanOpd}");
+            $cleanAgencyName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $agencyName);
         }
 
         $allTableCodes = array_values(array_unique(array_merge($officialTables, $customTables)));
         natsort($allTableCodes);
 
-        $opdList = config('sibingka.opd_list', []);
-        $instansiList = config('sibingka.instansi_list', []);
-        
-        $agencyInfo = $type === 'instansi' 
-            ? ($instansiList[$cleanOpd] ?? null) 
-            : ($opdList[$cleanOpd] ?? null);
-            
-        $agencyName = $agencyInfo['short_name'] ?? ($agencyInfo['name'] ?? "OPD_{$cleanOpd}");
-        $cleanAgencyName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $agencyName);
-
         $sheets = [];
 
         foreach ($allTableCodes as $tableCode) {
+            $tableOpdCode = $cleanOpd;
+            if ($isAllBps) {
+                $tableOpdCode = '01';
+                foreach (config('sibingka_tables.bps', []) as $dsCode => $tbls) {
+                    if (in_array($tableCode, $tbls, true)) {
+                        $tableOpdCode = $dsCode;
+                        break;
+                    }
+                }
+            }
+
             $metaQuery = TabelMetadata::where('table_code', $tableCode)
                 ->where('year', $year);
 
@@ -161,13 +208,34 @@ trait ExportsExcel
             } elseif ($type === 'instansi') {
                 $metaQuery->where('opd_code', $cleanOpd)
                     ->where('source_type', 'not like', '%bps%');
+            } elseif ($type === 'bps') {
+                $metaQuery->where(function($q) use ($tableOpdCode, $isAllBps) {
+                    if (!$isAllBps) {
+                        $q->where('opd_code', $tableOpdCode)
+                          ->orWhere('source_type', 'like', '%bps%');
+                    } else {
+                        $q->where('source_type', 'like', '%bps%')
+                          ->orWhereIn('source_type', ['custom_bps', 'bps'])
+                          ->orWhere('opd_code', $tableOpdCode);
+                    }
+                });
             } else {
                 $metaQuery->where('opd_code', $cleanOpd);
             }
 
             $meta = $metaQuery->first();
 
-            // Jika belum ada di tahun terpilih, cari fallback snapshot dari tahun terdekat
+            // 1. Jika belum ada di tahun terpilih, coba buatkan template resmi untuk tahun tersebut lebih dulu
+            if (!$meta || empty($meta->table_html) || str_contains($meta->table_html, 'Indicator Details')) {
+                $createdMeta = $this->getOrCreateMetadata($tableCode, $tableOpdCode, $year, $type);
+                if ($createdMeta && !empty($createdMeta->table_html) && !str_contains($createdMeta->table_html, 'Indicator Details')) {
+                    $meta = $createdMeta;
+                }
+            }
+
+            // 2. Jika masih belum ada di tahun terpilih, cari fallback snapshot dari tahun terdekat
+            $isFallback = false;
+            $sourceYear = $year;
             if (!$meta || empty($meta->table_html) || str_contains($meta->table_html, 'Indicator Details')) {
                 $fallbackQuery = TabelMetadata::where('table_code', $tableCode)
                     ->whereNotNull('table_html')
@@ -180,25 +248,59 @@ trait ExportsExcel
                         ->where('source_type', 'not like', '%instansi%');
                 } elseif ($type === 'instansi') {
                     $fallbackQuery->where('source_type', 'not like', '%bps%');
+                } elseif ($type === 'bps') {
+                    $fallbackQuery->where(function($q) {
+                        $q->where('source_type', 'like', '%bps%')
+                          ->orWhereIn('source_type', ['custom_bps', 'bps']);
+                    });
                 }
 
-                $meta = $fallbackQuery->orderByRaw("ABS(year - {$year}) ASC")->first();
+                $fallbackMeta = $fallbackQuery->orderByRaw("ABS(year - {$year}) ASC")->first();
+                if ($fallbackMeta) {
+                    $meta = $fallbackMeta;
+                    $isFallback = true;
+                    $sourceYear = (int)$fallbackMeta->year;
+                }
             }
 
-            // Jika masih belum ada di database, buat template resmi
+            // 3. Jika masih belum ada di database, buat template resmi
             if (!$meta || empty($meta->table_html)) {
-                $meta = $this->getOrCreateMetadata($tableCode, $cleanOpd, $year, $type);
+                $meta = $this->getOrCreateMetadata($tableCode, $tableOpdCode, $year, $type);
+            }
+
+            $defaultHtml = $this->getDefaultHtmlForTable($tableCode, $year);
+            $exportHtml = $meta?->table_html;
+            if ($defaultHtml && (empty($exportHtml) || str_contains($exportHtml, 'Belum ada data untuk tabel ini'))) {
+                $exportHtml = $defaultHtml;
+            }
+
+            $titleId = $meta?->title_id;
+            $titleEn = $meta?->title_en;
+
+            // Jika data menggunakan fallback dari tahun lain ($sourceYear !== $year):
+            // Sesuaikan tahun pada judul, tahun header, dan kosongkan angka tahun lama agar tidak rancu
+            if ($isFallback && $sourceYear !== $year) {
+                if ($titleId) {
+                    $titleId = $this->adjustYearInTitle($titleId, $sourceYear, $year);
+                }
+                if ($titleEn) {
+                    $titleEn = $this->adjustYearInTitle($titleEn, $sourceYear, $year);
+                }
+                if ($exportHtml) {
+                    $exportHtml = $this->adjustYearInHtml($exportHtml, $sourceYear, $year);
+                    $exportHtml = $this->buildEmptyTemplateFromHtml($exportHtml);
+                }
             }
 
             $sheets[] = new TableOpdExport(
                 $tableCode,
-                $cleanOpd,
+                $tableOpdCode,
                 $year,
-                $meta?->title_id,
-                $meta?->title_en,
-                $meta?->source,
+                $titleId,
+                $titleEn,
+                $meta?->source ?? 'BPS Kota Bukittinggi',
                 $meta?->note,
-                $meta?->table_html,
+                $exportHtml,
                 $isTemplate
             );
         }
@@ -260,8 +362,7 @@ trait ExportsExcel
                 $tbodyHtml .= "</tr>\n";
             }
 
-            return "<table class=\"w-full text-left text-xs sm:text-sm border-collapse table-custom-border\">
-<thead>
+            return "<thead>
     <tr class=\"bg-[#f95a00] text-white text-center font-bold\">
         <th class=\"py-3 px-4 font-bold border border-slate-700 text-left align-middle min-w-[280px]\">
             <div>Jenis Keputusan</div>
@@ -276,8 +377,7 @@ trait ExportsExcel
 </thead>
 <tbody class=\"bg-[#fef9c3] text-slate-900 font-medium\">
     {$tbodyHtml}
-</tbody>
-</table>";
+</tbody>";
         }
 
         if ($tableCode === '8.1.4') {
@@ -298,8 +398,7 @@ trait ExportsExcel
                 </tr>\n";
             }
 
-            return "<table class=\"w-full text-left text-xs sm:text-sm border-collapse table-custom-border\">
-<thead>
+            return "<thead>
     <tr class=\"bg-[#f95a00] text-white text-center font-bold\">
         <th class=\"py-3 px-4 font-bold border border-slate-700 w-[50%]\" colspan=\"2\" rowspan=\"2\">
             <div>Kecamatan</div>
@@ -343,8 +442,7 @@ trait ExportsExcel
         <td class=\"py-2.5 px-4 text-center border border-slate-700\">-</td>
     </tr>
     {$jumlahRowsHtml}
-</tbody>
-</table>";
+</tbody>";
         }
 
         return null;

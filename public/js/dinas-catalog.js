@@ -426,13 +426,13 @@
             return `
             <tr onclick="openYearModal('${tbl.code}', '${titleEscaped}', '${titleEnEscaped}')"
                 class="hover:bg-amber-50/60 transition-colors group cursor-pointer">
-                <td class="py-3 px-4 align-middle">
-                    <span class="inline-flex items-center justify-center bg-[#f98825] group-hover:bg-[#e07212] text-white font-bold text-[11px] px-2.5 py-0.5 rounded-full shadow-2xs transition-colors">
+                <td class="py-2.5 sm:py-3 px-2 sm:px-4 align-middle">
+                    <span class="inline-flex items-center justify-center bg-[#f98825] group-hover:bg-[#e07212] text-white font-bold text-[10px] sm:text-[11px] px-2 sm:px-2.5 py-0.5 rounded-full shadow-2xs transition-colors">
                         ${tbl.code}
                     </span>
                 </td>
-                <td class="py-3 px-4 align-middle text-slate-700 group-hover:text-slate-900 text-xs font-medium leading-relaxed">
-                    <div class="flex items-center justify-between gap-2">
+                <td class="py-2.5 sm:py-3 px-2 sm:px-4 align-middle text-slate-700 group-hover:text-slate-900 text-xs font-medium leading-relaxed">
+                    <div class="flex items-center justify-between gap-1.5 sm:gap-2">
                         <div>
                             <span class="font-semibold text-slate-800">${tbl.title}</span>
                             ${tbl.titleEn ? `<span class="text-slate-400 mx-1">/</span><span class="italic text-slate-500 font-normal">${tbl.titleEn}</span>` : ''}
@@ -440,18 +440,18 @@
                         <i class="fa-solid fa-chevron-right text-[10px] text-slate-300 group-hover:text-[#f98825] transition-transform group-hover:translate-x-1 shrink-0"></i>
                     </div>
                 </td>
-                <td class="py-3 px-4 align-middle text-center">
-                    <div class="inline-flex items-center space-x-1.5">
+                <td class="py-2.5 sm:py-3 px-2 sm:px-4 align-middle text-center">
+                    <div class="inline-flex items-center space-x-1 sm:space-x-1.5">
                         <button onclick="event.stopPropagation(); openYearModal('${tbl.code}', '${titleEscaped}', '${titleEnEscaped}')"
                                 title="Input Data Tabel ${tbl.code}"
-                                class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-amber-50 group-hover:bg-[#f98825] text-[#f98825] group-hover:text-white border border-amber-200 group-hover:border-transparent font-bold text-[11px] transition-all shadow-2xs cursor-pointer">
-                            <i class="fa-solid fa-pen-to-square text-[10px]"></i>
-                            <span>Input Data</span>
+                                class="inline-flex items-center space-x-1 sm:space-x-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-amber-50 group-hover:bg-[#f98825] text-[#f98825] group-hover:text-white border border-amber-200 group-hover:border-transparent font-bold text-[10px] sm:text-[11px] transition-all shadow-2xs cursor-pointer">
+                            <i class="fa-solid fa-pen-to-square text-[9px] sm:text-[10px]"></i>
+                            <span>Input<span class="hidden xs:inline"> Data</span></span>
                         </button>
                         ${isAdmin ? `
                             <button onclick="event.stopPropagation(); deleteCustomTable('${tbl.code}')"
                                     title="Hapus tabel [${tbl.code}]"
-                                    class="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer">
+                                    class="p-1 sm:p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer">
                                 <i class="fa-solid fa-trash-can text-xs"></i>
                             </button>
                         ` : ''}

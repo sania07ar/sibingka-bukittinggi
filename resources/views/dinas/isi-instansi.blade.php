@@ -191,7 +191,7 @@
                     </div>
                 @else
                     <!-- Card Header: Title & Search Filter (Untuk Admin) -->
-                    <div class="flex flex-row items-center justify-between gap-3 pb-2 sm:pb-3 border-b border-slate-100 shrink-0">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 pb-2.5 sm:pb-3 border-b border-slate-100 shrink-0">
                         <div>
                             <div class="flex items-center space-x-2">
                                 <h1 class="text-base sm:text-lg md:text-xl font-black text-slate-900 tracking-tight leading-tight">Pilih Instansi Vertikal & Lainnya</h1>
@@ -202,14 +202,14 @@
                             <p class="text-[11px] sm:text-xs text-slate-500 font-medium">Silakan pilih instansi vertikal / mitra BPS untuk melihat dan mengisi data</p>
                         </div>
 
-                        <div class="flex items-center space-x-2">
+                        <div class="flex items-center w-full sm:w-auto">
                             <!-- Search Input Box -->
-                            <div class="relative w-36 xs:w-44 sm:w-60 flex items-center">
+                            <div class="relative w-full sm:w-60 flex items-center">
                                 <input type="text"
                                        id="instansiSearchInput"
                                        oninput="handleSearchInstansi(this.value)"
                                        placeholder="Cari instansi..."
-                                       class="w-full bg-[#f8fafc] hover:bg-[#eef2f5] focus:bg-white border border-slate-200/90 focus:border-[#f95a00] rounded-full pl-4 pr-9 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/15 transition-all">
+                                       class="w-full bg-[#f8fafc] hover:bg-[#eef2f5] focus:bg-white border border-slate-200/90 focus:border-[#f95a00] rounded-full pl-4 pr-9 py-2 sm:py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/15 transition-all">
                                 <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400" style="top: 0; bottom: 0; right: 0;">
                                     <i class="fa-solid fa-magnifying-glass text-xs leading-none"></i>
                                 </div>
@@ -270,7 +270,7 @@
                 <div class="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 mt-1 sm:mt-1.5 pt-2 border-t border-slate-100 shrink-0">
                     @if($isInstansiUser && $userInstansi)
                         <!-- UNDUH EXCEL DATA INSTANSI (User Instansi Terpilih) + Pilih Tahun -->
-                        <div class="inline-flex items-center space-x-1.5 bg-emerald-50/70 border border-emerald-200/90 rounded-xl p-1 shadow-2xs">
+                        <div class="inline-flex flex-wrap sm:flex-nowrap items-center justify-center gap-1.5 bg-emerald-50/70 border border-emerald-200/90 rounded-xl p-1 shadow-2xs max-w-full">
                             <select id="instansiUserExportYear" 
                                     onchange="updateInstansiUserExportUrl(this.value)" 
                                     class="bg-white border border-emerald-200 text-emerald-800 text-xs font-bold rounded-lg px-2.5 py-1 focus:outline-none cursor-pointer"
@@ -292,15 +292,25 @@
                         <div class="relative inline-block text-left" id="adminInstansiExportDropdownWrapper">
                             <button type="button" 
                                     onclick="toggleAdminInstansiExportDropdown()"
-                                    class="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 hover:text-emerald-800 font-bold text-xs border border-emerald-200/80 transition-all shadow-2xs hover:shadow-xs cursor-pointer"
+                                    class="inline-flex items-center space-x-1.5 px-3.5 py-2 sm:py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 hover:text-emerald-800 font-bold text-xs border border-emerald-200/80 transition-all shadow-2xs hover:shadow-xs cursor-pointer"
                                     title="Unduh Data Excel per Instansi Vertikal">
                                 <i class="fa-solid fa-file-excel text-xs text-emerald-600"></i>
                                 <span>UNDUH EXCEL DATA INSTANSI</span>
                                 <i class="fa-solid fa-chevron-down text-[10px] ml-1"></i>
                             </button>
                             <div id="adminInstansiExportDropdown" 
-                                 class="hidden absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-80 max-h-80 overflow-y-auto bg-white rounded-2xl shadow-2xl border border-slate-200 p-2.5 z-50 text-left text-xs">
+                                 class="hidden absolute bottom-full mb-2 left-0 w-[calc(100vw-2rem)] max-w-xs sm:w-80 max-h-[65vh] sm:max-h-80 overflow-y-auto bg-white rounded-2xl shadow-2xl border border-slate-200 p-3 z-50 text-left text-xs transition-all">
                                 
+                                <!-- Header with Close Button -->
+                                <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
+                                    <span class="font-bold text-slate-700 text-xs flex items-center gap-1.5">
+                                        <i class="fa-solid fa-file-excel text-emerald-600"></i> Unduh Excel Instansi
+                                    </span>
+                                    <button type="button" onclick="toggleAdminInstansiExportDropdown()" class="text-slate-400 hover:text-slate-700 p-1 -mr-1 rounded-md" title="Tutup">
+                                        <i class="fa-solid fa-xmark text-sm"></i>
+                                    </button>
+                                </div>
+
                                 <!-- Pilih Tahun Excel -->
                                 <div class="px-2 py-1.5 border-b border-slate-100 mb-2 bg-slate-50 rounded-xl">
                                     <label for="adminInstansiExportYearSelector" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
@@ -389,9 +399,44 @@
     </script>
     <script src="{{ asset('js/dinas-catalog.js') }}?v={{ @filemtime(public_path('js/dinas-catalog.js')) }}"></script>
     <script>
+        function positionDropdownSafely(dropId, wrapId) {
+            const drop = document.getElementById(dropId);
+            const wrap = document.getElementById(wrapId);
+            if (!drop || !wrap || drop.classList.contains('hidden')) return;
+
+            drop.style.left = '0px';
+            drop.style.transform = 'none';
+
+            const wrapRect = wrap.getBoundingClientRect();
+            const dropRect = drop.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            const margin = 12;
+
+            let leftOffset = (wrapRect.width - dropRect.width) / 2;
+            let screenLeft = wrapRect.left + leftOffset;
+            let screenRight = screenLeft + dropRect.width;
+
+            if (screenRight > viewportWidth - margin) {
+                leftOffset -= (screenRight - (viewportWidth - margin));
+            }
+
+            if (wrapRect.left + leftOffset < margin) {
+                leftOffset = margin - wrapRect.left;
+            }
+
+            drop.style.left = Math.round(leftOffset) + 'px';
+        }
+
         function toggleAdminInstansiExportDropdown() {
             const drop = document.getElementById('adminInstansiExportDropdown');
-            if (drop) drop.classList.toggle('hidden');
+            if (!drop) return;
+            const isOpening = drop.classList.contains('hidden');
+            if (isOpening) {
+                drop.classList.remove('hidden');
+                positionDropdownSafely('adminInstansiExportDropdown', 'adminInstansiExportDropdownWrapper');
+            } else {
+                drop.classList.add('hidden');
+            }
         }
         function changeAdminInstansiExportYear(selectedYear) {
             const links = document.querySelectorAll('.admin-instansi-export-link');
@@ -416,6 +461,9 @@
             if (wrap && drop && !wrap.contains(e.target)) {
                 drop.classList.add('hidden');
             }
+        });
+        window.addEventListener('resize', function() {
+            positionDropdownSafely('adminInstansiExportDropdown', 'adminInstansiExportDropdownWrapper');
         });
     </script>
 </body>

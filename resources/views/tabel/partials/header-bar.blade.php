@@ -28,7 +28,7 @@
 
 
                 <!-- Right: Navigation Action Buttons -->
-                <div class="flex items-center space-x-1.5 sm:space-x-3 shrink-0">
+                <div class="flex items-center space-x-1.5 sm:space-x-2.5 shrink-0">
                     @php
                         $backRoute = route('isi-data-opd');
                         $backLabel = 'Daftar OPD';

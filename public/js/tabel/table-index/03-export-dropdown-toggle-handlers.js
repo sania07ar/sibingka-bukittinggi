@@ -36,12 +36,13 @@
                         showToast('✅ Berhasil mengimpor data menggunakan Laravel Excel!');
                     }
                     if (result.table_html) {
+                        const cleanTableHtml = result.table_html.replace(/<\/?table[^>]*>/gi, '');
                         try {
                             const scopedHtmlKey = (typeof getStorageKey === 'function') ? getStorageKey('sibingka_table_html') : `sibingka_table_html_${currentTableCode}_${currentYear}`;
                             const scopedSavedKey = (typeof getStorageKey === 'function') ? getStorageKey('sibingka_table_is_saved') : `sibingka_table_is_saved_${currentTableCode}_${currentYear}`;
-                            safeSetLocalStorage(scopedHtmlKey, result.table_html);
+                            safeSetLocalStorage(scopedHtmlKey, cleanTableHtml);
                             safeSetLocalStorage(scopedSavedKey, '1');
-                            safeSetLocalStorage(`sibingka_table_html_${currentTableCode}_${currentYear}`, result.table_html);
+                            safeSetLocalStorage(`sibingka_table_html_${currentTableCode}_${currentYear}`, cleanTableHtml);
                             safeSetLocalStorage(`sibingka_table_is_saved_${currentTableCode}_${currentYear}`, '1');
                             safeSetLocalStorage(`sibingka_table_source_${currentTableCode}_${currentYear}`, 'excel');
                             if (result.title_id && typeof getStorageKey === 'function') safeSetLocalStorage(getStorageKey('sibingka_table_title_id'), result.title_id);
@@ -50,7 +51,7 @@
                             if (result.note && typeof getStorageKey === 'function') safeSetLocalStorage(getStorageKey('sibingka_table_note'), result.note);
                         } catch(e) {}
                         const tableEl = document.getElementById('dataDisplayTable');
-                        if (tableEl) tableEl.innerHTML = result.table_html;
+                        if (tableEl) tableEl.innerHTML = cleanTableHtml;
                     }
                     setTimeout(() => { window.location.reload(); }, 600);
                 } else {
