@@ -1,19 +1,15 @@
         <!-- Hero Panoramic Banner -->
         <div id="beranda-section" class="scroll-mt-24 relative w-full rounded-3xl overflow-hidden border border-slate-200/80 shadow-sm bg-white min-h-[380px] sm:min-h-[420px] lg:min-h-[440px] flex items-center">
             
-            <div class="absolute inset-y-0 right-0 w-full sm:w-1/2 lg:w-[46%] xl:w-2/5 overflow-hidden pointer-events-none">
-                <img src="{{ asset('images/fgd-bukittinggi-exact.png') }}?v={{ file_exists(public_path('images/fgd-bukittinggi-exact.png')) ? filemtime(public_path('images/fgd-bukittinggi-exact.png')) : time() }}" alt="FGD Bukittinggi dalam Angka" class="w-full h-full object-cover object-center">
-                <div class="absolute inset-y-0 left-0 w-14 sm:w-20 bg-gradient-to-r from-white to-transparent"></div>
+            <!-- Full Panoramic FGD Bukittinggi Image with Seamless Natural Left Fade -->
+            <div class="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
+                <img src="{{ asset('images/fgd.jpeg') }}?v={{ file_exists(public_path('images/fgd.jpeg')) ? filemtime(public_path('images/fgd.jpeg')) : time() }}" alt="FGD Bukittinggi dalam Angka" class="w-full h-full object-cover object-right sm:object-[70%_center]">
+                <!-- Gradasi halus alami tanpa kotak: putih lembut di area teks kiri, lalu memudar transparan ke kanan agar foto HD jelas -->
+                <div class="absolute inset-0 pointer-events-none" 
+                     style="background: linear-gradient(to right, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.86) 32%, rgba(255, 255, 255, 0.4) 50%, rgba(255, 255, 255, 0) 65%);"></div>
             </div>
 
-            <div class="absolute inset-y-0 left-0 w-1/2 pointer-events-none opacity-85">
-                <svg class="w-full h-full text-orange-400/20" viewBox="0 0 400 400" fill="none" preserveAspectRatio="none">
-                    <path d="M-50,150 C100,80 150,280 350,200" stroke="currentColor" stroke-width="2.5" />
-                    <path d="M-50,180 C120,110 180,310 380,230" stroke="currentColor" stroke-width="2" />
-                    <path d="M-50,210 C140,140 210,340 410,260" stroke="currentColor" stroke-width="1.5" />
-                </svg>
-            </div>
-
+            <!-- Content Area (Tanpa kotak, menyatu langsung dengan banner) -->
             <div class="relative z-10 max-w-xl lg:max-w-2xl px-6 sm:px-10 lg:px-14 py-8">
                 <p class="text-xs sm:text-sm font-bold text-[#ea580c] tracking-wide mb-2.5">
                     Selamat Datang, <span class="text-[#f95a00] font-extrabold">{{ $dinasName }}</span>
