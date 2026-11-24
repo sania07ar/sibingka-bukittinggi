@@ -39,7 +39,7 @@
 
         $selectedYear = (int) request('year', date('Y'));
         $endYear = max(2036, ((int) date('Y')) + 10);
-        $availableYears = range($endYear, 2020);
+        $availableYears = range($endYear, 2015);
 
         try {
             $opdList = config('sibingka.opd_list', []);

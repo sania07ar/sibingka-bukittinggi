@@ -517,14 +517,19 @@
         if (!yearSelect) return;
 
         const urlYear = new URLSearchParams(window.location.search).get('year');
-        const defaultYear = urlYear ? parseInt(urlYear, 10) : 2026;
+        const modalYear = document.getElementById('modalExportYearSelect')?.value;
+        const defaultYear = urlYear ? parseInt(urlYear, 10) : (modalYear ? parseInt(modalYear, 10) : 2026);
 
         let html = '';
-        for (let y = 2027; y >= 2020; y--) {
+        const currentYr = new Date().getFullYear();
+        const maxYear = Math.max(2036, currentYr + 1);
+        const minYear = 2015;
+        for (let y = maxYear; y >= minYear; y--) {
             html += `<option value="${y}" ${y === defaultYear ? 'selected' : ''}>Tahun ${y}</option>`;
         }
         
         yearSelect.innerHTML = html;
+        yearSelect.value = defaultYear;
     };
 
     window.openYearModal = function (tableCode, tableTitle, tableTitleEn = '') {
@@ -558,7 +563,8 @@
         const yearSelect = document.getElementById('selectedYearSelect');
         if (yearSelect) {
             const urlYear = new URLSearchParams(window.location.search).get('year');
-            yearSelect.value = urlYear || '2026';
+            const modalYear = document.getElementById('modalExportYearSelect')?.value;
+            yearSelect.value = urlYear || modalYear || '2026';
         }
 
         const modal = document.getElementById('yearModal');

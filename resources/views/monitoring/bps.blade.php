@@ -80,7 +80,7 @@
 
             $selectedYear = (int) request('year', (int) date('Y'));
             $endYear = max(2036, ((int) date('Y')) + 10);
-            $availableYears = range($endYear, 2018);
+            $availableYears = range($endYear, 2015);
 
             // Ambil penyesuaian tahapan manual BPS jika ada
             $manualStagesBps = \App\Models\MonitoringStage::where('agency_type', 'bps')

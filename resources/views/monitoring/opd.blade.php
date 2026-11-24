@@ -67,7 +67,7 @@
         @php
             $selectedYear = (int) request('year', (int) date('Y'));
             $endYear = max(2036, ((int) date('Y')) + 10);
-            $availableYears = range($endYear, 2018);
+            $availableYears = range($endYear, 2015);
 
             $opdCatalogCounts = [
                 '01' => 6, '02' => 4, '03' => 1, '04' => 5, '05' => 5,

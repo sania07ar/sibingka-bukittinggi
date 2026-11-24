@@ -60,7 +60,11 @@
                                 onchange="window.updateModalExportUrl(this.value)" 
                                 class="bg-white border border-emerald-200 text-emerald-800 text-xs font-bold rounded-lg px-2 py-1 focus:outline-none cursor-pointer"
                                 title="Pilih tahun data Excel yang ingin diunduh">
-                            @foreach(range(max(2027, ((int)date('Y')) + 1), 2020) as $yr)
+                            @php
+                                $maxYear = max(2036, ((int)date('Y')) + 1);
+                                $minYear = 2015;
+                            @endphp
+                            @foreach(range($maxYear, $minYear) as $yr)
                                 <option value="{{ $yr }}" {{ ((int)request('year', date('Y'))) === $yr ? 'selected' : '' }}>{{ $yr }}</option>
                             @endforeach
                         </select>
@@ -103,8 +107,8 @@
             </div>
 
             <!-- Tables List Table (Full Width) -->
-            <div class="border border-slate-100 rounded-2xl overflow-hidden shadow-2xs bg-white flex-1 min-h-[180px] sm:min-h-[240px]">
-                <div class="overflow-x-auto max-h-[46vh] sm:max-h-[340px] overflow-y-auto">
+            <div class="border border-slate-100 rounded-2xl overflow-hidden shadow-2xs bg-white flex-1 min-h-[180px] sm:min-h-[220px] flex flex-col">
+                <div class="overflow-x-auto overflow-y-auto flex-1 min-h-0 w-full">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="border-b border-slate-100 sticky top-0 z-10 bg-white text-[10px] sm:text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">
@@ -127,7 +131,7 @@
             </div>
 
             <!-- Footer of Table: Tampilkan 10 hasil & Pagination -->
-            <div class="flex flex-wrap items-center justify-between gap-3 pt-2 text-xs text-slate-500">
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-2 text-xs text-slate-500 shrink-0">
                 <div class="flex items-center space-x-1.5 text-[11px] sm:text-xs">
                     <span>Tampilkan</span>
                     <div class="relative inline-block">
@@ -151,7 +155,7 @@
 
             @if($isAdmin)
             <!-- Action Bar Bawah: Tambah Tabel Baru (HANYA ADMINISTRATOR BPS) -->
-            <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+            <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 shrink-0">
                 <div class="flex items-center space-x-2 text-[11px] text-slate-500">
                     <span class="w-5 h-5 rounded-full bg-amber-100 text-[#f98825] flex items-center justify-center font-bold text-[10px] shrink-0">
                         <i class="fa-solid fa-plus"></i>

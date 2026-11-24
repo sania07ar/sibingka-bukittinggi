@@ -272,7 +272,11 @@
                                 <select id="bpsExportYearSelector" 
                                         onchange="changeBpsExportYear(this.value)" 
                                         class="w-full bg-white border border-slate-200 text-slate-800 text-xs font-bold rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-emerald-500 cursor-pointer">
-                                    @foreach(range(max(2027, ((int)date('Y')) + 1), 2020) as $yr)
+                                    @php
+                                        $maxYear = max(2036, ((int)date('Y')) + 1);
+                                        $minYear = 2015;
+                                    @endphp
+                                    @foreach(range($maxYear, $minYear) as $yr)
                                         <option value="{{ $yr }}" {{ ((int)request('year', date('Y'))) === $yr ? 'selected' : '' }}>Tahun {{ $yr }}</option>
                                     @endforeach
                                 </select>

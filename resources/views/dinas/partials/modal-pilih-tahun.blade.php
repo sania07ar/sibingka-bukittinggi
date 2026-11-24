@@ -29,8 +29,13 @@
                 <div class="relative">
                     <select id="selectedYearSelect" 
                             class="w-full bg-[#f4f6f8] hover:bg-[#eef2f5] focus:bg-white border border-slate-200 focus:border-[#f98825] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 font-semibold focus:outline-none transition-all cursor-pointer appearance-none">
-                        @foreach(range(max(2027, ((int)date('Y')) + 1), 2020) as $y)
-                            <option value="{{ $y }}" {{ ((int)request('year', date('Y'))) === $y ? 'selected' : '' }}>Tahun {{ $y }}</option>
+                        @php
+                            $currentYear = (int)request('year', date('Y'));
+                            $maxYear = max(2036, ((int)date('Y')) + 1);
+                            $minYear = 2015;
+                        @endphp
+                        @foreach(range($maxYear, $minYear) as $y)
+                            <option value="{{ $y }}" {{ $currentYear === $y ? 'selected' : '' }}>Tahun {{ $y }}</option>
                         @endforeach
                     </select>
                     <div class="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">
