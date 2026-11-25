@@ -105,6 +105,27 @@
                            class="input-custom w-full px-3 py-2 rounded-xl text-xs font-semibold font-mono">
                 </div>
 
+                <!-- Kata Sandi Saat Ini (Dapat dilihat / disembunyikan) -->
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        Kata Sandi Saat Ini
+                    </label>
+                    <div class="relative">
+                        <input type="password" 
+                               id="edit_current_password" 
+                               readonly
+                               placeholder="Belum tercatat (reset di bawah)"
+                               class="input-custom w-full pl-3 pr-10 py-2 rounded-xl text-xs font-semibold font-mono bg-slate-50 text-slate-800">
+                        <button type="button" 
+                                onclick="toggleEditCurrentPassword()" 
+                                id="btnToggleEditCurrentPassword"
+                                title="Tampilkan / Sembunyikan Kata Sandi"
+                                class="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-slate-700 transition-colors focus:outline-none">
+                            <i class="fa-solid fa-eye text-xs" id="iconEditCurrentPassword"></i>
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Password Baru (Opsional) -->
                 <div>
                     <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
@@ -117,17 +138,17 @@
                            class="input-custom w-full px-3 py-2 rounded-xl text-xs font-semibold font-mono">
                 </div>
 
-            </div>
+                <!-- No. WhatsApp / HP Dinas -->
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        No. WhatsApp / Kontak Dinas (Opsional)
+                    </label>
+                    <input type="text" 
+                           name="phone" 
+                           id="edit_phone" 
+                           class="input-custom w-full px-3 py-2 rounded-xl text-xs font-semibold">
+                </div>
 
-            <!-- No. WhatsApp / HP Dinas -->
-            <div>
-                <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    No. WhatsApp / Kontak Dinas (Opsional)
-                </label>
-                <input type="text" 
-                       name="phone" 
-                       id="edit_phone" 
-                       class="input-custom w-full px-3 py-2 rounded-xl text-xs font-semibold">
             </div>
 
 

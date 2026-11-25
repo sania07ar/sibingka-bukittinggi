@@ -91,13 +91,6 @@
                         <i class="fa-solid fa-arrow-right text-xs"></i>
                     </a>
 
-                    <a href="{{ route('monitoring-bps') }}"
-                       class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm px-5 py-3.5 rounded-xl shadow-md transition-all transform hover:-translate-y-0.5 no-underline">
-                        <i class="fa-solid fa-chart-pie text-sm"></i>
-                        <span>Monitoring BPS</span>
-                        <i class="fa-solid fa-arrow-right text-xs"></i>
-                    </a>
-
                 @else
                     <a href="{{ $targetRoute }}"
                        class="btn-orange-glow inline-flex items-center gap-2.5 bg-[#f95a00] hover:bg-[#ea580c] text-white font-bold text-sm px-6 py-3.5 rounded-xl shadow-lg shadow-orange-500/30 transition-all transform hover:-translate-y-0.5 no-underline">

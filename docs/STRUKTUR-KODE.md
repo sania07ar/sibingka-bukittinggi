@@ -1,6 +1,3 @@
-
-
-
 # Struktur Kode SiBingka
 
 Kode yang panjang sudah dipecah ke beberapa file kecil. Panduan ini menunjukkan di mana mengubah apa.

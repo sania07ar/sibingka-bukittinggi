@@ -171,6 +171,17 @@
         const passwordInput = document.getElementById('edit_password');
         if (passwordInput) passwordInput.value = '';
 
+        const currentPasswordInput = document.getElementById('edit_current_password');
+        const currentPasswordIcon = document.getElementById('iconEditCurrentPassword');
+        if (currentPasswordInput) {
+            currentPasswordInput.value = userData.visible_password || '';
+            currentPasswordInput.type = 'password';
+        }
+        if (currentPasswordIcon) {
+            currentPasswordIcon.classList.remove('fa-eye-slash');
+            currentPasswordIcon.classList.add('fa-eye');
+        }
+
         const activeInput = document.getElementById('edit_is_active');
         if (activeInput) activeInput.checked = !!userData.is_active;
 
@@ -216,6 +227,21 @@
     function closeEditModal() {
         document.getElementById('editModal').classList.add('hidden');
         currentEditingUser = null;
+    }
+
+    function toggleEditCurrentPassword() {
+        const input = document.getElementById('edit_current_password');
+        const icon = document.getElementById('iconEditCurrentPassword');
+        if (!input || !icon) return;
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
     }
 
     // Single Account Delete Modal

@@ -23,6 +23,7 @@ class User extends Authenticatable
         'username',
         'email',
         'password',
+        'visible_password',
         'nip',
         'phone',
         'role',
@@ -40,6 +41,7 @@ class User extends Authenticatable
      */
     protected $hidden = [
         'password',
+        'visible_password',
         'remember_token',
     ];
 
@@ -53,6 +55,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'visible_password' => 'encrypted',
             'allowed_pages' => 'array',
             'is_active' => 'boolean',
             'last_login_at' => 'datetime',

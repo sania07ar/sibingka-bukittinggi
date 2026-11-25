@@ -248,6 +248,7 @@ class AuthController extends Controller
                     'username' => 'operator_bps',
                     'email' => 'bps1375@bps.go.id',
                     'password' => Hash::make('bpsbukittinggi'),
+                    'visible_password' => 'bpsbukittinggi',
                     'role' => 'bps',
                     'opd_code' => 'bps',
                     'dinas_name' => 'Badan Pusat Statistik Kota Bukittinggi',
@@ -292,6 +293,7 @@ class AuthController extends Controller
         }
 
         $dinasUsers = $query->orderBy('role')->orderBy('opd_code')->orderBy('name')->get();
+        $dinasUsers->each->makeVisible('visible_password');
         $pagesList = config('sibingka.pages', []);
         $opdList = config('sibingka.opd_list', []);
         $instansiList = config('sibingka.instansi_list', []);
@@ -353,6 +355,7 @@ class AuthController extends Controller
             'username' => $username,
             'email' => $email,
             'password' => Hash::make($request->input('password')),
+            'visible_password' => $request->input('password'),
             'nip' => $request->input('nip'),
             'phone' => $request->input('phone'),
             'role' => $role,
@@ -429,6 +432,7 @@ class AuthController extends Controller
 
         if ($request->filled('password')) {
             $user->password = Hash::make($request->input('password'));
+            $user->visible_password = $request->input('password');
         }
 
         $user->save();
@@ -520,6 +524,7 @@ class AuthController extends Controller
                     'username' => $opd['default_username'],
                     'email' => $opd['email'],
                     'password' => Hash::make('bpsbukittinggi'),
+                    'visible_password' => 'bpsbukittinggi',
                     'role' => 'opd',
                     'opd_code' => $code,
                     'dinas_name' => $opd['name'],
@@ -565,6 +570,7 @@ class AuthController extends Controller
                     'username' => $inst['default_username'],
                     'email' => $inst['email'],
                     'password' => Hash::make('bpsbukittinggi'),
+                    'visible_password' => 'bpsbukittinggi',
                     'role' => 'instansi',
                     'opd_code' => $code,
                     'dinas_name' => $inst['name'],
