@@ -66,6 +66,21 @@
             const theadRows = thead.querySelectorAll('tr');
             if (theadRows.length === 0) return;
 
+            if (currentTableCode === '4.2.11' || (tableEl && tableEl.innerText.includes('Golongan Darah'))) {
+                const gDarahTh = Array.from(thead.querySelectorAll('th')).find(th => th.innerText.includes('Golongan Darah'));
+                if (gDarahTh && gDarahTh.getAttribute('colspan') !== '4') {
+                    gDarahTh.setAttribute('colspan', '4');
+                    gDarahTh.colSpan = 4;
+                }
+            }
+            if (currentTableCode === '6.3' || (tableEl && tableEl.innerText.includes('Golongan Langganan'))) {
+                thead.querySelectorAll('th').forEach(th => {
+                    if (/kolom\s*7/i.test(th.innerText.trim())) {
+                        th.remove();
+                    }
+                });
+            }
+
             theadRows.forEach((tr) => {
                 const ths = tr.querySelectorAll('th');
                 // Cek apakah baris ini adalah baris nomor kolom, misal (1), (2), (3) atau dengan background peach
@@ -194,7 +209,7 @@
             }
 
             // Khusus Tabel multi-bagian vertikal (Dinas 08 / Tabel 4.1.x Pendidikan, atau Tabel 5.1.1 Hortikultura)
-            const isEducation3in1Edit = ((currentType !== 'bps') && ['4.1.1', '4.1.3', '4.1.4', '4.1.5', '4.1.6', '4.1.7', '4.1.8', '4.1.9', '4.1.10', '4.1.15', '4.1.16', '4.1.17'].includes(currentTableCode)) || currentTableCode === '5.1.1';
+            const isEducation3in1Edit = ((currentType !== 'bps') && ['4.1.1', '4.1.3', '4.1.4', '4.1.5', '4.1.6', '4.1.7', '4.1.8', '4.1.9', '4.1.15', '4.1.16', '4.1.17'].includes(currentTableCode)) || currentTableCode === '5.1.1';
             if (isEducation3in1Edit) {
                 rows.forEach(tr => {
                     const text = tr.innerText.trim();

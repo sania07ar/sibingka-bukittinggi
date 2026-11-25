@@ -277,8 +277,18 @@ function formatTitleWithYear(title, defaultTitle, yLabel) {
         return `${cleanBase}, ${yLabel}`;
     }
 
+    // Khusus Tabel 4.1.10 (Kemenag) & Perpustakaan (4.1.21 s.d 4.1.24): cukup satu tahun saja (misal 2026)
+    if (typeof currentTableCode !== 'undefined' && (currentTableCode === '4.1.10' || currentTableCode === '4.1.21' || currentTableCode === '4.1.22' || currentTableCode === '4.1.23' || currentTableCode === '4.1.24')) {
+        let raw = (defaultTitle || title || '').trim();
+        if (raw.trim().toLowerCase() === 'table' || raw.trim().toLowerCase() === 'tabel') {
+            raw = (defaultTitle || '').trim();
+        }
+        const cleanBase = raw.replace(/([,\s]+)(?:19|20)\d{2}(?:\s*[\/–\-]\s*(?:19|20)\d{2})?.*$/i, '').trim();
+        return `${cleanBase}, ${yLabel}`;
+    }
+
     // Khusus tabel pendidikan 4.1.x (OPD 08): tahun ajaran SiBingka Bukittinggi = Tahun + 1 (misal 2025 -> 2025/2026)
-    if (typeof currentTableCode === 'string' && (currentOpdCode === '08' || currentTableCode.startsWith('4.1')) && currentTableCode !== '4.1.2' && currentTableCode !== '4.1.11' && currentTableCode !== '4.1.12' && currentTableCode !== '4.1.13' && currentTableCode !== '4.1.14' && currentTableCode !== '4.1.18' && currentTableCode !== '4.1.19' && currentTableCode !== '4.1.20' && currentTableCode !== '4.1.21' && currentTableCode !== '4.1.22' && currentTableCode !== '4.1.23' && currentTableCode !== '4.1.24') {
+    if (typeof currentTableCode === 'string' && (currentOpdCode === '08' || currentTableCode.startsWith('4.1')) && currentTableCode !== '4.1.2' && currentTableCode !== '4.1.10' && currentTableCode !== '4.1.11' && currentTableCode !== '4.1.12' && currentTableCode !== '4.1.13' && currentTableCode !== '4.1.14' && currentTableCode !== '4.1.18' && currentTableCode !== '4.1.19' && currentTableCode !== '4.1.20' && currentTableCode !== '4.1.21' && currentTableCode !== '4.1.22' && currentTableCode !== '4.1.23' && currentTableCode !== '4.1.24') {
         const yrInt = parseInt(yLabel) || 2025;
         const acadYr = `${yrInt}/${yrInt + 1}`;
         let raw = (defaultTitle || title || '').trim();
@@ -370,7 +380,7 @@ function formatTitleWithYear(title, defaultTitle, yLabel) {
         return t.replace(monthYearPattern, (m, month) => `${month} ${yLabel}`);
     }
 
-    const rangePattern = /\b(?:19|20)\d{2}\s*[–\-]\s*(?:19|20)\d{2}\b/;
+    const rangePattern = /\b(?:19|20)\d{2}\s*[\/–\-]\s*(?:19|20)\d{2}\b/;
     if (rangePattern.test(t)) {
         return t.replace(rangePattern, yLabel);
     }

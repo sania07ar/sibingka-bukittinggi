@@ -36,6 +36,10 @@ class TableOpdExport implements FromView, ShouldAutoSize, WithTitle, WithStyles
         }
         if ($this->tableCode === '4.2.11' || stripos($rawHtml, 'Donatur Darah') !== false || stripos($rawHtml, 'Golongan Darah') !== false) {
             $rawHtml = preg_replace('/Kolom\s*6/i', 'AB', $rawHtml);
+            $rawHtml = preg_replace('/(<th[^>]*?)colspan=[\'"]?3[\'"]?([^>]*?>\s*<div>\s*Golongan Darah)/i', '$1colspan="4"$2', $rawHtml);
+        }
+        if ($this->tableCode === '6.3' || (stripos($rawHtml, 'Tenaga Listrik') !== false && stripos($rawHtml, 'Golongan Langganan') !== false)) {
+            $rawHtml = preg_replace('/<th[^>]*>\s*(?:<div>)?\s*Kolom\s*7\s*(?:<\/div>)?\s*<\/th>/i', '', $rawHtml);
         }
         if ($this->tableCode === '8.1.6' || (stripos($rawHtml, 'Bemo') !== false && stripos($rawHtml, 'Bus Umum') !== false)) {
             $rawHtml = preg_replace('/Kolom\s*6/i', 'Taksi / Taxi', $rawHtml);

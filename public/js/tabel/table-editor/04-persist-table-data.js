@@ -94,6 +94,24 @@
 
             cleanGhostRows(clone);
 
+            // Jaminan integritas header Tabel 4.2.11: Golongan Darah harus selalu colspan="4"
+            if (currentTableCode === '4.2.11' || clone.innerText.includes('Golongan Darah')) {
+                const gDarahTh = Array.from(clone.querySelectorAll('thead th')).find(th => th.innerText.includes('Golongan Darah'));
+                if (gDarahTh) {
+                    gDarahTh.setAttribute('colspan', '4');
+                    gDarahTh.colSpan = 4;
+                }
+            }
+
+            // Jaminan integritas header Tabel 6.3: hapus kolom Kolom 7 jika masih tersisa
+            if (currentTableCode === '6.3' || clone.innerText.includes('Golongan Langganan')) {
+                clone.querySelectorAll('thead th').forEach(th => {
+                    if (/kolom\s*7/i.test(th.innerText.trim())) {
+                        th.remove();
+                    }
+                });
+            }
+
             // Save to localStorage
             const scopedHtmlKey = getStorageKey('sibingka_table_html');
             const scopedSavedKey = getStorageKey('sibingka_table_is_saved');

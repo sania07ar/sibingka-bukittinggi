@@ -38,6 +38,14 @@ var isEditMode = false;
                 localStorage.removeItem('sibingka_table_html_1.1.6_2026');
                 localStorage.removeItem('sibingka_table_html_8.1.2_2026');
                 localStorage.removeItem('sibingka_table_html_8.1.2_2027');
+                for (let y = 2026; y <= 2036; y++) {
+                    const k4214 = `sibingka_table_html_4.2.14_${y}`;
+                    const val4214 = localStorage.getItem(k4214);
+                    if (val4214 && (val4214.includes('47,43') || val4214.includes('52,51') || val4214.includes('(4)') || val4214.includes('(5)'))) {
+                        localStorage.removeItem(k4214);
+                        localStorage.removeItem(`sibingka_table_source_4.2.14_${y}`);
+                    }
+                }
                 for (let y = 2015; y <= 2030; y++) {
                     ['5.1.15', '5.1.16', '5.1.17'].forEach(code => {
                         const k = `sibingka_table_html_${code}_${y}`;
@@ -61,6 +69,20 @@ var isEditMode = false;
                         safeSetLocalStorage(k542, val542.replace(/<th([^>]*?)colspan=[\'"]?2[\'"]?([^>]*?)>\s*<div>Sewaktu-waktu<\/div>\s*<\/th>/gi, '<th$1$2><div>Sewaktu-waktu</div><div class="italic font-normal text-[11px] sm:text-xs">Sometime</div></th>')
                                                         .replace(/colspan="2"><div>Sewaktu-waktu<\/div>/gi, '><div>Sewaktu-waktu</div><div class="italic font-normal text-[11px] sm:text-xs">Sometime</div>')
                                                         .replace(/<th([^>]*?)>\s*\(6\)\s*<\/th>/gi, '<th$1>(5)</th>'));
+                    }
+                    const k4211 = `sibingka_table_html_4.2.11_${y}`;
+                    const val4211 = localStorage.getItem(k4211);
+                    if (val4211 && (val4211.includes('colspan="3"') || val4211.includes("colspan='3'") || /kolom\s*6/i.test(val4211) || !val4211.includes('colspan="4"'))) {
+                        localStorage.removeItem(k4211);
+                        localStorage.removeItem(`sibingka_table_source_4.2.11_${y}`);
+                        localStorage.removeItem(`sibingka_table_is_saved_4.2.11_${y}`);
+                    }
+                    const k63 = `sibingka_table_html_6.3_${y}`;
+                    const val63 = localStorage.getItem(k63);
+                    if (val63 && (val63.includes('Kolom 7') || val63.includes('kolom 7'))) {
+                        localStorage.removeItem(k63);
+                        localStorage.removeItem(`sibingka_table_source_6.3_${y}`);
+                        localStorage.removeItem(`sibingka_table_is_saved_6.3_${y}`);
                     }
                     const k = `sibingka_table_html_8.1.3_${y}`;
                     const val = localStorage.getItem(k);
@@ -114,6 +136,24 @@ var isEditMode = false;
                     if (k.startsWith('sibingka_table_html_4.1.')) {
                         const val = localStorage.getItem(k) || '';
                         if (val.includes('2023/2026') || val.includes('2026/2025') || val.includes('2023/2025')) {
+                            keysToRemove.push(k);
+                            continue;
+                        }
+                    }
+
+                    // 3. Bersihkan cache tabel 4.2.11 jika struktur thead belum rapi (colspan 3 atau ada Kolom 6)
+                    if (k.includes('4.2.11')) {
+                        const val = localStorage.getItem(k) || '';
+                        if (val.includes('colspan="3"') || val.includes("colspan='3'") || /kolom\s*6/i.test(val) || (val.includes('Golongan Darah') && !val.includes('colspan="4"'))) {
+                            keysToRemove.push(k);
+                            continue;
+                        }
+                    }
+
+                    // 4. Bersihkan cache tabel 6.3 jika terdapat label Kolom 7
+                    if (k.includes('6.3')) {
+                        const val = localStorage.getItem(k) || '';
+                        if (val.includes('Kolom 7') || val.includes('kolom 7')) {
                             keysToRemove.push(k);
                             continue;
                         }
@@ -308,6 +348,17 @@ var isEditMode = false;
             let customSource = (serverDbMetadata && serverDbMetadata.source) ? serverDbMetadata.source : (getScopedLocalStorageItem('sibingka_table_source_text') || (serverDbFallbackMetadata && serverDbFallbackMetadata.source ? serverDbFallbackMetadata.source : null));
             let customNote = (serverDbMetadata && serverDbMetadata.note !== undefined && serverDbMetadata.note !== null) ? serverDbMetadata.note : (getScopedLocalStorageItem('sibingka_table_note') || (serverDbFallbackMetadata && serverDbFallbackMetadata.note !== undefined ? serverDbFallbackMetadata.note : null));
 
+            // Bersihkan judul lawas bergaris miring (2026/2027 dsb) untuk Tabel 4.1.10 & Perpustakaan (4.1.21 s.d 4.1.24)
+            if (['4.1.10', '4.1.21', '4.1.22', '4.1.23', '4.1.24'].includes(currentTableCode)) {
+                const lsTitle = getScopedLocalStorageItem('sibingka_table_title_id');
+                if (lsTitle && /\b\d{4}\/\d{4}\b/.test(lsTitle)) {
+                    removeScopedLocalStorageItem('sibingka_table_title_id');
+                    removeScopedLocalStorageItem('sibingka_table_title_en');
+                    customTitleId = (serverDbMetadata && serverDbMetadata.title_id) ? serverDbMetadata.title_id : null;
+                    customTitleEn = (serverDbMetadata && serverDbMetadata.title_en) ? serverDbMetadata.title_en : null;
+                }
+            }
+
             // Isolasi judul & sumber untuk Instansi Vertikal Kampus (05 s.d 23): selalu prioritaskan nama kampus resmi dari katalog
             if (isInstansi && catInfo && catInfo.title) {
                 if (!customTitleId || customTitleId.includes('Perguruan Tinggi') || customTitleId.includes('Tabel Data Statistik Sektoral')) {
@@ -490,8 +541,18 @@ var isEditMode = false;
                     return `${cleanBase}, ${yLabel}`;
                 }
 
+                // Khusus Tabel 4.1.10 (Kemenag) & Perpustakaan (4.1.21 s.d 4.1.24): cukup satu tahun saja (misal 2026)
+                if (typeof currentTableCode === 'string' && (currentTableCode === '4.1.10' || currentTableCode === '4.1.21' || currentTableCode === '4.1.22' || currentTableCode === '4.1.23' || currentTableCode === '4.1.24')) {
+                    let raw = (defaultTitle || title || '').trim();
+                    if (raw.trim().toLowerCase() === 'table' || raw.trim().toLowerCase() === 'tabel') {
+                        raw = (defaultTitle || '').trim();
+                    }
+                    const cleanBase = raw.replace(/([,\s]+)(?:19|20)\d{2}(?:\s*[\/–\-]\s*(?:19|20)\d{2})?.*$/i, '').trim();
+                    return `${cleanBase}, ${yLabel}`;
+                }
+
                 // Khusus tabel pendidikan 4.1.x (OPD 08): tahun ajaran SiBingka Bukittinggi = Tahun + 1 (misal 2025 -> 2025/2026, 2026 -> 2026/2027)
-                if (typeof currentTableCode === 'string' && (currentOpdCode === '08' || currentTableCode.startsWith('4.1')) && currentTableCode !== '4.1.2' && currentTableCode !== '4.1.11' && currentTableCode !== '4.1.12' && currentTableCode !== '4.1.13' && currentTableCode !== '4.1.14' && currentTableCode !== '4.1.18' && currentTableCode !== '4.1.19' && currentTableCode !== '4.1.20' && currentTableCode !== '4.1.21' && currentTableCode !== '4.1.22' && currentTableCode !== '4.1.23' && currentTableCode !== '4.1.24') {
+                if (typeof currentTableCode === 'string' && (currentOpdCode === '08' || currentTableCode.startsWith('4.1')) && currentTableCode !== '4.1.2' && currentTableCode !== '4.1.10' && currentTableCode !== '4.1.11' && currentTableCode !== '4.1.12' && currentTableCode !== '4.1.13' && currentTableCode !== '4.1.14' && currentTableCode !== '4.1.18' && currentTableCode !== '4.1.19' && currentTableCode !== '4.1.20' && currentTableCode !== '4.1.21' && currentTableCode !== '4.1.22' && currentTableCode !== '4.1.23' && currentTableCode !== '4.1.24') {
                     const yrInt = parseInt(yLabel) || 2025;
                     const acadYr = `${yrInt}/${yrInt + 1}`;
                     let raw = (defaultTitle || title || '').trim();
@@ -563,7 +624,7 @@ var isEditMode = false;
                 }
 
                 // 2. Cek tahun atau rentang tahun di akhir judul
-                const yearPattern = /(,\s*|\s+)(19|20)\d{2}(\s*[–\-]\s*(19|20)\d{2})?\s*$/;
+                const yearPattern = /(,\s*|\s+)(19|20)\d{2}(\s*[\/–\-]\s*(19|20)\d{2})?\s*$/;
                 if (yearPattern.test(t)) {
                     return t.replace(yearPattern, (match, prefix) => `${prefix}${yLabel}`);
                 }
@@ -733,11 +794,22 @@ var isEditMode = false;
                     }
                 } else if (currentTableCode === '4.2.11' || savedHtml.includes('Golongan Darah') || savedHtml.includes('Donatur Darah')) {
                     savedHtml = savedHtml.replace(/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/gi, '<th class="py-3 px-4 font-bold border border-slate-700"><div>AB</div></th>')
-                                         .replace(/Kolom\s*6/gi, 'AB');
-                    safeSetLocalStorage(scopedHtmlKey, savedHtml);
-                    safeSetLocalStorage(`sibingka_table_html_${currentTableCode}_${currentYear}`, savedHtml);
-                    if (serverDbMetadata) {
-                        serverDbMetadata.table_html = savedHtml;
+                                         .replace(/Kolom\s*6/gi, 'AB')
+                                         .replace(/(<th[^>]*?)colspan=["']?3["']?([^>]*?>\s*<div>\s*Golongan Darah)/gi, '$1colspan="4"$2');
+                    if (savedHtml.includes('colspan="3"') || savedHtml.includes("colspan='3'")) {
+                        localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
+                        localStorage.removeItem(scopedHtmlKey);
+                        localStorage.removeItem(`sibingka_table_source_${currentTableCode}_${currentYear}`);
+                        localStorage.removeItem(`sibingka_table_is_saved_${currentTableCode}_${currentYear}`);
+                        if (serverDbMetadata && serverDbMetadata.table_html) {
+                            savedHtml = serverDbMetadata.table_html;
+                        }
+                    } else {
+                        safeSetLocalStorage(scopedHtmlKey, savedHtml);
+                        safeSetLocalStorage(`sibingka_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+                        if (serverDbMetadata) {
+                            serverDbMetadata.table_html = savedHtml;
+                        }
                     }
                 } else if (['9.4', '5.1.18'].includes(currentTableCode) || savedHtml.includes('Mandiangin') || savedHtml.includes('Guguk Panjang')) {
                     savedHtml = savedHtml.replace(/<th([^>]*)>\s*(?:<div>)?\s*Kolom\s*6\s*(?:<\/div>)?\s*<\/th>/gi, '<th class="py-3 px-4 font-bold border border-slate-700"><div>Aur Birugo Tigo Baleh</div></th>')
@@ -753,6 +825,19 @@ var isEditMode = false;
                                      .replace(/Jumlah\s*\/\s*Total/gi, 'Bukittinggi')
                                      .replace(/<td([^>]*)>\s*Jumlah\s*<\/td>/gi, '<td$1>Bukittinggi</td>');
                 safeSetLocalStorage(`sibingka_table_html_${currentTableCode}_${currentYear}`, savedHtml);
+            }
+
+            // Self-healing tabel 6.3 (PLN): hilangkan label Kolom 7 dari thead
+            if ((currentTableCode === '6.3' || (savedHtml && savedHtml.includes('Tenaga Listrik') && savedHtml.includes('Golongan Langganan'))) && savedHtml) {
+                if (savedHtml.includes('Kolom 7') || savedHtml.includes('kolom 7')) {
+                    localStorage.removeItem(`sibingka_table_html_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(scopedHtmlKey);
+                    localStorage.removeItem(`sibingka_table_source_${currentTableCode}_${currentYear}`);
+                    localStorage.removeItem(`sibingka_table_is_saved_${currentTableCode}_${currentYear}`);
+                    if (serverDbMetadata && serverDbMetadata.table_html) {
+                        savedHtml = serverDbMetadata.table_html;
+                    }
+                }
             }
 
             // Self-healing tabel 4.3.3: hilangkan baris Catatan dari tbody dan rapikan nama kecamatan
@@ -1357,7 +1442,7 @@ var isEditMode = false;
             }
 
             // Self-healing tabel sekolah (Dinas Pendidikan 4.1.1, 4.1.3 s.d. 4.1.17): pastikan thead selalu urut [yr-2/yr-1, yr-1/yr, yr/yr+1]
-            const schoolEducationCodes = ['4.1.1', '4.1.3', '4.1.4', '4.1.5', '4.1.6', '4.1.7', '4.1.8', '4.1.9', '4.1.10', '4.1.15', '4.1.16', '4.1.17'];
+            const schoolEducationCodes = ['4.1.1', '4.1.3', '4.1.4', '4.1.5', '4.1.6', '4.1.7', '4.1.8', '4.1.9', '4.1.15', '4.1.16', '4.1.17'];
             if (schoolEducationCodes.includes(currentTableCode) && (currentType !== 'bps') && savedHtml) {
                 const yrInt = parseInt(currentYear) || 2025;
                 const expectedY1 = `${yrInt - 2}/${yrInt - 1}`;
@@ -1562,6 +1647,18 @@ var isEditMode = false;
                         th.innerHTML = '<div>AB</div>';
                     }
                 });
+                const gDarahTh = Array.from(tableEl.querySelectorAll('thead th')).find(th => th.innerText.includes('Golongan Darah'));
+                if (gDarahTh && gDarahTh.getAttribute('colspan') !== '4') {
+                    gDarahTh.setAttribute('colspan', '4');
+                    gDarahTh.colSpan = 4;
+                }
+            }
+            if (currentTableCode === '6.3' || (tableEl && tableEl.innerText.includes('Golongan Langganan'))) {
+                tableEl.querySelectorAll('thead th').forEach(th => {
+                    if (/kolom\s*7/i.test(th.innerText.trim())) {
+                        th.remove();
+                    }
+                });
             }
 
             // Atur lebar tabel agar proporsional, panjang, dan tidak sempit
@@ -1671,7 +1768,7 @@ var isEditMode = false;
             }
 
             // Khusus Tabel Dinas 08 / Tabel 4.1.x (Tabel 3-in-1: Sekolah, Guru, Murid)
-            const isEducation3in1 = (currentType !== 'bps') && ['4.1.1', '4.1.3', '4.1.4', '4.1.5', '4.1.6', '4.1.7', '4.1.8', '4.1.9', '4.1.10', '4.1.15', '4.1.16', '4.1.17'].includes(currentTableCode);
+            const isEducation3in1 = (currentType !== 'bps') && ['4.1.1', '4.1.3', '4.1.4', '4.1.5', '4.1.6', '4.1.7', '4.1.8', '4.1.9', '4.1.15', '4.1.16', '4.1.17'].includes(currentTableCode);
             if (isEducation3in1) {
                 const yrInt = parseInt(currentYear) || 2025;
                 const expectedY1 = `${yrInt - 2}/${yrInt - 1}`;
